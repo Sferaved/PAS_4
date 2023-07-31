@@ -1,6 +1,6 @@
-package com.taxi_pas_4.ui.maps;
+package com.taxi_pas_4.cities.Kyiv;
 
-public class Kyiv7 {
+public class Kyiv6 {
     public static String[] street() {
         return new String[]{
                 "Дитячий садок №102 (Київ, Лісовий просп., 6Б)",

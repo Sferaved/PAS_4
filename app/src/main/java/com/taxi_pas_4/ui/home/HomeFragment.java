@@ -15,6 +15,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -47,6 +48,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.cities.Kyiv.KyivCity;
+import com.taxi_pas_4.cities.OdessaTest.Odessa;
 import com.taxi_pas_4.databinding.FragmentHomeBinding;
 import com.taxi_pas_4.ui.finish.FinishActivity;
 import com.taxi_pas_4.ui.maps.CostJSONParser;
@@ -75,7 +78,8 @@ public class HomeFragment extends Fragment {
     private Spinner listView;
     Button button;
     private String[] array;
-    public String[] arrayStreet = StartActivity.arrayStreet;
+    private String api;
+    public String[] arrayStreet;
     static FloatingActionButton fab_call;
     private final String TAG = "TAG";
     private static final int CM_DELETE_ID = 1;
@@ -113,6 +117,24 @@ public class HomeFragment extends Fragment {
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
+
+        List<String> stringList = logCursor(StartActivity.CITY_INFO, getActivity());
+        switch (stringList.get(1)){
+            case "Kyiv City":
+                arrayStreet = KyivCity.arrayStreet();
+                api = StartActivity.apiKyiv;
+                break;
+            case "Odessa":
+                arrayStreet = Odessa.arrayStreet();
+                api = StartActivity.apiTest;
+                break;
+            default:
+                arrayStreet = Odessa.arrayStreet();
+                api = StartActivity.apiTest;
+                break;
+        }
+
+
         ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(),
                 android.R.layout.simple_dropdown_item_1line, arrayStreet);
 
@@ -126,7 +148,7 @@ public class HomeFragment extends Fragment {
         from_number = binding.fromNumber;
 
         if((OpenStreetMapActivity.from_house != null) && !OpenStreetMapActivity.from_house.equals("house")) {
-            String url = "https://m.easy-order-taxi.site/" + StartActivity.api + "/android/autocompleteSearchComboHid/" + from;
+            String url = "https://m.easy-order-taxi.site/" + api + "/android/autocompleteSearchComboHid/" + from;
 
             Map sendUrlMapCost = null;
             try {
@@ -162,7 +184,7 @@ public class HomeFragment extends Fragment {
                         from = from.substring(0,  from.indexOf("/"));
                     };
 
-                    String url = "https://m.easy-order-taxi.site/" + StartActivity.api + "/android/autocompleteSearchComboHid/" + from;
+                    String url = "https://m.easy-order-taxi.site/" + api + "/android/autocompleteSearchComboHid/" + from;
 
                     Map sendUrlMapCost = null;
                     try {
@@ -204,7 +226,7 @@ public class HomeFragment extends Fragment {
                                                           to = to.substring(0, to.indexOf("/"));
                                                       }
                                                       ;
-                                                      String url = "https://m.easy-order-taxi.site/" + StartActivity.api + "/android/autocompleteSearchComboHid/" + to;
+                                                      String url = "https://m.easy-order-taxi.site/" + api + "/android/autocompleteSearchComboHid/" + to;
 
                                                       Map sendUrlMapCost = null;
                                                       try {
@@ -339,7 +361,7 @@ public class HomeFragment extends Fragment {
 //                                                                    Toast.makeText(getActivity(), messageResult, Toast.LENGTH_LONG).show();
                                                                     Intent intent = new Intent(getActivity(), FinishActivity.class);
                                                                     intent.putExtra("messageResult_key", messageResult);
-                                                                    intent.putExtra("UID_key", String.valueOf(sendUrlMapCost.get("dispatching_order_uid")));
+                                                                    intent.putExtra("UID_key", String.valueOf(sendUrlMap.get("dispatching_order_uid")));
                                                                     startActivity(intent);
                                                                     if(from_name.equals(to_name)) {
                                                                         if(!sendUrlMap.get("lat").equals("0")) {
@@ -442,20 +464,44 @@ public class HomeFragment extends Fragment {
         mapbut.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                LocationManager lm = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
+                boolean gps_enabled = false;
+                boolean network_enabled = false;
+
+                try {
+                    gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+                } catch(Exception ex) {
+                }
+
+                try {
+                    network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+                } catch(Exception ex) {
+                }
+
+                if(!gps_enabled || !network_enabled) {
+                    // notify user
+                    MaterialAlertDialogBuilder builder =  new MaterialAlertDialogBuilder(getActivity(), R.style.AlertDialogTheme);
+                    LayoutInflater inflater = getActivity().getLayoutInflater();
+
+                    View view_cost = inflater.inflate(R.layout.message_layout, null);
+                    builder.setView(view_cost);
+                    TextView message = view_cost.findViewById(R.id.textMessage);
+                    message.setText(R.string.gps_info);
+                    builder.setPositiveButton(R.string.gps_on, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                                    getActivity().startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                                }
+                            })
+                            .setNegativeButton(R.string.cancel_button, null)
+                            .show();
+                }  else  if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
                     checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
                     checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
 
-                }
-                if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                } else if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                     startActivity(new Intent(getActivity(), OpenStreetMapActivity.class));
-                } else {
-                    HomeFragment newFragment = new HomeFragment();
-                    FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
-                    transaction.replace(getId(), newFragment);
-                    transaction.addToBackStack(null);
-                    transaction.commit();
                 }
             }
         });
@@ -569,6 +615,29 @@ public class HomeFragment extends Fragment {
             ActivityCompat.requestPermissions(getActivity(), new String[]{permission}, requestCode);
         }
     }
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001; // Произвольный код для запроса разрешений
+
+
+// Другой код вашего Fragment или Activity...
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        Log.d("TAG", "onRequestPermissionsResult requestCode: " + requestCode);
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                    && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                Intent intent = new Intent(getActivity(), OpenStreetMapActivity.class);
+                // Разрешения получены, теперь можно продолжить обновление местоположения
+                startActivity(intent);
+            } else {
+                // Пользователь не предоставил необходимые разрешения, переход на MainActivity
+                Intent intent = new Intent(getActivity(), MainActivity.class);
+                startActivity(intent);
+            }
+        }
+    }
+
 
     private Map <String, String> routChoice(int i) {
         Map <String, String> rout = new HashMap<>();
@@ -908,7 +977,7 @@ public class HomeFragment extends Fragment {
             result = "no_extra_charge_codes";
         }
 
-        String url = "https://m.easy-order-taxi.site/" + StartActivity.api + "/android/" + urlAPI + "/" + parameters + "/" + result;
+        String url = "https://m.easy-order-taxi.site/" + api + "/android/" + urlAPI + "/" + parameters + "/" + result;
 
         Log.d("TAG", "getTaxiUrlSearch: " + url);
 
@@ -1048,7 +1117,7 @@ public class HomeFragment extends Fragment {
             result = "no_extra_charge_codes";
         }
 
-        String url = "https://m.easy-order-taxi.site/" + StartActivity.api + "/android/" + urlAPI + "/" + parameters + "/" + result;
+        String url = "https://m.easy-order-taxi.site/" + api + "/android/" + urlAPI + "/" + parameters + "/" + result;
 
         Log.d("TAG", "getTaxiUrlSearch: " + url);
         database.close();

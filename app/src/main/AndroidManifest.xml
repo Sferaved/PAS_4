@@ -75,7 +75,6 @@
             android:name=".ui.open_map.OpenStreetMapActivity"
             android:exported="true"
             android:theme="@style/Theme.PAS_4.NoActionBar" />
-        <activity android:name=".ui.start.GoogleSignInActivity" />
         <activity android:name=".ui.start.StopActivity" />
         <activity android:name=".ui.start.UpdateActivity" />
 

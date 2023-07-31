@@ -1,6 +1,6 @@
 <resources>
-    <string name="version_code">4.000</string>
-    <string name="version">Версия: 4.000</string>
+    <string name="version_code">4.001</string>
+    <string name="version">Версия: 4.001</string>
 
     <string name="app_name">Такси Киев</string>
 
@@ -56,7 +56,7 @@
     <string name="make_rout_message">Сформируйте маршрут</string>
     <string name="error_message">"Ошибка: "</string>
     <string name="to_point">"Место назначения: "</string>
-    <string name="cost_of_order">"Стоимость поездки: "</string>
+    <string name="cost_of_order">" Стоимость поездки: "</string>
     <string name="firebase_false_message">грн. Извините, без проверки Google-аккаунта заказ невозможен.</string>
     <string name="UAH">грн</string>
     <string name="order">Заказать</string>
@@ -146,6 +146,12 @@
     <string name="ex_st_4">" Телефон водителя: "</string>
     <string name="ex_st_5">" Ожидаемое время подачи: "</string>
     <string name="ex_st_0">Выполняется поиск машины</string>
+    <string name="your_city">"Ваш город "</string>
+    <string name="Kyiv_city">Киев</string>
+    <string name="Odessa">Одесса</string>
+    <string name="gps_message">Для использовния карты включите GPS</string>
+    <string name="city">Город</string>
+    <string name="change_message">"Смена базы адресов. "</string>
 
 
 </resources>

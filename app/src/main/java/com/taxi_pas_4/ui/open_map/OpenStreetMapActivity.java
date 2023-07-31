@@ -57,6 +57,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.NetworkChangeReceiver;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.cities.Kyiv.KyivCity;
+import com.taxi_pas_4.cities.OdessaTest.Odessa;
 import com.taxi_pas_4.ui.finish.FinishActivity;
 import com.taxi_pas_4.ui.home.MyBottomSheetDialogFragment;
 import com.taxi_pas_4.ui.home.MyGeoDialogFragment;
@@ -95,13 +97,13 @@ public class OpenStreetMapActivity extends AppCompatActivity {
     private IMapController mapController;
     EditText from_number, to_number;
     private String from, to, messageResult, from_geo;
-    public String[] arrayStreet = StartActivity.arrayStreet;
-
+    public String[] arrayStreet;
     static FloatingActionButton fab, fab_call, fab_open_map, fab_add;
 
     private TextView textViewFrom;
     private static double startLat, startLan, finishLat, finishLan;
     static MapView map = null;
+    private static String api;
     public static GeoPoint startPoint;
     public static GeoPoint endPoint;
     public GeoPoint endPointHome;
@@ -155,6 +157,7 @@ public class OpenStreetMapActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Toast.makeText(this, getString(R.string.check_position), Toast.LENGTH_SHORT).show();
         networkChangeReceiver = new NetworkChangeReceiver();
         Context ctx = getApplicationContext();
         //important! set your user agent to prevent getting banned from the osm servers
@@ -186,6 +189,22 @@ public class OpenStreetMapActivity extends AppCompatActivity {
 
         inflater = getLayoutInflater();
         view = inflater.inflate(R.layout.phone_verify_layout, null);
+
+        List<String> stringList = logCursor(StartActivity.CITY_INFO, this);
+        switch (stringList.get(1)){
+            case "Kyiv City":
+                arrayStreet = KyivCity.arrayStreet();
+                api = StartActivity.apiKyiv;
+                break;
+            case "Odessa":
+                arrayStreet = Odessa.arrayStreet();
+                api = StartActivity.apiTest;
+                break;
+            default:
+                arrayStreet = Odessa.arrayStreet();
+                break;
+        }
+
 
         if (!routMaps().isEmpty()) {
             adressArr = new ArrayList<>(routMaps().size());
@@ -277,7 +296,7 @@ public class OpenStreetMapActivity extends AppCompatActivity {
 //
 //        // Создаем и показываем диалог
 //        alertDialog = builder.show();
-        Toast.makeText(this, getString(R.string.check_position), Toast.LENGTH_SHORT).show();
+
         array = arrayAdressAdapter();
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
@@ -296,7 +315,7 @@ public class OpenStreetMapActivity extends AppCompatActivity {
                     startLat = latitude;
                     startLan = longitude;
 
-                    String urlFrom =  "https://m.easy-order-taxi.site/" + StartActivity.api + "/android/fromSearchGeo/" + startLat + "/" + startLan;
+                    String urlFrom =  "https://m.easy-order-taxi.site/" + api + "/android/fromSearchGeo/" + startLat + "/" + startLan;
                     Map sendUrlFrom = null;
                     try {
                         sendUrlFrom = FromJSONParser.sendURL(urlFrom);
@@ -331,6 +350,22 @@ public class OpenStreetMapActivity extends AppCompatActivity {
             }
         };
 
+        List<String> stringListArr = logCursor(StartActivity.CITY_INFO, this);
+        switch (stringListArr.get(1)){
+            case "Kyiv City":
+                arrayStreet = KyivCity.arrayStreet();
+                api = StartActivity.apiKyiv;
+                break;
+            case "Odessa":
+                arrayStreet = Odessa.arrayStreet();
+                api = StartActivity.apiTest;
+                break;
+            default:
+                arrayStreet = Odessa.arrayStreet();
+                api = StartActivity.apiTest;
+                break;
+        }
+        
     }
 
     private void startLocationUpdates() {
@@ -469,7 +504,7 @@ public class OpenStreetMapActivity extends AppCompatActivity {
             }
         }
 
-        String urlFrom =  "https://m.easy-order-taxi.site/" + StartActivity.api + "/android/fromSearchGeo/" + startLat + "/" + startLan;
+        String urlFrom =  "https://m.easy-order-taxi.site/" + api + "/android/fromSearchGeo/" + startLat + "/" + startLan;
         Map<String, String> sendUrlFrom = FromJSONParser.sendURL(urlFrom);
 
         FromAdressString =  (String) sendUrlFrom.get("route_address_from");
@@ -805,7 +840,7 @@ public class OpenStreetMapActivity extends AppCompatActivity {
             from_geo = startLat + " - " + startLan;
 
 
-            String urlFrom = "https://m.easy-order-taxi.site/" + StartActivity.api + "/android/fromSearchGeo/" + startLat + "/" + startLan;
+            String urlFrom = "https://m.easy-order-taxi.site/" + api + "/android/fromSearchGeo/" + startLat + "/" + startLan;
             Map sendUrlMap = FromJSONParser.sendURL(urlFrom);
 
             String orderWeb = (String) sendUrlMap.get("order_cost");
@@ -848,7 +883,7 @@ public class OpenStreetMapActivity extends AppCompatActivity {
                         if (to.indexOf("/") != -1) {
                             to = to.substring(0,  to.indexOf("/"));
                         };
-                        String url = "https://m.easy-order-taxi.site/" + StartActivity.api + "/android/autocompleteSearchComboHid/" + to;
+                        String url = "https://m.easy-order-taxi.site/" + api + "/android/autocompleteSearchComboHid/" + to;
 
 
                         Log.d("TAG", "onClick urlCost: " + url);
@@ -1256,7 +1291,7 @@ public class OpenStreetMapActivity extends AppCompatActivity {
 //                                                                            Toast.makeText(OpenStreetMapActivity.this, messageResult, Toast.LENGTH_LONG).show();
                                                                             Intent intent = new Intent(OpenStreetMapActivity.this, FinishActivity.class);
                                                                             intent.putExtra("messageResult_key", messageResult);
-                                                                            intent.putExtra("UID_key", Objects.requireNonNull(sendUrlMapCost.get("dispatching_order_uid")));
+                                                                            intent.putExtra("UID_key", Objects.requireNonNull(sendUrlMap.get("dispatching_order_uid")));
                                                                             startActivity(intent);
                                                                         } else {
                                                                             String message = (String) sendUrlMap.get("message");
@@ -1486,7 +1521,7 @@ public class OpenStreetMapActivity extends AppCompatActivity {
             result = "no_extra_charge_codes";
         }
 
-        String url = "https://m.easy-order-taxi.site/" + StartActivity.api + "/android/" + urlAPI + "/" + parameters + "/" + result;
+        String url = "https://m.easy-order-taxi.site/" + api + "/android/" + urlAPI + "/" + parameters + "/" + result;
         Log.d("TAG", "getTaxiUrlSearch services: " + url);
 
 
@@ -1577,7 +1612,7 @@ public class OpenStreetMapActivity extends AppCompatActivity {
             result = "no_extra_charge_codes";
         }
 
-        String url = "https://m.easy-order-taxi.site/" + StartActivity.api + "/android/" + urlAPI + "/" + parameters + "/" + result;
+        String url = "https://m.easy-order-taxi.site/" + api + "/android/" + urlAPI + "/" + parameters + "/" + result;
 
 
         database.close();

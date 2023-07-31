@@ -1,4 +1,4 @@
-package com.taxi_pas_4.ui.maps;
+package com.taxi_pas_4.cities.Kyiv;
 
 public class Kyiv8 {
     public static String[] street() {
