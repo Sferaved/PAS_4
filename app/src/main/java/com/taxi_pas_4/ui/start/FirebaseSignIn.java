@@ -550,7 +550,7 @@ public class FirebaseSignIn extends AppCompatActivity {
 
             String title = getString(R.string.new_version);
             String messageNotif = getString(R.string.news_of_version);
-            String urlStr = "https://play.google.com/store/apps/details?id=com.taxi.easy.ua&pli=1";
+            String urlStr = "https://play.google.com/store/apps/details?id=com.taxi_pas_4";
 
             notificationHelper.showNotification(this, title, messageNotif, urlStr);
         }

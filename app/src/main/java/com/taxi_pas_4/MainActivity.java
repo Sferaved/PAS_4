@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
                 phoneNumberChange();
         }
         if (item.getItemId() == R.id.nav_driver) {
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.taxieasyua.job"));
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.taxieasyua.job&pli=1"));
             startActivity(browserIntent);
         }
         if (item.getItemId() == R.id.action_exit) {

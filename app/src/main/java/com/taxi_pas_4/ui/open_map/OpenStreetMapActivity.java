@@ -319,16 +319,12 @@ public class OpenStreetMapActivity extends AppCompatActivity {
                     Map sendUrlFrom = null;
                     try {
                         sendUrlFrom = FromJSONParser.sendURL(urlFrom);
-                    } catch (MalformedURLException e) {
-                        throw new RuntimeException(e);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    } catch (JSONException e) {
-                        throw new RuntimeException(e);
+
+                    } catch (MalformedURLException | InterruptedException | JSONException e) {
+                        Toast.makeText(getApplicationContext(), getString(R.string.verify_internet), Toast.LENGTH_LONG).show();
+                        finish();
                     }
-
                     FromAdressString =  (String) sendUrlFrom.get("route_address_from");
-
                     progressBar.setVisibility(View.INVISIBLE);
                     MarkerOverlay markerOverlay = new MarkerOverlay(OpenStreetMapActivity.this);
                     map.getOverlays().add(markerOverlay);
@@ -338,13 +334,15 @@ public class OpenStreetMapActivity extends AppCompatActivity {
 
                     map.invalidate();
                     progressBar.setVisibility(View.INVISIBLE);
+
                 }
 
 
                 try {
                     dialogFromToGeo();
                 } catch (MalformedURLException | InterruptedException | JSONException e) {
-                    throw new RuntimeException(e);
+                    Toast.makeText(getApplicationContext(), getString(R.string.verify_internet), Toast.LENGTH_LONG).show();
+                    finish();
                 }
 
             }
