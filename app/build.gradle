@@ -11,8 +11,8 @@ android {
         applicationId "com.taxi_pas_4"
         minSdk 24
         targetSdk 33
-        versionCode 4002
-        versionName '4.002'
+        versionCode 4004
+        versionName '4.004'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 

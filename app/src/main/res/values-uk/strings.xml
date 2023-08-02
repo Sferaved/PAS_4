@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="version_code">4.003</string>
-    <string name="version">Версія: 4.003</string>
+    <string name="version_code">4.004</string>
+    <string name="version">Версія: 4.004</string>
 
     <string name="app_name">Таксі Дюк Попутник</string>
     <string name="back4app_server_url">https://parseapi.back4app.com/</string>
@@ -11,8 +11,8 @@
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="nav_header_title">Попутчик таксі Києв дешево Дюк</string>
-    <string name="nav_header_subtitle">Швидкі поїздки по Києву та області</string>
+    <string name="nav_header_title">Таксі Дюк Попутник</string>
+    <string name="nav_header_subtitle">Замовлення онлайн дешево водія зі своїм авто</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Налаштування</string>
 
