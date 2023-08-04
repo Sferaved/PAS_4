@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="version_code">4.004</string>
-    <string name="version">Версія: 4.004</string>
+    <string name="version_code">4.005</string>
+    <string name="version">Версія: 4.005</string>
 
     <string name="app_name">Таксі Дюк Попутник</string>
     <string name="back4app_server_url">https://parseapi.back4app.com/</string>
@@ -152,4 +152,5 @@
     <string name="gps_message">Для використання карти увімкніть GPS</string>
     <string name="city">Місто</string>
     <string name="change_message">"Зміна бази адрес."</string>
+    <string name="server_error_connected">Сервер не прийняв запит, наберіть операторів</string>
 </resources>
