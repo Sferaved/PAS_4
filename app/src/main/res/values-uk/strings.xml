@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="version_code">4.006</string>
-    <string name="version">Версія: 4.006</string>
+    <string name="version_code">4.007</string>
+    <string name="version">Версія: 4.007</string>
 
     <string name="app_name">Таксі Дюк Попутник</string>
     <string name="back4app_server_url">https://parseapi.back4app.com/</string>
@@ -89,7 +89,7 @@
     <string name="make_order_message">Здійсніть хоча б одну поїздку</string>
     <string name="to_adress_message">Куди їдемо?</string>
     <string name="coastMarkersMessage">"Вартість подорожі по маршруту "</string>
-    <string name="please_phone_message">Без інформації про номер телефону замовлення неможливе</string>
+    <string name="please_phone_message">Ця програма передає номер Вашого мобільного телефону для увімкнення функції замовлення таксі. Без інформації про номер телефону замовлення таксі неможливе. Введіть номер телефону та натисніть кнопку ЗБЕРІГТИ Ви підтверджуєте згоду на передачу номера Вашого телефону диспетчеру для пошуку автомобіля та збереження його для наступних замовлень таксі.</string>
     <string name="check_message">Чекайте, йде підключення.</string>
     <string name="find_of_map">Спробуйте знайти на карті</string>
     <string name="end_point_marker">Місце призначення</string>
