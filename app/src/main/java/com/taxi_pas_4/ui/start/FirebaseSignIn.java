@@ -80,10 +80,7 @@ public class FirebaseSignIn extends AppCompatActivity {
             checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
 
         }
-        ImageView mImageView = findViewById(R.id.imageView2);
-        Animation sunRiseAnimation = AnimationUtils.loadAnimation(this, R.anim.sun_rise);
-        // Подключаем анимацию к нужному View
-        mImageView.startAnimation(sunRiseAnimation);
+
         List<String> stringListArr = logCursor(StartActivity.CITY_INFO);
         switch (stringListArr.get(1)){
             case "Kyiv City":
@@ -123,7 +120,8 @@ public class FirebaseSignIn extends AppCompatActivity {
         try {
             signInLauncher.launch(signInIntent);
         } catch (NullPointerException e) {
-            Toast.makeText(this, getString(R.string.firebase_error), Toast.LENGTH_SHORT).show();
+           finish();
+           startActivity(new Intent(FirebaseSignIn.this, StopActivity.class));
         }
     }
 

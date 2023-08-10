@@ -55,7 +55,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class StartActivity extends Activity {
-    public static final String DB_NAME = "data_10082023_0";
+    public static final String DB_NAME = "data_10082023_3";
     public static final String TABLE_USER_INFO = "userInfo";
     public static final String TABLE_SETTINGS_INFO = "settingsInfo";
     public static final String TABLE_ORDERS_INFO = "ordersInfo";
@@ -83,7 +83,15 @@ public class StartActivity extends Activity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.start_layout);
-
+        try {
+            initDB();
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
 
         try_again_button = findViewById(R.id.try_again_button);
         try_again_button.setOnClickListener(new View.OnClickListener() {
@@ -111,11 +119,10 @@ public class StartActivity extends Activity {
                             @Override
                             public void run() {
                                 try {
-                                    initDB();
+
                                     startIp();
                                     startActivity(new Intent(StartActivity.this, FirebaseSignIn.class));
-                                } catch (MalformedURLException | JSONException | InterruptedException e) {
-                                    Log.d("TAG", "onResume:  new RuntimeException(e)");
+                                } catch (MalformedURLException e) {
                                 }
                             }
                         });
@@ -409,7 +416,7 @@ public class StartActivity extends Activity {
         database.execSQL("CREATE TABLE IF NOT EXISTS " + CITY_INFO + "(id integer primary key autoincrement," +
                 " city text);");
         if (cursorDb.getCount() == 0) {
-            insertCity("Odessa");
+            insertCity("Kyiv City");
         } else {
             getLocalIpAddress();
         }

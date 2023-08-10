@@ -189,39 +189,33 @@ public class OpenStreetMapActivity extends AppCompatActivity {
         view = inflater.inflate(R.layout.phone_verify_layout, null);
         map = findViewById(R.id.map);
         map.setTileSource(TileSourceFactory.MAPNIK);
-        map.setBuiltInZoomControls(true);
-        map.setMultiTouchControls(true);
 
         mapController = map.getController();
+        startLat = 50.27;
+        startLan = 30.31;
+        GeoPoint initialGeoPoint = new GeoPoint(startLat, startLan);
+        map.getController().setCenter(initialGeoPoint);
+
+        map.setBuiltInZoomControls(true);
+        map.setMultiTouchControls(true);
         mapController.setZoom(16);
         map.setClickable(true);
+
         List<String> stringList = logCursor(StartActivity.CITY_INFO, this);
         switch (stringList.get(1)){
             case "Kyiv City":
                 arrayStreet = KyivCity.arrayStreet();
                 api = StartActivity.apiKyiv;
-                startLat = 50.27;
-                startLan = 30.31;
-                FromAdressString = "Kyiv City";
                 break;
             case "Odessa":
                 arrayStreet = Odessa.arrayStreet();
                 api = StartActivity.apiTest;
-                startLat = 46.29;
-                startLan = 30.44;
-                FromAdressString = "Odessa";
                 break;
             default:
                 arrayStreet = Odessa.arrayStreet();
                 break;
         }
-        MarkerOverlay markerOverlay = new MarkerOverlay(OpenStreetMapActivity.this);
-        map.getOverlays().add(markerOverlay);
-        setMarker(startLat, startLan, FromAdressString);
-        GeoPoint initialGeoPoint = new GeoPoint(startLat, startLan);
-        map.getController().setCenter(initialGeoPoint);
 
-        map.invalidate();
 
         if (!routMaps().isEmpty()) {
             adressArr = new ArrayList<>(routMaps().size());

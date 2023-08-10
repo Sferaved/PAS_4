@@ -69,6 +69,10 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
                 if(checkBox.isChecked()) {
                     phoneNumber.setVisibility(View.VISIBLE);
                     button.setVisibility(View.VISIBLE);
+
+                } else {
+                    phoneNumber.setVisibility(View.INVISIBLE);
+                    button.setVisibility(View.INVISIBLE);
                 }
             }
         });
