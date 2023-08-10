@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="version_code">4.008</string>
-    <string name="version">Версія: 4.008</string>
+    <string name="version_code">4.010</string>
+    <string name="version">Версія: 4.010</string>
 
     <string name="app_name">Таксі Дюк Попутник</string>
     <string name="back4app_server_url">https://parseapi.back4app.com/</string>
@@ -153,4 +153,6 @@
     <string name="city">Місто</string>
     <string name="change_message">"Зміна бази адрес."</string>
     <string name="server_error_connected">Сервер не прийняв запит, наберіть операторів</string>
+    <string name="GDPR">Застосовується Загальний регламент захисту персональних даних (GDPR) Європейського союзу. Додатком користуватися ним без введення жодної особистої інформації. Деякі частини, можуть вимагати введення користувачем особистих даних для отримання цих послуг або доступу до особливих розділів або реєстрації як користувача із захистом паролем. Виконуючи ці дії користувач погоджується с Правиламі конфедійціності та усвідомлює з якою метою збираються дані, а також те, чи введення інформації є добровільним або обовязковим для користування відповідною послугою.</string>
+    <string name="ok_gdpr">Погодитися</string>
 </resources>

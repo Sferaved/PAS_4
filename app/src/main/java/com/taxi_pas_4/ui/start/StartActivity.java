@@ -55,7 +55,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class StartActivity extends Activity {
-    public static final String DB_NAME = "data_02082023_0";
+    public static final String DB_NAME = "data_10082023_0";
     public static final String TABLE_USER_INFO = "userInfo";
     public static final String TABLE_SETTINGS_INFO = "settingsInfo";
     public static final String TABLE_ORDERS_INFO = "ordersInfo";
