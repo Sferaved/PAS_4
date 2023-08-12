@@ -85,12 +85,8 @@ public class StartActivity extends Activity {
         setContentView(R.layout.start_layout);
         try {
             initDB();
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (MalformedURLException | JSONException | InterruptedException e) {
+            Log.d("TAG", "onCreate:" + new RuntimeException(e));
         }
 
         try_again_button = findViewById(R.id.try_again_button);

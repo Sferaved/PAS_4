@@ -169,7 +169,7 @@ public class FirebaseSignIn extends AppCompatActivity {
                     try {
                         onSignInResult(result);
                     } catch (MalformedURLException | JSONException | InterruptedException e) {
-                        throw new RuntimeException(e);
+                        Log.d("TAG", "onCreate:" + new RuntimeException(e));
                     }
                 }
             }
@@ -460,13 +460,13 @@ public class FirebaseSignIn extends AppCompatActivity {
                 try {
                     callback.onLocationServiceResult(true);
                 } catch (MalformedURLException e) {
-                    throw new RuntimeException(e);
+                    Log.d("TAG", "onCreate:" + new RuntimeException(e));
                 }
             } else {
                 try {
                     callback.onLocationServiceResult(false);
                 } catch (MalformedURLException e) {
-                    throw new RuntimeException(e);
+                    Log.d("TAG", "onCreate:" + new RuntimeException(e));
                 }
             }
         });
@@ -495,7 +495,7 @@ public class FirebaseSignIn extends AppCompatActivity {
                 urlConnection.setDoInput(true);
                 urlConnection.getResponseCode();
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                Log.d("TAG", "onCreate:" + new RuntimeException(e));
             }
             urlConnection.disconnect();
         });
@@ -539,7 +539,7 @@ public class FirebaseSignIn extends AppCompatActivity {
         try {
             sendUrlMapCost = ResultSONParser.sendURL(url);
         } catch (MalformedURLException | InterruptedException | JSONException e) {
-            throw new RuntimeException(e);
+            Log.d("TAG", "onCreate:" + new RuntimeException(e));
         }
 
         String message = (String) sendUrlMapCost.get("message");
