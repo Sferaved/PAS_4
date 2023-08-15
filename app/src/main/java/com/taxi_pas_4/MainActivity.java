@@ -193,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
                         database.close();
                         break;
                     case "Dnipropetrovsk Oblast":
-                        message += getString(R.string.Dnipro_city);
+
                         cv = new ContentValues();
                         cv.put("tarif", "Базовый");
                         database.update(StartActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
@@ -225,8 +225,8 @@ public class MainActivity extends AppCompatActivity {
                         SQLiteDatabase database = openOrCreateDatabase(StartActivity.DB_NAME, MODE_PRIVATE, null);
                         database.update(StartActivity.CITY_INFO, cv, "id = ?",
                                 new String[] { "1" });
-                        startActivity(new Intent(MainActivity.this, MainActivity.class));
                         Toast.makeText(MainActivity.this, getString(R.string.change_message) + message   , Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(MainActivity.this, MainActivity.class));
                     }
                 }).setNegativeButton(cancel_button, null)
                 .show();
