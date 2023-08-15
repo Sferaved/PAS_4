@@ -72,6 +72,7 @@ public class StartActivity extends Activity {
 
     public static final String  apiTest = "apiTest";
     public static final String  apiKyiv = "apiPas4001";
+    public static final String  apiDnipro = "apiPas4001_Dnipro";
 
 
     public static long addCost, cost;
@@ -311,6 +312,9 @@ public class StartActivity extends Activity {
         switch (stringList.get(1)){
             case "Kyiv City":
                 api = StartActivity.apiKyiv;
+                break;
+            case "Dnipropetrovsk Oblast":
+                api = StartActivity.apiDnipro;
                 break;
             case "Odessa":
                 api = StartActivity.apiTest;
@@ -602,6 +606,13 @@ public class StartActivity extends Activity {
                                 message += getString(R.string.Kyiv_city);
                                 cv = new ContentValues();
                                 cv.put("tarif", "Базовий онлайн");
+                                database.update(StartActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
+                                        new String[] { "1" });
+                                break;
+                            case "Dnipropetrovsk Oblast":
+                                message += getString(R.string.Dnipro_city);
+                                cv = new ContentValues();
+                                cv.put("tarif", "Базовый");
                                 database.update(StartActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
                                         new String[] { "1" });
                                 break;

@@ -49,6 +49,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.ServerConnection;
+import com.taxi_pas_4.cities.Dnipro.Dnipro;
 import com.taxi_pas_4.cities.Kyiv.KyivCity;
 import com.taxi_pas_4.cities.OdessaTest.Odessa;
 import com.taxi_pas_4.databinding.FragmentHomeBinding;
@@ -125,6 +126,10 @@ public class HomeFragment extends Fragment {
             case "Kyiv City":
                 arrayStreet = KyivCity.arrayStreet();
                 api = StartActivity.apiKyiv;
+                break;
+            case "Dnipropetrovsk Oblast":
+                arrayStreet = Dnipro.arrayStreet();
+                api = StartActivity.apiDnipro;
                 break;
             case "Odessa":
                 arrayStreet = Odessa.arrayStreet();

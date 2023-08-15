@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="version_code">4.015</string>
-    <string name="version">Версія: 4.015</string>
+    <string name="version_code">4.017</string>
+    <string name="version">Версія: 4.017</string>
 
     <string name="app_name">Таксі Дюк Попутник</string>
     <string name="back4app_server_url">https://parseapi.back4app.com/</string>
@@ -153,6 +153,8 @@
     <string name="city">Місто</string>
     <string name="change_message">"Зміна бази адрес."</string>
     <string name="server_error_connected">Сервер не прийняв запит, наберіть операторів</string>
-    <string name="GDPR">Користувач погоджується с Правиламі конфедійціності  Загального регламенту захисту персональних даних (GDPR) ЄС та усвідомлює з що введення інформації про телефон є обовязковим для замовлеення таксі.</string>
-    <string name="ok_gdpr">Погодитися</string>
+    <string name="GDPR">Користувач погоджується з Правилами конфіденційності Загального регламенту захисту персональних даних (GDPR) ЄС та усвідомлює, що введення інформації про телефон є обов\'язковим для замовлення таксі.</string>
+    <string name="ok_gdpr">Погодитись</string>
+    <string name="Dnipro_city">Дніпро</string>
+    <string name="city_change">Виберіть місто</string>
 </resources>

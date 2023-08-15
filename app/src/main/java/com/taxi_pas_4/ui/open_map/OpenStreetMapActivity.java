@@ -58,6 +58,7 @@ import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.NetworkChangeReceiver;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.ServerConnection;
+import com.taxi_pas_4.cities.Dnipro.Dnipro;
 import com.taxi_pas_4.cities.Kyiv.KyivCity;
 import com.taxi_pas_4.cities.OdessaTest.Odessa;
 import com.taxi_pas_4.ui.finish.FinishActivity;
@@ -207,6 +208,10 @@ public class OpenStreetMapActivity extends AppCompatActivity {
                 arrayStreet = KyivCity.arrayStreet();
                 api = StartActivity.apiKyiv;
                 break;
+            case "Dnipropetrovsk Oblast":
+                arrayStreet = Dnipro.arrayStreet();
+                api = StartActivity.apiDnipro;
+                break;
             case "Odessa":
                 arrayStreet = Odessa.arrayStreet();
                 api = StartActivity.apiTest;
@@ -354,6 +359,10 @@ public class OpenStreetMapActivity extends AppCompatActivity {
             case "Kyiv City":
                 arrayStreet = KyivCity.arrayStreet();
                 api = StartActivity.apiKyiv;
+                break;
+            case "Dnipropetrovsk Oblast":
+                arrayStreet = Dnipro.arrayStreet();
+                api = StartActivity.apiDnipro;
                 break;
             case "Odessa":
                 arrayStreet = Odessa.arrayStreet();

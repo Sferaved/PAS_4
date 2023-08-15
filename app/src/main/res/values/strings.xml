@@ -1,6 +1,6 @@
 <resources>
-    <string name="version_code">4.015</string>
-    <string name="version">Версия: 4.015</string>
+    <string name="version_code">4.017</string>
+    <string name="version">Версия: 4.017</string>
 
     <string name="app_name">Такси Дюк Попутчик</string>
 
@@ -153,7 +153,9 @@
     <string name="city">Город</string>
     <string name="change_message">"Смена базы адресов. "</string>
     <string name="server_error_connected">Сервер не принял запрос, наберите операторов</string>
-    <string name="GDPR">Пользователь соглашается с Правилами конфедиционности Общего регламента защиты персональных данных (GDPR) ЕС и осознает, что ввод информации о телефоне является обязательным для заказа такси.</string>
+    <string name="GDPR">Пользователь соглашается с Правилами конфеденциальности Общего регламента защиты персональных данных (GDPR) ЕС и осознает, что ввод информации о телефоне является обязательным для заказа такси.</string>
     <string name="ok_gdpr">Согласиться</string>
+    <string name="Dnipro_city">Днепр</string>
+    <string name="city_change">Выберите город</string>
 
 </resources>
