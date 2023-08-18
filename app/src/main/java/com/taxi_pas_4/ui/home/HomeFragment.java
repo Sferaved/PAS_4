@@ -100,7 +100,6 @@ public class HomeFragment extends Fragment {
                 "CONDIT",
                 "MEET",
                 "COURIER",
-                "TERMINAL",
                 "CHECK_OUT",
                 "BABY_SEAT",
                 "DRIVER",
@@ -136,8 +135,8 @@ public class HomeFragment extends Fragment {
                 api = StartActivity.apiTest;
                 break;
             default:
-                arrayStreet = Odessa.arrayStreet();
-                api = StartActivity.apiTest;
+                arrayStreet = KyivCity.arrayStreet();
+                api = StartActivity.apiKyiv;
                 break;
         }
 
@@ -420,7 +419,23 @@ public class HomeFragment extends Fragment {
                                                                                 @Override
                                                                                 public void onClick(DialogInterface dialog, int which) {
                                                                                     Intent intent = new Intent(Intent.ACTION_DIAL);
-                                                                                    intent.setData(Uri.parse("tel:0674443804"));
+                                                                                    String phone;
+                                                                                    List<String> stringList = logCursor(StartActivity.CITY_INFO, getActivity());
+                                                                                    switch (stringList.get(1)){
+                                                                                        case "Kyiv City":
+                                                                                            phone = "tel:0674443804";
+                                                                                            break;
+                                                                                        case "Dnipropetrovsk Oblast":
+                                                                                            phone = "tel:0667257070";
+                                                                                            break;
+                                                                                        case "Odessa":
+                                                                                            phone = "tel:0737257070";
+                                                                                            break;
+                                                                                        default:
+                                                                                            phone = "tel:0674443804";
+                                                                                            break;
+                                                                                    }
+                                                                                    intent.setData(Uri.parse(phone));
                                                                                     startActivity(intent);
 
                                                                                 }
@@ -528,7 +543,23 @@ public class HomeFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(Intent.ACTION_DIAL);
-                intent.setData(Uri.parse("tel:0674443804"));
+                String phone;
+                List<String> stringList = logCursor(StartActivity.CITY_INFO, getActivity());
+                switch (stringList.get(1)){
+                    case "Kyiv City":
+                        phone = "tel:0674443804";
+                        break;
+                    case "Dnipropetrovsk Oblast":
+                        phone = "tel:0667257070";
+                        break;
+                    case "Odessa":
+                        phone = "tel:0737257070";
+                        break;
+                    default:
+                        phone = "tel:0674443804";
+                        break;
+                }
+                intent.setData(Uri.parse(phone));
                 startActivity(intent);
             }
         });
@@ -901,7 +932,23 @@ public class HomeFragment extends Fragment {
                                                                 @Override
                                                                 public void onClick(DialogInterface dialog, int which) {
                                                                     Intent intent = new Intent(Intent.ACTION_DIAL);
-                                                                    intent.setData(Uri.parse("tel:0674443804"));
+                                                                    String phone;
+                                                                    List<String> stringList = logCursor(StartActivity.CITY_INFO, getActivity());
+                                                                    switch (stringList.get(1)){
+                                                                        case "Kyiv City":
+                                                                            phone = "tel:0674443804";
+                                                                            break;
+                                                                        case "Dnipropetrovsk Oblast":
+                                                                            phone = "tel:0667257070";
+                                                                            break;
+                                                                        case "Odessa":
+                                                                            phone = "tel:0737257070";
+                                                                            break;
+                                                                        default:
+                                                                            phone = "tel:0674443804";
+                                                                            break;
+                                                                    }
+                                                                    intent.setData(Uri.parse(phone));
                                                                     getActivity().startActivity(intent);
                                                                 }
                                                             })
@@ -994,7 +1041,7 @@ public class HomeFragment extends Fragment {
         List<String> servicesChecked = new ArrayList<>();
         String result;
         boolean servicesVer = false;
-        for (int i = 1; i <= 15 ; i++) {
+        for (int i = 1; i <= 14 ; i++) {
             if(services.get(i).equals("1")) {
                 servicesVer = true;
                 break;
@@ -1134,7 +1181,7 @@ public class HomeFragment extends Fragment {
         List<String> servicesChecked = new ArrayList<>();
         String result;
         boolean servicesVer = false;
-        for (int i = 1; i <= 15 ; i++) {
+        for (int i = 1; i <= 14 ; i++) {
             if(services.get(i).equals("1")) {
                 servicesVer = true;
                 break;
