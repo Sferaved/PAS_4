@@ -1,6 +1,6 @@
-package com.taxi_pas_4.cities.OdessaTest;
+package com.taxi_pas_4.cities.Odessa;
 
-public class Odessa {
+public class OdessaTest {
 
     public static String[]  arrayStreet() {
         return new String[]{

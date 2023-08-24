@@ -58,6 +58,12 @@ public class StopActivity extends Activity {
                     case "Odessa":
                         phone = "tel:0737257070";
                         break;
+                    case "Zaporizhzhia":
+                        phone = "tel:0687257070";
+                        break;
+                    case "Cherkasy Oblast":
+                        phone = "tel:0962294243";
+                        break;
                     default:
                         phone = "tel:0674443804";
                         break;

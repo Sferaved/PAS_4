@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="version_code">4.022</string>
-    <string name="version">Версія: 4.022</string>
+    <string name="version_code">4.024</string>
+    <string name="version">Версія: 4.024</string>
 
     <string name="app_name">Таксі Дюк Попутник</string>
     <string name="back4app_server_url">https://parseapi.back4app.com/</string>
@@ -157,4 +157,6 @@
     <string name="ok_gdpr">Погодитись</string>
     <string name="Dnipro_city">Дніпро</string>
     <string name="city_change">Виберіть місто</string>
+    <string name="Zaporizhzhia">Запоріжжя</string>
+    <string name="Cherkasy">Черкаси</string>
 </resources>

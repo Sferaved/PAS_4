@@ -54,7 +54,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class StartActivity extends Activity {
-    public static final String DB_NAME = "data_18082023_0";
+    public static final String DB_NAME = "data_23082023_0";
     public static final String TABLE_USER_INFO = "userInfo";
     public static final String TABLE_SETTINGS_INFO = "settingsInfo";
     public static final String TABLE_ORDERS_INFO = "ordersInfo";
@@ -72,7 +72,9 @@ public class StartActivity extends Activity {
     public static final String  apiTest = "apiTest";
     public static final String  apiKyiv = "apiPas4001";
     public static final String  apiDnipro = "apiPas4001_Dnipro";
-
+    public static final String  apiOdessa = "apiPas4001_Odessa";
+    public static final String  apiZaporizhzhia = "apiPas4001_Zaporizhzhia";
+    public static final String  apiCherkasy = "apiPas4001_Cherkasy";
 
     public static long addCost, cost;
     public static boolean verifyPhone;
@@ -212,6 +214,12 @@ public class StartActivity extends Activity {
                         case "Odessa":
                             phone = "tel:0737257070";
                             break;
+                        case "Zaporizhzhia":
+                            phone = "tel:0687257070";
+                            break;
+                        case "Cherkasy Oblast":
+                            phone = "tel:0962294243";
+                            break;
                         default:
                             phone = "tel:0674443804";
                             break;
@@ -303,11 +311,6 @@ public class StartActivity extends Activity {
                 long endTime = System.currentTimeMillis();
                 responseTime[0] = endTime - startTime; // Используем индекс 0 для записи времени
 
-                // Проверка успешности ответа и времени подключения
-//                if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
-//                    Log.d("TAG", "isConnectedToGoogle: Подключение к Google выполнено успешно. Время ответа: " + responseTime[0] + " мс");
-//                }
-
                 connection.disconnect();
 
                 // Вызываем метод обратного вызова
@@ -332,7 +335,13 @@ public class StartActivity extends Activity {
                 api = StartActivity.apiDnipro;
                 break;
             case "Odessa":
-                api = StartActivity.apiTest;
+                api = StartActivity.apiOdessa;
+                break;
+            case "Zaporizhzhia":
+                api = StartActivity.apiZaporizhzhia;
+                break;
+            case "Cherkasy Oblast":
+                api = StartActivity.apiCherkasy;
                 break;
             default:
                 api = StartActivity.apiKyiv;
@@ -390,7 +399,7 @@ public class StartActivity extends Activity {
         if (cursorDb.getCount() == 0) {
             List<String> settings = new ArrayList<>();
             settings.add("usually");
-            settings.add("Базовый");
+            settings.add(" ");
             insertFirstSettings(settings);
             if (cursorDb != null && !cursorDb.isClosed())
                 cursorDb.close();
@@ -429,11 +438,7 @@ public class StartActivity extends Activity {
 
         database.execSQL("CREATE TABLE IF NOT EXISTS " + CITY_INFO + "(id integer primary key autoincrement," +
                 " city text);");
-        if (cursorDb.getCount() == 0) {
-            insertCity("Kyiv City");
-        } else {
-            getLocalIpAddress();
-        }
+        getLocalIpAddress();
 
         Cursor cursor = StartActivity.database.query(StartActivity.TABLE_USER_INFO, null, null, null, null, null, null);
         verifyPhone = cursor.getCount() == 1;
@@ -614,43 +619,37 @@ public class StartActivity extends Activity {
                         String message = getString(R.string.your_city);
                         SQLiteDatabase database = openOrCreateDatabase(StartActivity.DB_NAME, MODE_PRIVATE, null);
                         ContentValues cv = new ContentValues();
+                        cv.put("tarif", " ");
+                        database.update(StartActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
+                                new String[] { "1" });
+                        database.close();
+                        insertCity(result);
                         switch (result){
                             case "Kyiv City":
                                 message += getString(R.string.Kyiv_city);
-                                cv = new ContentValues();
-                                cv.put("tarif", "Базовий онлайн");
-                                database.update(StartActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
-                                        new String[] { "1" });
                                 break;
                             case "Dnipropetrovsk Oblast":
                                 message += getString(R.string.Dnipro_city);
-                                cv = new ContentValues();
-                                cv.put("tarif", "Базовый");
-                                database.update(StartActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
-                                        new String[] { "1" });
                                 break;
                             case "Odessa":
                                 message += getString(R.string.Odessa);
-                                cv.put("tarif", "Базовый");
-                                database.update(StartActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
-                                        new String[] { "1" });
-                                database.close();
+                                break;
+                            case "Zaporizhzhia":
+                                message += getString(R.string.Zaporizhzhia);
+                                break;
+                            case "Cherkasy Oblast":
+                                message += getString(R.string.Cherkasy);
                                 break;
                             default:
                                 message += getString(R.string.Kyiv_city);
-                                cv = new ContentValues();
-                                cv.put("tarif", "Базовий онлайн");
-                                database.update(StartActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
-                                        new String[] { "1" });
                                 break;
                         }
-
-                        updateCity(result);
-                        database.close();
+                        Log.d("TAG", "onResponse: StartActivity.TABLE_SETTINGS_INFO " + logCursor(StartActivity.TABLE_SETTINGS_INFO));
                         Toast.makeText(StartActivity.this, message, Toast.LENGTH_SHORT).show();
-
-
                     }
+                }
+                else {
+                    Toast.makeText(StartActivity.this, R.string.verify_internet, Toast.LENGTH_SHORT).show();
                 }
             }
 

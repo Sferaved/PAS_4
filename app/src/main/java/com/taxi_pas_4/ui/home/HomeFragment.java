@@ -49,9 +49,12 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.ServerConnection;
+import com.taxi_pas_4.cities.Cherkasy.Cherkasy;
 import com.taxi_pas_4.cities.Dnipro.Dnipro;
 import com.taxi_pas_4.cities.Kyiv.KyivCity;
-import com.taxi_pas_4.cities.OdessaTest.Odessa;
+import com.taxi_pas_4.cities.Odessa.Odessa;
+import com.taxi_pas_4.cities.Odessa.OdessaTest;
+import com.taxi_pas_4.cities.Zaporizhzhia.Zaporizhzhia;
 import com.taxi_pas_4.databinding.FragmentHomeBinding;
 import com.taxi_pas_4.ui.finish.FinishActivity;
 import com.taxi_pas_4.ui.maps.CostJSONParser;
@@ -81,8 +84,8 @@ public class HomeFragment extends Fragment {
     private Spinner listView;
     Button button;
     private String[] array;
-    private String api;
-    public String[] arrayStreet;
+    public  String api;
+    public  String[] arrayStreet;
     static FloatingActionButton fab_call;
     private final String TAG = "TAG";
     private static final int CM_DELETE_ID = 1;
@@ -130,8 +133,20 @@ public class HomeFragment extends Fragment {
                 arrayStreet = Dnipro.arrayStreet();
                 api = StartActivity.apiDnipro;
                 break;
+            case "Zaporizhzhia":
+                arrayStreet = Zaporizhzhia.arrayStreet();
+                api = StartActivity.apiZaporizhzhia;
+                break;
+            case "Cherkasy Oblast":
+                arrayStreet = Cherkasy.arrayStreet();
+                api = StartActivity.apiCherkasy;
+                break;
             case "Odessa":
                 arrayStreet = Odessa.arrayStreet();
+                api = StartActivity.apiOdessa;
+                break;
+            case "OdessaTest":
+                arrayStreet = OdessaTest.arrayStreet();
                 api = StartActivity.apiTest;
                 break;
             default:
@@ -146,7 +161,7 @@ public class HomeFragment extends Fragment {
 
         AutoCompleteTextView textViewFrom =binding.textFrom;
         textViewFrom.setAdapter(adapter);
-        Log.d("TAG", "onCreateView startPoint: " + OpenStreetMapActivity.from_name + OpenStreetMapActivity.from_house);
+//        Log.d("TAG", "onCreateView startPoint: " + OpenStreetMapActivity.from_name + OpenStreetMapActivity.from_house);
         if(OpenStreetMapActivity.from_name != null && !OpenStreetMapActivity.from_name.equals("name")) {
             textViewFrom.setText(OpenStreetMapActivity.from_name);
             from = OpenStreetMapActivity.from_name;
@@ -432,6 +447,12 @@ public class HomeFragment extends Fragment {
                                                                                         case "Odessa":
                                                                                             phone = "tel:0737257070";
                                                                                             break;
+                                                                                        case "Zaporizhzhia":
+                                                                                            phone = "tel:0687257070";
+                                                                                            break;
+                                                                                        case "Cherkasy Oblast":
+                                                                                            phone = "tel:0962294243";
+                                                                                            break;
                                                                                         default:
                                                                                             phone = "tel:0674443804";
                                                                                             break;
@@ -446,9 +467,7 @@ public class HomeFragment extends Fragment {
                                                                 }
 
 
-                                                            } catch (MalformedURLException |
-                                                                     InterruptedException |
-                                                                     JSONException e) {
+                                                            } catch (MalformedURLException e) {
                                                                 Toast.makeText(getActivity(), getString(R.string.verify_internet), Toast.LENGTH_LONG).show();
                                                             }
                                                         } else {
@@ -463,19 +482,18 @@ public class HomeFragment extends Fragment {
                                                 @Override
                                                 public void onClick(DialogInterface dialog, int which) {
 
-                                                    HomeFragment newFragment = new HomeFragment();
-                                                    FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
-                                                    transaction.replace(getId(), newFragment);
-                                                    transaction.addToBackStack(null);
-                                                    transaction.commit();
+//                                                    HomeFragment newFragment = new HomeFragment();
+//                                                    FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
+//                                                    transaction.replace(getId(), newFragment);
+//                                                    transaction.addToBackStack(null);
+//                                                    transaction.commit();
                                                 }
                                             })
                                             .show();
                                 }
                             }
 
-                        } catch (MalformedURLException | InterruptedException |
-                                 JSONException e) {
+                        } catch (MalformedURLException e) {
                             Toast.makeText(getActivity(), getString(R.string.verify_internet), Toast.LENGTH_LONG).show();
                         }
                     }
@@ -555,6 +573,12 @@ public class HomeFragment extends Fragment {
                         break;
                     case "Odessa":
                         phone = "tel:0737257070";
+                        break;
+                    case "Zaporizhzhia":
+                        phone = "tel:0687257070";
+                        break;
+                    case "Cherkasy Oblast":
+                        phone = "tel:0962294243";
                         break;
                     default:
                         phone = "tel:0674443804";
@@ -945,12 +969,18 @@ public class HomeFragment extends Fragment {
                                                                         case "Odessa":
                                                                             phone = "tel:0737257070";
                                                                             break;
+                                                                        case "Zaporizhzhia":
+                                                                            phone = "tel:0687257070";
+                                                                            break;
+                                                                        case "Cherkasy Oblast":
+                                                                            phone = "tel:0962294243";
+                                                                            break;
                                                                         default:
                                                                             phone = "tel:0674443804";
                                                                             break;
                                                                     }
                                                                     intent.setData(Uri.parse(phone));
-                                                                    getActivity().startActivity(intent);
+                                                                    startActivity(intent);
                                                                 }
                                                             })
                                                             .setNegativeButton(OpenStreetMapActivity.tra, new DialogInterface.OnClickListener() {
@@ -964,8 +994,7 @@ public class HomeFragment extends Fragment {
                                                 }
                                             }
 
-                                        } catch (MalformedURLException | InterruptedException |
-                                                 JSONException e) {
+                                        } catch (MalformedURLException e) {
                                             Toast.makeText(getActivity(), getString(R.string.verify_internet), Toast.LENGTH_LONG).show();
                                         }
                                     } else {

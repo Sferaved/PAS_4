@@ -45,6 +45,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationView;
 import com.taxi_pas_4.databinding.ActivityMainBinding;
 import com.taxi_pas_4.ui.home.MyPhoneDialogFragment;
+import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
 import com.taxi_pas_4.ui.start.StartActivity;
 
 import java.util.ArrayList;
@@ -57,15 +58,23 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     NetworkChangeReceiver networkChangeReceiver;
     String  cityNew;
+
+
     private final String[] cityList = new String[]{
             "Київ",
             "Дніпро",
+            "Одеса",
+            "Запоріжжя",
+            "Черкаси",
             "Тест"
     };
    private final String[] cityCode = new String[]{
             "Kyiv City",
             "Dnipropetrovsk Oblast",
-            "Odessa"
+            "Odessa",
+            "Zaporizhzhia",
+            "Cherkasy Oblast",
+            "OdessaTest"
     };
     String message;
     @Override
@@ -184,29 +193,23 @@ public class MainActivity extends AppCompatActivity {
                 message = getString(R.string.your_city) + cityList[position];
                 ContentValues cv = new ContentValues();
                 SQLiteDatabase database = view.getContext().openOrCreateDatabase(StartActivity.DB_NAME, MODE_PRIVATE, null);
-                switch (cityNew){
-                    case "Kyiv City":
-                        cv = new ContentValues();
-                        cv.put("tarif", "Базовий онлайн");
-                        database.update(StartActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
-                                new String[] { "1" });
-                        database.close();
-                        break;
-                    case "Dnipropetrovsk Oblast":
 
-                        cv = new ContentValues();
-                        cv.put("tarif", "Базовый");
-                        database.update(StartActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
-                                new String[] { "1" });
-                        break;
-                    case "Odessa":
-                        cv.put("tarif", "Базовый");
-                        database.update(StartActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
-                                new String[] { "1" });
-                        database.close();
-                        break;
-
-                }
+//                switch (cityNew){
+//                    case "Kyiv City":
+//                        cv.put("tarif", "Базовий онлайн");
+//                        break;
+//                    case "Dnipropetrovsk Oblast":
+//                    case "Zaporizhzhia":
+//                    case "Cherkasy Oblast":
+//                    case "Odessa":
+//                    case "OdessaTest":
+//                        cv.put("tarif", "Базовый");
+//                        break;
+//                }
+                cv.put("tarif", " ");
+                database.update(StartActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
+                        new String[] { "1" });
+                database.close();
 
             }
 
@@ -225,8 +228,18 @@ public class MainActivity extends AppCompatActivity {
                         SQLiteDatabase database = openOrCreateDatabase(StartActivity.DB_NAME, MODE_PRIVATE, null);
                         database.update(StartActivity.CITY_INFO, cv, "id = ?",
                                 new String[] { "1" });
+                        database.close();
                         Toast.makeText(MainActivity.this, getString(R.string.change_message) + message   , Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(MainActivity.this, MainActivity.class));
+                        startActivity(new Intent(MainActivity.this, OpenStreetMapActivity.class));
+//                        HomeFragment newFragment = new HomeFragment();
+//                        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+//                        transaction.replace(R.id.nav_home, newFragment); // Замените R.id.fragment_container на ID вашего контейнера фрагментов
+//                        transaction.addToBackStack(null);
+//                        transaction.commit();
+
+
+
+
                     }
                 }).setNegativeButton(cancel_button, null)
                 .show();
