@@ -1,6 +1,6 @@
 <resources>
-    <string name="version_code">4.024</string>
-    <string name="version">Версия: 4.024</string>
+    <string name="version_code">4.025</string>
+    <string name="version">Версия: 4.025</string>
 
     <string name="app_name">Такси Дюк Попутчик</string>
 
@@ -159,4 +159,17 @@
     <string name="city_change">Выберите город</string>
     <string name="Zaporizhzhia">Запорожье</string>
     <string name="Cherkasy">Черкассы</string>
+    <string name="OdessaTest">Одесса (Тест)</string>
+    <string name="disc_text">Изменить стоимость на</string>
+    <string name="email_sent">Сообщение отправлено</string>
+    <string name="send_like">Оценить приложение</string>
+    <string name="send_email_admin">Сообщить про проблему</string>
+    <string name="SA_subject">Сообщение № I-</string>
+    <string name="SA_message_start">Текст Вашего сообщения: </string>
+    <string name="SA_info_pas">Информация о приложении: </string>
+    <string name="SA_info_city">База адресов города </string>
+    <string name="SA_pas_text">Приложение: </string>
+    <string name="SA_user_text">Пользователь: </string>
+    <string name="SA_email">Электронная почта: </string>
+    <string name="SA_phone_text">Телефон: </string>
 </resources>

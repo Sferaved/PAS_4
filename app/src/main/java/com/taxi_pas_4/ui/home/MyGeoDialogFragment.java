@@ -1,6 +1,5 @@
 package com.taxi_pas_4.ui.home;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,7 +11,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
-import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 
 
@@ -53,7 +51,8 @@ public class MyGeoDialogFragment extends BottomSheetDialogFragment {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(getActivity(), MainActivity.class));
+                getActivity().finish();
+//                startActivity(new Intent(getActivity(), MainActivity.class));
             }
         });
         return view;

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="version_code">4.024</string>
-    <string name="version">Версія: 4.024</string>
+    <string name="version_code">4.025</string>
+    <string name="version">Версія: 4.025</string>
 
     <string name="app_name">Таксі Дюк Попутник</string>
     <string name="back4app_server_url">https://parseapi.back4app.com/</string>
@@ -159,4 +159,17 @@
     <string name="city_change">Виберіть місто</string>
     <string name="Zaporizhzhia">Запоріжжя</string>
     <string name="Cherkasy">Черкаси</string>
+    <string name="OdessaTest">Одеса (Тест)</string>
+    <string name="disc_text">Змінити вартість на</string>
+    <string name="email_sent">Повідомлення відправлено</string>
+    <string name="send_like">Оцінити додаток</string>
+    <string name="send_email_admin">Повідомити про проблему</string>
+    <string name="SA_subject">Повідомлення № I-</string>
+    <string name="SA_message_start">Текст Вашого повідомленя: </string>
+    <string name="SA_info_pas">Інформація про додаток: </string>
+    <string name="SA_info_city">База адрес міста </string>
+    <string name="SA_pas_text">Додаток: </string>
+    <string name="SA_user_text">Користувач: </string>
+    <string name="SA_email">Електронна пошта: </string>
+    <string name="SA_phone_text">"Телефон: </string>
 </resources>

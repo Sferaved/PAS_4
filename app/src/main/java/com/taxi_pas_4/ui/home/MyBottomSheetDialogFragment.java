@@ -18,6 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -31,8 +32,8 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
-import com.taxi_pas_4.ui.start.StartActivity;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -52,8 +53,11 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
     public static String[] arrayServiceCode;
     private TextView tvSelectedTime, tvSelectedDate;
     private Calendar calendar;
-    private EditText komenterinp;
-
+    private EditText komenterinp, discount;
+    Button btn_min, btn_plus;
+    long discountFist;
+    final static long MIN_VALUE = -90;
+    final static long MAX_VALUE = 200;
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Nullable
     @Override
@@ -98,7 +102,7 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
         listView.setAdapter(adapterSet);
         listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 
-        List<String> services = logCursor(StartActivity.TABLE_SERVICE_INFO, getContext());
+        List<String> services = logCursor(MainActivity.TABLE_SERVICE_INFO, getContext());
         for (int i = 0; i < arrayServiceCode.length; i++) {
             if(services.get(i+1).equals("1")) {
                 listView.setItemChecked(i,true);
@@ -122,9 +126,9 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
         spinner.setPrompt("Title");
         spinner.setBackgroundResource(R.drawable.spinner_border);
 
-        SQLiteDatabase database = getContext().openOrCreateDatabase(StartActivity.DB_NAME, MODE_PRIVATE, null);
-        Cursor cursorDb = database.query(StartActivity.TABLE_SETTINGS_INFO, null, null, null, null, null, null);
-        String tariffOld =  logCursor(StartActivity.TABLE_SETTINGS_INFO,getContext()).get(2);
+        SQLiteDatabase database = getContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        Cursor cursorDb = database.query(MainActivity.TABLE_SETTINGS_INFO, null, null, null, null, null, null);
+        String tariffOld =  logCursor(MainActivity.TABLE_SETTINGS_INFO,getContext()).get(2);
         if (cursorDb != null && !cursorDb.isClosed())
             cursorDb.close();
         for (int i = 0; i < tariffArr.length; i++) {
@@ -141,8 +145,8 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
                 cv.put("tarif", tariff);
 
                 // обновляем по id
-                SQLiteDatabase database = getContext().openOrCreateDatabase(StartActivity.DB_NAME, MODE_PRIVATE, null);
-                database.update(StartActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
+                SQLiteDatabase database = getContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+                database.update(MainActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
                         new String[] { "1" });
                 database.close();
             }
@@ -173,9 +177,48 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
 //
 //        ContentValues cv = new ContentValues();
 //        cv.put("time", formattedTime);
-//        database.update(StartActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?", new String[] { "1" });
+//        database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?", new String[] { "1" });
 
         komenterinp = view.findViewById(R.id.komenterinp);
+        discount = view.findViewById(R.id.discinp);
+
+
+        discount.setText(logCursor(MainActivity.TABLE_SETTINGS_INFO, getContext()).get(3));
+        String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, getContext()).get(3);
+        discountFist =  Integer.parseInt(discountText);
+
+
+        btn_min = view.findViewById(R.id.btn_minus);
+        btn_min.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                discountFist -= 5;
+                if (discountFist <= MIN_VALUE) {
+                    discountFist = MIN_VALUE;
+                }
+                if(discountFist > 0) {
+                    discount.setText("+" + String.valueOf(discountFist));
+                } else {
+                    discount.setText( String.valueOf(discountFist));
+                }
+            }
+        });
+        btn_plus = view.findViewById(R.id.btn_plus);
+        btn_plus.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                discountFist += 5;
+                if (discountFist >= MAX_VALUE) {
+                    discountFist = MAX_VALUE;
+                }
+                if(discountFist > 0) {
+                    discount.setText("+" + String.valueOf(discountFist));
+                } else {
+                    discount.setText( String.valueOf(discountFist));
+                }
+            }
+        });
+
         tvSelectedDate = view.findViewById(R.id.tv_selected_date);
         LocalDate currentDate = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
@@ -184,8 +227,8 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
         cv.put("date", currentDate.format(formatter));
 
         // обновляем по id
-        database = getContext().openOrCreateDatabase(StartActivity.DB_NAME, MODE_PRIVATE, null);
-        database.update(StartActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
+        database = getContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
                 new String[] { "1" });
 
         tvSelectedDate.setOnClickListener(new View.OnClickListener() {
@@ -210,6 +253,9 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
         });
 
         database.close();
+
+
+
         return view;
     }
     // Метод для обновления отображаемой даты
@@ -221,21 +267,21 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
         cv.put("date", formattedDate);
 
         // Обновляем по id
-        SQLiteDatabase database = getContext().openOrCreateDatabase(StartActivity.DB_NAME, MODE_PRIVATE, null);
-        database.update(StartActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?", new String[] { "1" });
+        SQLiteDatabase database = getContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?", new String[] { "1" });
         database.close();
     }
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onPause() {
         super.onPause();
-        List<String> services = logCursor(StartActivity.TABLE_SERVICE_INFO, getContext());
+        List<String> services = logCursor(MainActivity.TABLE_SERVICE_INFO, getContext());
         Log.d("TAG", "onPause: " + services.size());
         for (int i = 0; i < services.size()-1; i++) {
             ContentValues cv = new ContentValues();
             cv.put(arrayServiceCode[i], "0");
-            SQLiteDatabase database = getContext().openOrCreateDatabase(StartActivity.DB_NAME, MODE_PRIVATE, null);
-            database.update(StartActivity.TABLE_SERVICE_INFO, cv, "id = ?",
+            SQLiteDatabase database = getContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+            database.update(MainActivity.TABLE_SERVICE_INFO, cv, "id = ?",
                     new String[] { "1" });
             database.close();
         }
@@ -245,8 +291,8 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
             if(booleanArray.get(booleanArray.keyAt(i))) {
                 ContentValues cv = new ContentValues();
                 cv.put(arrayServiceCode[booleanArray.keyAt(i)], "1");
-                SQLiteDatabase database = getContext().openOrCreateDatabase(StartActivity.DB_NAME, MODE_PRIVATE, null);
-                database.update(StartActivity.TABLE_SERVICE_INFO, cv, "id = ?",
+                SQLiteDatabase database = getContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+                database.update(MainActivity.TABLE_SERVICE_INFO, cv, "id = ?",
                         new String[] { "1" });
                 database.close();
 
@@ -260,13 +306,27 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
             cv.put("comment", commentText);
 
             // обновляем по id
-            SQLiteDatabase database = getContext().openOrCreateDatabase(StartActivity.DB_NAME, MODE_PRIVATE, null);
-            database.update(StartActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
+            SQLiteDatabase database = getContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+            database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
+                    new String[]{"1"});
+            database.close();
+        }
+
+        String discountText = discount.getText().toString();
+        if (!discountText.isEmpty()) {
+
+            ContentValues cv = new ContentValues();
+
+            cv.put("discount", discountText);
+
+            // обновляем по id
+            SQLiteDatabase database = getContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+            database.update(MainActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
                     new String[]{"1"});
             database.close();
         }
         //Проверка даты времени
-        List<String> stringList = logCursor(StartActivity.TABLE_ADD_SERVICE_INFO, getContext());
+        List<String> stringList = logCursor(MainActivity.TABLE_ADD_SERVICE_INFO, getContext());
         String time = stringList.get(1);
         String date = stringList.get(3);
 
@@ -285,8 +345,8 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
                 cv.put("date", date);
 
                 // обновляем по id
-                SQLiteDatabase database = getContext().openOrCreateDatabase(StartActivity.DB_NAME, MODE_PRIVATE, null);
-                database.update(StartActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
+                SQLiteDatabase database = getContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+                database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
                         new String[] { "1" });
                 database.close();
 
@@ -317,8 +377,8 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
                 cv.put("date", date);
 
                 // обновляем по id
-                SQLiteDatabase database = getContext().openOrCreateDatabase(StartActivity.DB_NAME, MODE_PRIVATE, null);
-                database.update(StartActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
+                SQLiteDatabase database = getContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+                database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
                         new String[] { "1" });
                 database.close();
             }
@@ -330,8 +390,8 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
             cv.put("date", "no_date");
 
             // обновляем по id
-            SQLiteDatabase database = getContext().openOrCreateDatabase(StartActivity.DB_NAME, MODE_PRIVATE, null);
-            database.update(StartActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
+            SQLiteDatabase database = getContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+            database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
                     new String[] { "1" });
             database.close();
         }
@@ -360,8 +420,8 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
                             cv.put("time", formattedTime);
 
                             // Обновляем по id
-                            SQLiteDatabase database = getContext().openOrCreateDatabase(StartActivity.DB_NAME, MODE_PRIVATE, null);
-                            database.update(StartActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?", new String[] { "1" });
+                            SQLiteDatabase database = getContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+                            database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?", new String[] { "1" });
                             database.close();
 
                     }
@@ -378,7 +438,7 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
     @SuppressLint("Range")
     public static List<String> logCursor(String table, Context context) {
         List<String> list = new ArrayList<>();
-        SQLiteDatabase database = context.openOrCreateDatabase(StartActivity.DB_NAME, MODE_PRIVATE, null);
+        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
         Cursor c = database.query(table, null, null, null, null, null, null);
         if (c != null) {
             if (c.moveToFirst()) {

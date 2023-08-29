@@ -1,10 +1,8 @@
 package com.taxi_pas_4.ui.finish;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.ConnectivityManager;
@@ -18,13 +16,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
-import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
-import com.taxi_pas_4.ui.start.StartActivity;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -47,25 +42,25 @@ public class FinishActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_finish);
 
-        List<String> stringListArr = logCursor(StartActivity.CITY_INFO);
+        List<String> stringListArr = logCursor(MainActivity.CITY_INFO);
         switch (stringListArr.get(1)){
             case "Kyiv City":
-                api = StartActivity.apiKyiv;
+                api = MainActivity.apiKyiv;
                 break;
             case "Dnipropetrovsk Oblast":
-                api = StartActivity.apiDnipro;
+                api = MainActivity.apiDnipro;
                 break;
             case "Odessa":
-                api = StartActivity.apiOdessa;
+                api = MainActivity.apiOdessa;
                 break;
             case "Zaporizhzhia":
-                api = StartActivity.apiZaporizhzhia;
+                api = MainActivity.apiZaporizhzhia;
                 break;
             case "Cherkasy Oblast":
-                api = StartActivity.apiCherkasy;
+                api = MainActivity.apiCherkasy;
                 break;
             default:
-                api = StartActivity.apiKyiv;
+                api = MainActivity.apiKyiv;
                 break;
         }
         String parameterValue = getIntent().getStringExtra("messageResult_key");
@@ -108,17 +103,9 @@ public class FinishActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if(connected()){
-                    if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                        startActivity(intent);
-                    } else {
-                        Intent intent = new Intent(getApplicationContext(), OpenStreetMapActivity.class);
-                        startActivity(intent);
-                    }
+                    startActivity(new Intent(getApplicationContext(), MainActivity.class));
                 } else {
-                    {
-                        Toast.makeText(getApplicationContext(), getString(R.string.verify_internet), Toast.LENGTH_LONG).show();
-                    }
+                    Toast.makeText(getApplicationContext(), getString(R.string.verify_internet), Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -136,7 +123,7 @@ public class FinishActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(Intent.ACTION_DIAL);
                 String phone;
-                List<String> stringList = logCursor(StartActivity.CITY_INFO);
+                List<String> stringList = logCursor(MainActivity.CITY_INFO);
                 switch (stringList.get(1)){
                     case "Kyiv City":
                         phone = "tel:0674443804";
@@ -189,7 +176,7 @@ public class FinishActivity extends AppCompatActivity {
     @SuppressLint("Range")
     private List<String> logCursor(String table) {
         List<String> list = new ArrayList<>();
-        SQLiteDatabase database = this.openOrCreateDatabase(StartActivity.DB_NAME, MODE_PRIVATE, null);
+        SQLiteDatabase database = this.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
         Cursor c = database.query(table, null, null, null, null, null, null);
         if (c != null) {
             if (c.moveToFirst()) {
@@ -234,7 +221,7 @@ public class FinishActivity extends AppCompatActivity {
                 String errorMessage = t.getMessage();
                 t.printStackTrace();
                 Log.d("TAG", "onFailure: " + errorMessage);
-                text_status.setText("Ошибка запроса к серверу");
+                text_status.setText(R.string.verify_internet);
             }
         });
     }

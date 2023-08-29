@@ -19,8 +19,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
-import com.taxi_pas_4.ui.start.StartActivity;
 
 import java.util.regex.Pattern;
 
@@ -50,7 +50,7 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
                     Toast.makeText(getActivity(), getString(R.string.format_phone) , Toast.LENGTH_SHORT).show();
                 }
                 if (val) {
-                    StartActivity.verifyPhone = true;
+                    MainActivity.verifyPhone = true;
                     updateRecordsUser(phoneNumber.getText().toString(), getContext());
                     dismiss();
                 }
@@ -90,8 +90,8 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
         cv.put("phone_number", result);
 
         // обновляем по id
-        SQLiteDatabase database = context.openOrCreateDatabase(StartActivity.DB_NAME, MODE_PRIVATE, null);
-        int updCount = database.update(StartActivity.TABLE_USER_INFO, cv, "id = ?",
+        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        int updCount = database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?",
                 new String[] { "1" });
         Log.d("TAG", "updated rows count = " + updCount);
 
