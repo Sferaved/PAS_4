@@ -34,7 +34,8 @@ import androidx.annotation.RequiresApi;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
-import com.taxi_pas_4.ui.maps.CostJSONParser;
+import com.taxi_pas_4.ui.gallery.GalleryFragment;
+import com.taxi_pas_4.ui.maps.ToJSONParser;
 
 import java.net.MalformedURLException;
 import java.text.SimpleDateFormat;
@@ -49,7 +50,7 @@ import java.util.Locale;
 import java.util.Map;
 
 
-public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
+public class MyBottomSheetGalleryFragment extends BottomSheetDialogFragment {
     private String tariff;
     ListView listView;
     public String[] arrayService;
@@ -388,22 +389,22 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
             database.close();
         }
         try {
-            HomeFragment.text_view_cost.setText(changeCost());
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
+            GalleryFragment.text_view_cost.setText(changeCost());
+        } catch (MalformedURLException ignored) {
+
         }
 
     }
     private String changeCost() throws MalformedURLException {
         String newCost = "0";
-        String url = getTaxiUrlSearch(HomeFragment.from, HomeFragment.from_numberCost,
-                HomeFragment.toCost, HomeFragment.to_numberCost, "costSearch", getActivity());
+        String url = getTaxiUrlSearchMarkers(GalleryFragment.from_lat, GalleryFragment.from_lng,
+                GalleryFragment.to_lat, GalleryFragment.to_lng, "costSearchMarkers", getContext());
 
-        Map<String, String> sendUrl = CostJSONParser.sendURL(url);
+        Map<String, String> sendUrl = ToJSONParser.sendURL(url);
 
         String mes = (String) sendUrl.get("message");
         String orderC = (String) sendUrl.get("order_cost");
-        Log.d("TAG", "onPausedawdddddddwdadwdawdaw orderC : " + orderC );
+
         if (orderC.equals("0")) {
             MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(mes);
             bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
@@ -419,23 +420,33 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
             discount = firstCost * discountInt / 100;
             newCost = Long.toString(firstCost + discount);
 
-            HomeFragment.cost = firstCost + discount;
-            HomeFragment.addCost = discount;
-
+            GalleryFragment.cost = firstCost + discount;
+            GalleryFragment.addCost = discount;
         }
+
+
         return newCost;
     }
-    private String getTaxiUrlSearch(String from, String from_number, String to, String to_number, String urlAPI, Context context) {
+    private String getTaxiUrlSearchMarkers(double originLatitude, double originLongitude,
+                                           double toLatitude, double toLongitude,
+                                           String urlAPI, Context context) {
+        //  Проверка даты и времени
+
+        List<String> stringList = logCursor(MainActivity.TABLE_ADD_SERVICE_INFO, context);
+        String time = stringList.get(1);
+        String comment = stringList.get(2);
+        String date = stringList.get(3);
 
         // Origin of route
-        String str_origin = from + "/" + from_number;
+        String str_origin = originLatitude + "/" + originLongitude;
 
         // Destination of route
-        String str_dest = to + "/" + to_number;
+        String str_dest = toLatitude + "/" + toLongitude;
 
+//        Cursor cursorDb = MainActivity.database.query(MainActivity.TABLE_SETTINGS_INFO, null, null, null, null, null, null);
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        String tarif = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(2);
 
-        String tarif =  logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(2);
 
         // Building the parameters to the web service
 
@@ -444,8 +455,10 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
         String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
         String displayName = logCursor(MainActivity.TABLE_USER_INFO, context).get(4);
 
-        if(urlAPI.equals("costSearch")) {
+
+        if(urlAPI.equals("costSearchMarkers")) {
             Cursor c = database.query(MainActivity.TABLE_USER_INFO, null, null, null, null, null, null);
+
             if (c.getCount() == 1) {
                 phoneNumber = logCursor(MainActivity.TABLE_USER_INFO, context).get(2);
                 c.close();
@@ -455,7 +468,6 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
 
 
         // Building the url to the web service
-// Building the url to the web service
         List<String> services = logCursor(MainActivity.TABLE_SERVICE_INFO, context);
         List<String> servicesChecked = new ArrayList<>();
         String result;
@@ -483,9 +495,10 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
             result = "no_extra_charge_codes";
         }
 
-        String url = "https://m.easy-order-taxi.site/" + HomeFragment.api + "/android/" + urlAPI + "/" + parameters + "/" + result;
+        String url = "https://m.easy-order-taxi.site/" + GalleryFragment.api + "/android/" + urlAPI + "/" + parameters + "/" + result;
 
         Log.d("TAG", "getTaxiUrlSearch: " + url);
+        database.close();
 
 
         return url;

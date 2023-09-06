@@ -2,17 +2,12 @@ package com.taxi_pas_4.ui.open_map;
 
 
 import android.content.Context;
-import android.os.Build;
-import android.util.Log;
 import android.view.MotionEvent;
 
-import org.json.JSONException;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.Overlay;
-
-import java.net.MalformedURLException;
 
 public class MarkerOverlay extends Overlay {
 
@@ -35,9 +30,9 @@ public class MarkerOverlay extends Overlay {
         }
 
 
-        OpenStreetMapActivity.endPoint = (GeoPoint) mapView.getProjection().fromPixels((int) event.getX(), (int) event.getY());
+        OpenStreetMapActivity.enspoint = (GeoPoint) mapView.getProjection().fromPixels((int) event.getX(), (int) event.getY());
         String target = OpenStreetMapActivity.epm;
-        OpenStreetMapActivity.setMarker(OpenStreetMapActivity.endPoint.getLatitude(), OpenStreetMapActivity.endPoint.getLongitude(), target);
+        OpenStreetMapActivity.setMarker(OpenStreetMapActivity.enspoint.getLatitude(), OpenStreetMapActivity.enspoint.getLongitude(), target);
 //        OpenStreetMapActivity.buttonAddServices.setVisibility(View.VISIBLE);
 //        OpenStreetMapActivity.buttonAddServices.setOnClickListener(new View.OnClickListener() {
 //            @Override
@@ -46,14 +41,14 @@ public class MarkerOverlay extends Overlay {
 //                bottomSheetDialogFragment.show(bottomSheetDialogFragment.getChildFragmentManager(), bottomSheetDialogFragment.getTag());
 //            }
 //        });
-        try {
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                OpenStreetMapActivity.dialogMarkers(OpenStreetMapActivity.fragmentManager);
-            }
-        } catch (MalformedURLException | JSONException | InterruptedException e) {
-            Log.d("TAG", "onCreate:" + new RuntimeException(e));
-        }
+//        try {
+//
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//                OpenStreetMapActivity.dialogMarkers(OpenStreetMapActivity.fragmentManager);
+//            }
+//        } catch (MalformedURLException | JSONException | InterruptedException e) {
+//            Log.d("TAG", "onCreate:" + new RuntimeException(e));
+//        }
 
         return true;
     }

@@ -1,5 +1,6 @@
 package com.taxi_pas_4.ui.maps;
 
+
 import android.util.Log;
 
 import com.taxi_pas_4.R;
@@ -60,10 +61,12 @@ public class CostJSONParser {
 
         try {
             String response = asyncTaskFuture.get(10, TimeUnit.SECONDS);
+            Log.d("TAG", "sendURL: response " + response);
             if (response != null) {
                 if (response.equals("400")) {
                     costMap.put("order_cost", "0");
-                    costMap.put("message", String.valueOf(R.string.verify_internet));
+                    costMap.put("message", "Сталася помілка");
+
                 } else {
                     JSONObject jsonarray = new JSONObject(response);
 
