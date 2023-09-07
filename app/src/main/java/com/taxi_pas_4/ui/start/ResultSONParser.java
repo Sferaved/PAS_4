@@ -2,8 +2,6 @@ package com.taxi_pas_4.ui.start;
 
 import android.util.Log;
 
-import com.taxi_pas_4.R;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -79,20 +77,20 @@ public class ResultSONParser {
                 }
             } else {
                 costMap.put("order_cost", "0");
-                costMap.put("message", String.valueOf(R.string.verify_internet));
+                costMap.put("message", "Сталася помілка");
             }
             return costMap;
         }  catch (TimeoutException e) {
             e.printStackTrace();
             asyncTaskFuture.cancel(true);
             costMap.put("order_cost", "0");
-            costMap.put("message", String.valueOf(R.string.verify_internet));
+            costMap.put("message", "Сталася помілка");
             return costMap;
         } catch (Exception e) {
             e.printStackTrace();
             asyncTaskFuture.cancel(true);
             costMap.put("order_cost", "0");
-            costMap.put("message", String.valueOf(R.string.verify_internet));
+            costMap.put("message", "Сталася помілка");
             return costMap;
         }
 

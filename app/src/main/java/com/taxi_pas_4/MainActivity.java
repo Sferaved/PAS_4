@@ -74,7 +74,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
-    public static final String DB_NAME = "data_05092023_7";
+    public static final String DB_NAME = "data_07092023_1";
     public static final String TABLE_USER_INFO = "userInfo";
     public static final String TABLE_SETTINGS_INFO = "settingsInfo";
     public static final String TABLE_ORDERS_INFO = "ordersInfo";
@@ -93,12 +93,13 @@ public class MainActivity extends AppCompatActivity {
     private FusedLocationProviderClient fusedLocationProviderClient;
     private LocationCallback locationCallback;
     public static final String  apiTest = "apiTest";
-    public static final String  apiKyiv = "apiPas4001";
-    public static final String  apiDnipro = "apiPas4001_Dnipro";
-    public static final String  apiOdessa = "apiPas4001_Odessa";
-    public static final String  apiZaporizhzhia = "apiPas4001_Zaporizhzhia";
-    public static final String  apiCherkasy = "apiPas4001_Cherkasy";
-    public static String  api = "apiPas4001";
+    public static final String  apiKyiv = "apiPas2";
+    public static final String  apiDnipro = "apiPas2_Dnipro";
+    public static final String  apiOdessa = "apiPas2_Odessa";
+    public static final String  apiZaporizhzhia = "apiPas2_Zaporizhzhia";
+    public static final String  apiCherkasy = "apiPas2_Cherkasy";
+//    public static String  api = "apiPas2";
+    public static String  api;
     public static SQLiteDatabase database;
 
     private final String[] cityList = new String[]{

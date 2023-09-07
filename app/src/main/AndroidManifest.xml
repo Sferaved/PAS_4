@@ -54,6 +54,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:label="@string/app_name"
             android:theme="@style/Theme.PAS_4.NoActionBar" >
             <intent-filter>
@@ -64,14 +65,18 @@
         </activity>
         <activity
             android:name=".ui.start.FirebaseSignIn"
+            android:screenOrientation="portrait"
             android:exported="true"
             android:theme="@style/Theme.PAS_4.NoActionBar" />
         <activity
             android:name=".ui.open_map.OpenStreetMapActivity"
+            android:screenOrientation="portrait"
             android:exported="true"
             android:theme="@style/Theme.PAS_4.NoActionBar" />
-        <activity android:name=".ui.start.StopActivity" />
-        <activity android:name=".ui.start.UpdateActivity" />
+        <activity android:name=".ui.start.StopActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".ui.start.UpdateActivity"
+            android:screenOrientation="portrait"/>
 
         <receiver android:name=".NetworkChangeReceiver" />
     </application>
