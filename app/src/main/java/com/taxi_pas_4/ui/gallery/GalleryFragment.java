@@ -6,6 +6,7 @@ import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.ConnectivityManager;
@@ -20,9 +21,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -32,18 +31,14 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
-import com.taxi_pas_4.cities.Cherkasy.Cherkasy;
-import com.taxi_pas_4.cities.Dnipro.Dnipro;
-import com.taxi_pas_4.cities.Kyiv.KyivCity;
-import com.taxi_pas_4.cities.Odessa.Odessa;
-import com.taxi_pas_4.cities.Odessa.OdessaTest;
-import com.taxi_pas_4.cities.Zaporizhzhia.Zaporizhzhia;
 import com.taxi_pas_4.databinding.FragmentGalleryBinding;
 import com.taxi_pas_4.ui.finish.FinishActivity;
 import com.taxi_pas_4.ui.home.MyBottomSheetBlackListFragment;
+import com.taxi_pas_4.ui.home.MyBottomSheetBonusFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetGalleryFragment;
 import com.taxi_pas_4.ui.maps.ToJSONParser;
+import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
 
 import org.json.JSONException;
 
@@ -58,11 +53,10 @@ public class GalleryFragment extends Fragment {
 
     private FragmentGalleryBinding binding;
     private ListView listView;
-    private String[] array, arraySpinner;
-    private static final int CM_DELETE_ID = 1;
+    private String[] array;
     public static TextView textView, text_view_cost;
-    AppCompatButton del_but, btnRouts, btn_minus, btn_plus, btnAdd;
-    Spinner spinner;
+    String from_mes, to_mes;
+    AppCompatButton del_but, btnRouts, btn_minus, btn_plus, btnAdd, buttonBonus;
     Integer selectedItem;
     String FromAddressString, ToAddressString;
     private long firstCost;
@@ -90,9 +84,9 @@ public class GalleryFragment extends Fragment {
                 "SMOKE",
         };
     }
-    private static String[] arrayStreet;
-    public  static String api;
 
+    public  static String api;
+    String bonus;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -101,32 +95,35 @@ public class GalleryFragment extends Fragment {
 
         binding = FragmentGalleryBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
+
+        getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
         List<String> stringList = logCursor(MainActivity.CITY_INFO, getActivity());
 
         if(stringList.size() !=0 ) {
             switch (stringList.get(1)){
                 case "Dnipropetrovsk Oblast":
-                    arrayStreet = Dnipro.arrayStreet();
+
                     api = MainActivity.apiDnipro;
                     break;
                 case "Zaporizhzhia":
-                    arrayStreet = Zaporizhzhia.arrayStreet();
+
                     api = MainActivity.apiZaporizhzhia;
                     break;
                 case "Cherkasy Oblast":
-                    arrayStreet = Cherkasy.arrayStreet();
+
                     api = MainActivity.apiCherkasy;
                     break;
                 case "Odessa":
-                    arrayStreet = Odessa.arrayStreet();
+
                     api = MainActivity.apiOdessa;
                     break;
                 case "OdessaTest":
-                    arrayStreet = OdessaTest.arrayStreet();
+
                     api = MainActivity.apiTest;
                     break;
                 default:
-                    arrayStreet = KyivCity.arrayStreet();
+
                     api = MainActivity.apiKyiv;
                     break;
             };
@@ -156,8 +153,7 @@ public class GalleryFragment extends Fragment {
         btn_minus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-
+                cost = Long.parseLong(text_view_cost.getText().toString());
                 cost -= 5;
                 addCost -= 5;
                 if (cost <= MIN_COST_VALUE) {
@@ -165,14 +161,33 @@ public class GalleryFragment extends Fragment {
                     addCost = MIN_COST_VALUE - cost;
                 }
                 text_view_cost.setText(String.valueOf(cost));
+                String bonus = logCursor(MainActivity.TABLE_USER_INFO, getActivity()).get(5);
 
+                if(Long.parseLong(bonus) >= cost * 100 ) {
+                    List<String> stringList = logCursor(MainActivity.CITY_INFO, getActivity());
+
+                    switch (stringList.get(1)) {
+                        case "Kyiv City":
+                        case "Dnipropetrovsk Oblast":
+                        case "Odessa":
+                        case "Zaporizhzhia":
+                        case "Cherkasy Oblast":
+                            buttonBonus.setVisibility(View.GONE);
+                            break;
+                        case "OdessaTest":
+                            buttonBonus.setVisibility(View.VISIBLE);
+                            break;
+                    }
+                } else {
+                    buttonBonus.setVisibility(View.GONE);
+                }
             }
         });
 
         btn_plus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                cost = Long.parseLong(text_view_cost.getText().toString());
                 cost += 5;
                 addCost += 5;
                 if (cost <= MIN_COST_VALUE) {
@@ -180,6 +195,26 @@ public class GalleryFragment extends Fragment {
                     addCost = MIN_COST_VALUE - cost;
                 }
                 text_view_cost.setText(String.valueOf(cost));
+                String bonus = logCursor(MainActivity.TABLE_USER_INFO, getActivity()).get(5);
+
+                if(Long.parseLong(bonus) >= cost * 100 ) {
+                    List<String> stringList = logCursor(MainActivity.CITY_INFO, getActivity());
+
+                    switch (stringList.get(1)) {
+                        case "Kyiv City":
+                        case "Dnipropetrovsk Oblast":
+                        case "Odessa":
+                        case "Zaporizhzhia":
+                        case "Cherkasy Oblast":
+                            buttonBonus.setVisibility(View.GONE);
+                            break;
+                        case "OdessaTest":
+                            buttonBonus.setVisibility(View.VISIBLE);
+                            break;
+                    }
+                } else {
+                    buttonBonus.setVisibility(View.GONE);
+                }
             }
         });
         btnAdd = binding.btnAdd;
@@ -210,6 +245,20 @@ public class GalleryFragment extends Fragment {
                     btn_minus.setVisibility(View.VISIBLE);
                     btn_plus.setVisibility(View.VISIBLE);
                     btnAdd.setVisibility(View.VISIBLE);
+                    List<String> stringList = logCursor(MainActivity.CITY_INFO, getActivity());
+                    Log.d("TAG", "cost: stringList.get(1) "  + stringList.get(1));
+                    switch (stringList.get(1)){
+                        case "Kyiv City":
+                        case "Dnipropetrovsk Oblast":
+                        case "Odessa":
+                        case "Zaporizhzhia":
+                        case "Cherkasy Oblast":
+                            buttonBonus.setVisibility(View.GONE);
+                            break;
+                        case "OdessaTest":
+                            buttonBonus.setVisibility(View.VISIBLE);
+                            break;
+                    }
                     SparseBooleanArray checkespositions = listView.getCheckedItemPositions();
                     ArrayList<Integer> selectespositions = new ArrayList<>();
 
@@ -252,8 +301,17 @@ public class GalleryFragment extends Fragment {
                         bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
                     } else {
                         try {
-                            String url = getTaxiUrlSearchMarkers(from_lat, from_lng,
-                                    to_lat, to_lng, "orderSearchMarkers", getContext());
+                            List<String> settings = new ArrayList<>();
+
+                            settings.add(Double.toString(from_lat));
+                            settings.add(Double.toString(from_lng));
+                            settings.add(Double.toString(to_lat));
+                            settings.add(Double.toString(to_lng));
+
+                            updateRoutMarker(settings);
+
+
+                            String url = getTaxiUrlSearchMarkers("orderSearchMarkers", getContext());
                             Log.d("TAG", "onClick 55555555585: " + url);
                             Map<String, String> sendUrl = ToJSONParser.sendURL(url);
 
@@ -272,18 +330,51 @@ public class GalleryFragment extends Fragment {
 
                                 Intent intent = new Intent(getActivity(), FinishActivity.class);
                                 intent.putExtra("messageResult_key", messageResult);
+                                intent.putExtra("messageCost_key", orderWeb);
+                                intent.putExtra("sendUrlMap", new HashMap<>(sendUrl));
                                 intent.putExtra("UID_key", Objects.requireNonNull(sendUrl.get("dispatching_order_uid")));
                                  startActivity(intent);
 
                             }
 
                         } catch (MalformedURLException e) {
-                            Toast.makeText(getActivity(), getString(R.string.verify_internet), Toast.LENGTH_LONG).show();
+                            MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
+                            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
                         }
                     }
                 } else {
-                    Toast.makeText(getActivity(), getString(R.string.verify_internet), Toast.LENGTH_LONG).show();
+                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
+                    bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
                 }
+            }
+        });
+
+        buttonBonus = binding.btnBonus;
+        String bonus = logCursor(MainActivity.TABLE_USER_INFO, getActivity()).get(5);
+        if(Long.parseLong(bonus) >= cost * 100 ) {
+            List<String> stringListBon = logCursor(MainActivity.CITY_INFO, getActivity());
+
+            switch (stringListBon.get(1)) {
+                case "Kyiv City":
+                case "Dnipropetrovsk Oblast":
+                case "Odessa":
+                case "Zaporizhzhia":
+                case "Cherkasy Oblast":
+                    buttonBonus.setVisibility(View.GONE);
+                    break;
+                case "OdessaTest":
+                    buttonBonus.setVisibility(View.VISIBLE);
+                    break;
+            }
+        } else {
+            buttonBonus.setVisibility(View.GONE);
+        }
+
+        buttonBonus.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MyBottomSheetBonusFragment bottomSheetDialogFragment = new MyBottomSheetBonusFragment(bonus, "marker", api, text_view_cost, "Gallery") ;
+                bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
             }
         });
         del_but.setVisibility(View.INVISIBLE);
@@ -292,9 +383,28 @@ public class GalleryFragment extends Fragment {
         btn_minus.setVisibility(View.INVISIBLE);
         btn_plus.setVisibility(View.INVISIBLE);
         btnAdd.setVisibility(View.INVISIBLE);
+        buttonBonus.setVisibility(View.INVISIBLE);
 
         return root;
     }
+    private void updateRoutMarker(List<String> settings) {
+
+        Log.d("TAG", "updateRoutMarker: settings - " + settings);
+
+        ContentValues cv = new ContentValues();
+
+        cv.put("startLat",  Double.parseDouble(settings.get(0)));
+        cv.put("startLan", Double.parseDouble(settings.get(1)));
+        cv.put("to_lat", Double.parseDouble(settings.get(2)));
+        cv.put("to_lng", Double.parseDouble(settings.get(3)));
+
+        // обновляем по id
+        SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        database.update(MainActivity.ROUT_MARKER, cv, "id = ?",
+                new String[] { "1" });
+        database.close();
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void dialogFromToOneRout(Map <String, String> rout) throws MalformedURLException, InterruptedException, JSONException {
         if(connected()) {
@@ -303,16 +413,28 @@ public class GalleryFragment extends Fragment {
             from_lng = Double.valueOf(rout.get("from_lng"));
             to_lat = Double.valueOf(rout.get("to_lat"));
             to_lng = Double.valueOf(rout.get("to_lng"));
+
+            Log.d("TAG", "dialogFromToOneRout: from_lat - " + from_lat);
+            Log.d("TAG", "dialogFromToOneRout: from_lng - " + from_lng);
+            Log.d("TAG", "dialogFromToOneRout: to_lat - " + to_lat);
+            Log.d("TAG", "dialogFromToOneRout: to_lng - " + to_lng);
+
             FromAddressString = rout.get("from_street") + rout.get("from_number") ;
             Log.d("TAG1", "dialogFromToOneRout: FromAddressString" + FromAddressString);
             ToAddressString = rout.get("to_street") + rout.get("to_number");
             if(rout.get("from_street").equals(rout.get("to_street"))) {
                 ToAddressString =  getString(R.string.on_city_tv);;
             }
-            Log.d("TAG1", "dialogFromToOneRout: ToAddressString" + ToAddressString);
+            Log.d("TAG", "dialogFromToOneRout: ToAddressString" + ToAddressString);
+            List<String> settings = new ArrayList<>();
 
-            String urlCost = getTaxiUrlSearchMarkers(from_lat, from_lng,
-                    to_lat, to_lng, "costSearchMarkers", getContext());
+            settings.add(rout.get("from_lat"));
+            settings.add(rout.get("from_lng"));
+            settings.add(rout.get("to_lat"));
+            settings.add(rout.get("to_lng"));
+
+            updateRoutMarker(settings);
+            String urlCost = getTaxiUrlSearchMarkers("costSearchMarkers", getContext());
 
             Map<String, String> sendUrlMapCost = ToJSONParser.sendURL(urlCost);
 
@@ -329,6 +451,7 @@ public class GalleryFragment extends Fragment {
                 btn_minus.setVisibility(View.INVISIBLE);
                 btn_plus.setVisibility(View.INVISIBLE);
                 btnAdd.setVisibility(View.INVISIBLE);
+                buttonBonus.setVisibility(View.INVISIBLE);
             }
             if (!orderCost.equals("0")) {
 
@@ -350,7 +473,8 @@ public class GalleryFragment extends Fragment {
 
                 }
         } else {
-            Toast.makeText(getActivity(), getString(R.string.verify_internet), Toast.LENGTH_LONG).show();
+            MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
+            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
         }
     }
     private Map <String, String> routChoice(int i) {
@@ -392,10 +516,18 @@ public class GalleryFragment extends Fragment {
 
         return hasConnect;
     }
-    private String getTaxiUrlSearchMarkers(double originLatitude, double originLongitude,
-                                           double toLatitude, double toLongitude,
-                                           String urlAPI, Context context) {
-        //  Проверка даты и времени
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private String getTaxiUrlSearchMarkers(String urlAPI, Context context) {
+
+        List<String> stringListRout = logCursor(MainActivity.ROUT_MARKER, context);
+        Log.d("TAG", "getTaxiUrlSearch: stringListRout" + stringListRout);
+
+        double originLatitude = Double.parseDouble(stringListRout.get(1));
+        double originLongitude = Double.parseDouble(stringListRout.get(2));
+        double toLatitude = Double.parseDouble(stringListRout.get(3));
+        double toLongitude = Double.parseDouble(stringListRout.get(4));
+
+
 
         List<String> stringList = logCursor(MainActivity.TABLE_ADD_SERVICE_INFO, context);
         String time = stringList.get(1);
@@ -403,12 +535,12 @@ public class GalleryFragment extends Fragment {
         String date = stringList.get(3);
 
         // Origin of route
-        String str_origin = originLatitude + "/" + originLongitude;
+        String str_origin = String.valueOf(originLatitude) + "/" + String.valueOf(originLongitude);
 
         // Destination of route
         String str_dest = toLatitude + "/" + toLongitude;
 
-//        Cursor cursorDb = MainActivity.database.query(MainActivity.TABLE_SETTINGS_INFO, null, null, null, null, null, null);
+        //        Cursor cursorDb = MainActivity.database.query(MainActivity.TABLE_SETTINGS_INFO, null, null, null, null, null, null);
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
         String tarif = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(2);
 
@@ -420,7 +552,6 @@ public class GalleryFragment extends Fragment {
         String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
         String displayName = logCursor(MainActivity.TABLE_USER_INFO, context).get(4);
 
-
         if(urlAPI.equals("costSearchMarkers")) {
             Cursor c = database.query(MainActivity.TABLE_USER_INFO, null, null, null, null, null, null);
 
@@ -428,15 +559,16 @@ public class GalleryFragment extends Fragment {
                 phoneNumber = logCursor(MainActivity.TABLE_USER_INFO, context).get(2);
                 c.close();
             }
-            parameters = str_origin + "/" + str_dest + "/" + tarif + "/" + phoneNumber + "/" + displayName + "(" + userEmail + ")";
-        }
 
+            parameters = str_origin + "/" + str_dest + "/" + tarif + "/" + phoneNumber + "/"
+                    + displayName + "*" + userEmail  + "*" + MainActivity.bonusPayment;
+        }
         if(urlAPI.equals("orderSearchMarkers")) {
             phoneNumber = logCursor(MainActivity.TABLE_USER_INFO, context).get(2);
 
 
             parameters = str_origin + "/" + str_dest + "/" + tarif + "/" + phoneNumber + "/"
-                    + displayName  + "/" + addCost + "/" + time + "/" + comment + "/" + date;
+                    + displayName + "*" + userEmail  + "*" + MainActivity.bonusPayment + "/" + addCost + "/" + time + "/" + comment + "/" + date;
 
             ContentValues cv = new ContentValues();
 
@@ -455,16 +587,16 @@ public class GalleryFragment extends Fragment {
         List<String> servicesChecked = new ArrayList<>();
         String result;
         boolean servicesVer = false;
-        for (int i = 1; i <= 14 ; i++) {
+        for (int i = 1; i < services.size()-1 ; i++) {
             if(services.get(i).equals("1")) {
                 servicesVer = true;
                 break;
             }
         }
         if(servicesVer) {
-            for (int i = 0; i < arrayServiceCode().length; i++) {
+            for (int i = 0; i < OpenStreetMapActivity.arrayServiceCode().length; i++) {
                 if(services.get(i+1).equals("1")) {
-                    servicesChecked.add(arrayServiceCode()[i]);
+                    servicesChecked.add(OpenStreetMapActivity.arrayServiceCode()[i]);
                 }
             }
             for (int i = 0; i < servicesChecked.size(); i++) {
@@ -480,11 +612,12 @@ public class GalleryFragment extends Fragment {
 
         String url = "https://m.easy-order-taxi.site/" + api + "/android/" + urlAPI + "/" + parameters + "/" + result;
 
-        Log.d("TAG", "getTaxiUrlSearch: " + url);
+
         database.close();
 
 
         return url;
+
     }
     private boolean verifyOrder(Context context) {
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
@@ -598,6 +731,7 @@ public class GalleryFragment extends Fragment {
             btn_minus.setVisibility(View.INVISIBLE);
             btn_plus.setVisibility(View.INVISIBLE);
             btnAdd.setVisibility(View.INVISIBLE);
+            buttonBonus.setVisibility(View.INVISIBLE);
 
         }
         del_but.setVisibility(View.INVISIBLE);
@@ -606,6 +740,7 @@ public class GalleryFragment extends Fragment {
         btn_minus.setVisibility(View.INVISIBLE);
         btn_plus.setVisibility(View.INVISIBLE);
         btnAdd.setVisibility(View.INVISIBLE);
+        buttonBonus.setVisibility(View.INVISIBLE);
 
 
     }
@@ -615,26 +750,53 @@ public class GalleryFragment extends Fragment {
         if(routMaps.size() != 0) {
             arrayRouts = new String[routMaps.size()];
             for (int i = 0; i < routMaps.size(); i++) {
+                if(routMaps.get(i).get("from_street").toString().equals("Місце відправлення")) {
+                    from_mes = getString(R.string.start_point_text);
+                }
+                else {
+                    from_mes = routMaps.get(i).get("from_street").toString();
+                }
+
+                if(routMaps.get(i).get("to_street").toString().equals("Місце призначення")) {
+                    to_mes = getString(R.string.end_point_marker);
+                }
+                else {
+                    to_mes = routMaps.get(i).get("to_street").toString();
+                }
+
+
                 if(!routMaps.get(i).get("from_street").toString().equals(routMaps.get(i).get("to_street").toString())) {
                     if (!routMaps.get(i).get("from_street").toString().equals(routMaps.get(i).get("from_number").toString())) {
-                        arrayRouts[i] = routMaps.get(i).get("from_street").toString() + " " +
+
+
+                        Log.d("TAG", "arrayToRoutsAdapter:   routMaps.get(i).get(\"from_street\").toString()" +  routMaps.get(i).get("from_street").toString());
+
+                        arrayRouts[i] = from_mes + " " +
                                 routMaps.get(i).get("from_number").toString() + " -> " +
-                                routMaps.get(i).get("to_street").toString() + " " +
+                                to_mes + " " +
                                 routMaps.get(i).get("to_number").toString();
                     } else if(!routMaps.get(i).get("to_street").toString().equals(routMaps.get(i).get("to_number").toString())) {
+                        Log.d("TAG", "arrayToRoutsAdapter:   routMaps.get(i).get(\"from_street\").toString()" +  routMaps.get(i).get("from_street").toString());
+
                         arrayRouts[i] = routMaps.get(i).get("from_street").toString() +
                                 getString(R.string.to_message) +
                                 routMaps.get(i).get("to_street").toString() + " " +
                                 routMaps.get(i).get("to_number").toString();
                     } else {
-                        arrayRouts[i] = routMaps.get(i).get("from_street").toString()  +
+
+                        Log.d("TAG", "arrayToRoutsAdapter:   routMaps.get(i).get(\"from_street\").toString()" +  routMaps.get(i).get("from_street").toString());
+
+                        arrayRouts[i] = from_mes + " " +
                                 getString(R.string.to_message) +
-                                routMaps.get(i).get("to_street").toString();
+                                to_mes;
 
                     }
 
                 } else {
-                    arrayRouts[i] = routMaps.get(i).get("from_street").toString() + " " +
+
+                    Log.d("TAG", "arrayToRoutsAdapter:   routMaps.get(i).get(\"from_street\").toString()" +  routMaps.get(i).get("from_street").toString());
+
+                    arrayRouts[i] = from_mes + " " +
                             routMaps.get(i).get("from_number").toString() + " -> " +
                             getString(R.string.on_city_tv);
                 }

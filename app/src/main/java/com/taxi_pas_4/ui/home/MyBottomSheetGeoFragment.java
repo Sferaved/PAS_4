@@ -35,7 +35,7 @@ import androidx.annotation.RequiresApi;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
-import com.taxi_pas_4.ui.maps.ToJSONParser;
+import com.taxi_pas_4.ui.maps.CostJSONParser;
 import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
 
 import java.net.MalformedURLException;
@@ -427,7 +427,7 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
         }
 
 
-        Map<String, String> sendUrl = ToJSONParser.sendURL(url);
+        Map<String, String> sendUrl = CostJSONParser.sendURL(url);
 
         String mes = sendUrl.get("message");
         String orderC = sendUrl.get("order_cost");
@@ -522,7 +522,7 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
         String date = stringList.get(3);
 
         // Origin of route
-        String str_origin = originLatitude + "/" + originLongitude;
+        String str_origin = String.valueOf(originLatitude) + "/" + String.valueOf(originLongitude);
 
         // Destination of route
         String str_dest = to + "/" + to_number;
@@ -545,7 +545,8 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
                 phoneNumber = logCursor(MainActivity.TABLE_USER_INFO, context).get(2);
                 c.close();
             }
-            parameters = str_origin + "/" + str_dest + "/" + tarif + "/" + phoneNumber + "/" + displayName + "(" + userEmail + ")";
+            parameters = str_origin + "/" + str_dest + "/" + tarif + "/" + phoneNumber + "/"
+                    + displayName + "*" + userEmail  + "*" + MainActivity.bonusPayment;
         }
 
         // Building the url to the web service
@@ -597,10 +598,10 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
         String date = stringList.get(3);
 
         // Origin of route
-        String str_origin = originLatitude + "/" + originLongitude;
+        String str_origin = String.valueOf(originLatitude) + "/" + String.valueOf(originLongitude);
 
         // Destination of route
-        String str_dest = toLatitude + "/" + toLongitude;
+        String str_dest = String.valueOf(toLatitude) + "/" + String.valueOf(toLongitude);
 
         //        Cursor cursorDb = MainActivity.database.query(MainActivity.TABLE_SETTINGS_INFO, null, null, null, null, null, null);
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
@@ -620,7 +621,8 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
                 phoneNumber = logCursor(MainActivity.TABLE_USER_INFO, context).get(2);
                 c.close();
             }
-            parameters = str_origin + "/" + str_dest + "/" + tarif + "/" + phoneNumber + "/" + displayName + "(" + userEmail + ")";
+            parameters = str_origin + "/" + str_dest + "/" + tarif + "/" + phoneNumber + "/"
+                    + displayName + "*" + userEmail  + "*" + MainActivity.bonusPayment;
         }
 
 

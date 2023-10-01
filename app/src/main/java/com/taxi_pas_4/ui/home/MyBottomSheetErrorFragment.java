@@ -102,5 +102,11 @@ public class MyBottomSheetErrorFragment extends BottomSheetDialogFragment {
         database.close();
         return list;
     }
-   }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        HomeFragment.progressBar.setVisibility(View.INVISIBLE);
+    }
+}
 
