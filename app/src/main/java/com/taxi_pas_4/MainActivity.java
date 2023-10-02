@@ -100,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
         HomeFragment.progressBar.setVisibility(View.INVISIBLE);
     }
 
-    public static final String DB_NAME = "data_01102023_4";
+    public static final String DB_NAME = "data_02102023_0";
     public static final String TABLE_USER_INFO = "userInfo";
     public static final String TABLE_SETTINGS_INFO = "settingsInfo";
     public static final String TABLE_ORDERS_INFO = "ordersInfo";
@@ -138,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
             "Черкаси",
             "Тест"
     };
-   private final String[] cityCode = new String[]{
+    private final String[] cityCode = new String[]{
             "Kyiv City",
             "Dnipropetrovsk Oblast",
             "Odessa",
@@ -158,24 +158,24 @@ public class MainActivity extends AppCompatActivity {
         }
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
-            setContentView(binding.getRoot());
+        setContentView(binding.getRoot());
 
-            setSupportActionBar(binding.appBarMain.toolbar);
+        setSupportActionBar(binding.appBarMain.toolbar);
 
-            DrawerLayout drawer = binding.drawerLayout;
-            NavigationView navigationView = binding.navView;
-            // Passing each menu ID as a set of Ids because each
-            // menu should be considered as top level destinations.
-            mAppBarConfiguration = new AppBarConfiguration.Builder(
-                    R.id.nav_home, R.id.nav_gallery, R.id.nav_about, R.id.nav_uid, R.id.nav_bonus)
-                    .setOpenableLayout(drawer)
-                    .build();
+        DrawerLayout drawer = binding.drawerLayout;
+        NavigationView navigationView = binding.navView;
+        // Passing each menu ID as a set of Ids because each
+        // menu should be considered as top level destinations.
+        mAppBarConfiguration = new AppBarConfiguration.Builder(
+                R.id.nav_home, R.id.nav_gallery, R.id.nav_about, R.id.nav_uid, R.id.nav_bonus)
+                .setOpenableLayout(drawer)
+                .build();
 
-            NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-            NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
-            NavigationUI.setupWithNavController(navigationView, navController);
-            networkChangeReceiver = new NetworkChangeReceiver();
-            bonusPayment = "nal_payment";
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+        NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
+        NavigationUI.setupWithNavController(navigationView, navController);
+        networkChangeReceiver = new NetworkChangeReceiver();
+        bonusPayment = "nal_payment";
     }
 
     @Override
@@ -307,7 +307,7 @@ public class MainActivity extends AppCompatActivity {
             insertRoutHome();
         }
         if (cursorDb != null && !cursorDb.isClosed())
-        cursorDb.close();
+            cursorDb.close();
 
         database.execSQL("CREATE TABLE IF NOT EXISTS " + ROUT_GEO + "(id integer primary key autoincrement," +
                 " startLat double," +
@@ -526,7 +526,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-//
+    //
     private void insertCity(String city) {
         String sql = "INSERT INTO " + CITY_INFO + " VALUES(?,?);";
         SQLiteDatabase database = openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
@@ -588,7 +588,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == R.id.phone_settings) {
-                phoneNumberChange();
+            phoneNumberChange();
         }
         if (item.getItemId() == R.id.nav_driver) {
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.taxieasyua.job"));
@@ -606,7 +606,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (item.getItemId() == R.id.send_like) {
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.taxi_pas_4"));
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.taxieasyua.back4app"));
             startActivity(browserIntent);
         }
 
@@ -843,34 +843,26 @@ public class MainActivity extends AppCompatActivity {
 
 
 //        String result = phoneNumber.getText().toString();
-        builder
-                .setPositiveButton(R.string.cheng, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if(connected()) {
-                            Log.d("TAG", "onClick befor validate: ");
-                            String PHONE_PATTERN = "((\\+?380)(\\d{9}))$";
-                            boolean val = Pattern.compile(PHONE_PATTERN).matcher(phoneNumber.getText().toString()).matches();
-                            Log.d("TAG", "onClick No validate: " + val);
-                            if (val == false) {
-                                Toast.makeText(MainActivity.this, getString(format_phone) , Toast.LENGTH_SHORT).show();
-                                Log.d("TAG", "onClick:phoneNumber.getText().toString() " + phoneNumber.getText().toString());
+            builder
+                    .setPositiveButton(R.string.cheng, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if(connected()) {
+                                Log.d("TAG", "onClick befor validate: ");
+                                String PHONE_PATTERN = "((\\+?380)(\\d{9}))$";
+                                boolean val = Pattern.compile(PHONE_PATTERN).matcher(phoneNumber.getText().toString()).matches();
+                                Log.d("TAG", "onClick No validate: " + val);
+                                if (val == false) {
+                                    Toast.makeText(MainActivity.this, getString(format_phone) , Toast.LENGTH_SHORT).show();
+                                    Log.d("TAG", "onClick:phoneNumber.getText().toString() " + phoneNumber.getText().toString());
 
-                            } else {
-                               updateRecordsUser(phoneNumber.getText().toString());
+                                } else {
+                                    updateRecordsUser(phoneNumber.getText().toString());
+                                }
                             }
                         }
-                    }
-                }).setNegativeButton(cancel_button, null)
-                .show();
-        } else {
-            if (!verifyPhone()) {
-                getPhoneNumber();
-            }
-            if (!verifyPhone()) {
-                MyPhoneDialogFragment bottomSheetDialogFragment = new MyPhoneDialogFragment();
-                bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
-            }
+                    }).setNegativeButton(cancel_button, null)
+                    .show();
         }
     }
     private void updateRecordsUser(String result) {
@@ -903,9 +895,9 @@ public class MainActivity extends AppCompatActivity {
         String mPhoneNumber;
         TelephonyManager tMgr = (TelephonyManager) this.getSystemService(TELEPHONY_SERVICE);
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_NUMBERS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            Log.d("TAG", "Manifest.permission.READ_PHONE_NUMBERS: " + ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_NUMBERS));
-            Log.d("TAG", "Manifest.permission.READ_PHONE_STATE: " + ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE));
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_NUMBERS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            Log.d("TAG", "Manifest.permission.READ_PHONE_NUMBERS: " + ActivityCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_NUMBERS));
+            Log.d("TAG", "Manifest.permission.READ_PHONE_STATE: " + ActivityCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE));
             return;
         }
         mPhoneNumber = tMgr.getLine1Number();
@@ -920,7 +912,7 @@ public class MainActivity extends AppCompatActivity {
 //                getActivity().finish();
 
             } else {
-                 insertRecordsUser(mPhoneNumber);
+                insertRecordsUser(mPhoneNumber);
             }
         }
 
@@ -1279,7 +1271,7 @@ public class MainActivity extends AppCompatActivity {
         protected Map<String, String> doInBackground(Void... voids) {
             String userEmail = logCursor(TABLE_USER_INFO).get(3);
 
-            String url = "https://m.easy-order-taxi.site/android/verifyBlackListUser/" + userEmail + "/" + "com.taxi_pas_4";
+            String url = "https://m.easy-order-taxi.site/android/verifyBlackListUser/" + userEmail + "/" + "com.taxieasyua.back4app";
             try {
                 return CostJSONParser.sendURL(url);
             } catch (Exception e) {
@@ -1339,7 +1331,7 @@ public class MainActivity extends AppCompatActivity {
                 NotificationHelper notificationHelper = new NotificationHelper();
                 String title = getString(R.string.new_version);
                 String messageNotif = getString(R.string.news_of_version);
-                String urlStr = "https://play.google.com/store/apps/details?id=com.taxi_pas_4";
+                String urlStr = "https://play.google.com/store/apps/details?id=com.taxieasyua.back4app";
                 notificationHelper.showNotification(this, title, messageNotif, urlStr);
 
                 // Обновляем время последней отправки уведомления
@@ -1349,7 +1341,4 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
-
-
 }

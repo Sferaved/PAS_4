@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="version_code">4.030</string>
-    <string name="version">Версія: 4.030</string>
+    <string name="version_code">4.031</string>
+    <string name="version">Версія: 4.031</string>
 
     <string name="app_name">Таксі Дюк Попутник</string>
     <string name="back4app_server_url">https://parseapi.back4app.com/</string>
@@ -179,7 +179,7 @@
     <string name="OK">Ок</string>
     <string name="to_marker_mes">Позначте маркером на карті місце висадки</string>
     <string name="set_marker">Відзначити по мапі</string>
-    <string name="uid_menu">Історія поїздок</string>
+    <string name="uid_menu">Історія замовлень</string>
     <string name="close_resone_def">Уточнить у диспетчера</string>
     <string name="close_resone_in_work">В обробці</string>
     <string name="close_resone_0">Виконаний</string>
