@@ -810,8 +810,7 @@ public class MainActivity extends AppCompatActivity {
             builder.setView(view_cost);
             TextView message = view_cost.findViewById(R.id.textMessage);
             message.setText(R.string.gps_info);
-            builder.setMessage(R.string.gps_info)
-                    .setPositiveButton(R.string.gps_on, new DialogInterface.OnClickListener() {
+            builder.setPositiveButton(R.string.gps_on, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface paramDialogInterface, int paramInt) {
                             startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
