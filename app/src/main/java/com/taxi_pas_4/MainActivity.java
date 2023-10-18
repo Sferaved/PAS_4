@@ -1309,6 +1309,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String LAST_NOTIFICATION_TIME_KEY = "lastNotificationTime";
     private static final long ONE_DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000; // 24 часа в миллисекундах
 
+//    private static final long ONE_DAY_IN_MILLISECONDS = 0; // 24 часа в миллисекундах
+
     private void version(String versionApi) throws MalformedURLException {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             checkPermission(Manifest.permission.POST_NOTIFICATIONS, PackageManager.PERMISSION_GRANTED);
@@ -1330,7 +1332,7 @@ public class MainActivity extends AppCompatActivity {
                 NotificationHelper notificationHelper = new NotificationHelper();
                 String title = getString(R.string.new_version);
                 String messageNotif = getString(R.string.news_of_version);
-                String urlStr = "https://play.google.com/store/apps/details?id=com.taxieasyua.back4app";
+                String urlStr = "https://play.google.com/store/apps/details?id=com.taxi_pas_4";
                 notificationHelper.showNotification(this, title, messageNotif, urlStr);
 
                 // Обновляем время последней отправки уведомления
