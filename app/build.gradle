@@ -11,8 +11,8 @@ android {
         applicationId "com.taxi_pas_4"
         minSdk 24
         targetSdk 33
-        versionCode 4037
-        versionName '4.037'
+        versionCode 4040
+        versionName '4.040'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += ['ru', 'uk']
@@ -88,4 +88,12 @@ dependencies {
             because("kotlin-stdlib-jdk8 is now a part of kotlin-stdlib")
         }
     }
+    implementation 'com.google.android.gms:play-services-base:18.2.0'
+    implementation 'com.google.android.gms:play-services-wallet:19.2.1'
+
+    implementation "androidx.room:room-runtime:2.4.0" // Убедитесь, что версия соответствует вашей версии Room
+    annotationProcessor "androidx.room:room-compiler:2.4.0" // То же касается версии здесь
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.9.1'
+    implementation 'com.squareup.okhttp3:okhttp:4.10.0'
+    implementation 'com.squareup.picasso:picasso:2.71828'
 }

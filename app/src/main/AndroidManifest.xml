@@ -35,9 +35,7 @@
         <activity
             android:name=".ui.payment.MonoBankActivity"
             android:exported="false" />
-        <activity
-            android:name=".ui.payment.PayPalActivity"
-            android:exported="false" />
+
         <activity
             android:name=".ui.finish.FinishActivity"
             android:screenOrientation="portrait"
@@ -85,6 +83,12 @@
             android:screenOrientation="portrait"/>
         <activity android:name=".ui.start.UpdateActivity"
             android:screenOrientation="portrait"/>
+
+        <activity android:name=".ui.open_map.OpenStreetMapVisicomActivity" />
+        <activity android:name=".ui.open_map.visicom.ActivityVisicomOnePage"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.PAS_4.NoActionBar" />
 
         <receiver android:name=".NetworkChangeReceiver" />
     </application>

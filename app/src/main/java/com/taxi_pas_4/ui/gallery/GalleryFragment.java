@@ -3,6 +3,7 @@ package com.taxi_pas_4.ui.gallery;
 import static android.content.Context.MODE_PRIVATE;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -20,7 +21,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -33,7 +36,6 @@ import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.databinding.FragmentGalleryBinding;
 import com.taxi_pas_4.ui.finish.FinishActivity;
-import com.taxi_pas_4.ui.home.MyBottomSheetBlackListFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetBonusFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetGalleryFragment;
@@ -51,21 +53,30 @@ import java.util.Objects;
 
 public class GalleryFragment extends Fragment {
 
+    private static final String TAG = "TAG_GEL";
+    @SuppressLint("StaticFieldLeak")
+    public static ProgressBar progressbar;
     private FragmentGalleryBinding binding;
     private ListView listView;
     private String[] array;
+    @SuppressLint("StaticFieldLeak")
     public static TextView textView, text_view_cost;
     String from_mes, to_mes;
-    AppCompatButton del_but, btnRouts, btn_minus, btn_plus, btnAdd, buttonBonus;
-    Integer selectedItem;
+    public static AppCompatButton del_but, btnRouts, btn_minus, btn_plus, btnAdd, buttonBonus;
+    int selectedItem;
     String FromAddressString, ToAddressString;
-    private long firstCost;
     public static long  addCost, cost;
     public static Double from_lat;
     public static Double from_lng;
     public static Double to_lat;
     public static Double to_lng;
-    long MIN_COST_VALUE, MAX_COST_VALUE;
+    long MIN_COST_VALUE;
+    private String pay_method;
+    public static long costFirstForMin;
+    private ArrayAdapter<String> listAdapter;
+    private String urlOrder;
+    private long discount;
+
     public static String[] arrayServiceCode() {
         return new String[]{
                 "BAGGAGE",
@@ -85,9 +96,6 @@ public class GalleryFragment extends Fragment {
         };
     }
 
-    public  static String api;
-    String bonus;
-
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         GalleryViewModel galleryViewModel =
@@ -96,38 +104,14 @@ public class GalleryFragment extends Fragment {
         binding = FragmentGalleryBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-        getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-        List<String> stringList = logCursor(MainActivity.CITY_INFO, getActivity());
+//        String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity()).get(3);
+        addCost = 0;
+        updateAddCost(String.valueOf(addCost));
 
-        if(stringList.size() !=0 ) {
-            switch (stringList.get(1)){
-                case "Dnipropetrovsk Oblast":
+        progressbar = binding.progressBar;
 
-                    api = MainActivity.apiDnipro;
-                    break;
-                case "Zaporizhzhia":
-
-                    api = MainActivity.apiZaporizhzhia;
-                    break;
-                case "Cherkasy Oblast":
-
-                    api = MainActivity.apiCherkasy;
-                    break;
-                case "Odessa":
-
-                    api = MainActivity.apiOdessa;
-                    break;
-                case "OdessaTest":
-
-                    api = MainActivity.apiTest;
-                    break;
-                default:
-
-                    api = MainActivity.apiKyiv;
-                    break;
-            };
-        }
         textView = binding.textGallery;
         textView.setText(R.string.my_routs);
 
@@ -144,77 +128,31 @@ public class GalleryFragment extends Fragment {
         text_view_cost = binding.textViewCost;
         btn_minus = binding.btnMinus;
         btn_plus = binding.btnPlus;
-        if(!text_view_cost.getText().toString().isEmpty()) {
+
+        btn_minus.setOnClickListener(v -> {
+            List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity());
+            addCost = Long.parseLong(stringListInfo.get(5));
             cost = Long.parseLong(text_view_cost.getText().toString());
-            MIN_COST_VALUE = (long) (cost * 0.1);
-            MAX_COST_VALUE = cost * 3;
-        }
-
-        btn_minus.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                cost = Long.parseLong(text_view_cost.getText().toString());
-                cost -= 5;
-                addCost -= 5;
-                if (cost <= MIN_COST_VALUE) {
-                    cost = MIN_COST_VALUE;
-                    addCost = MIN_COST_VALUE - cost;
-                }
-                text_view_cost.setText(String.valueOf(cost));
-                String bonus = logCursor(MainActivity.TABLE_USER_INFO, getActivity()).get(5);
-
-                if(Long.parseLong(bonus) >= cost * 100 ) {
-                    List<String> stringList = logCursor(MainActivity.CITY_INFO, getActivity());
-
-                    switch (stringList.get(1)) {
-                        case "Kyiv City":
-                        case "Dnipropetrovsk Oblast":
-                        case "Odessa":
-                        case "Zaporizhzhia":
-                        case "Cherkasy Oblast":
-                            buttonBonus.setVisibility(View.GONE);
-                            break;
-                        case "OdessaTest":
-                            buttonBonus.setVisibility(View.VISIBLE);
-                            break;
-                    }
-                } else {
-                    buttonBonus.setVisibility(View.GONE);
-                }
+            cost -= 5;
+            addCost -= 5;
+            if (cost <= MIN_COST_VALUE) {
+                cost = MIN_COST_VALUE;
+                addCost = MIN_COST_VALUE - costFirstForMin;
             }
+            updateAddCost(String.valueOf(addCost));
+            text_view_cost.setText(String.valueOf(cost));
         });
 
         btn_plus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity());
+                addCost = Long.parseLong(stringListInfo.get(5));
                 cost = Long.parseLong(text_view_cost.getText().toString());
                 cost += 5;
                 addCost += 5;
-                if (cost <= MIN_COST_VALUE) {
-                    cost = MIN_COST_VALUE;
-                    addCost = MIN_COST_VALUE - cost;
-                }
+                updateAddCost(String.valueOf(addCost));
                 text_view_cost.setText(String.valueOf(cost));
-                String bonus = logCursor(MainActivity.TABLE_USER_INFO, getActivity()).get(5);
-
-                if(Long.parseLong(bonus) >= cost * 100 ) {
-                    List<String> stringList = logCursor(MainActivity.CITY_INFO, getActivity());
-
-                    switch (stringList.get(1)) {
-                        case "Kyiv City":
-                        case "Dnipropetrovsk Oblast":
-                        case "Odessa":
-                        case "Zaporizhzhia":
-                        case "Cherkasy Oblast":
-                            buttonBonus.setVisibility(View.GONE);
-                            break;
-                        case "OdessaTest":
-                            buttonBonus.setVisibility(View.VISIBLE);
-                            break;
-                    }
-                } else {
-                    buttonBonus.setVisibility(View.GONE);
-                }
             }
         });
         btnAdd = binding.btnAdd;
@@ -230,8 +168,8 @@ public class GalleryFragment extends Fragment {
 
         array = arrayToRoutsAdapter ();
         if(array != null) {
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(), R.layout.services_adapter_layout, array);
-            listView.setAdapter(adapter);
+            listAdapter = new ArrayAdapter<>(requireActivity(), R.layout.services_adapter_layout, array);
+            listView.setAdapter(listAdapter);
             listView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 
             registerForContextMenu(listView);
@@ -241,46 +179,18 @@ public class GalleryFragment extends Fragment {
                     del_but.setVisibility(View.VISIBLE);
                     btnRouts.setVisibility(View.VISIBLE);
                     text_view_cost.setVisibility(View.VISIBLE);
-
+                    buttonBonus.setVisibility(View.VISIBLE);
                     btn_minus.setVisibility(View.VISIBLE);
                     btn_plus.setVisibility(View.VISIBLE);
                     btnAdd.setVisibility(View.VISIBLE);
-                    List<String> stringList = logCursor(MainActivity.CITY_INFO, getActivity());
-                    Log.d("TAG", "cost: stringList.get(1) "  + stringList.get(1));
-                    switch (stringList.get(1)){
-                        case "Kyiv City":
-                        case "Dnipropetrovsk Oblast":
-                        case "Odessa":
-                        case "Zaporizhzhia":
-                        case "Cherkasy Oblast":
-                            buttonBonus.setVisibility(View.GONE);
-                            break;
-                        case "OdessaTest":
-                            buttonBonus.setVisibility(View.VISIBLE);
-                            break;
-                    }
-                    SparseBooleanArray checkespositions = listView.getCheckedItemPositions();
-                    ArrayList<Integer> selectespositions = new ArrayList<>();
-
-                    for (int i = 0; i < checkespositions.size(); i++) {
-                        int pos = checkespositions.keyAt(i);
-                        if (checkespositions.get(pos)) {
-                            selectespositions.add(pos);
-                        }
-                    }
-
-                    for (int posit : selectespositions) {
-                        selectedItem = posit + 1;
-                    }
-
-
-
+                    selectedItem = position + 1;
+                    Log.d(TAG, "onItemClick: selectedItem " + selectedItem);
                     try {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                             dialogFromToOneRout(routChoice(selectedItem));
                         }
                     } catch (MalformedURLException | InterruptedException | JSONException e) {
-                        Log.d("TAG", "onItemClick: " + e.toString());
+                        Log.d(TAG, "onItemClick: " + e.toString());
                     }
 
 
@@ -294,86 +204,66 @@ public class GalleryFragment extends Fragment {
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onClick(View view) {
-                if (connected()) {
-                    if(!verifyOrder(getContext())) {
+                List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
 
-                        MyBottomSheetBlackListFragment bottomSheetDialogFragment = new MyBottomSheetBlackListFragment("orderCost");
-                        bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
-                    } else {
-                        try {
-                            List<String> settings = new ArrayList<>();
+                pay_method = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity()).get(4);
 
-                            settings.add(Double.toString(from_lat));
-                            settings.add(Double.toString(from_lng));
-                            settings.add(Double.toString(to_lat));
-                            settings.add(Double.toString(to_lng));
-
-                            updateRoutMarker(settings);
-
-
-                            String url = getTaxiUrlSearchMarkers("orderSearchMarkers", getContext());
-                            Log.d("TAG", "onClick 55555555585: " + url);
-                            Map<String, String> sendUrl = ToJSONParser.sendURL(url);
-
-                            String mes = (String) sendUrl.get("message");
-                            String orderC = (String) sendUrl.get("order_cost");
-
-                            if (orderC.equals("0")) {
-                                MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(mes);
-                                bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                switch (stringList.get(1)) {
+                    case "Kyiv City":
+                    case "Dnipropetrovsk Oblast":
+                    case "Odessa":
+                    case "Zaporizhzhia":
+                    case "Cherkasy Oblast":
+                        break;
+                    case "OdessaTest":
+                         if(pay_method.equals("bonus_payment")) {
+                            String bonus = logCursor(MainActivity.TABLE_USER_INFO, requireActivity()).get(5);
+                            if(Long.parseLong(bonus) < Long.parseLong(text_view_cost.getText().toString()) * 100 ) {
+                                paymentType("nal_payment");
                             }
-                            if (!orderC.equals("0")) {
-                                String orderWeb = orderC;
-                                String messageResult = getString(R.string.thanks_message) +
-                                       FromAddressString + getString(R.string.to_message) + ToAddressString +
-                                       getString(R.string.call_of_order) + orderWeb + getString(R.string.UAH);
-
-                                Intent intent = new Intent(getActivity(), FinishActivity.class);
-                                intent.putExtra("messageResult_key", messageResult);
-                                intent.putExtra("messageCost_key", orderWeb);
-                                intent.putExtra("sendUrlMap", new HashMap<>(sendUrl));
-                                intent.putExtra("UID_key", Objects.requireNonNull(sendUrl.get("dispatching_order_uid")));
-                                 startActivity(intent);
-
-                            }
-
-                        } catch (MalformedURLException e) {
-                            MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
-                            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
                         }
-                    }
-                } else {
-                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
-                    bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                        break;
+                }
+                progressbar.setVisibility(View.VISIBLE);
+                List<String> stringListCity = logCursor(MainActivity.CITY_INFO, requireActivity());
+                String card_max_pay = stringListCity.get(4);
+                String bonus_max_pay = stringListCity.get(5);
+                switch (pay_method) {
+                    case "bonus_payment":
+                        if (Long.parseLong(bonus_max_pay) <= Long.parseLong(text_view_cost.getText().toString()) * 100) {
+                            changePayMethodMax(text_view_cost.getText().toString(), pay_method);
+                        } else {
+                            orderRout();
+                            orderFinished();
+                        }
+                        break;
+                    case "card_payment":
+                    case "fondy_payment":
+                    case "mono_payment":
+                        if (Long.parseLong(card_max_pay) <= Long.parseLong(text_view_cost.getText().toString())) {
+                            changePayMethodMax(text_view_cost.getText().toString(), pay_method);
+                        } else {
+                            orderRout();
+                            orderFinished();
+                        }
+                        break;
+                    default:
+                        orderRout();
+                        orderFinished();
+                        break;
                 }
             }
         });
 
         buttonBonus = binding.btnBonus;
-        String bonus = logCursor(MainActivity.TABLE_USER_INFO, getActivity()).get(5);
-        if(Long.parseLong(bonus) >= cost * 100 ) {
-            List<String> stringListBon = logCursor(MainActivity.CITY_INFO, getActivity());
-
-            switch (stringListBon.get(1)) {
-                case "Kyiv City":
-                case "Dnipropetrovsk Oblast":
-                case "Odessa":
-                case "Zaporizhzhia":
-                case "Cherkasy Oblast":
-                    buttonBonus.setVisibility(View.GONE);
-                    break;
-                case "OdessaTest":
-                    buttonBonus.setVisibility(View.VISIBLE);
-                    break;
-            }
-        } else {
-            buttonBonus.setVisibility(View.GONE);
-        }
 
         buttonBonus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MyBottomSheetBonusFragment bottomSheetDialogFragment = new MyBottomSheetBonusFragment(bonus, "marker", api, text_view_cost, "Gallery") ;
+                List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
+                String api =  stringList.get(2);
+                updateAddCost("0");
+                MyBottomSheetBonusFragment bottomSheetDialogFragment = new MyBottomSheetBonusFragment(Long.parseLong(text_view_cost.getText().toString()), "marker", api, text_view_cost) ;
                 bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
             }
         });
@@ -387,9 +277,79 @@ public class GalleryFragment extends Fragment {
 
         return root;
     }
-    private void updateRoutMarker(List<String> settings) {
 
-        Log.d("TAG", "updateRoutMarker: settings - " + settings);
+    @SuppressLint("ResourceAsColor")
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void orderRout() {
+
+        if(connected()) {
+            urlOrder = getTaxiUrlSearchMarkers("orderSearchMarkersVisicom", requireActivity());
+        } else {
+            MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
+            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+            OpenStreetMapActivity.progressBar.setVisibility(View.INVISIBLE);
+        }
+    }
+    private void orderFinished() {
+        try {
+            Map<String, String> sendUrlMap = ToJSONParser.sendURL(urlOrder);
+            Log.d(TAG, "Map sendUrlMap = ToJSONParser.sendURL(urlOrder); " + sendUrlMap);
+
+            String orderWeb = sendUrlMap.get("order_cost");
+
+            assert orderWeb != null;
+            if (!orderWeb.equals("0")) {
+                String to_name;
+                if (Objects.equals(sendUrlMap.get("routefrom"), sendUrlMap.get("routeto"))) {
+                    to_name = getString(R.string.on_city_tv);
+                } else {
+                    if(Objects.equals(sendUrlMap.get("routeto"), "Точка на карте")) {
+                        to_name = requireActivity().getString(R.string.end_point_marker);
+                    } else {
+                        to_name = sendUrlMap.get("routeto") + " " + sendUrlMap.get("to_number");
+                    }
+                }
+                String messageResult = getString(R.string.thanks_message) +
+                        sendUrlMap.get("routefrom") + sendUrlMap.get("routefromnumber") + " " + getString(R.string.to_message) +
+                        to_name + "." +
+                        getString(R.string.call_of_order) + orderWeb + getString(R.string.UAH);
+                String messageFondy = getString(R.string.fondy_message) + " " +
+                        sendUrlMap.get("routefrom") + sendUrlMap.get("routefromnumber") + " " + getString(R.string.to_message) +
+                        to_name + ".";
+
+                Intent intent = new Intent(requireActivity(), FinishActivity.class);
+                intent.putExtra("messageResult_key", messageResult);
+                intent.putExtra("messageFondy_key", messageFondy);
+                intent.putExtra("messageCost_key", orderWeb);
+                intent.putExtra("sendUrlMap", new HashMap<>(sendUrlMap));
+                intent.putExtra("UID_key", Objects.requireNonNull(sendUrlMap.get("dispatching_order_uid")));
+                startActivity(intent);
+            } else {
+                String message = requireActivity().getString(R.string.error_message);
+                MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
+                bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                OpenStreetMapActivity.progressBar.setVisibility(View.INVISIBLE);
+            }
+
+
+        } catch (MalformedURLException ignored) {
+
+        }
+    }
+
+    private void paymentType(String paymentCode) {
+        ContentValues cv = new ContentValues();
+        cv.put("payment_type", paymentCode);
+        // обновляем по id
+        SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        database.update(MainActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
+                new String[] { "1" });
+        database.close();
+    }
+
+     private void updateRoutMarker(List<String> settings) {
+
+        Log.d(TAG, "updateRoutMarker: settings - " + settings);
 
         ContentValues cv = new ContentValues();
 
@@ -397,6 +357,8 @@ public class GalleryFragment extends Fragment {
         cv.put("startLan", Double.parseDouble(settings.get(1)));
         cv.put("to_lat", Double.parseDouble(settings.get(2)));
         cv.put("to_lng", Double.parseDouble(settings.get(3)));
+         cv.put("start", settings.get(4));
+         cv.put("finish", settings.get(5));
 
         // обновляем по id
         SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
@@ -408,24 +370,24 @@ public class GalleryFragment extends Fragment {
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void dialogFromToOneRout(Map <String, String> rout) throws MalformedURLException, InterruptedException, JSONException {
         if(connected()) {
-            Log.d("TAG", "dialogFromToOneRout: " + rout.toString());
+            Log.d(TAG, "dialogFromToOneRout: " + rout.toString());
             from_lat =  Double.valueOf(rout.get("from_lat"));
             from_lng = Double.valueOf(rout.get("from_lng"));
             to_lat = Double.valueOf(rout.get("to_lat"));
             to_lng = Double.valueOf(rout.get("to_lng"));
 
-            Log.d("TAG", "dialogFromToOneRout: from_lat - " + from_lat);
-            Log.d("TAG", "dialogFromToOneRout: from_lng - " + from_lng);
-            Log.d("TAG", "dialogFromToOneRout: to_lat - " + to_lat);
-            Log.d("TAG", "dialogFromToOneRout: to_lng - " + to_lng);
+            Log.d(TAG, "dialogFromToOneRout: from_lat - " + from_lat);
+            Log.d(TAG, "dialogFromToOneRout: from_lng - " + from_lng);
+            Log.d(TAG, "dialogFromToOneRout: to_lat - " + to_lat);
+            Log.d(TAG, "dialogFromToOneRout: to_lng - " + to_lng);
 
             FromAddressString = rout.get("from_street") + rout.get("from_number") ;
-            Log.d("TAG1", "dialogFromToOneRout: FromAddressString" + FromAddressString);
+            Log.d(TAG, "dialogFromToOneRout: FromAddressString" + FromAddressString);
             ToAddressString = rout.get("to_street") + rout.get("to_number");
             if(rout.get("from_street").equals(rout.get("to_street"))) {
                 ToAddressString =  getString(R.string.on_city_tv);;
             }
-            Log.d("TAG", "dialogFromToOneRout: ToAddressString" + ToAddressString);
+            Log.d(TAG, "dialogFromToOneRout: ToAddressString" + ToAddressString);
             List<String> settings = new ArrayList<>();
 
             settings.add(rout.get("from_lat"));
@@ -433,16 +395,32 @@ public class GalleryFragment extends Fragment {
             settings.add(rout.get("to_lat"));
             settings.add(rout.get("to_lng"));
 
+            settings.add(FromAddressString);
+            settings.add(ToAddressString);
+
             updateRoutMarker(settings);
-            String urlCost = getTaxiUrlSearchMarkers("costSearchMarkers", getContext());
+            String urlCost = getTaxiUrlSearchMarkers("costSearchMarkers", requireActivity());
 
             Map<String, String> sendUrlMapCost = ToJSONParser.sendURL(urlCost);
 
-            String message = (String) sendUrlMapCost.get("message");
-            String orderCost = (String) sendUrlMapCost.get("order_cost");
+            String message = requireActivity().getString(R.string.error_message);
+            String orderCost = sendUrlMapCost.get("order_cost");
+            Log.d(TAG, "dialogFromToOneRout:orderCost " + orderCost);
 
 
-            if (orderCost.equals("0")) {
+            if (!orderCost.equals("0")) {
+                String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity()).get(3);
+                long discountInt = Integer.parseInt(discountText);
+                cost = Long.parseLong(orderCost);
+                discount = cost * discountInt / 100;
+
+                cost += discount;
+                updateAddCost(String.valueOf(discount));
+                text_view_cost.setText(String.valueOf(cost));
+
+                costFirstForMin = cost;
+                MIN_COST_VALUE = (long) (cost*0.6);
+            } else {
                 MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
                 bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
 
@@ -453,25 +431,6 @@ public class GalleryFragment extends Fragment {
                 btnAdd.setVisibility(View.INVISIBLE);
                 buttonBonus.setVisibility(View.INVISIBLE);
             }
-            if (!orderCost.equals("0")) {
-
-
-                String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, getContext()).get(3);
-                long discountInt = Integer.parseInt(discountText);
-                long discount;
-                firstCost = Long.parseLong(orderCost);
-                discount = firstCost * discountInt / 100;
-                cost = firstCost + discount;
-                addCost = discount;
-                text_view_cost.setText(String.valueOf(cost));
-//                    addCost = discount;
-                    Log.d("TAG", "dialogFromToOneRout: cost " + cost);
-                    Log.d("TAG", "dialogFromToOneRout: addCost " + addCost);
-                    Log.d("TAG", "dialogFromToOneRout: cost " + cost);
-
-
-
-                }
         } else {
             MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
             bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
@@ -479,8 +438,8 @@ public class GalleryFragment extends Fragment {
     }
     private Map <String, String> routChoice(int i) {
         Map <String, String> rout = new HashMap<>();
-        SQLiteDatabase database = getContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-        Cursor c = database.query(MainActivity.TABLE_ORDERS_INFO, null, null, null, null, null, null);
+        SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        @SuppressLint("Recycle") Cursor c = database.query(MainActivity.TABLE_ORDERS_INFO, null, null, null, null, null, null);
         c.move(i);
         rout.put("id", c.getString(c.getColumnIndexOrThrow ("id")));
         rout.put("from_lat", c.getString(c.getColumnIndexOrThrow ("from_lat")));
@@ -492,14 +451,14 @@ public class GalleryFragment extends Fragment {
         rout.put("to_street", c.getString(c.getColumnIndexOrThrow ("to_street")));
         rout.put("to_number", c.getString(c.getColumnIndexOrThrow ("to_number")));
 
-        Log.d("TAG", "routMaps: " + rout);
+        Log.d(TAG, "routMaps: " + rout);
         return rout;
     }
     private boolean connected() {
 
-        Boolean hasConnect = false;
+        boolean hasConnect = false;
 
-        ConnectivityManager cm = (ConnectivityManager) getActivity().getSystemService(
+        ConnectivityManager cm = (ConnectivityManager) requireActivity().getSystemService(
                 Context.CONNECTIVITY_SERVICE);
         NetworkInfo wifiNetwork = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
         if (wifiNetwork != null && wifiNetwork.isConnected()) {
@@ -517,34 +476,52 @@ public class GalleryFragment extends Fragment {
         return hasConnect;
     }
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private String getTaxiUrlSearchMarkers(String urlAPI, Context context) {
+    @SuppressLint("Range")
+    public String getTaxiUrlSearchMarkers(String urlAPI, Context context) {
+        Log.d(TAG, "getTaxiUrlSearchMarkers: " + urlAPI);
 
-        List<String> stringListRout = logCursor(MainActivity.ROUT_MARKER, context);
-        Log.d("TAG", "getTaxiUrlSearch: stringListRout" + stringListRout);
+        String query = "SELECT * FROM " + MainActivity.ROUT_MARKER + " LIMIT 1";
+        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        Cursor cursor = database.rawQuery(query, null);
 
-        double originLatitude = Double.parseDouble(stringListRout.get(1));
-        double originLongitude = Double.parseDouble(stringListRout.get(2));
-        double toLatitude = Double.parseDouble(stringListRout.get(3));
-        double toLongitude = Double.parseDouble(stringListRout.get(4));
+        cursor.moveToFirst();
 
+        // Получите значения полей из первой записи
 
+        double originLatitude = cursor.getDouble(cursor.getColumnIndex("startLat"));
+        double originLongitude = cursor.getDouble(cursor.getColumnIndex("startLan"));
+        double toLatitude = cursor.getDouble(cursor.getColumnIndex("to_lat"));
+        double toLongitude = cursor.getDouble(cursor.getColumnIndex("to_lng"));
+        String start = cursor.getString(cursor.getColumnIndex("start"));
+        String finish = cursor.getString(cursor.getColumnIndex("finish"));
+
+        // Заменяем символ '/' в строках
+        start = start.replace("/", "|");
+        finish = finish.replace("/", "|");
+
+        // Origin of route
+        String str_origin = originLatitude + "/" + originLongitude;
+
+        // Destination of route
+        String str_dest = toLatitude + "/" + toLongitude;
+
+        cursor.close();
+
+        List<String> listCity = logCursor(MainActivity.CITY_INFO, requireActivity());
+        String city = listCity.get(1);
+        String api = listCity.get(2);
 
         List<String> stringList = logCursor(MainActivity.TABLE_ADD_SERVICE_INFO, context);
         String time = stringList.get(1);
         String comment = stringList.get(2);
         String date = stringList.get(3);
 
-        // Origin of route
-        String str_origin = String.valueOf(originLatitude) + "/" + String.valueOf(originLongitude);
-
-        // Destination of route
-        String str_dest = toLatitude + "/" + toLongitude;
-
-        //        Cursor cursorDb = MainActivity.database.query(MainActivity.TABLE_SETTINGS_INFO, null, null, null, null, null, null);
-        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-        String tarif = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(2);
 
 
+        List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, context);
+        String tarif =  stringListInfo.get(2);
+        String payment_type = stringListInfo.get(4);
+        String addCost = stringListInfo.get(5);
         // Building the parameters to the web service
 
         String parameters = null;
@@ -559,16 +536,16 @@ public class GalleryFragment extends Fragment {
                 phoneNumber = logCursor(MainActivity.TABLE_USER_INFO, context).get(2);
                 c.close();
             }
-
             parameters = str_origin + "/" + str_dest + "/" + tarif + "/" + phoneNumber + "/"
-                    + displayName + "*" + userEmail  + "*" + MainActivity.bonusPayment;
+                    + displayName + "*" + userEmail  + "*" + payment_type;
         }
-        if(urlAPI.equals("orderSearchMarkers")) {
+        if(urlAPI.equals("orderSearchMarkersVisicom")) {
             phoneNumber = logCursor(MainActivity.TABLE_USER_INFO, context).get(2);
 
 
             parameters = str_origin + "/" + str_dest + "/" + tarif + "/" + phoneNumber + "/"
-                    + displayName + "*" + userEmail  + "*" + MainActivity.bonusPayment + "/" + addCost + "/" + time + "/" + comment + "/" + date;
+                    + displayName + "*" + userEmail  + "*" + payment_type + "/" + addCost + "/"
+                    + time + "/" + comment + "/" + date+ "/" + start + "/" + finish;
 
             ContentValues cv = new ContentValues();
 
@@ -605,39 +582,81 @@ public class GalleryFragment extends Fragment {
                 }
             }
             result = String.join("*", servicesChecked);
-            Log.d("TAG", "getTaxiUrlSearchGeo result:" + result + "/");
+            Log.d(TAG, "getTaxiUrlSearchGeo result:" + result + "/");
         } else {
             result = "no_extra_charge_codes";
         }
 
-        String url = "https://m.easy-order-taxi.site/" + api + "/android/" + urlAPI + "/" + parameters + "/" + result;
-
+        String url = "https://m.easy-order-taxi.site/" + api + "/android/" + urlAPI + "/"
+                + parameters + "/" + result + "/" + city  + "/" + context.getString(R.string.application);
+        Log.d(TAG, "getTaxiUrlSearchMarkers: " + url);
 
         database.close();
-
 
         return url;
-
     }
-    private boolean verifyOrder(Context context) {
-        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-        Cursor cursor = database.query(MainActivity.TABLE_USER_INFO, null, null, null, null, null, null);
 
-        boolean verify = true;
-        if (cursor.getCount() == 1) {
+    private void changePayMethodMax(String textCost, String paymentType) {
+        List<String> stringListCity = logCursor(MainActivity.CITY_INFO, requireActivity());
+        String card_max_pay =  stringListCity.get(4);
+        String bonus_max_pay =  stringListCity.get(5);
 
-            if (logCursor(MainActivity.TABLE_USER_INFO, context).get(1).equals("0")) {
-                verify = false;Log.d("TAG", "verifyOrder:verify " +verify);
+        // Инфлейтим макет для кастомного диалога
+        LayoutInflater inflater = LayoutInflater.from(requireActivity());
+        View dialogView = inflater.inflate(R.layout.custom_dialog_layout, null);
+
+        AlertDialog alertDialog = new AlertDialog.Builder(requireActivity()).create();
+        alertDialog.setView(dialogView);
+        alertDialog.setCancelable(false);
+        // Настраиваем элементы макета
+
+
+        TextView messageTextView = dialogView.findViewById(R.id.dialog_message);
+        messageTextView.setText(R.string.max_limit_message);
+
+        Button okButton = dialogView.findViewById(R.id.dialog_ok_button);
+        okButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                switch (paymentType) {
+                    case "bonus_payment":
+                        if (Long.parseLong(bonus_max_pay) <= Long.parseLong(textCost) * 100) {
+                            paymentType("nal_payment");
+                        }
+                        break;
+                    case "card_payment":
+                    case "fondy_payment":
+                    case "mono_payment":
+                        if (Long.parseLong(card_max_pay) <= Long.parseLong(textCost)) {
+                            paymentType("nal_payment");
+                        }
+                        break;
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    orderRout();
+                }
+                orderFinished();
+                progressbar.setVisibility(View.GONE);
+                alertDialog.dismiss();
             }
-            cursor.close();
-        }
-        database.close();
-        return verify;
+        });
+
+        Button cancelButton = dialogView.findViewById(R.id.dialog_cancel_button);
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                progressbar.setVisibility(View.GONE);
+                alertDialog.dismiss();
+            }
+        });
+        alertDialog.show();
     }
+
+
     @SuppressLint("Range")
     public List<String> logCursor(String table, Context context) {
         List<String> list = new ArrayList<>();
-        SQLiteDatabase database = getActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
         Cursor c = database.query(table, null, null, null, null, null, null);
         if (c != null) {
             if (c.moveToFirst()) {
@@ -657,7 +676,7 @@ public class GalleryFragment extends Fragment {
         return list;
     }
     private void reIndexOrders() {
-        SQLiteDatabase database = getActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
         database.execSQL("CREATE TABLE  temp_table" + "(id integer primary key autoincrement," +
                 " from_street text," +
                 " from_number text," +
@@ -709,7 +728,7 @@ public class GalleryFragment extends Fragment {
             int i = position + 1;
 
             String deleteQuery = "DELETE FROM " + MainActivity.TABLE_ORDERS_INFO + " WHERE id = " + i  + ";";
-            SQLiteDatabase database = getActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+            SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
 
             database.execSQL(deleteQuery);
             database.close();
@@ -717,11 +736,11 @@ public class GalleryFragment extends Fragment {
         reIndexOrders();
         array = arrayToRoutsAdapter();
         if (array != null) {
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(), R.layout.services_adapter_layout, array);
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireActivity(), R.layout.services_adapter_layout, array);
             listView.setAdapter(adapter);
         } else {
             // Если массив пустой, отобразите текст "no_routs" вместо списка
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(), R.layout.services_adapter_layout, new String[]{});
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireActivity(), R.layout.services_adapter_layout, new String[]{});
             listView.setAdapter(adapter);
             textView.setText(R.string.no_routs);
 
@@ -745,7 +764,7 @@ public class GalleryFragment extends Fragment {
 
     }
     private String[] arrayToRoutsAdapter() {
-        ArrayList<Map> routMaps = routMaps(getContext());
+        ArrayList<Map> routMaps = routMaps(requireActivity());
         String[] arrayRouts;
         if(routMaps.size() != 0) {
             arrayRouts = new String[routMaps.size()];
@@ -769,14 +788,14 @@ public class GalleryFragment extends Fragment {
                     if (!routMaps.get(i).get("from_street").toString().equals(routMaps.get(i).get("from_number").toString())) {
 
 
-                        Log.d("TAG", "arrayToRoutsAdapter:   routMaps.get(i).get(\"from_street\").toString()" +  routMaps.get(i).get("from_street").toString());
+                        Log.d(TAG, "arrayToRoutsAdapter:   routMaps.get(i).get(\"from_street\").toString()" +  routMaps.get(i).get("from_street").toString());
 
                         arrayRouts[i] = from_mes + " " +
                                 routMaps.get(i).get("from_number").toString() + " -> " +
                                 to_mes + " " +
                                 routMaps.get(i).get("to_number").toString();
                     } else if(!routMaps.get(i).get("to_street").toString().equals(routMaps.get(i).get("to_number").toString())) {
-                        Log.d("TAG", "arrayToRoutsAdapter:   routMaps.get(i).get(\"from_street\").toString()" +  routMaps.get(i).get("from_street").toString());
+                        Log.d(TAG, "arrayToRoutsAdapter:   routMaps.get(i).get(\"from_street\").toString()" +  routMaps.get(i).get("from_street").toString());
 
                         arrayRouts[i] = routMaps.get(i).get("from_street").toString() +
                                 getString(R.string.to_message) +
@@ -784,7 +803,7 @@ public class GalleryFragment extends Fragment {
                                 routMaps.get(i).get("to_number").toString();
                     } else {
 
-                        Log.d("TAG", "arrayToRoutsAdapter:   routMaps.get(i).get(\"from_street\").toString()" +  routMaps.get(i).get("from_street").toString());
+                        Log.d(TAG, "arrayToRoutsAdapter:   routMaps.get(i).get(\"from_street\").toString()" +  routMaps.get(i).get("from_street").toString());
 
                         arrayRouts[i] = from_mes + " " +
                                 getString(R.string.to_message) +
@@ -794,7 +813,7 @@ public class GalleryFragment extends Fragment {
 
                 } else {
 
-                    Log.d("TAG", "arrayToRoutsAdapter:   routMaps.get(i).get(\"from_street\").toString()" +  routMaps.get(i).get("from_street").toString());
+                    Log.d(TAG, "arrayToRoutsAdapter:   routMaps.get(i).get(\"from_street\").toString()" +  routMaps.get(i).get("from_street").toString());
 
                     arrayRouts[i] = from_mes + " " +
                             routMaps.get(i).get("from_number").toString() + " -> " +
@@ -827,12 +846,42 @@ public class GalleryFragment extends Fragment {
             }
         }
         database.close();
-        Log.d("TAG", "routMaps: " + routsArr);
+        Log.d(TAG, "routMaps: 1111 " + routsArr);
         return routsArr;
+    }
+
+    private void updateAddCost(String addCost) {
+        ContentValues cv = new ContentValues();
+        Log.d(TAG, "updateAddCost: addCost" + addCost);
+        cv.put("addCost", addCost);
+
+        // обновляем по id
+        SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        database.update(MainActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
+                new String[] { "1" });
+        database.close();
     }
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume: selectedItem " + selectedItem);
+        listView.clearChoices();
+        listView.requestLayout(); // Обновляем визуальное состояние списка
+        if (listAdapter != null) {
+            listAdapter.notifyDataSetChanged(); // Обновляем адаптер
+        }
+        del_but.setVisibility(View.INVISIBLE);
+        text_view_cost.setVisibility(View.INVISIBLE);
+        btnRouts.setVisibility(View.INVISIBLE);
+        btn_minus.setVisibility(View.INVISIBLE);
+        btn_plus.setVisibility(View.INVISIBLE);
+        btnAdd.setVisibility(View.INVISIBLE);
+        buttonBonus.setVisibility(View.INVISIBLE);
     }
 }

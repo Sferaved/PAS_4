@@ -49,34 +49,19 @@ public class MyBottomSheetErrorFragment extends BottomSheetDialogFragment {
             public void onClick(View v) {
                 List<String> stringList = logCursor(MainActivity.CITY_INFO, getContext());
                 Intent intent = new Intent(Intent.ACTION_DIAL);
-                String phone;
-                switch (stringList.get(1)){
-                    case "Kyiv City":
-                        phone = "tel:0674443804";
-                        break;
-                    case "Dnipropetrovsk Oblast":
-                        phone = "tel:0667257070";
-                        break;
-                    case "Odessa":
-                        phone = "tel:0737257070";
-                        break;
-                    case "Zaporizhzhia":
-                        phone = "tel:0687257070";
-                        break;
-                    case "Cherkasy Oblast":
-                        phone = "tel:0962294243";
-                        break;
-                    default:
-                        phone = "tel:0674443804";
-                        break;
-                }
+                String phone = stringList.get(3);
+
                 intent.setData(Uri.parse(phone));
                 startActivity(intent);
             }
         });
         textViewInfo = view.findViewById(R.id.textViewInfo);
-        textViewInfo.setText(errorMessage);
 
+        if(!errorMessage.equals("null")) {
+            textViewInfo.setText(errorMessage);
+        } else {
+            textViewInfo.setText(getString(R.string.error_message));
+        }
         return view;
     }
 
@@ -100,13 +85,14 @@ public class MyBottomSheetErrorFragment extends BottomSheetDialogFragment {
             }
         }
         database.close();
+        assert c != null;
+        c.close();
         return list;
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        HomeFragment.progressBar.setVisibility(View.INVISIBLE);
     }
 }
 

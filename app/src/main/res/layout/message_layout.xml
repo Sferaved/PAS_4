@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#434C5E">
+    android:background="@color/background_color_new">
 
 
     <TextView
@@ -13,8 +13,8 @@
         android:layout_height="wrap_content"
         android:background="@drawable/input"
         android:ellipsize="end"
-        android:textColor="@color/white"
         android:ems="10"
+        android:textColor="@color/white"
         android:fontFamily="@font/regular"
         android:gravity="center"
         android:textSize="16sp"

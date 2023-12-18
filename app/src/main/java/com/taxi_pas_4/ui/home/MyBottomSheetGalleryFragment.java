@@ -402,51 +402,57 @@ public class MyBottomSheetGalleryFragment extends BottomSheetDialogFragment {
 
         Map<String, String> sendUrl = ToJSONParser.sendURL(url);
 
-        String mes = (String) sendUrl.get("message");
-        String orderC = (String) sendUrl.get("order_cost");
+        String message = requireActivity().getString(R.string.error_message);
+        String orderC = sendUrl.get("order_cost");
 
         if (orderC.equals("0")) {
-            MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(mes);
+            MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
             bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
         }
         if (!orderC.equals("0")) {
 
-            Long  firstCost = Long.parseLong(orderC);
+            long firstCost = Long.parseLong(orderC);
 
             String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, getContext()).get(3);
             long discountInt = Integer.parseInt(discountText);
-            long discount;
+            long discount = firstCost * discountInt / 100;
 
-            discount = firstCost * discountInt / 100;
-            newCost = Long.toString(firstCost + discount);
+            updateAddCost(String.valueOf(discount));
 
-            GalleryFragment.cost = firstCost + discount;
-            GalleryFragment.addCost = discount;
+            newCost = String.valueOf(firstCost + discount);
         }
 
 
         return newCost;
+    }
+    private void updateAddCost(String addCost) {
+        ContentValues cv = new ContentValues();
+        Log.d("TAG", "updateAddCost: addCost" + addCost);
+        cv.put("addCost", addCost);
+
+        // обновляем по id
+        SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        database.update(MainActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
+                new String[] { "1" });
+        database.close();
     }
     private String getTaxiUrlSearchMarkers(double originLatitude, double originLongitude,
                                            double toLatitude, double toLongitude,
                                            String urlAPI, Context context) {
         //  Проверка даты и времени
 
-        List<String> stringList = logCursor(MainActivity.TABLE_ADD_SERVICE_INFO, context);
-        String time = stringList.get(1);
-        String comment = stringList.get(2);
-        String date = stringList.get(3);
-
-        // Origin of route
-        String str_origin = String.valueOf(originLatitude) + "/" + String.valueOf(originLongitude);
+               // Origin of route
+        String str_origin = originLatitude + "/" + originLongitude;
 
         // Destination of route
-        String str_dest = String.valueOf(toLatitude) + "/" + String.valueOf(toLongitude);
+        String str_dest = toLatitude + "/" + toLongitude;
 
 //        Cursor cursorDb = MainActivity.database.query(MainActivity.TABLE_SETTINGS_INFO, null, null, null, null, null, null);
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-        String tarif = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(2);
 
+        List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, context);
+        String tarif =  stringListInfo.get(2);
+        String payment_type =  stringListInfo.get(4);
 
         // Building the parameters to the web service
 
@@ -464,7 +470,7 @@ public class MyBottomSheetGalleryFragment extends BottomSheetDialogFragment {
                 c.close();
             }
             parameters = str_origin + "/" + str_dest + "/" + tarif + "/" + phoneNumber + "/"
-                    + displayName + "*" + userEmail  + "*" + MainActivity.bonusPayment;
+                    + displayName + "*" + userEmail  + "*" + payment_type;
         }
 
 
@@ -495,8 +501,11 @@ public class MyBottomSheetGalleryFragment extends BottomSheetDialogFragment {
         } else {
             result = "no_extra_charge_codes";
         }
-
-        String url = "https://m.easy-order-taxi.site/" + GalleryFragment.api + "/android/" + urlAPI + "/" + parameters + "/" + result;
+        List<String> listCity = logCursor(MainActivity.CITY_INFO, requireActivity());
+        String city = listCity.get(1);
+        String api = listCity.get(2);
+        String url = "https://m.easy-order-taxi.site/" + api + "/android/" + urlAPI + "/"
+                + parameters + "/" + result + "/" + city  + "/" + context.getString(R.string.application);
 
         Log.d("TAG", "getTaxiUrlSearch: " + url);
         database.close();
