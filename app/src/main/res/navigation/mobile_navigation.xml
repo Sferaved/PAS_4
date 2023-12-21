@@ -28,14 +28,19 @@
         android:label="@string/uid_menu"
         tools:layout="@layout/fragment_uid" />
     <fragment
-        android:id="@+id/nav_bonus"
-        android:name="com.taxi_pas_4.ui.bonus.BonusFragment"
-        android:label="@string/my_bonus_menu"
-        tools:layout="@layout/fragment_bonus" />
+        android:id="@+id/nav_card"
+        android:name="com.taxi_pas_4.ui.card.CardFragment"
+        android:label="@string/my_card_pay"
+        tools:layout="@layout/fragment_card" />
 
     <fragment
         android:id="@+id/nav_about"
         android:name="com.taxi_pas_4.ui.about.AboutFragment"
-        android:label="@string/menu_about"
+        android:label="@string/conf"
+        tools:layout="@layout/fragment_about" />
+    <fragment
+        android:id="@+id/nav_author"
+        android:name="com.taxi_pas_4.ui.author.AuthorFragment"
+        android:label="@string/author_about"
         tools:layout="@layout/fragment_about" />
 </navigation>

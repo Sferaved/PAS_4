@@ -211,8 +211,6 @@ public class VisicomFragment extends Fragment  implements ApiCallback{
         btn_minus.setOnClickListener(v -> {
             List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity());
             addCost = Long.parseLong(stringListInfo.get(5));
-            Log.d(TAG, "startCost: firstCost " + firstCost);
-            firstCost = Long.parseLong(text_view_cost.getText().toString());
             firstCost -= 5;
             addCost -= 5;
             if (firstCost <= MIN_COST_VALUE) {
@@ -220,19 +218,17 @@ public class VisicomFragment extends Fragment  implements ApiCallback{
                 addCost = MIN_COST_VALUE - firstCostForMin;
             }
             updateAddCost(String.valueOf(addCost));
-            Log.d(TAG, "startCost: addCost " + addCost);
+            Log.d("TAG", "startCost: addCost " + addCost);
             text_view_cost.setText(String.valueOf(firstCost));
         });
 
         btn_plus.setOnClickListener(v -> {
             List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity());
             addCost = Long.parseLong(stringListInfo.get(5));
-            firstCost = Long.parseLong(text_view_cost.getText().toString());
-            Log.d(TAG, "startCost: firstCost " + firstCost);
             firstCost += 5;
             addCost += 5;
             updateAddCost(String.valueOf(addCost));
-            Log.d(TAG, "startCost: addCost " + addCost);
+            Log.d("TAG", "startCost: addCost " + addCost);
             text_view_cost.setText(String.valueOf(firstCost));
         });
         btnOrder.setOnClickListener(new View.OnClickListener() {

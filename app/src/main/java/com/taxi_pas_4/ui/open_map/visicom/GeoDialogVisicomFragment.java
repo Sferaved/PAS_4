@@ -271,7 +271,6 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
         btn_minus.setOnClickListener(v -> {
             List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity());
             addCost = Long.parseLong(stringListInfo.get(5));
-            firstCost = Long.parseLong(text_view_cost.getText().toString());
             firstCost -= 5;
             addCost -= 5;
             if (firstCost <= MIN_COST_VALUE) {
@@ -286,7 +285,6 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
         btn_plus.setOnClickListener(v -> {
             List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity());
             addCost = Long.parseLong(stringListInfo.get(5));
-            firstCost = Long.parseLong(text_view_cost.getText().toString());
             firstCost += 5;
             addCost += 5;
             updateAddCost(String.valueOf(addCost));

@@ -417,7 +417,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
                         if (!orderCost.equals("0")) {
                             String costUpdate;
                             String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO).get(3);
-                            long discountInt = Long.parseLong(discountText);
+                            long discountInt = Integer.parseInt(discountText);
                             long discount;
                             long firstCost = Long.parseLong(orderCost);
                             discount = firstCost * discountInt / 100;
