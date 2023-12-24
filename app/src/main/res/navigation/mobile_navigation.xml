@@ -27,6 +27,13 @@
         android:name="com.taxi_pas_4.ui.uid.UIDFragment"
         android:label="@string/uid_menu"
         tools:layout="@layout/fragment_uid" />
+
+    <fragment
+        android:id="@+id/nav_bonus"
+        android:name="com.taxi_pas_4.ui.bonus.BonusFragment"
+        android:label="@string/my_bonus_menu"
+        tools:layout="@layout/fragment_bonus" />
+
     <fragment
         android:id="@+id/nav_card"
         android:name="com.taxi_pas_4.ui.card.CardFragment"
