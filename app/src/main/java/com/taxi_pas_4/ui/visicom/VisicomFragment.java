@@ -209,27 +209,26 @@ public class VisicomFragment extends Fragment  implements ApiCallback{
         });
 
         btn_minus.setOnClickListener(v -> {
-            List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity());
-            addCost = Long.parseLong(stringListInfo.get(5));
-            firstCost -= 5;
-            addCost -= 5;
-            if (firstCost <= MIN_COST_VALUE) {
-                firstCost = MIN_COST_VALUE;
-                addCost = MIN_COST_VALUE - firstCostForMin;
+            if (cost >= MIN_COST_VALUE) {
+                List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity());
+                addCost = Long.parseLong(stringListInfo.get(5));
+                cost = Long.parseLong(text_view_cost.getText().toString());
+                cost -= 5;
+                addCost -= 5;
+
+                updateAddCost(String.valueOf(addCost));
+                text_view_cost.setText(String.valueOf(cost));
             }
-            updateAddCost(String.valueOf(addCost));
-            Log.d("TAG", "startCost: addCost " + addCost);
-            text_view_cost.setText(String.valueOf(firstCost));
         });
 
         btn_plus.setOnClickListener(v -> {
             List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity());
             addCost = Long.parseLong(stringListInfo.get(5));
-            firstCost += 5;
+            cost = Long.parseLong(text_view_cost.getText().toString());
+            cost += 5;
             addCost += 5;
             updateAddCost(String.valueOf(addCost));
-            Log.d("TAG", "startCost: addCost " + addCost);
-            text_view_cost.setText(String.valueOf(firstCost));
+            text_view_cost.setText(String.valueOf(cost));
         });
         btnOrder.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -443,11 +442,11 @@ public class VisicomFragment extends Fragment  implements ApiCallback{
                             String result = status.getResponse();
                             Log.d("TAG", "onResponse:result " + result);
                             MyBottomSheetCityFragment bottomSheetDialogFragment = new MyBottomSheetCityFragment(result);
-                            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                            bottomSheetDialogFragment.show(getParentFragmentManager(), bottomSheetDialogFragment.getTag());
                         }
                     } else {
                         MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
-                        bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                        bottomSheetDialogFragment.show(getParentFragmentManager(), bottomSheetDialogFragment.getTag());
                     }
                 }
 
@@ -749,7 +748,8 @@ public class VisicomFragment extends Fragment  implements ApiCallback{
         boolean verify = true;
         if (cursor.getCount() == 1) {
 
-            if (logCursor(MainActivity.TABLE_USER_INFO, context).get(2).equals("+380")) {
+            if (logCursor(MainActivity.TABLE_USER_INFO, context).get(2).equals("+380") ||
+                !MainActivity.verifyPhone) {
                 verify = false;
             }
             cursor.close();
