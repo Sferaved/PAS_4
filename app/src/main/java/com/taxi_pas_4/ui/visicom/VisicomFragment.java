@@ -1226,7 +1226,15 @@ public class VisicomFragment extends Fragment{
         assert orderCost != null;
         if (orderCost.equals("0")) {
             MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
-            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+
+        // Проверяем, что активность не в состоянии сохранения
+            if (!requireActivity().isFinishing() && !requireActivity().isDestroyed()) {
+                // Проверяем, что фрагмент готов к выполнению транзакции
+                if (!getChildFragmentManager().isStateSaved()) {
+                    bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                }
+            }
+
         } else {
             Log.d(TAG, "visicomCost: ++++");
             String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireContext()).get(3);
@@ -1246,13 +1254,7 @@ public class VisicomFragment extends Fragment{
 
                 geoText.setVisibility(View.VISIBLE);
                 progressBar.setVisibility(View.INVISIBLE);
-//                if (MainActivity.countryState != null) {
-//                    Log.d(TAG, "visicomCost: MainActivity.countryState " + MainActivity.countryState);
-//                    btn_clear_from.setVisibility(View.VISIBLE);
-//                    btn_clear_to.setVisibility(View.VISIBLE);
-//                } else {
-//                    Log.d(TAG, "visicomCost: MainActivity.countryState is null");
-//                }
+
                 btn_clear_from.setVisibility(View.VISIBLE);
                 btn_clear_to.setVisibility(View.VISIBLE);
 

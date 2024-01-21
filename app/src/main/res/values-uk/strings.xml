@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.049</string>
-    <string name="version">Версія: 4.049</string>
+    <string name="version_code">4.050</string>
+    <string name="version">Версія: 4.050</string>
 
     <string name="app_name">Таксі Дюк Попутник</string>
     <string name="back4app_server_url">https://parseapi.back4app.com/</string>
