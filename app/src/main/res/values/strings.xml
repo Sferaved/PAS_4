@@ -1,8 +1,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.048</string>
-    <string name="version">Версия: 4.048</string>
+    <string name="version_code">4.049</string>
+    <string name="version">Версия: 4.049</string>
 
     <string name="app_name">Такси Дюк Попутчик</string>
 
@@ -317,6 +317,6 @@
     <string name="pay_cancel">Поездка отменена  через отсутствие оплаты. Попробуйте еще.</string>
     <string name="ex_st_canceled">Заказ снят. Поробуйте еще.</string>
     <string name="search">Поиск адреса ...</string>
-    <string name="account_verify">Идет проверка аккунта...</string>
+    <string name="account_verify">Идет проверка регистрации...</string>
     <string name="city_search">Определяется Ваше местоположение...</string>
 </resources>
