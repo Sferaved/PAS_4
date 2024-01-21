@@ -1,8 +1,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.045</string>
-    <string name="version">Версия: 4.045</string>
+    <string name="version_code">4.046</string>
+    <string name="version">Версия: 4.046</string>
 
     <string name="app_name">Такси Дюк Попутчик</string>
 
@@ -97,7 +97,7 @@
     <string name="address_error_message">Ошибка ввода адреса</string>
 
     <string name="BAGGAGE">Загрузка салона</string>
-    <string name="ANIMAL">Животное</string>,
+    <string name="ANIMAL">Животное</string>
     <string name="CONDIT">Кондиционер</string>
     <string name="MEET">Встреча с табличкой</string>
     <string name="COURIER">Курьер. доставка</string>
@@ -291,12 +291,12 @@
     <string name="search_text">Поиск адреса</string>
     <string name="drag_marker">Для уточнения местоположения передвигайте маркер</string>
     <string name="drag_marker_bottom">Нажмите на маркер и переместите его для уточнения местоположения</string>
-    <string name="menu_city">Заказ г.</string>
-    <string name="city_kyiv">Киев и области</string>
-    <string name="city_dnipro">Днепр</string>
-    <string name="city_odessa">Одесса</string>
-    <string name="city_zaporizhzhia">Запорожье</string>
-    <string name="city_cherkasy">Черкассы</string>
+    <string name="menu_city">Заказ </string>
+    <string name="city_kyiv">г.Киев и области</string>
+    <string name="city_dnipro">г.Днепр</string>
+    <string name="city_odessa">г.Одесса</string>
+    <string name="city_zaporizhzhia">г.Запорожье</string>
+    <string name="city_cherkasy"> г.Черкассы</string>
     <string name="tail1">Карты для города \'</string>
     <string name="tail2">\' успешно загружены</string>
     <string name="rout_fin">Выбирите из списка номер дома</string>
@@ -310,4 +310,11 @@
     <string name="my_name">Андрей Коржов</string>
     <string name="conf">Конфеденциальность</string>
     <string name="author_about">Об авторе</string>
+    <string name="foreign_countries">другое</string>
+    <string name="order_in">"заказ в "</string>
+    <string name="checking">Ожидайте, идет проверка данных ...</string>
+    <string name="time_out_text">Отмена поездки по таймауту оплаты. Попробуйте еще.</string>
+    <string name="pay_cancel">Поездка отменена  через отсутствие оплаты. Попробуйте еще.</string>
+    <string name="ex_st_canceled">Заказ снят. Поробуйте еще.</string>
+    <string name="search">Поиск адреса ...</string>
 </resources>

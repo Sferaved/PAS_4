@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.045</string>
-    <string name="version">Версія: 4.045</string>
+    <string name="version_code">4.046</string>
+    <string name="version">Версія: 4.046</string>
 
     <string name="app_name">Таксі Дюк Попутник</string>
     <string name="back4app_server_url">https://parseapi.back4app.com/</string>
@@ -98,7 +98,7 @@
     <string name="address_error_message">Помилка введення адреси</string>
 
     <string name="BAGGAGE">Завантаження салону</string>
-    <string name="ANIMAL">Тварина</string>,
+    <string name="ANIMAL">Тварина</string>
     <string name="CONDIT">Кондиціонер</string>
     <string name="MEET">Зустріч з табличкою</string>
     <string name="COURIER">Кур\'єр. доставка</string>
@@ -292,12 +292,12 @@
     <string name="search_text">Пошук адреси</string>
     <string name="drag_marker">Для уточнення місцезнаходження пересувайте маркер</string>
     <string name="drag_marker_bottom">Натисніть на маркер та перемістіть його для уточнення розташування</string>
-    <string name="menu_city">Заказ м.</string>
-    <string name="city_kyiv">Київ та область</string>
-    <string name="city_dnipro">Дніпро</string>
-    <string name="city_odessa">Одеса</string>
-    <string name="city_zaporizhzhia">Запоріжжя</string>
-    <string name="city_cherkasy">Черкаси</string>
+    <string name="menu_city">Заказ </string>
+    <string name="city_kyiv">м.Київ та область</string>
+    <string name="city_dnipro">м.Дніпро</string>
+    <string name="city_odessa">м.Одеса</string>
+    <string name="city_zaporizhzhia">м.Запоріжжя</string>
+    <string name="city_cherkasy">м.Черкаси</string>
     <string name="tail1">Карти для міста \'</string>
     <string name="tail2">\' успішно завантажено</string>
     <string name="rout_fin">Виберіть із списку номер будинку</string>
@@ -311,4 +311,11 @@
     <string name="my_name">Андрій Коржов</string>
     <string name="conf">Конфіденційність</string>
     <string name="author_about">Про автора</string>
+    <string name="foreign_countries">інше</string>
+    <string name="order_in">"заказ в "</string>
+    <string name="checking">Чекайте, йде перевірка даних.</string>
+    <string name="time_out_text">Скасування поїздки по таймауту оплати. Спробуйте ще.</string>
+    <string name="pay_cancel">Поїздку скасовано через відсутність оплати. Спробуйте ще.</string>
+    <string name="ex_st_canceled">Заказ скасовано. Спробуйте ще.</string>
+    <string name="search">Пошук адреси...</string>
 </resources>

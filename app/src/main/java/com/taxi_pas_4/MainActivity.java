@@ -23,6 +23,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -39,6 +40,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -58,20 +61,27 @@ import com.taxi_pas_4.cities.api.CityResponseMerchantFondy;
 import com.taxi_pas_4.cities.api.CityService;
 import com.taxi_pas_4.databinding.ActivityMainBinding;
 import com.taxi_pas_4.ui.card.CardInfo;
+import com.taxi_pas_4.ui.finish.ApiClient;
+import com.taxi_pas_4.ui.finish.ApiService;
+import com.taxi_pas_4.ui.finish.City;
 import com.taxi_pas_4.ui.fondy.callback.CallbackResponse;
 import com.taxi_pas_4.ui.fondy.callback.CallbackService;
 import com.taxi_pas_4.ui.home.HomeFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetCityFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetGPSFragment;
-import com.taxi_pas_4.ui.home.MyBottomSheetMessageFragment;
 import com.taxi_pas_4.ui.maps.CostJSONParser;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
+import com.taxi_pas_4.utils.ip.ApiServiceCountry;
+import com.taxi_pas_4.utils.ip.CountryResponse;
+import com.taxi_pas_4.utils.ip.IPUtil;
+import com.taxi_pas_4.utils.ip.RetrofitClient;
 import com.taxi_pas_4.utils.phone.ApiClientPhone;
+import com.taxi_pas_4.utils.user.ApiServiceUser;
+import com.taxi_pas_4.utils.user.UserResponse;
 
 import org.json.JSONException;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -97,14 +107,12 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements VisicomFragment.AutoClickListener{
     private static final String TAG = "TAG_MAIN";
     public static String order_id;
     public static String invoiceId;
 
-
-
-    public static final String DB_NAME = "data_28122023_0";
+    public static final String DB_NAME = "data_12012024_2";
 
     /**
      * Table section
@@ -140,6 +148,10 @@ public class MainActivity extends AppCompatActivity {
     public static SQLiteDatabase database;
     public static Menu navMenu;
     public static MenuItem navVisicomMenuItem;
+    public static String countryState;
+    private static String verifyInternet;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -169,59 +181,17 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
         networkChangeReceiver = new NetworkChangeReceiver();
+        verifyInternet = getString(R.string.verify_internet);
 
+// Initialize VisicomFragment and set AutoClickListener
+        VisicomFragment visicomFragment = new VisicomFragment();
+        visicomFragment.setAutoClickListener(this); // "this" refers to the MainActivity
 
     }
     @Override
     protected void onResume() {
         super.onResume();
-         // Получаем путь к базе данных
-        String dbPath = getDatabasePath(MainActivity.DB_NAME).getAbsolutePath();
-        File dbFile = new File(dbPath);
-        // Проверяем существование файла базы данных
-        if (dbFile.exists()) {
-            SQLiteDatabase database = openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-
-            Cursor c = database.query(CITY_INFO, null, null, null, null, null, null);
-            if(c.getCount() != 0) {
-                List<String> listCity = logCursor(CITY_INFO);
-                String city = listCity.get(1);
-
-                String cityMenu;
-                switch (city) {
-                    case "Dnipropetrovsk Oblast":
-                        cityMenu = getString(R.string.city_dnipro);
-                        break;
-                    case "Odessa":
-                        cityMenu = getString(R.string.city_odessa);
-                        break;
-                    case "Zaporizhzhia":
-                        cityMenu = getString(R.string.city_zaporizhzhia);
-                        break;
-                    case "Cherkasy Oblast":
-                        cityMenu = getString(R.string.city_cherkasy);
-                        break;
-                    case "OdessaTest":
-                        cityMenu = "Test";
-                        break;
-                    default:
-                        cityMenu = getString(R.string.city_kyiv);
-                }
-
-
-                if (MainActivity.navVisicomMenuItem != null) {
-                    // Новый текст элемента меню
-                    String newTitle =  getString(R.string.menu_city) + " " + cityMenu;
-
-                    // Изменяем текст элемента меню
-                    MainActivity.navVisicomMenuItem.setTitle(newTitle);
-                }
-            }
-
-            database.close();
-        }
-
-    }
+   }
     @Override
     protected void onRestart() {
         super.onRestart();
@@ -612,12 +582,14 @@ public class MainActivity extends AppCompatActivity {
             finishAffinity();
         }
         if (item.getItemId() == R.id.gps) {
+
             eventGps();
         }
 
         if (item.getItemId() == R.id.nav_city) {
-//            cityChange();
-            MyBottomSheetCityFragment bottomSheetDialogFragment = new MyBottomSheetCityFragment();
+            List<String> listCity = logCursor(MainActivity.CITY_INFO);
+            String city = listCity.get(1);
+            MyBottomSheetCityFragment bottomSheetDialogFragment = new MyBottomSheetCityFragment(city);
             bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
         }
 
@@ -742,9 +714,13 @@ public class MainActivity extends AppCompatActivity {
             MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment();
             bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
         } else {
-            String message = getString(R.string.gps_ok);
-            MyBottomSheetMessageFragment bottomSheetDialogFragment = new MyBottomSheetMessageFragment(message);
-            bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
+            } else {
+                onAutoClick();
+            }
         }
     }
     public void phoneNumberChange() {
@@ -759,11 +735,13 @@ public class MainActivity extends AppCompatActivity {
 
         @SuppressLint({"MissingInflatedId", "LocalSuppress"})
         EditText phoneNumber = view.findViewById(R.id.phoneNumber);
+        EditText userName = view.findViewById(R.id.userName);
 
         List<String> stringList =  logCursor(MainActivity.TABLE_USER_INFO);
 
         if(stringList.size() != 0) {
             phoneNumber.setText(stringList.get(2));
+            userName.setText(stringList.get(4));
 
 
 //        String result = phoneNumber.getText().toString();
@@ -781,7 +759,12 @@ public class MainActivity extends AppCompatActivity {
                                 Log.d("TAG", "onClick:phoneNumber.getText().toString() " + phoneNumber.getText().toString());
 
                             } else {
-                               updateRecordsUser(phoneNumber.getText().toString());
+                               updateRecordsUser("phone_number", phoneNumber.getText().toString());
+                               String newName = userName.getText().toString();
+                               if (newName.trim().isEmpty()) {
+                                   newName = "No_name";
+                               }
+                               updateRecordsUser("username", newName);
                             }
                         }
                     }
@@ -789,10 +772,10 @@ public class MainActivity extends AppCompatActivity {
                 .show();
         }
     }
-    private void updateRecordsUser(String result) {
+    private void updateRecordsUser(String field, String result) {
         ContentValues cv = new ContentValues();
 
-        cv.put("phone_number", result);
+        cv.put(field, result);
 
         // обновляем по id
         SQLiteDatabase database = openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
@@ -867,14 +850,15 @@ public class MainActivity extends AppCompatActivity {
         db.close();
         return list;
     }
+
     public void newUser() {
         String userEmail = logCursor(TABLE_USER_INFO).get(3);
         Log.d(TAG, "newUser: " + userEmail);
         if(userEmail.equals("email")) {
+            Toast.makeText(this, R.string.checking, Toast.LENGTH_SHORT).show();
             startFireBase();
         } else {
             new VerifyUserTask().execute();
-
         }
 
     }
@@ -905,22 +889,24 @@ public class MainActivity extends AppCompatActivity {
                             signInLauncher.launch(signInIntent);
                         }
                     });
-                } catch (NullPointerException ignored) {
-
+                } catch (NullPointerException e) {
+                    Log.e(TAG, "NullPointerException during sign-in launch", e);
+                    e.printStackTrace();
                 }
+
             }
         });
         thread.start();
     }
 
-
     private final ActivityResultLauncher<Intent> signInLauncher = registerForActivityResult(
+            
             new FirebaseAuthUIActivityResultContract(),
             new ActivityResultCallback<FirebaseAuthUIAuthenticationResult>() {
                 @Override
                 public void onActivityResult(FirebaseAuthUIAuthenticationResult result) {
                     try {
-                        onSignInResult(result);
+                        onSignInResult(result, getSupportFragmentManager());
                     } catch (MalformedURLException | JSONException | InterruptedException e) {
                         Log.d(TAG, "onCreate:" + new RuntimeException(e));
                     }
@@ -929,29 +915,31 @@ public class MainActivity extends AppCompatActivity {
     );
 
 
-    private void onSignInResult(FirebaseAuthUIAuthenticationResult result) throws MalformedURLException, JSONException, InterruptedException {
+    private void onSignInResult(FirebaseAuthUIAuthenticationResult result, FragmentManager fm) throws MalformedURLException, JSONException, InterruptedException {
         ContentValues cv = new ContentValues();
+        Log.d(TAG, "onSignInResult: ");
         try {
+            Log.d(TAG, "onSignInResult: result.getResultCode() " + result.getResultCode());
             if (result.getResultCode() == RESULT_OK) {
                 // Successfully signed in
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
-                updateRecordsUserInfo("email", user.getEmail());
-                updateRecordsUserInfo("username", user.getDisplayName());
+                updateRecordsUserInfo("email", user.getEmail(), getApplicationContext());
 
-                addUser(user.getDisplayName(), user.getEmail()) ;
+//                addUser(user.getDisplayName(), user.getEmail()) ;
+                addUserNoName(user.getEmail(), getApplicationContext());
                 userPhoneFromServer (user.getEmail());
-
-
-//                fetchBonus(user.getEmail());
 
                 getCardToken("fondy", TABLE_FONDY_CARDS, user.getEmail());
                 getCardToken("mono", TABLE_MONO_CARDS, user.getEmail());
 
                 cv.put("verifyOrder", "1");
+
                 SQLiteDatabase database = getApplicationContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
                 database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
                 database.close();
+                new GetPublicIPAddressTask(fm).execute();
+
 
             } else {
 
@@ -971,6 +959,7 @@ public class MainActivity extends AppCompatActivity {
             database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
             database.close();
         }
+//        VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
     }
 
     private void addUser(String displayName , String userEmail) {
@@ -1012,8 +1001,42 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void updateRecordsUserInfo(String userInfo, String result) {
-        SQLiteDatabase database = getApplicationContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+    public static void addUserNoName(String email, Context context) {
+        // Создание объекта Retrofit
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://m.easy-order-taxi.site/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        // Создание экземпляра ApiService
+        ApiServiceUser apiService = retrofit.create(ApiServiceUser.class);
+
+        // Вызов метода addUserNoName
+        Call<UserResponse> call = apiService.addUserNoName(email);
+
+        // Асинхронный вызов
+        call.enqueue(new Callback<UserResponse>() {
+            @Override
+            public void onResponse(Call<UserResponse> call, Response<UserResponse> response) {
+                if (response.isSuccessful()) {
+                    UserResponse userResponse = response.body();
+                    if (userResponse != null) {
+                        updateRecordsUserInfo("username", userResponse.getUserName(), context);
+
+                    }
+                } else {
+                    updateRecordsUserInfo("username", "no_name", context);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<UserResponse> call, Throwable t) {
+                System.out.println("Network Error: " + t.getMessage());
+            }
+        });
+    }
+    private static void updateRecordsUserInfo(String userInfo, String result, Context context) {
+        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
         ContentValues cv = new ContentValues();
 
         cv.put(userInfo, result);
@@ -1187,6 +1210,39 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onAutoClick() {
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        VisicomFragment visicomFragment = (VisicomFragment) fragmentManager.findFragmentByTag("VisicomFragment");
+
+        if (visicomFragment != null) {
+            // Если фрагмент существует, просто перейдите к нему
+            navController.navigate(R.id.nav_visicom);
+            visicomFragment.autoClickButton();
+        } else {
+            // Фрагмент не существует, создаем и добавляем его
+            FragmentTransaction transaction = fragmentManager.beginTransaction();
+            VisicomFragment newFragment = new VisicomFragment();
+            transaction.replace(R.id.nav_host_fragment_content_main, newFragment, "VisicomFragment");
+            transaction.commit();
+
+            // Ждем, чтобы убедиться, что фрагмент добавлен перед вызовом autoClickButton
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    VisicomFragment addedFragment = (VisicomFragment) getSupportFragmentManager().findFragmentByTag("VisicomFragment");
+                    if (addedFragment != null) {
+                        navController.navigate(R.id.nav_visicom);
+                        addedFragment.autoClickButton();
+                    }
+                }
+            }, 100);
+        }
+    }
+
+
+
     @SuppressLint("StaticFieldLeak")
     public class VerifyUserTask extends AsyncTask<Void, Void, Map<String, String>> {
         private Exception exception;
@@ -1224,6 +1280,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                     cv.put("verifyOrder", "1");
                     database.update(TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
+
                 }
             }
             database.close();
@@ -1370,7 +1427,7 @@ public class MainActivity extends AppCompatActivity {
                     boolean val = Pattern.compile(PHONE_PATTERN).matcher(phone).matches();
 
                     if (val) {
-                        updateRecordsUser(phone);
+                        updateRecordsUser("phone_number", phone);
                     } else {
                         // Handle case where phone doesn't match the pattern
                         Log.e("UserPhone", "Phone does not match pattern");
@@ -1389,4 +1446,111 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+    private static class GetPublicIPAddressTask extends AsyncTask<Void, Void, String> {
+        FragmentManager fragmentManager;
+
+        public GetPublicIPAddressTask(FragmentManager fragmentManager) {
+            this.fragmentManager = fragmentManager;
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            try {
+                return IPUtil.getPublicIPAddress();
+            } catch (Exception e) {
+                // Log the exception
+                Log.e(TAG, "Exception in doInBackground: " + e.getMessage());
+                // Return null or handle the exception as needed
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String ipAddress) {
+            try {
+                if (ipAddress != null) {
+                    Log.d(TAG, "onCreate: Local IP Address: " + ipAddress);
+//                getCountryByIP(ipAddress);
+                    getCityByIP(ipAddress, fragmentManager);
+                } else {
+//                getCountryByIP("31.202.139.47");
+                    getCityByIP("31.202.139.47",fragmentManager);
+                }
+            } catch (Exception e) {
+                // Log the exception
+                Log.e(TAG, "Exception in onPostExecute: " + e.getMessage());
+                // Handle the exception as needed
+            }
+
+        }
+    }
+    public static void getCountryByIP(String ipAddress) {
+        ApiServiceCountry apiService = RetrofitClient.getClient().create(ApiServiceCountry.class);
+        Call<CountryResponse> call = apiService.getCountryByIP(ipAddress);
+
+        call.enqueue(new Callback<CountryResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<CountryResponse> call, @NonNull Response<CountryResponse> response) {
+                if (response.isSuccessful()) {
+                    CountryResponse countryResponse = response.body();
+                    if (countryResponse != null) {
+                        countryState = countryResponse.getCountry();
+                    } else {
+                        countryState = "UA";
+                    }
+                } else {
+                    countryState = "UA";
+                }
+                Log.d(TAG, "countryState  " + countryState);
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<CountryResponse> call, @NonNull Throwable t) {
+                Log.e(TAG, "Error: " + t.getMessage());
+            }
+        });
+    }
+
+    private static void getCityByIP(String ip, FragmentManager fm) {
+
+        ApiService apiService = ApiClient.getApiService();
+
+        Call<City> call = apiService.cityByIp(ip);
+
+        call.enqueue(new Callback<City>() {
+            @Override
+            public void onResponse(@NonNull Call<City> call, @NonNull Response<City> response) {
+                if (response.isSuccessful()) {
+                    City status = response.body();
+                    if (status != null) {
+                        String result = status.getResponse();
+                        Log.d("TAG", "onResponse:result " + result);
+
+                        MyBottomSheetCityFragment bottomSheetDialogFragment = new MyBottomSheetCityFragment(result);
+//                        bottomSheetDialogFragment.show(fm, bottomSheetDialogFragment.getTag());
+                        // Добавим проверку на состояние фрагмента перед вызовом show()
+                        if (!fm.isStateSaved()) {
+                            bottomSheetDialogFragment.show(fm, bottomSheetDialogFragment.getTag());
+                        } else {
+                            // Состояние фрагмента уже было сохранено, невозможно выполнить транзакцию
+                            // Обработайте это событие соответствующим образом (возможно, отложите показ фрагмента)
+                            Log.w("TAG", "Fragment state is already saved. Cannot perform transaction.");
+                        }
+                    }
+                }
+
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<City> call, @NonNull Throwable t) {
+                // Обработка ошибок сети или других ошибок
+                String errorMessage = t.getMessage();
+                t.printStackTrace();
+                Log.d("TAG", "onFailure: " + errorMessage);
+
+            }
+        });
+//        }
+    }
+
 }

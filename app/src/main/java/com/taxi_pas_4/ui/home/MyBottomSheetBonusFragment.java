@@ -67,6 +67,10 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
     ProgressBar progressBar;
     CustomArrayAdapter adapter;
     private static SQLiteDatabase database;
+
+    public MyBottomSheetBonusFragment() {
+    }
+
     private String baseUrl = "https://m.easy-order-taxi.site";
 
     public MyBottomSheetBonusFragment(long cost, String rout, String api, TextView textView) {
@@ -129,27 +133,6 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
         }
 
         merchantFondy(city, getContext());
-//        switch (city) {
-//            case "Kyiv City":
-//            case "Dnipropetrovsk Oblast":
-//            case "Odessa":
-//            case "Zaporizhzhia":
-//            case "Cherkasy Oblast":
-//                ContentValues cv = new ContentValues();
-//                cv.put("merchant_fondy", "");
-//                cv.put("fondy_key_storage", "");
-//
-//                SQLiteDatabase database = requireContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-//                database.update(MainActivity.CITY_INFO, cv, "id = ?",
-//                        new String[]{"1"});
-//                database.close();
-//                adapter.setItemEnabled(2, false);
-//                break;
-//            case "OdessaTest":
-//                merchantFondy(city, getContext());
-//                break;
-//        }
-
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -369,7 +352,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
 
     public void reCount() {
         Log.d(TAG, "onDismiss: rout " + rout);
-        if(rout.equals("home")) {
+        if (rout != null && rout.equals("home")) {
             String urlCost = null;
             Map<String, String> sendUrlMapCost = null;
             try {
@@ -402,7 +385,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
 
             }
         }
-        if(rout.equals("visicom")) {
+        if (rout != null && rout.equals("visicom")) {
             String urlCost = null;
             Map<String, String> sendUrlMapCost = null;
             try {
@@ -438,7 +421,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
             }
 
         }
-        if(rout.equals("marker")) {
+        if (rout != null && rout.equals("marker")) {
             String urlCost = null;
             Map<String, String> sendUrlMapCost = null;
             try {
