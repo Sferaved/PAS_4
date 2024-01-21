@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
     public static String order_id;
     public static String invoiceId;
 
-    public static final String DB_NAME = "data_12012024_2";
+    public static final String DB_NAME = "data_21012024_2";
 
     /**
      * Table section
@@ -924,14 +924,15 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
                 // Successfully signed in
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
-                updateRecordsUserInfo("email", user.getEmail(), getApplicationContext());
-
-//                addUser(user.getDisplayName(), user.getEmail()) ;
-                addUserNoName(user.getEmail(), getApplicationContext());
-                userPhoneFromServer (user.getEmail());
-
-                getCardToken("fondy", TABLE_FONDY_CARDS, user.getEmail());
-                getCardToken("mono", TABLE_MONO_CARDS, user.getEmail());
+                settingsNewUser(user.getEmail());
+//                updateRecordsUserInfo("email", user.getEmail(), getApplicationContext());
+//
+////                addUser(user.getDisplayName(), user.getEmail()) ;
+//                addUserNoName(user.getEmail(), getApplicationContext());
+//                userPhoneFromServer (user.getEmail());
+//
+//                getCardToken("fondy", TABLE_FONDY_CARDS, user.getEmail());
+//                getCardToken("mono", TABLE_MONO_CARDS, user.getEmail());
 
                 cv.put("verifyOrder", "1");
 
@@ -961,7 +962,51 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
         }
 //        VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
     }
+    private void settingsNewUser (String email) {
+        // Assuming this code is inside a method or a runnable block
 
+// Task 1: Update user info in a separate thread
+        Thread updateUserInfoThread = new Thread(() -> {
+            updateRecordsUserInfo("email", email, getApplicationContext());
+        });
+        updateUserInfoThread.start();
+
+// Task 2: Add user with no name in a separate thread
+        Thread addUserNoNameThread = new Thread(() -> {
+            addUserNoName(email, getApplicationContext());
+        });
+        addUserNoNameThread.start();
+
+// Task 3: Fetch user phone information from the server in a separate thread
+        Thread userPhoneThread = new Thread(() -> {
+            userPhoneFromServer(email);
+        });
+        userPhoneThread.start();
+
+// Task 4: Get card token for "fondy" in a separate thread
+        Thread fondyCardThread = new Thread(() -> {
+            getCardToken("fondy", TABLE_FONDY_CARDS, email);
+        });
+        fondyCardThread.start();
+
+// Task 5: Get card token for "mono" in a separate thread
+        Thread monoCardThread = new Thread(() -> {
+            getCardToken("mono", TABLE_MONO_CARDS, email);
+        });
+        monoCardThread.start();
+
+// Wait for all threads to finish (optional)
+        try {
+            updateUserInfoThread.join();
+            addUserNoNameThread.join();
+            userPhoneThread.join();
+            fondyCardThread.join();
+            monoCardThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+    }
     private void addUser(String displayName , String userEmail) {
         String urlString = "https://m.easy-order-taxi.site/android/addUser/" + displayName  + "/" + userEmail;
 
