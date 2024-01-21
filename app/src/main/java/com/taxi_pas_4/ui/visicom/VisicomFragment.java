@@ -75,6 +75,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 
 import retrofit2.Call;
@@ -133,6 +136,7 @@ public class VisicomFragment extends Fragment{
         View root = binding.getRoot();
         progressBar = binding.progressBar;
         progressBar.setVisibility(View.VISIBLE);
+
         return root;
     }
     @Override
@@ -951,14 +955,19 @@ public class VisicomFragment extends Fragment{
             btn_clear_to.setVisibility(View.INVISIBLE);
             FragmentManager fragmentManager = getChildFragmentManager();
 
-            new GetPublicIPAddressTask(fragmentManager, city).execute();
-        } else {
-            btn_clear_from_text.setVisibility(View.VISIBLE);
-            textfrom.setVisibility(View.VISIBLE);
-            num1.setVisibility(View.VISIBLE);
-            btn_clear_from_text.setVisibility(View.VISIBLE);
-
+            try {
+                new GetPublicIPAddressTask(fragmentManager, city).execute().get(MainActivity.MAX_TASK_EXECUTION_TIME_SECONDS, TimeUnit.SECONDS);
+            } catch (ExecutionException | InterruptedException | TimeoutException e) {
+                MainActivity.countryState = "UA";
+            }
         }
+//        else {
+//            btn_clear_from_text.setVisibility(View.VISIBLE);
+//            textfrom.setVisibility(View.VISIBLE);
+//            num1.setVisibility(View.VISIBLE);
+//            btn_clear_from_text.setVisibility(View.VISIBLE);
+//
+//        }
         switch (city){
             case "Kyiv City":
                 cityMenu = getString(R.string.city_kyiv);
@@ -992,7 +1001,11 @@ public class VisicomFragment extends Fragment{
         // Изменяем текст элемента меню
         MainActivity.navVisicomMenuItem.setTitle(newTitle);
 
-        if(!newRout()) {
+        if (newRout()) {
+            btn_clear_from.setVisibility(View.INVISIBLE);
+            textfrom.setVisibility(View.INVISIBLE);
+            num1.setVisibility(View.INVISIBLE);
+        } else {
 
             btn_clear_from_text.setVisibility(View.INVISIBLE);
             new Handler().postDelayed(new Runnable() {
@@ -1001,12 +1014,6 @@ public class VisicomFragment extends Fragment{
                     visicomCost();
                 }
             }, 100);
-        } else {
-
-            btn_clear_from.setVisibility(View.INVISIBLE);
-
-            textfrom.setVisibility(View.INVISIBLE);
-            num1.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -1305,6 +1312,7 @@ public class VisicomFragment extends Fragment{
             } catch (Exception e) {
                 // Log the exception
                 Log.e(TAG, "Exception in onPostExecute: " + e.getMessage());
+                MainActivity.countryState = "UA";
                 // Handle the exception as needed
             }
         }
