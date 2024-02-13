@@ -1,8 +1,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.054</string>
-    <string name="version">Версия: 4.054</string>
+    <string name="version_code">4.055</string>
+    <string name="version">Версия: 4.055</string>
 
     <string name="app_name">Такси Дюк Попутчик</string>
 
@@ -42,7 +42,7 @@
     <string name="open_maps">Заказать по карте</string>
     <string name="driver">Работа водителем (реклама)</string>
     <string name="send_email">Поделиться</string>
-    <string name="gps_ok">У Вас все хорошо</string>
+    <string name="gps_ok">Определение геопозиции включено</string>
     <string name="cancel_button">Нет, спасибо</string>
     <string name="gps_on">Включить</string>
     <string name="gps_info">Чтобы улучшить работу программы, включите на устройстве геолокацию Google</string>
