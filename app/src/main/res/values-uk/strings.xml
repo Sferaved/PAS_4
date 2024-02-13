@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.053</string>
-    <string name="version">Версія: 4.053</string>
+    <string name="version_code">4.054</string>
+    <string name="version">Версія: 4.054</string>
 
     <string name="app_name">Таксі Дюк Попутник</string>
     <string name="back4app_server_url">https://parseapi.back4app.com/</string>
@@ -56,7 +56,7 @@
     <string name="save_button">Зберегти</string>
     <string name="you_this">"Ви зараз тут: "</string>
     <string name="make_rout_message">Сформуйте маршрут</string>
-    <string name="error_message">Відбулася помилка.</string>
+    <string name="error_message">Відбулася помилка. Зателефонуйте оператору</string>
     <string name="to_point">"Місце призначення: "</string>
     <string name="cost_of_order">" Вартість поїздки: "</string>
     <string name="firebase_false_message">грн. Вибачте, без перевірки Google-акаунту замовлення не можливе.</string>
@@ -71,7 +71,7 @@
     <string name="on_city">" по місту."</string>
     <string name="on_city_tv">" по місту"</string>
     <string name="help_button">Підтримка</string>
-    <string name="try_again">Знову</string>
+    <string name="try_again">Перезавантажити</string>
     <string name="ok_button">Ок</string>
     <string name="to_message">" -> "</string>
     <string name="rout_from_message">Вкажить місце відправлення</string>

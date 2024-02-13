@@ -1,6 +1,5 @@
 package com.taxi_pas_4.ui.uid;
 
-import static android.content.Context.CONNECTIVITY_SERVICE;
 import static android.content.Context.MODE_PRIVATE;
 import static com.taxi_pas_4.R.string.verify_internet;
 
@@ -9,8 +8,6 @@ import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,10 +17,11 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.NetworkChangeReceiver;
@@ -32,6 +30,7 @@ import com.taxi_pas_4.databinding.FragmentUidBinding;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.RouteResponse;
 import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
+import com.taxi_pas_4.utils.connect.NetworkUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,9 +49,14 @@ public class UIDFragment extends Fragment {
     private static TextView textView;
     private NetworkChangeReceiver networkChangeReceiver;
     ProgressBar progressBar;
+    NavController navController;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
+        navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
+        if (!NetworkUtils.isNetworkAvailable(requireContext())) {
+            navController.navigate(R.id.nav_visicom);
+        }
         binding = FragmentUidBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
@@ -62,36 +66,10 @@ public class UIDFragment extends Fragment {
         progressBar = binding.progressBar;
         networkChangeReceiver = new NetworkChangeReceiver();
 
-        if(connected()) {
-            @SuppressLint("UseRequireInsteadOfGet") String email = logCursor(MainActivity.TABLE_USER_INFO, Objects.requireNonNull(requireActivity())).get(3);
-            fetchRoutes(email);
-        }
+        @SuppressLint("UseRequireInsteadOfGet") String email = logCursor(MainActivity.TABLE_USER_INFO, Objects.requireNonNull(requireActivity())).get(3);
+        fetchRoutes(email);
+
         return root;
-    }
-    private boolean connected() {
-
-        Boolean hasConnect = false;
-
-        ConnectivityManager cm = (ConnectivityManager) requireActivity().getSystemService(
-                CONNECTIVITY_SERVICE);
-        NetworkInfo wifiNetwork = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        if (wifiNetwork != null && wifiNetwork.isConnected()) {
-            hasConnect = true;
-        }
-        NetworkInfo mobileNetwork = cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
-        if (mobileNetwork != null && mobileNetwork.isConnected()) {
-            hasConnect = true;
-        }
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        if (activeNetwork != null && activeNetwork.isConnected()) {
-            hasConnect = true;
-        }
-
-        if (!hasConnect) {
-            Toast.makeText(requireActivity(), verify_internet, Toast.LENGTH_LONG).show();
-        }
-        Log.d("TAG", "connected: " + hasConnect);
-        return hasConnect;
     }
 
     String baseUrl = "https://m.easy-order-taxi.site";
@@ -132,6 +110,7 @@ public class UIDFragment extends Fragment {
                 } else {
                     MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
                     bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                    progressBar.setVisibility(View.INVISIBLE);
                 }
             }
 

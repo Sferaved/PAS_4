@@ -2,12 +2,9 @@ package com.taxi_pas_4;
 
 import static com.taxi_pas_4.R.string.cancel_button;
 import static com.taxi_pas_4.R.string.format_phone;
-import static com.taxi_pas_4.R.string.verify_internet;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -73,7 +70,8 @@ import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetGPSFragment;
 import com.taxi_pas_4.ui.maps.CostJSONParser;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
-import com.taxi_pas_4.utils.activ_push.PushAlarmReceiver;
+import com.taxi_pas_4.utils.activ_push.MyService;
+import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.ip.IPUtil;
 import com.taxi_pas_4.utils.messages.UsersMessages;
 import com.taxi_pas_4.utils.permissions.UserPermissions;
@@ -105,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
     public static String order_id;
     public static String invoiceId;
 
-    public static final String DB_NAME = "data_03022024_0";
+    public static final String DB_NAME = "data_01022024_8";
 
     /**
      * Table section
@@ -123,6 +121,8 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
     public static final String TABLE_POSITION_INFO = "myPosition";
     public static final String TABLE_FONDY_CARDS = "tableFondyCards";
     public static final String TABLE_MONO_CARDS = "tableMonoCards";
+
+    public static final String TABLE_LAST_PUSH = "tableLastPush";
     public static Cursor cursorDb;
     public static boolean verifyPhone;
     private AppBarConfiguration mAppBarConfiguration;
@@ -182,38 +182,19 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
         visicomFragment.setAutoClickListener(this); // "this" refers to the MainActivity
     }
 
-    private static final int ALARM_REQUEST_CODE = 0; // Use a unique code for your PendingIntent
-
-    private void scheduleAlarm() {
-        if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            checkPermission(Manifest.permission.POST_NOTIFICATIONS, PackageManager.PERMISSION_GRANTED);
-        }
-
-        Intent intent = new Intent(this, PushAlarmReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
-        Log.d(TAG, "scheduleAlarm: ");
-        // Set the alarm to start at 24-hour intervals
-        long intervalMillis = 24 * 60 * 60 * 1000; // 24 hours
-//        long intervalMillis = 60 * 1000; // 24 hours
-        long triggerMillis = System.currentTimeMillis() + intervalMillis;
-
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, triggerMillis, intervalMillis, pendingIntent);
-    }
-
 
     @Override
     protected void onResume() {
         super.onResume();
-        updateLastActivityTimestamp();
+        startService(new Intent(this, MyService.class));
 
     }
-    private static final String PREFS_NAME_25 = "UserActivityPrefs";
+    private static final String PREFS_NAME = "UserActivityPrefs";
     private static final String LAST_ACTIVITY_KEY = "lastActivityTimestamp";
     private void updateLastActivityTimestamp() {
 
         // Обновление времени последней активности в SharedPreferences
-        SharedPreferences prefs = getApplicationContext().getSharedPreferences(PREFS_NAME_25, Context.MODE_PRIVATE);
+        SharedPreferences prefs = getApplicationContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
 
         long lastActivityTimestamp = prefs.getLong(LAST_ACTIVITY_KEY, 0);
         long currentTime = System.currentTimeMillis();
@@ -433,9 +414,74 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
                 " bank_name text," +
                 " rectoken text," +
                 " rectoken_check text);");
+        database.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_LAST_PUSH + "(id integer primary key autoincrement," +
+                " push_date DATETIME);");
+        
 
         database.close();
-        newUser();
+
+        if (NetworkUtils.isNetworkAvailable(this)) {
+            // Действия при наличии интернета
+            newUser();
+        }
+    }
+
+    public void insertPushDate(Context context) {
+        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        if (database != null) {
+            try {
+                // Получаем текущее время и дату
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                String currentDateandTime = sdf.format(new Date());
+                Log.d("InsertOrUpdate", "Current date and time: " + currentDateandTime);
+
+                // Создаем объект ContentValues для передачи данных в базу данных
+                ContentValues values = new ContentValues();
+                values.put("push_date", currentDateandTime);
+
+                // Пытаемся вставить новую запись. Если запись уже существует, выполняется обновление.
+                long rowId = database.insertWithOnConflict(MainActivity.TABLE_LAST_PUSH, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+
+                if (rowId != -1) {
+                    Log.d("InsertOrUpdate", "Insert or update successful");
+                } else {
+                    Log.d("InsertOrUpdate", "Error inserting or updating");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                database.close();
+            }
+        }
+    }
+    public void updatePushDate(Context context) {
+        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        if (database != null) {
+            try {
+                // Получаем текущее время и дату
+                @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                String currentDateandTime = sdf.format(new Date());
+                Log.d(TAG, "Current date and time: " + currentDateandTime);
+
+                // Создаем объект ContentValues для передачи данных в базу данных
+                ContentValues values = new ContentValues();
+                values.put("push_date", currentDateandTime);
+
+                // Пытаемся вставить новую запись. Если запись уже существует, выполняется обновление.
+                int rowsAffected = database.update(MainActivity.TABLE_LAST_PUSH, values, "ROWID=1", null);
+                if (rowsAffected > 0) {
+                    Log.d(TAG, "Update successful");
+                } else {
+                    Log.d(TAG, "Error updating");
+                }
+
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                database.close();
+            }
+        }
     }
 
     private void insertFirstSettings(List<String> settings) {
@@ -613,31 +659,17 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
     @SuppressLint("IntentReset")
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.phone_settings) {
-                phoneNumberChange();
-        }
-        if (item.getItemId() == R.id.nav_driver) {
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.taxieasyua.job"));
-            startActivity(browserIntent);
-        }
+
         if (item.getItemId() == R.id.action_exit) {
             finishAffinity();
         }
-        if (item.getItemId() == R.id.gps) {
 
+        if (item.getItemId() == R.id.gps) {
             eventGps();
         }
 
-        if (item.getItemId() == R.id.nav_city) {
-            List<String> listCity = logCursor(MainActivity.CITY_INFO);
-            String city = listCity.get(1);
-            MyBottomSheetCityFragment bottomSheetDialogFragment = new MyBottomSheetCityFragment(city);
-            bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
-        }
-
-        if (item.getItemId() == R.id.send_like) {
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.taxi_pas_4"));
-            startActivity(browserIntent);
+        if (item.getItemId() == R.id.send_email_admin) {
+            sendEmailAdmin();
         }
 
         if (item.getItemId() == R.id.send_email) {
@@ -657,13 +689,53 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
                 startActivity(Intent.createChooser(emailIntent, getString(R.string.share)));
             } catch (android.content.ActivityNotFoundException ignored) {
 
+        }
+
+            if (item.getItemId() == R.id.phone_settings) {
+                if (NetworkUtils.isNetworkAvailable(this)) {
+                    phoneNumberChange();
+                } else {
+                    Toast.makeText(this, R.string.verify_internet, Toast.LENGTH_SHORT).show();
+                }
+
+            }
+        }
+
+        if (item.getItemId() == R.id.nav_driver) {
+            if (NetworkUtils.isNetworkAvailable(this)) {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.taxieasyua.job"));
+                startActivity(browserIntent);
+            } else {
+                Toast.makeText(this, R.string.verify_internet, Toast.LENGTH_SHORT).show();
+            }
+        }
+        if (item.getItemId() == R.id.phone_settings) {
+            if (NetworkUtils.isNetworkAvailable(this)) {
+                phoneNumberChange();
+            } else {
+                Toast.makeText(this, R.string.verify_internet, Toast.LENGTH_SHORT).show();
+            }
+        }
+        if (item.getItemId() == R.id.nav_city) {
+            if (NetworkUtils.isNetworkAvailable(this)) {
+                List<String> listCity = logCursor(MainActivity.CITY_INFO);
+                String city = listCity.get(1);
+                MyBottomSheetCityFragment bottomSheetDialogFragment = new MyBottomSheetCityFragment(city);
+                bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
+            } else {
+                Toast.makeText(this, R.string.verify_internet, Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        if (item.getItemId() == R.id.send_like) {
+            if (NetworkUtils.isNetworkAvailable(this)) {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.taxi_pas_4"));
+                startActivity(browserIntent);
+            } else {
+                Toast.makeText(this, R.string.verify_internet, Toast.LENGTH_SHORT).show();
             }
 
         }
-        if (item.getItemId() == R.id.send_email_admin) {
-            sendEmailAdmin();
-        }
-
         return false;
     }
     private String generateRandomString(int length) {
@@ -756,12 +828,16 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
             MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment();
             bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
         } else {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                    && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
-                checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
+            if (NetworkUtils.isNetworkAvailable(this)) {
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                        && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                    checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                } else {
+                    onAutoClick();
+                }
             } else {
-                onAutoClick();
+                Toast.makeText(this, getString(R.string.verify_internet), Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -791,7 +867,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
                 .setPositiveButton(R.string.cheng, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        if(connected()) {
+//                        if(connected()) {
                             Log.d("TAG", "onClick befor validate: ");
                             String PHONE_PATTERN = "((\\+?380)(\\d{9}))$";
                             boolean val = Pattern.compile(PHONE_PATTERN).matcher(phoneNumber.getText().toString()).matches();
@@ -808,7 +884,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
                                }
                                updateRecordsUser("username", newName);
                             }
-                        }
+//                        }
                     }
                 }).setNegativeButton(cancel_button, null)
                 .show();
@@ -844,9 +920,9 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
             hasConnect = true;
         }
 
-        if (!hasConnect) {
-            Toast.makeText(this, verify_internet, Toast.LENGTH_LONG).show();
-        }
+//        if (!hasConnect) {
+//            Toast.makeText(this, verify_internet, Toast.LENGTH_LONG).show();
+//        }
         Log.d("TAG", "connected: " + hasConnect);
         return hasConnect;
     }
@@ -898,12 +974,15 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
         Log.d(TAG, "newUser: " + userEmail);
 
         if(userEmail.equals("email")) {
+
+            new Thread(() -> insertPushDate(getApplicationContext())).start();
+
             try {
                 FirebaseApp.initializeApp(MainActivity.this);
             } catch (Exception e) {
                 Log.e(TAG, "Exception during authentication", e);
                 e.printStackTrace();
-                Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
                 VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
 
             }
@@ -911,12 +990,16 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
             startFireBase();
 
         } else {
+            new Thread(() -> updatePushDate(getApplicationContext())).start();
 
             new VerifyUserTask().execute();
             UserPermissions.getPermissions(userEmail, getApplicationContext());
             new UsersMessages(userEmail, getApplicationContext());
         }
-        scheduleAlarm();
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+//            scheduleAlarm();
+//        }
+
 
     }
 
@@ -944,7 +1027,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
                 } catch (Exception e) {
                     Log.e(TAG, "Exception during sign-in launch", e);
                     e.printStackTrace();
-                    Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
                     VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
                 }
             }
@@ -1063,15 +1146,11 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
             e.printStackTrace();
             // Дополнительные действия...
             getCityByIP("31.202.139.47", fm, context);
-            Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
+//            Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
             VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
         }
     }
 
-    private void handleTaskResult(String result) {
-        // Обработка результата задачи
-        // ...
-    }
 
     public static void addUserNoName(String email, Context context) {
         // Создание объекта Retrofit
@@ -1103,7 +1182,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
 
             @Override
             public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
-                Toast.makeText(context, context.getString(verify_internet), Toast.LENGTH_SHORT).show();
+//                Toast.makeText(context, context.getString(verify_internet), Toast.LENGTH_SHORT).show();
                 VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
 
             }
@@ -1273,7 +1352,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
             public void onFailure(@NonNull Call<CallbackResponse> call, @NonNull Throwable t) {
                 // Обработка ошибки запроса
                 Log.d(TAG, "onResponse: failure " + t.toString());
-                Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
                 VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
             }
         });
@@ -1331,7 +1410,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
                 return CostJSONParser.sendURL(url);
             } catch (Exception e) {
                 exception = e;
-                Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
                 VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
                 return null;
             }
@@ -1365,7 +1444,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
         }
     }
 
-    private static final String PREFS_NAME = "MyPrefsFileNew";
+    private static final String PREFS_NAME_VERSION = "MyPrefsFileNew";
     private static final String LAST_NOTIFICATION_TIME_KEY = "lastNotificationTimeNew";
 //    private static final long ONE_DAY_IN_MILLISECONDS = 0; // 24 часа в миллисекундах
     private static final long ONE_DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000; // 24 часа в миллисекундах
@@ -1375,7 +1454,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
 
 
         // Получаем SharedPreferences
-        SharedPreferences SharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences SharedPreferences = getSharedPreferences(PREFS_NAME_VERSION, Context.MODE_PRIVATE);
 
         // Получаем время последней отправки уведомления
         long lastNotificationTime = SharedPreferences.getLong(LAST_NOTIFICATION_TIME_KEY, 0);
@@ -1439,7 +1518,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
             @Override
             public void onFailure(Call<CityResponse> call, Throwable t) {
                 Log.e("Request", "Failed. Error message: " + t.getMessage());
-                Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
                 VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
             }
         });
@@ -1475,7 +1554,6 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
 
                         Log.d(TAG, "onResponse: " + logCursor(CITY_INFO).toString());
 
-                        // Добавьте здесь код для обработки полученных значений
                     }
                 } else {
                     Log.e("Request", "Failed. Error code: " + response.code());
@@ -1485,7 +1563,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
             @Override
             public void onFailure(Call<CityResponseMerchantFondy> call, Throwable t) {
                 Log.e("Request", "Failed. Error message: " + t.getMessage());
-                Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
                 VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
             }
         });
@@ -1542,7 +1620,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
                 Log.e(TAG, "Exception in doInBackground: " + e.getMessage());
                 // Return null or handle the exception as needed
                 getCityByIP("31.202.139.47",fragmentManager, context);
-                Toast.makeText(context, context.getString(verify_internet), Toast.LENGTH_SHORT).show();
+//                Toast.makeText(context, context.getString(verify_internet), Toast.LENGTH_SHORT).show();
                 VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
                 return null;
             }
@@ -1562,7 +1640,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
                 Log.e(TAG, "Exception in onPostExecute: " + e.getMessage());
                 // Handle the exception as needed
                 getCityByIP("31.202.139.47",fragmentManager, context);
-                Toast.makeText(context, context.getString(verify_internet), Toast.LENGTH_SHORT).show();
+//                Toast.makeText(context, context.getString(verify_internet), Toast.LENGTH_SHORT).show();
                 VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
             }
 
@@ -1602,7 +1680,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
                 String errorMessage = t.getMessage();
                 t.printStackTrace();
                 Log.d("TAG", "onFailure: " + errorMessage);
-                Toast.makeText(context, context.getString(verify_internet), Toast.LENGTH_SHORT).show();
+//                Toast.makeText(context, context.getString(verify_internet), Toast.LENGTH_SHORT).show();
                 VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
             }
         });

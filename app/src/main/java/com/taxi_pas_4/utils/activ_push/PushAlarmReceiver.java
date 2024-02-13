@@ -31,6 +31,7 @@ public class PushAlarmReceiver extends BroadcastReceiver {
         Log.d(TAG, "onReceive: isUserActive " + isUserActive);
 
         if (!isUserActive) {
+            updateLastActivityTimestamp(context);
             // Если пользователь не активен, отправьте уведомление
             sendNotification(context);
         }
@@ -55,8 +56,8 @@ public class PushAlarmReceiver extends BroadcastReceiver {
         Log.d(TAG, "lastActivit: CHECK " + timeFormatter(lastActivityTimestamp));
         Log.d(TAG, "currentTime: CHECK " + timeFormatter(currentTime));
         // Проверка, прошло ли более 25 дней с последней активности
-//        return (currentTime - lastActivityTimestamp) <= (60 * 1000);
-        return (currentTime - lastActivityTimestamp) < (25 * 24 * 60 * 60 * 1000);
+        return (currentTime - lastActivityTimestamp) <= (60 * 1000);
+//        return (currentTime - lastActivityTimestamp) < (25 * 24 * 60 * 60 * 1000);
     }
     private String timeFormatter(long timeMsec) {
         Date formattedTime = new Date(timeMsec);
@@ -77,7 +78,7 @@ public class PushAlarmReceiver extends BroadcastReceiver {
 
         // Используйте ваш класс NotificationHelper для отправки уведомления
         NotificationHelper.showNotificationMessageOpen(context, title, message, pendingIntent);
-        updateLastActivityTimestamp(context);
+
     }
 
     public static void scheduleAlarm(Context context) {

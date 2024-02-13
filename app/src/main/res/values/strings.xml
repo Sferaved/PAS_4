@@ -1,8 +1,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.053</string>
-    <string name="version">Версия: 4.053</string>
+    <string name="version_code">4.054</string>
+    <string name="version">Версия: 4.054</string>
 
     <string name="app_name">Такси Дюк Попутчик</string>
 
@@ -10,7 +10,7 @@
     <string name="back4app_app_id">01YGF894m3NJRXT1BlH6qPo9pUfDlG9sqi9K9mIL</string>
     <string name="back4app_client_key">T5f5GuT1UCmaiJn8Dek3sVmayGuJa2jfelQR6V6f</string>
 
-    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_open">Open navigation  drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="nav_header_title">Попутчик такси Украина дешево</string>
     <string name="nav_header_subtitle">Быстрые поездки по городам Украины</string>
@@ -55,7 +55,7 @@
     <string name="save_button">Сохранить</string>
     <string name="you_this">"Вы сейчас здесь: "</string>
     <string name="make_rout_message">Сформируйте маршрут</string>
-    <string name="error_message">Произошла ошибка.</string>
+    <string name="error_message">Произошла ошибка. Наберите оператора.</string>
     <string name="to_point">"Место назначения: "</string>
     <string name="cost_of_order">" Стоимость поездки: "</string>
     <string name="firebase_false_message">грн. Извините, без проверки Google-аккаунта заказ невозможен.</string>
@@ -70,7 +70,7 @@
     <string name="on_city">" по городу."</string>
     <string name="on_city_tv">" по городу"</string>
     <string name="help_button">Поддержка</string>
-    <string name="try_again">Снова</string>
+    <string name="try_again">Перезагрузить</string>
     <string name="ok_button">Ок</string>
     <string name="to_message">" -> "</string>
     <string name="rout_from_message">Укажите место отправки</string>
