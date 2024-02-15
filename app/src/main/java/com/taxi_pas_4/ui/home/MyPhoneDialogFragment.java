@@ -49,6 +49,9 @@ import java.util.regex.Pattern;
 
 
 public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
+    public MyPhoneDialogFragment() {
+    }
+
     EditText phoneNumber;
     AppCompatButton button;
     CheckBox checkBox;
