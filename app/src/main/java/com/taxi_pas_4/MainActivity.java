@@ -4,6 +4,7 @@ import static com.taxi_pas_4.R.string.cancel_button;
 import static com.taxi_pas_4.R.string.format_phone;
 
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -182,12 +183,28 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
     }
 
 
+
+
+    private boolean isServiceRunning() {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (MyService.class.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
+
     protected void onResume() {
         super.onResume();
-        startService(new Intent(this, MyService.class));
-
+        Log.d(TAG, "onResume:!isServiceRunning())  " + isServiceRunning());
+        if (!isServiceRunning()) {
+            startService(new Intent(this, MyService.class));
+        }
     }
+
     private static final String PREFS_NAME = "UserActivityPrefs";
     private static final String LAST_ACTIVITY_KEY = "lastActivityTimestamp";
     private void updateLastActivityTimestamp() {
@@ -868,7 +885,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
                             String PHONE_PATTERN = "((\\+?380)(\\d{9}))$";
                             boolean val = Pattern.compile(PHONE_PATTERN).matcher(phoneNumber.getText().toString()).matches();
                             Log.d("TAG", "onClick No validate: " + val);
-                            if (val == false) {
+                            if (!val) {
                                 Toast.makeText(MainActivity.this, getString(format_phone) , Toast.LENGTH_SHORT).show();
                                 Log.d("TAG", "onClick:phoneNumber.getText().toString() " + phoneNumber.getText().toString());
 
