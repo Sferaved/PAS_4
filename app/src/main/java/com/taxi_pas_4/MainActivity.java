@@ -5,6 +5,7 @@ import static com.taxi_pas_4.R.string.format_phone;
 
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
+import android.app.NotificationManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -23,6 +24,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -195,16 +197,63 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
         return false;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
 
     protected void onResume() {
         super.onResume();
+        insertOrUpdatePushDate();
         Log.d(TAG, "onResume:!isServiceRunning())  " + isServiceRunning());
         if (!isServiceRunning()) {
             startService(new Intent(this, MyService.class));
         }
     }
 
+    private void checkNotificationPermissionAndRequestIfNeeded() {
+        // Проверяем разрешение на отправку уведомлений
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (!notificationManager.areNotificationsEnabled()) {
+            // Разрешение на отправку уведомлений отключено, показываем диалоговое окно или системный экран для запроса разрешения
+            Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+            intent.putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+            startActivity(intent);
+            // После отображения системного экрана для настроек уведомлений, можно предположить, что пользователь примет необходимые действия и вернется в приложение.
+            // Здесь вы можете использовать метод onActivityResult() для обработки результата запроса разрешения.
+        }
+
+    }
+
+
+    public void insertOrUpdatePushDate() {
+
+        SQLiteDatabase database = openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        if (database != null) {
+            try {
+                // Получаем текущее время и дату
+                @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                String currentDateandTime = sdf.format(new Date());
+                Log.d(TAG, "Current date and time: " + currentDateandTime);
+
+                // Создаем объект ContentValues для передачи данных в базу данных
+                ContentValues values = new ContentValues();
+                values.put("push_date", currentDateandTime);
+
+                // Пытаемся вставить новую запись. Если запись уже существует, выполняется обновление.
+                int rowsAffected = database.update(MainActivity.TABLE_LAST_PUSH, values, "ROWID=1", null);
+                if (rowsAffected > 0) {
+                    Log.d(TAG, "Update successful");
+                } else {
+                    Log.d(TAG, "Error updating");
+                }
+
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                database.close();
+            }
+        }
+    }
     private static final String PREFS_NAME = "UserActivityPrefs";
     private static final String LAST_ACTIVITY_KEY = "lastActivityTimestamp";
     private void updateLastActivityTimestamp() {
@@ -677,7 +726,9 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 
         if (item.getItemId() == R.id.action_exit) {
+
             finishAffinity();
+
         }
 
         if (item.getItemId() == R.id.gps) {
@@ -1001,7 +1052,12 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
             }
             Toast.makeText(this, R.string.checking, Toast.LENGTH_SHORT).show();
             startFireBase();
-
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    checkNotificationPermissionAndRequestIfNeeded();
+                }
+            }, 15000);
         } else {
             new Thread(() -> updatePushDate(getApplicationContext())).start();
 
@@ -1009,9 +1065,6 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
             UserPermissions.getPermissions(userEmail, getApplicationContext());
             new UsersMessages(userEmail, getApplicationContext());
         }
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-//            scheduleAlarm();
-//        }
 
 
     }
@@ -1699,5 +1752,6 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
         });
 //        }
     }
+
 
 }
