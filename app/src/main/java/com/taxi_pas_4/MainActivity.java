@@ -187,14 +187,16 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
 
 
 
-    private boolean isServiceRunning() {
+    private void isServiceRunning() {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
             if (MyService.class.getName().equals(service.service.getClassName())) {
-                return true;
+                Intent intent = new Intent(this, MyService.class);
+                stopService(intent);
+                Log.d(TAG, "isServiceRunning: " + "stopService");
             }
         }
-        return false;
+
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -203,10 +205,9 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
     protected void onResume() {
         super.onResume();
         insertOrUpdatePushDate();
-        Log.d(TAG, "onResume:!isServiceRunning())  " + isServiceRunning());
-        if (!isServiceRunning()) {
-            startService(new Intent(this, MyService.class));
-        }
+        Log.d(TAG, "onResume: isServiceRunning())  " );
+        isServiceRunning();
+        startService(new Intent(this, MyService.class));
     }
 
     private void checkNotificationPermissionAndRequestIfNeeded() {
