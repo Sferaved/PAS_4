@@ -1,35 +1,28 @@
 package com.taxi_pas_4.utils.activ_push;
 
 import android.annotation.SuppressLint;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
 import androidx.annotation.RequiresApi;
-import androidx.work.ListenableWorker;
-import androidx.work.PeriodicWorkRequest;
-import androidx.work.WorkManager;
 
 import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.NotificationHelper;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.notify.NotificationHelper;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 public class MyService extends Service {
 

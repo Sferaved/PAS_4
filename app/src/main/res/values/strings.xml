@@ -1,8 +1,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.062</string>
-    <string name="version">Версия: 4.062</string>
+    <string name="version_code">4.064</string>
+    <string name="version">Версия: 4.064</string>
 
     <string name="app_name">Такси Дюк Попутчик</string>
 
@@ -322,4 +322,12 @@
     <string name="city_search">Определяется Ваше местоположение...</string>
     <string name="city_loc">город </string>
     <string name="new_order_notify">Закажите поездку по выгодной цене.</string>
+    <string name="id_phone_text">Предоставьте доступ до встроенного идентификатора устройства, чтобы получать персолнализированные рекламные предложения и улучшенный опыт пользования партнерскими сервисами. В любой момент Вы можете запросить удаления этой информации.</string>
+    <string name="item_state_phone">Персонализация</string>
+    <string name="update_rout">Обновить историю</string>
+    <string name="update_app">Обновить приложение</string>
+    <string name="upload">Скачивание обновления ...</string>
+    <string name="update_ok">У Вас установлена актуальная версия. Нет необходимости обновлять приложение.</string>
+    <string name="phone_driver">Звонок водителю</string>
+    <string name="auto_info">, авто</string>
 </resources>

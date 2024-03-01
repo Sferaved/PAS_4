@@ -3,15 +3,21 @@ package com.taxi_pas_4;
 import static com.taxi_pas_4.R.string.cancel_button;
 import static com.taxi_pas_4.R.string.format_phone;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
+import android.app.AlarmManager;
+import android.app.AlertDialog;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.IntentSender;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -25,6 +31,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -39,6 +46,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -46,12 +54,20 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
+import androidx.work.WorkManager;
 
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationView;
+import com.google.android.play.core.appupdate.AppUpdateInfo;
+import com.google.android.play.core.appupdate.AppUpdateManager;
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
+import com.google.android.play.core.install.model.AppUpdateType;
+import com.google.android.play.core.install.model.UpdateAvailability;
+import com.google.android.play.core.tasks.OnSuccessListener;
+import com.google.android.play.core.tasks.Task;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -70,19 +86,25 @@ import com.taxi_pas_4.ui.home.HomeFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetCityFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetGPSFragment;
+import com.taxi_pas_4.ui.home.MyBottomSheetMessageFragment;
 import com.taxi_pas_4.ui.maps.CostJSONParser;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.activ_push.MyService;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
+import com.taxi_pas_4.utils.download.AppUpdater;
 import com.taxi_pas_4.utils.ip.IPUtil;
 import com.taxi_pas_4.utils.messages.UsersMessages;
+import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.utils.permissions.UserPermissions;
 import com.taxi_pas_4.utils.phone.ApiClientPhone;
+import com.taxi_pas_4.utils.phone_state.DeviceUtils;
+import com.taxi_pas_4.utils.phone_state.MyBottomSheetPhoneStateFragment;
 import com.taxi_pas_4.utils.user.ApiServiceUser;
 import com.taxi_pas_4.utils.user.UserResponse;
 
 import org.json.JSONException;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -146,6 +168,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
     public static String countryState;
     private static String verifyInternet;
     public static final long MAX_TASK_EXECUTION_TIME_SECONDS = 3;
+    private static String versionServer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -187,16 +210,28 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
 
 
 
+    @SuppressLint("NewApi")
     private void isServiceRunning() {
+
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        int serviceCount = 0;
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            Log.d(TAG, "isServiceRunning: " + service.service.getClassName());
+            serviceCount++;
             if (MyService.class.getName().equals(service.service.getClassName())) {
                 Intent intent = new Intent(this, MyService.class);
                 stopService(intent);
                 Log.d(TAG, "isServiceRunning: " + "stopService");
             }
         }
+        Log.d(TAG, "Total running services: " + serviceCount);
 
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, MyService.class);
+        PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_MUTABLE);
+        alarmManager.cancel(pendingIntent);
+
+        WorkManager.getInstance(this).cancelAllWork();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -208,6 +243,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
         Log.d(TAG, "onResume: isServiceRunning())  " );
         isServiceRunning();
         startService(new Intent(this, MyService.class));
+
     }
 
     private void checkNotificationPermissionAndRequestIfNeeded() {
@@ -727,10 +763,12 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 
         if (item.getItemId() == R.id.action_exit) {
-
-            finishAffinity();
-
+          finishAffinity();
         }
+
+//        if (item.getItemId() == R.id.action_state_phone) {
+//            checkPermission();
+//        }
 
         if (item.getItemId() == R.id.gps) {
             eventGps();
@@ -768,7 +806,15 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
 
             }
         }
+        if (item.getItemId() == R.id.update) {
+            Log.d(TAG, "onOptionsItemSelected: " +versionServer);
+            if (NetworkUtils.isNetworkAvailable(this)) {
+                updateApp();
 
+            } else {
+                Toast.makeText(this, R.string.verify_internet, Toast.LENGTH_SHORT).show();
+            }
+        }
         if (item.getItemId() == R.id.nav_driver) {
             if (NetworkUtils.isNetworkAvailable(this)) {
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.taxieasyua.job"));
@@ -806,6 +852,282 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
         }
         return false;
     }
+
+
+    private AppUpdater appUpdater;
+    private static final int REQUEST_INSTALL_PACKAGES = 123;
+    private void updateApp() {
+
+        // Создание экземпляра AppUpdater
+        appUpdater = new AppUpdater(this);
+        Log.d("UpdateApp", "Starting app update process");
+
+        // Установка слушателя для обновления состояния установки
+        appUpdater.setOnUpdateListener(new AppUpdater.OnUpdateListener() {
+            @Override
+            public void onUpdateCompleted() {
+                // Показать пользователю сообщение о завершении обновления
+                Toast.makeText(getApplicationContext(), "Обновление завершено. Приложение будет перезапущено.", Toast.LENGTH_SHORT).show();
+
+                // Перезапуск приложения для применения обновлений
+                restartApplication();
+            }
+        });
+
+        // Регистрация слушателя
+        appUpdater.registerListener();
+
+        // Проверка наличия обновлений
+        checkForUpdate();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_INSTALL_PACKAGES) {
+            if (resultCode == RESULT_OK) {
+                // Пользователь разрешил установку пакетов, продолжаем установку
+                // Ваш код для установки пакета
+
+            } else {
+                // Пользователь отказал в установке пакетов или отменил действие
+                // Обработайте это событие соответствующим образом
+            }
+            Log.d(TAG, "onActivityResult:resultCode " + resultCode);
+        }
+    }
+
+    // Добавляем проверку наличия обновлений
+    private static final int MY_REQUEST_CODE = 1001;
+
+    private void checkForUpdate() {
+        AppUpdateManager appUpdateManager = AppUpdateManagerFactory.create(this);
+        Task<AppUpdateInfo> appUpdateInfoTask = appUpdateManager.getAppUpdateInfo();
+        appUpdateInfoTask.addOnSuccessListener(new OnSuccessListener<AppUpdateInfo>() {
+            @Override
+            public void onSuccess(AppUpdateInfo appUpdateInfo) {
+                if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) {
+                    // Доступны обновления
+                    Log.d("UpdateApp", "Available updates found");
+
+                    // Запускаем процесс обновления
+                    try {
+                        appUpdateManager.startUpdateFlowForResult(
+                                appUpdateInfo,
+                                AppUpdateType.IMMEDIATE, // или AppUpdateType.FLEXIBLE
+                                MainActivity.this, // Используем ссылку на активность
+                                MY_REQUEST_CODE); // Код запроса для обновления
+                    } catch (IntentSender.SendIntentException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    String message = getString(R.string.update_ok);
+                    MyBottomSheetMessageFragment bottomSheetDialogFragment = new MyBottomSheetMessageFragment(message);
+                    bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
+                }
+            }
+        });
+    }
+
+
+
+
+
+
+    private void restartApplication() {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        // Отмена регистрации слушателя при уничтожении активности
+        if (appUpdater != null) {
+            appUpdater.unregisterListener();
+        }
+    }
+    private static final int REQUEST_CODE_UNKNOWN_APP_SOURCES = 1234; // Произвольный код запроса разрешения
+    @SuppressLint("ObsoleteSdkInt")
+//    private void updateApp() throws InterruptedException {
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            if (!getPackageManager().canRequestPackageInstalls()) {
+//                // Пользователь еще не предоставил разрешение на установку пакетов из неизвестных источников.
+//                // Здесь можно открыть системное окно настроек для запроса этого разрешения.
+//                Intent intent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
+//                intent.setData(Uri.parse("package:" + getPackageName()));
+//                startActivityForResult(intent, REQUEST_CODE_UNKNOWN_APP_SOURCES);
+//            }
+//        }
+//
+//        String fileName = "app-debug.apk";
+//        File file = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), fileName);
+//        String saveFilePath = file.getAbsolutePath();
+//        String updateUrl = "https://m.easy-order-taxi.site/last_versions/" + getString(R.string.application);
+//        AlertDialog alertDialog = progressBarUpload ();
+//        alertDialog.show();
+//        update_cancel = false;
+//        FileDownloader.downloadFile(updateUrl, saveFilePath, new FileDownloader.DownloadCallback() {
+//            @Override
+//            public void onDownloadComplete(String filePath) {
+//                File downloadedFile = new File(filePath);
+//                long fileSizeInBytes = downloadedFile.length();
+//                alertDialog.dismiss();
+//                if(!update_cancel) {
+//                    Log.d(TAG, "File size: " + fileSizeInBytes + " B");
+//                    // Загрузка завершена, вызываем установку файла
+//                    Log.d(TAG, "onDownloadComplete: " + filePath);
+//                    installFile(filePath);
+//                }
+//
+//            }
+//
+//            @Override
+//            public void onDownloadFailed(Exception e) {
+//                // Обработка ошибки загрузки файла
+//                Log.d("TAG", "onDownloadFailed: " +  e.toString());
+//                e.printStackTrace();
+//            }
+//        });
+//    }
+
+    private static final int INSTALL_REQUEST_CODE = 1;
+    private boolean update_cancel;
+    private void installFile(String filePath) {
+
+        File file = new File(filePath);
+        Log.d(TAG, "installFile: " + isApkFileValid(filePath));
+        if (file.exists() && file.isFile()) {
+
+            try {
+                // Код установки приложения
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                Uri uri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".provider", file);
+                intent.setDataAndType(uri, "application/vnd.android.package-archive");
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivityForResult(intent, INSTALL_REQUEST_CODE);
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.e(TAG, "Installation failed: " + e.getMessage());
+            }
+
+
+        } else {
+            Log.e(TAG, "File does not exist or is not a regular file");
+            // Дополнительная обработка в случае отсутствия файла
+        }
+    }
+
+    @SuppressLint("UseCompatLoadingForDrawables")
+    public AlertDialog progressBarUpload () throws InterruptedException {
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View dialogView = inflater.inflate(R.layout.dialog_layout, null);
+//
+// / Создание диалога с кастомным макетом
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        alertDialogBuilder.setView(dialogView);
+        alertDialogBuilder.setPositiveButton(getString(cancel_button), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                update_cancel = true;
+            }
+        });
+
+        return alertDialogBuilder.create();
+
+    }
+
+
+    private boolean isApkFileValid(String filePath) {
+        PackageManager pm = getPackageManager();
+        PackageInfo packageInfo = pm.getPackageArchiveInfo(filePath, 0);
+        if (packageInfo != null) {
+            // Проверяем, что пакет содержит версию и название
+            Log.d(TAG, "isApkFileValid: " + packageInfo.packageName);
+            Log.d(TAG, "isApkFileValid: " + packageInfo.versionCode);
+            return packageInfo.packageName != null && packageInfo.versionCode != 0;
+        }
+        return false;
+    }
+
+
+    private static final int PERMISSION_REQUEST_READ_PHONE_STATE = 1;
+    private void checkPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE)
+                == PackageManager.PERMISSION_GRANTED) {
+            performPhoneStateOperation();
+        } else {
+            MyBottomSheetPhoneStateFragment bottomSheetDialogFragment = new MyBottomSheetPhoneStateFragment();
+            bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
+        }
+    }
+    @SuppressLint({"HardwareIds", "ObsoleteSdkInt"})
+    private void performPhoneStateOperation() {
+        TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        if (telephonyManager != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // Начиная с Android 10, IMEI может быть недоступен без разрешения READ_PHONE_STATE
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "IMEI недоступен без разрешения", Toast.LENGTH_SHORT).show();
+                    // Здесь вы можете запросить разрешение у пользователя
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE}, PERMISSION_REQUEST_READ_PHONE_STATE);
+                    return;
+                }
+            }
+            String imei = null;
+            String toastMessage = "";
+            try {
+
+                Log.d(TAG, "performPhoneStateOperation: Build.VERSION.SDK_INT" + Build.VERSION.SDK_INT);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    // Для Android 8.0 (API уровня 26) и выше
+                    imei = telephonyManager.getImei(); // Получение IMEI первой SIM-карты
+                } else {
+                    // Для Android ниже 8.0 (API уровня меньше 26)
+                    imei = telephonyManager.getDeviceId(); // Получение IMEI устройства
+                }
+                if (imei != null) {
+                    // Делаем что-то с IMEI
+                    Log.d(TAG, "performPhoneStateOperation: IMEI: " + imei);
+                    toastMessage = "IMEI: " + imei;
+                } else {
+                    // IMEI недоступен
+                    Log.d(TAG, "performPhoneStateOperation: IMEI недоступен");
+                    Toast.makeText(this, "IMEI недоступен", Toast.LENGTH_SHORT).show();
+                }
+            } catch (SecurityException e) {
+                Log.d(TAG, "performPhoneStateOperation: IMEI недоступен");
+                Toast.makeText(this, "IMEI недоступен", Toast.LENGTH_SHORT).show();
+
+            }
+            String deviceId = DeviceUtils.getDeviceId(getApplicationContext());
+            toastMessage += " " + "Android ID устройства " + deviceId;
+            try {
+                String deviceIdSerial = DeviceUtils.getDeviceSerialNumber();
+                toastMessage += " " + "Serial ID устройства " + deviceIdSerial;
+                Toast.makeText(this, "Serial ID устройства " + deviceIdSerial, Toast.LENGTH_SHORT).show();
+            }  catch (SecurityException e) {
+               Log.d(TAG, "performPhoneStateOperation: IMEI недоступен");
+               Toast.makeText(this, "Serial ID устройства недоступен", Toast.LENGTH_SHORT).show();
+
+            }
+
+
+            Toast.makeText(this, toastMessage, Toast.LENGTH_SHORT).show();
+
+
+
+        } else {
+            // Устройство не поддерживает функции телефона
+            Toast.makeText(this, "Функции телефона недоступны", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+
     private String generateRandomString(int length) {
         String characters = "012345678901234567890123456789";
         StringBuilder randomString = new StringBuilder();
@@ -1497,6 +1819,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
                     cv.put("verifyOrder", "0");
                     database.update(TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
                 } else {
+                    versionServer = message;
                     try {
                         version(message);
                     } catch (MalformedURLException ignored) {
@@ -1532,16 +1855,19 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
         // Проверяем, прошло ли уже 24 часа с момента последней отправки
         if (currentTime - lastNotificationTime >= ONE_DAY_IN_MILLISECONDS) {
             if (!versionApi.equals(getString(R.string.version_code))) {
-                NotificationHelper notificationHelper = new NotificationHelper();
+
                 String title = getString(R.string.new_version);
                 String messageNotif = getString(R.string.news_of_version);
+
                 String urlStr = "https://play.google.com/store/apps/details?id=com.taxi_pas_4";
-                notificationHelper.showNotification(this, title, messageNotif, urlStr);
+                NotificationHelper.showNotification(this, title, messageNotif, urlStr);
 
                 // Обновляем время последней отправки уведомления
                 SharedPreferences.Editor editor = SharedPreferences.edit();
                 editor.putLong(LAST_NOTIFICATION_TIME_KEY, currentTime);
                 editor.apply();
+
+
             }
         }
     }
