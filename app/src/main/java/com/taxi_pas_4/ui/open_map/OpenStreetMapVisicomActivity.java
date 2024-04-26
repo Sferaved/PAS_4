@@ -25,6 +25,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.Switch;
 import android.widget.Toast;
@@ -51,6 +52,7 @@ import com.taxi_pas_4.ui.maps.FromJSONParser;
 import com.taxi_pas_4.ui.open_map.api.ApiResponse;
 import com.taxi_pas_4.ui.open_map.api.ApiService;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
+import com.taxi_pas_4.utils.VerifyUserTask;
 
 import org.json.JSONException;
 import org.osmdroid.api.IMapController;
@@ -86,7 +88,8 @@ public class OpenStreetMapVisicomActivity extends AppCompatActivity {
     private static ApiService apiService;
 
     public String[] arrayStreet;
-    public static FloatingActionButton fab, fab_call, fab_open_map, fab_open_marker;
+    public static FloatingActionButton  fab_call, fab_open_map, fab_open_marker;
+    public static ImageButton fab;
 
     public static double startLat, startLan, finishLat, finishLan;
     public static MapView map;
@@ -537,7 +540,7 @@ public class OpenStreetMapVisicomActivity extends AppCompatActivity {
                                 if (!result.equals("404")) {
                                     ToAdressString = result;
                                 } else {
-                                    FromAdressString = endPointNoText;
+                                    ToAdressString = endPointNoText;
                                 }
                                 assert map != null;
                                 marker = new Marker(map);
@@ -591,6 +594,11 @@ public class OpenStreetMapVisicomActivity extends AppCompatActivity {
     }
     public void onResume() {
         super.onResume();
+        String userEmail = logCursor(MainActivity.TABLE_USER_INFO, getApplicationContext()).get(3);
+
+        String application =  getString(R.string.application);
+        new com.taxi_pas_4.utils.VerifyUserTask(userEmail, application, getApplicationContext()).execute();
+
         switchToRegion();
 
         gpsSwitch.setChecked(switchState());

@@ -40,7 +40,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.ColorRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -77,6 +76,7 @@ import com.taxi_pas_4.ui.maps.CostJSONParser;
 import com.taxi_pas_4.ui.maps.ToJSONParser;
 import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
 import com.taxi_pas_4.ui.start.ResultSONParser;
+import com.taxi_pas_4.utils.VerifyUserTask;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 
 import org.json.JSONException;
@@ -156,50 +156,46 @@ public class HomeFragment extends Fragment {
     AutoCompleteTextView textViewFrom, textViewTo;
     ArrayAdapter<String> adapter;
     NavController navController;
+    String city;
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
-        if (!NetworkUtils.isNetworkAvailable(requireContext())) {
+        List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
+        Log.d(TAG, "onViewCreated: " + stringList);
+        city = stringList.get(1);
+        if (!NetworkUtils.isNetworkAvailable(requireContext()) || city.equals("foreign countries")) {
             navController.navigate(R.id.nav_visicom);
         }
+
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
         finiched = true;
 
-        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                if (alertDialog != null && alertDialog.isShowing()) {
-                    alertDialog.dismiss();
-                } else {
-                    // Действия, которые нужно выполнить при нажатии кнопки "назад", если диалог не открыт
-                    // Например, вызов стандартного обработчика кнопки "назад"
-                    requireActivity().onBackPressed();
-                }
-            }
-        });
+        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+
         progressBar = binding.progressBar;
         buttonBonus = binding.btnBonus;
 
         addCost = 0;
         updateAddCost(String.valueOf(addCost));
 
-        List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
-        Log.d(TAG, "onViewCreated: " + stringList);
-        if(stringList.size() !=0 ) {
-            switch (stringList.get(1)){
+        if(!stringList.isEmpty()) {
+            switch (city){
                 case "Dnipropetrovsk Oblast":
                     arrayStreet = DniproCity.arrayStreet();
+                    paymentType("nal_payment");
                     break;
                 case "Zaporizhzhia":
                     arrayStreet = Zaporizhzhia.arrayStreet();
+                    paymentType("nal_payment");
                     break;
                 case "Cherkasy Oblast":
                     arrayStreet = Cherkasy.arrayStreet();
+                    paymentType("nal_payment");
                     break;
                 case "Odessa":
                     arrayStreet = Odessa.arrayStreet();
+                    paymentType("nal_payment");
                     break;
                 case "OdessaTest":
                     arrayStreet = OdessaTest.arrayStreet();
@@ -282,12 +278,9 @@ public class HomeFragment extends Fragment {
 
         btn_order.setOnClickListener(new View.OnClickListener() {
             @SuppressLint("UseRequireInsteadOfGet")
-            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onClick(View v) {
                 progressBar.setVisibility(View.VISIBLE);
-
-
                 if(connected()) {
                     List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
                     List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity());
@@ -322,11 +315,13 @@ public class HomeFragment extends Fragment {
                                     changePayMethodMax(text_view_cost.getText().toString(), pay_method);
                                 } else {
                                     try {
-                                        orderRout();
+                                        if (orderRout()) {
+                                            orderFinished();
+                                        };
                                     } catch (UnsupportedEncodingException e) {
                                         throw new RuntimeException(e);
                                     }
-                                    orderFinished();
+
 
                                 }
                                 break;
@@ -337,23 +332,22 @@ public class HomeFragment extends Fragment {
                                     changePayMethodMax(text_view_cost.getText().toString(), pay_method);
                                 } else {
                                     try {
-                                        orderRout();
+                                        if (orderRout()) {
+                                            orderFinished();
+                                        };
                                     } catch (UnsupportedEncodingException e) {
                                         throw new RuntimeException(e);
                                     }
-                                    orderFinished();
                                 }
                                 break;
                             default:
                                 try {
-                                    orderRout();
+                                    if (orderRout()) {
+                                        orderFinished();
+                                    };
                                 } catch (UnsupportedEncodingException e) {
                                     throw new RuntimeException(e);
                                 }
-
-                                orderFinished();
-
-                                break;
                         }
 
                 } else {
@@ -433,7 +427,7 @@ public class HomeFragment extends Fragment {
         fab_call.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getRevers("V_20240113144017635_1XZW", "повернення замовлення", "6000");
+//                getRevers("V_20240416093908005_L3KA", "повернення замовлення", "4000");
 
                 Intent intent = new Intent(Intent.ACTION_DIAL);
                 List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
@@ -533,11 +527,12 @@ public class HomeFragment extends Fragment {
     }
 
     private void orderFinished() {
+
         if (!verifyPhone(requireContext())) {
             getPhoneNumber();
         }
         if (!verifyPhone(requireActivity())) {
-            bottomSheetDialogFragment = new MyPhoneDialogFragment("home", text_view_cost.getText().toString(), true);
+            bottomSheetDialogFragment = new MyPhoneDialogFragment(getActivity(),"home", text_view_cost.getText().toString(), true);
             bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
             progressBar.setVisibility(View.INVISIBLE);
         }
@@ -548,12 +543,13 @@ public class HomeFragment extends Fragment {
                 Map<String, String> sendUrlMap = ToJSONParser.sendURL(urlOrder);
 
                 String orderWeb = sendUrlMap.get("order_cost");
-                String message = requireActivity().getString(R.string.error_message);
+                String message = sendUrlMap.get("message");
 
                 if (!orderWeb.equals("0")) {
 
                     String from_name = sendUrlMap.get("routefrom");
                     String to_name = sendUrlMap.get("routeto");
+
                     if (from_name.equals(to_name)) {
                         messageResult = getString(R.string.thanks_message) +
                                 from_name + " " + from_number.getText() + getString(R.string.on_city) +
@@ -595,9 +591,24 @@ public class HomeFragment extends Fragment {
                     progressBar.setVisibility(View.INVISIBLE);
 
                 } else {
-                    message = getString(R.string.error_message);
-                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
-                    bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                    if (message.contains("Дублирование")) {
+                        message = getResources().getString(R.string.double_order_error);
+                        MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
+                        bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                    } else {
+                        switch (pay_method) {
+                            case "bonus_payment":
+                            case "card_payment":
+                            case "fondy_payment":
+                            case "mono_payment":
+                                changePayMethodToNal();
+                                break;
+                            default:
+                                message = getResources().getString(R.string.error_message);
+                                MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
+                                bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                        }
+                    }
                 }
 
 
@@ -611,96 +622,144 @@ public class HomeFragment extends Fragment {
             bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
         }
     }
+
+    private void changePayMethodToNal() {
+        // Инфлейтим макет для кастомного диалога
+        LayoutInflater inflater = LayoutInflater.from(requireActivity());
+        View dialogView = inflater.inflate(R.layout.custom_dialog_layout, null);
+
+        alertDialog = new AlertDialog.Builder(requireActivity()).create();
+        alertDialog.setView(dialogView);
+        alertDialog.setCancelable(false);
+        // Настраиваем элементы макета
+
+
+        TextView messageTextView = dialogView.findViewById(R.id.dialog_message);
+        String messagePaymentType = getString(R.string.to_nal_payment);
+        messageTextView.setText(messagePaymentType);
+
+        Button okButton = dialogView.findViewById(R.id.dialog_ok_button);
+        okButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                paymentType("nal_payment");
+
+                try {
+                    if(orderRout()){
+                        orderFinished();
+                    }
+                } catch (UnsupportedEncodingException e) {
+                    throw new RuntimeException(e);
+                }
+                progressBar.setVisibility(View.GONE);
+                alertDialog.dismiss();
+            }
+        });
+
+        Button cancelButton = dialogView.findViewById(R.id.dialog_cancel_button);
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                progressBar.setVisibility(View.GONE);
+                alertDialog.dismiss();
+            }
+        });
+
+        alertDialog.show();
+    }
+
     @SuppressLint("ResourceAsColor")
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    private void orderRout() throws UnsupportedEncodingException {
+    private boolean orderRout() throws UnsupportedEncodingException {
         if(!verifyOrder(requireContext())) {
             MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.black_list_message));
             bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
-            return;
+            progressBar.setVisibility(View.INVISIBLE);
+            return false;
+        } else {
+            List<String> stringListRoutHome = logCursor(MainActivity.ROUT_HOME, requireActivity());
+            progressBar.setVisibility(View.INVISIBLE);
+            if (stringListRoutHome.get(1).equals(" ") && !textViewTo.getText().equals("")) {
+                boolean stop = false;
+                if (numberFlagFrom.equals("1") && from_number.getText().toString().equals(" ")) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        from_number.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.selected_text_color)));
+                        from_number.setBackgroundTintBlendMode(BlendMode.SRC_IN); // Устанавливаем режим смешивания цветов
+                        from_number.requestFocus();
+                    } else {
+                        ViewCompat.setBackgroundTintList(from_number, ColorStateList.valueOf(getResources().getColor(R.color.selected_text_color)));
+                        from_number.requestFocus();
+                    }
+                    stop = true;
+                }
+                if (numberFlagTo.equals("1") && to_number.getText().toString().equals(" ")) {
+                    to_number.setBackgroundTintList(ColorStateList.valueOf(R.color.selected_text_color));
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        to_number.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.selected_text_color)));
+                        to_number.setBackgroundTintBlendMode(BlendMode.SRC_IN); // Устанавливаем режим смешивания цветов
+                        to_number.requestFocus();
+                    } else {
+                        ViewCompat.setBackgroundTintList(to_number, ColorStateList.valueOf(getResources().getColor(R.color.selected_text_color)));
+                        to_number.requestFocus();
+                    }
+                    stop = true;
+
+                }
+                if (stop) {
+                    return false;
+                }
+
+                if (numberFlagFrom.equals("1") && !from_number.getText().toString().equals(" ")) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        from_number.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.edit)));
+                        from_number.setBackgroundTintBlendMode(BlendMode.SRC_IN); // Устанавливаем режим смешивания цветов
+                        from_number.requestFocus();
+                    } else {
+                        ViewCompat.setBackgroundTintList(from_number, ColorStateList.valueOf(getResources().getColor(R.color.edit)));
+                        from_number.requestFocus();
+                    }
+
+                }
+                if (numberFlagTo.equals("1") && !to_number.getText().toString().equals(" ")) {
+                    to_number.setBackgroundTintList(ColorStateList.valueOf(R.color.selected_text_color));
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        to_number.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.edit)));
+                        to_number.setBackgroundTintBlendMode(BlendMode.SRC_IN); // Устанавливаем режим смешивания цветов
+                        to_number.requestFocus();
+                    } else {
+                        ViewCompat.setBackgroundTintList(to_number, ColorStateList.valueOf(getResources().getColor(R.color.edit)));
+                        to_number.requestFocus();
+                    }
+
+
+                }
+
+                String from_numberCost;
+                if (from_number.getText().toString().equals(" ")) {
+                    from_numberCost = " ";
+                } else {
+
+                    from_numberCost = from_number.getText().toString();
+                }
+                String toCost, to_numberCost;
+                if (to == null) {
+                    toCost = from;
+                    to_numberCost = from_number.getText().toString();
+                } else {
+                    toCost = to;
+                    to_numberCost = to_number.getText().toString();
+                }
+                List<String> settings = new ArrayList<>();
+                settings.add(from);
+                settings.add(from_numberCost);
+                settings.add(toCost);
+                settings.add(to_numberCost);
+                Log.d(TAG, "order: settings" + settings);
+                updateRoutHome(settings);
+            }
+
+            urlOrder = getTaxiUrlSearch( "orderSearch", requireActivity());
+            return true;
         }
-        List<String> stringListRoutHome = logCursor(MainActivity.ROUT_HOME, requireActivity());
-
-        if (stringListRoutHome.get(1).equals(" ") && !textViewTo.getText().equals("")) {
-            boolean stop = false;
-            if (numberFlagFrom.equals("1") && from_number.getText().toString().equals(" ")) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    from_number.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.selected_text_color)));
-                    from_number.setBackgroundTintBlendMode(BlendMode.SRC_IN); // Устанавливаем режим смешивания цветов
-                    from_number.requestFocus();
-                } else {
-                    ViewCompat.setBackgroundTintList(from_number, ColorStateList.valueOf(getResources().getColor(R.color.selected_text_color)));
-                    from_number.requestFocus();
-                }
-                stop = true;
-            }
-            if (numberFlagTo.equals("1") && to_number.getText().toString().equals(" ")) {
-                to_number.setBackgroundTintList(ColorStateList.valueOf(R.color.selected_text_color));
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    to_number.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.selected_text_color)));
-                    to_number.setBackgroundTintBlendMode(BlendMode.SRC_IN); // Устанавливаем режим смешивания цветов
-                    to_number.requestFocus();
-                } else {
-                    ViewCompat.setBackgroundTintList(to_number, ColorStateList.valueOf(getResources().getColor(R.color.selected_text_color)));
-                    to_number.requestFocus();
-                }
-                stop = true;
-
-            }
-            if (stop) {
-                return;
-            }
-
-            if (numberFlagFrom.equals("1") && !from_number.getText().toString().equals(" ")) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    from_number.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.edit)));
-                    from_number.setBackgroundTintBlendMode(BlendMode.SRC_IN); // Устанавливаем режим смешивания цветов
-                    from_number.requestFocus();
-                } else {
-                    ViewCompat.setBackgroundTintList(from_number, ColorStateList.valueOf(getResources().getColor(R.color.edit)));
-                    from_number.requestFocus();
-                }
-
-            }
-            if (numberFlagTo.equals("1") && !to_number.getText().toString().equals(" ")) {
-                to_number.setBackgroundTintList(ColorStateList.valueOf(R.color.selected_text_color));
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    to_number.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.edit)));
-                    to_number.setBackgroundTintBlendMode(BlendMode.SRC_IN); // Устанавливаем режим смешивания цветов
-                    to_number.requestFocus();
-                } else {
-                    ViewCompat.setBackgroundTintList(to_number, ColorStateList.valueOf(getResources().getColor(R.color.edit)));
-                    to_number.requestFocus();
-                }
-
-
-            }
-
-            String from_numberCost;
-            if (from_number.getText().toString().equals(" ")) {
-                from_numberCost = " ";
-            } else {
-
-                from_numberCost = from_number.getText().toString();
-            }
-            String toCost, to_numberCost;
-            if (to == null) {
-                toCost = from;
-                to_numberCost = from_number.getText().toString();
-            } else {
-                toCost = to;
-                to_numberCost = to_number.getText().toString();
-            }
-            List<String> settings = new ArrayList<>();
-            settings.add(from);
-            settings.add(from_numberCost);
-            settings.add(toCost);
-            settings.add(to_numberCost);
-            Log.d(TAG, "order: settings" + settings);
-            updateRoutHome(settings);
-        }
-
-        urlOrder = getTaxiUrlSearch( "orderSearch", requireActivity());
 
     }
     private void updateAddCost(String addCost) {
@@ -733,13 +792,13 @@ public class HomeFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        String userEmail = logCursor(MainActivity.TABLE_USER_INFO, requireActivity()).get(3);
+
+        String application =  getString(R.string.application);
+        new VerifyUserTask(userEmail, application, requireActivity()).execute();
 
         progressBar.setVisibility(View.INVISIBLE);
         pay_method =  logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity()).get(4);
-//        if(!text_view_cost.getText().equals("")){
-//            changePayMethodMax(text_view_cost.getText().toString(), pay_method);
-//        }
-
 
         if(bottomSheetDialogFragment != null) {
             bottomSheetDialogFragment.dismiss();
@@ -1642,14 +1701,12 @@ public class HomeFragment extends Fragment {
                 }
 
                 try {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        orderRout();
-                    }
+                    if (orderRout()) {
+                        orderFinished();
+                    };
                 } catch (UnsupportedEncodingException e) {
                     throw new RuntimeException(e);
                 }
-
-                orderFinished();
 
                 progressBar.setVisibility(View.GONE);
                 alertDialog.dismiss();

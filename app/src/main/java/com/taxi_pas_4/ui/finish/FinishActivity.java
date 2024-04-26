@@ -15,8 +15,8 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -45,6 +45,7 @@ import com.taxi_pas_4.ui.fondy.token_pay.StatusRequestToken;
 import com.taxi_pas_4.ui.fondy.token_pay.SuccessResponseDataToken;
 import com.taxi_pas_4.ui.home.MyBottomSheetBlackListFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
+import com.taxi_pas_4.ui.home.MyBottomSheetErrorPaymentFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetMessageFragment;
 import com.taxi_pas_4.ui.maps.CostJSONParser;
 import com.taxi_pas_4.ui.mono.MonoApi;
@@ -88,15 +89,17 @@ public class FinishActivity extends AppCompatActivity {
     public static Button btn_cancel_order;
     private long delayMillis, delayMillisStatus;
     public static Runnable myRunnable;
-    public static Handler handler, handlerStatus;
-    Runnable myTaskStatus;
-
+    public static Runnable runnableBonusBtn;
+    public static Handler handler, handlerBonusBtn,  handlerStatus;
+    public static Runnable myTaskStatus;
+    public static ProgressBar progressBar;
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_finish);
-        new VerifyUserTask().execute();
+
+        progressBar = findViewById(R.id.progress_bar);
         pay_method = logCursor(MainActivity.TABLE_SETTINGS_INFO).get(4);
         Log.d(TAG, "onCreate: " + pay_method);
         messageFondy = getString(R.string.fondy_message);
@@ -136,31 +139,42 @@ public class FinishActivity extends AppCompatActivity {
         handler = new Handler();
 
         if (pay_method.equals("bonus_payment")) {
+            handlerBonusBtn = new Handler();
 
              String url = baseUrl + "/bonusBalance/recordsBloke/" + uid;
 
              fetchBonus(url);
-             handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        MainActivity.order_id = null;
+            runnableBonusBtn = new Runnable() {
+                @Override
+                public void run() {
+                    MainActivity.order_id = null;
+                    String newStatus = text_status.getText().toString();
+                    if(!newStatus.contains(getString(R.string.time_out_text))
+                            || !newStatus.contains(getString(R.string.error_payment_card))
+                            || !newStatus.contains(getString(R.string.double_order_error))
+                            || !newStatus.contains(getString(R.string.call_btn_cancel)) ) {
                         String cancelText = getApplicationContext().getString(R.string.call_btn_cancel);
                         text_status.setText(cancelText);
-                        btn_cancel_order.setText(getString(R.string.help_button));
-                        btn_cancel_order.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                handlerStatus.removeCallbacks(myTaskStatus);
-                                Intent intent = new Intent(Intent.ACTION_DIAL);
 
-                                List<String> stringList = logCursor(MainActivity.CITY_INFO);
-                                String phone = stringList.get(3);
-                                intent.setData(Uri.parse(phone));
-                                startActivity(intent);
-                            }
-                        });
+                    } else {
+                        text_status.setText(newStatus);
                     }
-             }, delayMillis);
+                    btn_cancel_order.setText(getString(R.string.help_button));
+                    btn_cancel_order.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            handlerStatus.removeCallbacks(myTaskStatus);
+                            Intent intent = new Intent(Intent.ACTION_DIAL);
+
+                            List<String> stringList = logCursor(MainActivity.CITY_INFO);
+                            String phone = stringList.get(3);
+                            intent.setData(Uri.parse(phone));
+                            startActivity(intent);
+                        }
+                    });
+                }
+            };
+            handlerBonusBtn.postDelayed(runnableBonusBtn, delayMillis);
          }
 
         handlerStatus = new Handler();
@@ -179,12 +193,23 @@ public class FinishActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     MainActivity.order_id = null;
-                    String cancelText = getApplicationContext().getString(R.string.call_btn_cancel);
-                    text_status.setText(cancelText);
+                    String newStatus = text_status.getText().toString();
+                    if(!newStatus.contains(getString(R.string.time_out_text))
+                            || !newStatus.contains(getString(R.string.error_payment_card))
+                            || !newStatus.contains(getString(R.string.double_order_error))
+                            || !newStatus.contains(getString(R.string.call_btn_cancel)) ) {
+                        String cancelText = getApplicationContext().getString(R.string.call_btn_cancel);
+                        text_status.setText(cancelText);
+
+                    } else {
+                        text_status.setText(newStatus);
+                    }
+                    btn_reset_status.setVisibility(View.GONE);
                     btn_cancel_order.setText(getString(R.string.help_button));
                     btn_cancel_order.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
+                            handlerBonusBtn.removeCallbacks(runnableBonusBtn);
                             handlerStatus.removeCallbacks(myTaskStatus);
                             Intent intent = new Intent(Intent.ACTION_DIAL);
                             List<String> stringList = logCursor(MainActivity.CITY_INFO);
@@ -202,21 +227,28 @@ public class FinishActivity extends AppCompatActivity {
         btn_cancel_order.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+//                handlerBonusBtn.removeCallbacks(runnableBonusBtn);
+                progressBar.setVisibility(View.VISIBLE);
                 handlerStatus.removeCallbacks(myTaskStatus);
+                handler.removeCallbacks(myRunnable);
                 if(connected()){
-                    cancelOrder(uid);
+
                     if(!uid_Double.equals(" ")) {
-                        cancelOrder(uid_Double);
+                        cancelOrderDouble();
+                    } else{
+                        cancelOrder(uid);
                     }
                     if (thread != null && thread.isAlive()) {
                         thread.interrupt();
                     }
                 } else {
+                    progressBar.setVisibility(View.INVISIBLE);
                     text_status.setText(R.string.verify_internet);
                 }
+
                 btn_reset_status.setVisibility(View.GONE);
                 btn_cancel_order.setVisibility(View.GONE);
-                handler.removeCallbacks(myRunnable);
+
             }
         });
 
@@ -279,6 +311,23 @@ public class FinishActivity extends AppCompatActivity {
         }
 
     }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        if (handler != null) {
+            handler.removeCallbacks(myRunnable);
+        }
+        if (handlerBonusBtn != null) {
+            handlerBonusBtn.removeCallbacks(runnableBonusBtn);
+        }
+        if (handlerStatus != null) {
+            handlerStatus.removeCallbacks(myTaskStatus);
+        }
+    }
+
+
     @SuppressLint("Range")
     private void payFondy(String MERCHANT_ID) {
 
@@ -301,7 +350,7 @@ public class FinishActivity extends AppCompatActivity {
                 .baseUrl("https://pay.fondy.eu/api/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-
+        MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(FinishActivity.this);
         PaymentApiToken paymentApi = retrofit.create(PaymentApiToken.class);
         List<String>  arrayList = logCursor(MainActivity.CITY_INFO);
         String MERCHANT_ID = arrayList.get(6);
@@ -354,27 +403,39 @@ public class FinishActivity extends AppCompatActivity {
                                 Log.d(TAG, "onResponse: errorResponseMessage " + errorResponseMessage);
                                 Log.d(TAG, "onResponse: errorResponseCode" + errorResponseCode);
 
-                                Toast.makeText(FinishActivity.this, R.string.pay_failure_mes, Toast.LENGTH_SHORT).show();
-                                getUrlToPaymentFondy(messageFondy, amount);
+//                                Toast.makeText(FinishActivity.this, R.string.pay_failure_mes, Toast.LENGTH_SHORT).show();
+                                MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(FinishActivity.this);
+
+                                MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("fondy_payment", messageFondy, amount, getApplicationContext());
+                                bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
+
                             }
                         } else {
-                            Toast.makeText(FinishActivity.this, R.string.pay_failure_mes, Toast.LENGTH_SHORT).show();
+//                            Toast.makeText(FinishActivity.this, R.string.pay_failure_mes, Toast.LENGTH_SHORT).show();
                             MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(FinishActivity.this);
-                            getUrlToPaymentFondy(messageFondy, amount);
+
+                            MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("fondy_payment", messageFondy, amount, getApplicationContext());
+                            bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
+
+//                            getUrlToPaymentFondy(messageFondy, amount);
                         }
                     } catch (JsonSyntaxException e) {
                         // Возникла ошибка при разборе JSON, возможно, сервер вернул неправильный формат ответа
                         Log.e(TAG, "Error parsing JSON response: " + e.getMessage());
-                        Toast.makeText(FinishActivity.this, R.string.pay_failure_mes, Toast.LENGTH_SHORT).show();
+//                        Toast.makeText(FinishActivity.this, R.string.pay_failure_mes, Toast.LENGTH_SHORT).show();
                         MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(FinishActivity.this);
-                        getUrlToPaymentFondy(messageFondy, amount);
+                        MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("fondy_payment", messageFondy, amount, getApplicationContext());
+                        bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
+//                        getUrlToPaymentFondy(messageFondy, amount);
                     }
                 } else {
                     // Обработка ошибки
                     Log.d(TAG, "onFailure: " + response.code());
-                    Toast.makeText(FinishActivity.this, R.string.pay_failure_mes, Toast.LENGTH_SHORT).show();
-                    
-                    getUrlToPaymentFondy(messageFondy, amount);
+//                    Toast.makeText(FinishActivity.this, R.string.pay_failure_mes, Toast.LENGTH_SHORT).show();
+                    MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(FinishActivity.this);
+                    MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("fondy_payment", messageFondy, amount, getApplicationContext());
+                    bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
+//                    getUrlToPaymentFondy(messageFondy, amount);
                 }
 
             }
@@ -382,9 +443,12 @@ public class FinishActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<ApiResponseToken<SuccessResponseDataToken>> call, Throwable t) {
                 Log.d(TAG, "onFailure1111: " + t.toString());
-                Toast.makeText(FinishActivity.this, R.string.pay_failure_mes, Toast.LENGTH_SHORT).show();
+//                Toast.makeText(FinishActivity.this, R.string.pay_failure_mes, Toast.LENGTH_SHORT).show();
+
                 MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(FinishActivity.this);
-                getUrlToPaymentFondy(messageFondy, amount);
+                MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("fondy_payment", messageFondy, amount, getApplicationContext());
+                bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
+//                getUrlToPaymentFondy(messageFondy, amount);
             }
         });
     }
@@ -404,13 +468,41 @@ public class FinishActivity extends AppCompatActivity {
                 do {
                     result = cursor.getString(cursor.getColumnIndex("rectoken"));
                     Log.d(TAG, "Found rectoken with rectoken_check = 1 and merchant = " + merchantId + ": " + result);
+                    return result;
                 } while (cursor.moveToNext());
             }
             cursor.close();
         }
 
         database.close();
+
+        logTableContent(table);
+
         return result;
+    }
+    private void logTableContent(String table) {
+        SQLiteDatabase database = openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+
+        String[] columns = {"rectoken_check", "merchant", "rectoken"}; // Укажите все необходимые поля
+        String selection = null;
+        String[] selectionArgs = null;
+
+        Cursor cursor = database.query(table, columns, selection, selectionArgs, null, null, null);
+
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                do {
+                    @SuppressLint("Range") String rectokenCheck = cursor.getString(cursor.getColumnIndex("rectoken_check"));
+                    @SuppressLint("Range") String merchant = cursor.getString(cursor.getColumnIndex("merchant"));
+                    @SuppressLint("Range") String rectoken = cursor.getString(cursor.getColumnIndex("rectoken"));
+
+                    Log.d(TAG, "rectoken_check: " + rectokenCheck + ", merchant: " + merchant + ", rectoken: " + rectoken);
+                } while (cursor.moveToNext());
+            }
+            cursor.close();
+        }
+
+        database.close();
     }
 
 
@@ -466,7 +558,8 @@ public class FinishActivity extends AppCompatActivity {
                                         checkoutUrl,
                                         amount,
                                         uid,
-                                        uid_Double
+                                        uid_Double,
+                                        getApplicationContext()
                                 );
                                 bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
 
@@ -476,28 +569,24 @@ public class FinishActivity extends AppCompatActivity {
                                 String errorResponseCode = responseBody.getErrorCode();
                                 Log.d(TAG, "onResponse: errorResponseMessage " + errorResponseMessage);
                                 Log.d(TAG, "onResponse: errorResponseCode" + errorResponseCode);
-                                cancelOrderDismiss(uid);
-                                cancelOrderDismiss(uid_Double);
+                                cancelOrderDouble();
                                 // Отобразить сообщение об ошибке пользователю
                             } else {
                                 // Обработка других возможных статусов ответа
                             }
                         } else {
                             // Обработка пустого тела ответа
-                            cancelOrderDismiss(uid);
-                            cancelOrderDismiss(uid_Double);
+                            cancelOrderDouble();
                         }
                     } catch (JsonSyntaxException e) {
                         // Возникла ошибка при разборе JSON, возможно, сервер вернул неправильный формат ответа
                         Log.e(TAG, "Error parsing JSON response: " + e.getMessage());
-                        cancelOrderDismiss(uid);
-                        cancelOrderDismiss(uid_Double);
+                        cancelOrderDouble();
                     }
                 } else {
                     // Обработка ошибки
                     Log.d(TAG, "onFailure: " + response.code());
-                    cancelOrderDismiss(uid);
-                    cancelOrderDismiss(uid_Double);
+                    cancelOrderDouble();
                 }
 
             }
@@ -506,50 +595,49 @@ public class FinishActivity extends AppCompatActivity {
             public void onFailure(@NonNull Call<ApiResponsePay<SuccessResponseDataPay>> call, Throwable t) {
                 Log.d(TAG, "onFailure1111: " + t.toString());
 
-                cancelOrderDismiss(uid);
-                cancelOrderDismiss(uid_Double);
+                cancelOrderDouble();
             }
 
 
         });
     }
 
-    private void cancelOrderDismiss(String value) {
-        List<String> listCity = logCursor(MainActivity.CITY_INFO);
-        String city = listCity.get(1);
-        String api = listCity.get(2);
-
-
-        String url = baseUrl + "/" + api + "/android/webordersCancel/" + value + "/" + city  + "/" + getString(R.string.application);
-
-        Call<Status> call = ApiClient.getApiService().cancelOrder(url);
-        Log.d(TAG, "cancelOrderWithDifferentValue cancelOrderUrl: " + url);
-
-        call.enqueue(new Callback<Status>() {
-            @Override
-            public void onResponse(Call<Status> call, Response<Status> response) {
-                Status status = response.body();
-                if (status != null) {
-
-                    String result =  String.valueOf(status.getResponse());
-                    Log.d(TAG, "onResponse: result" + result);
-                    FinishActivity.text_status.setText(result + getString(R.string.pay_failure));
-
-                } else {
-                    FinishActivity.text_status.setText(R.string.verify_internet);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<Status> call, Throwable t) {
-                // Обработка ошибок сети или других ошибок
-                String errorMessage = t.getMessage();
-                t.printStackTrace();
-                Log.d(TAG, "onFailure: " + errorMessage);
-
-            }
-        });
-    }
+//    private void cancelOrderDismiss(String value) {
+//        List<String> listCity = logCursor(MainActivity.CITY_INFO);
+//        String city = listCity.get(1);
+//        String api = listCity.get(2);
+//
+//
+//        String url = baseUrl + "/" + api + "/android/webordersCancel/" + value + "/" + city  + "/" + getString(R.string.application);
+//
+//        Call<Status> call = ApiClient.getApiService().cancelOrder(url);
+//        Log.d(TAG, "cancelOrderWithDifferentValue cancelOrderUrl: " + url);
+//
+//        call.enqueue(new Callback<Status>() {
+//            @Override
+//            public void onResponse(Call<Status> call, Response<Status> response) {
+//                Status status = response.body();
+//                if (status != null) {
+//
+//                    String result =  String.valueOf(status.getResponse());
+//                    Log.d(TAG, "onResponse: result" + result);
+//                    FinishActivity.text_status.setText(result + getString(R.string.pay_failure));
+//
+//                } else {
+//                    FinishActivity.text_status.setText(R.string.verify_internet);
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Call<Status> call, Throwable t) {
+//                // Обработка ошибок сети или других ошибок
+//                String errorMessage = t.getMessage();
+//                t.printStackTrace();
+//                Log.d(TAG, "onFailure: " + errorMessage);
+//
+//            }
+//        });
+//    }
 
     private void getUrlToPaymentMono(String amount, String reference, String comment) {
 
@@ -593,34 +681,31 @@ public class FinishActivity extends AppCompatActivity {
                                     pageUrl,
                                     amount,
                                     uid,
-                                    uid_Double
+                                    uid_Double,
+                                    getApplicationContext()
                             );
                             bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
 
                         } else {
-                            cancelOrderDismiss(uid);
-                            cancelOrderDismiss(uid_Double);
+                            cancelOrderDouble();
                         }
 
                     } catch (JsonSyntaxException e) {
                         // Возникла ошибка при разборе JSON, возможно, сервер вернул неправильный формат ответа
                         Log.e(TAG, "Error parsing JSON response: " + e.getMessage());
-                        cancelOrderDismiss(uid);
-                        cancelOrderDismiss(uid_Double);
+                        cancelOrderDouble();
                     }
                 } else {
                     // Обработка ошибки
                     Log.d(TAG, "onFailure: " + response.code());
-                    cancelOrderDismiss(uid);
-                    cancelOrderDismiss(uid_Double);
+                    cancelOrderDouble();
                 }
             }
 
             @Override
             public void onFailure(Call<ResponsePayMono> call, Throwable t) {
                 Log.d(TAG, "onFailure1111: " + t.toString());
-                cancelOrderDismiss(uid);
-                cancelOrderDismiss(uid_Double);
+                cancelOrderDouble();
             }
 
 
@@ -818,13 +903,29 @@ public class FinishActivity extends AppCompatActivity {
 
         call.enqueue(new Callback<Status>() {
             @Override
-            public void onResponse(Call<Status> call, Response<Status> response) {
+            public void onResponse(@NonNull Call<Status> call, @NonNull Response<Status> response) {
                 if (response.isSuccessful()) {
                     Status status = response.body();
                     if (status != null) {
                         String result =  String.valueOf(status.getResponse());
                         Log.d(TAG, "onResponse: result" + result);
-                        text_status.setText(result);
+                        String message_local = result;
+                        Log.d(TAG, "onResponse: " +message_local);
+                        switch (result) {
+                            case "Запит на скасування замовлення надіслано. Замовлення не вдалося скасувати.":
+                                message_local = getString(R.string.cancel_0);
+                                break;
+                            case "Запит на скасування замовлення надіслано. Замовлення скасоване.":
+                                message_local = getString(R.string.cancel_1);
+                                break;
+                            case "Запит на скасування замовлення надіслано. Вимагає підтвердження клієнтом скасування диспетчерської.":
+                                message_local = getString(R.string.cancel_2);
+                                break;
+                            case "Запит на скасування замовлення надіслано. Статус поїздки дізнайтесь у диспетчера.":
+                                message_local = getString(R.string.cancel_3);
+                                break;
+                        }
+                        text_status.setText(message_local);
                         String comment = getString(R.string.fondy_revers_message) + getString(R.string.fondy_message);;
 
                         switch (pay_method) {
@@ -842,6 +943,7 @@ public class FinishActivity extends AppCompatActivity {
                         text_status.setText(R.string.verify_internet);
                     }
                 }
+                progressBar.setVisibility(View.INVISIBLE);
             }
 
             @Override
@@ -851,10 +953,77 @@ public class FinishActivity extends AppCompatActivity {
                 t.printStackTrace();
                 Log.d(TAG, "onFailure: " + errorMessage);
                 text_status.setText(R.string.verify_internet);
+                progressBar.setVisibility(View.INVISIBLE);
             }
         });
     }
-    private void getRevers(String orderId, String comment, String amount) {
+    private void cancelOrderDouble() {
+        List<String> listCity = logCursor(MainActivity.CITY_INFO);
+        String city = listCity.get(1);
+        String api = listCity.get(2);
+
+        String url = baseUrl + "/" + api + "/android/webordersCancelDouble/" + uid+ "/" + uid_Double + "/" + pay_method + "/" + city  + "/" + getString(R.string.application);
+
+        Call<Status> call = ApiClient.getApiService().cancelOrderDouble(url);
+        Log.d(TAG, "cancelOrderDouble: " + url);
+
+        call.enqueue(new Callback<Status>() {
+            @Override
+            public void onResponse(Call<Status> call, Response<Status> response) {
+                if (response.isSuccessful()) {
+                    Status status = response.body();
+                    if (status != null) {
+                        String result =  String.valueOf(status.getResponse());
+                        Log.d(TAG, "onResponse: result" + result);
+                        String message_local = result;
+                        Log.d(TAG, "onResponse: " +message_local);
+                        switch (result) {
+                            case "Запит на скасування замовлення надіслано. Замовлення не вдалося скасувати.":
+                                message_local = getString(R.string.cancel_0);
+                                break;
+                            case "Запит на скасування замовлення надіслано. Замовлення скасоване.":
+                                message_local = getString(R.string.cancel_1);
+                                break;
+                            case "Запит на скасування замовлення надіслано. Вимагає підтвердження клієнтом скасування диспетчерської.":
+                                message_local = getString(R.string.cancel_2);
+                                break;
+                            case "Запит на скасування замовлення надіслано. Статус поїздки дізнайтесь у диспетчера.":
+                                message_local = getString(R.string.cancel_3);
+                                break;
+                        }
+                        text_status.setText(message_local);
+                        String comment = getString(R.string.fondy_revers_message) + getString(R.string.fondy_message);;
+
+                        switch (pay_method) {
+                            case "fondy_payment":
+                                getRevers(MainActivity.order_id, comment, amount);
+                                break;
+                            case "mono_payment":
+                                getReversMono(MainActivity.invoiceId, comment, Integer.parseInt(amount));
+                                break;
+                        }
+                    }
+                } else {
+                    // Обработка неуспешного ответа
+                    if (pay_method.equals("nal_payment")) {
+                        text_status.setText(R.string.verify_internet);
+                    }
+                }
+                progressBar.setVisibility(View.INVISIBLE);
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Status> call, @NonNull Throwable t) {
+                // Обработка ошибок сети или других ошибок
+                String errorMessage = t.getMessage();
+                t.printStackTrace();
+                Log.d(TAG, "onFailure: " + errorMessage);
+                text_status.setText(R.string.verify_internet);
+                progressBar.setVisibility(View.INVISIBLE);
+            }
+        });
+    }
+    void getRevers(String orderId, String comment, String amount) {
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://pay.fondy.eu/api/")
@@ -915,7 +1084,7 @@ public class FinishActivity extends AppCompatActivity {
         });
 
     }
-    private void getReversMono(
+    void getReversMono(
             String invoiceId,
             String extRef,
             int amount
@@ -1028,7 +1197,16 @@ public class FinishActivity extends AppCompatActivity {
                             message = getString(R.string.ex_st_0);
                             break;
                         case "Canceled":
-                            message = getString(R.string.ex_st_canceled);
+                            String newStatus = text_status.getText().toString();
+                            if(!newStatus.contains(getString(R.string.time_out_text))
+                                    || !newStatus.contains(getString(R.string.error_payment_card))
+                                    || !newStatus.contains(getString(R.string.double_order_error))
+                                    || !newStatus.contains(getString(R.string.call_btn_cancel)) ) {
+                                message = getString(R.string.ex_st_canceled);
+                            } else {
+                                message = newStatus;
+                            }
+
                             break;
                         case "CarFound":
                             // Формируем сообщение с учетом возможных пустых значений переменных
@@ -1062,12 +1240,28 @@ public class FinishActivity extends AppCompatActivity {
                             message = getString(R.string.def_status);
                             break;
                     }
-
-                    text_status.setText(message);
+                    String message_local = message;
+                    Log.d(TAG, "onResponse: " +message_local);
+                    switch (message) {
+                        case "Запит на скасування замовлення надіслано. Замовлення не вдалося скасувати.":
+                            message_local = getString(R.string.cancel_0);
+                            break;
+                        case "Запит на скасування замовлення надіслано. Замовлення скасоване.":
+                            message_local = getString(R.string.cancel_1);
+                            break;
+                        case "Запит на скасування замовлення надіслано. Вимагає підтвердження клієнтом скасування диспетчерської.":
+                            message_local = getString(R.string.cancel_2);
+                            break;
+                        case "Запит на скасування замовлення надіслано. Статус поїздки дізнайтесь у диспетчера.":
+                            message_local = getString(R.string.cancel_3);
+                            break;
+                    }
+                    text_status.setText(message_local);
 
                 } else {
                     text_status.setText(getString(R.string.def_status));
                 }
+
             }
 
             @Override

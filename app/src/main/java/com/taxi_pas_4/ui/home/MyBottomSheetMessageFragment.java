@@ -57,7 +57,12 @@ public class MyBottomSheetMessageFragment extends BottomSheetDialogFragment {
         });
         textViewInfo = view.findViewById(R.id.textViewInfo);
         textViewInfo.setText(message);
-
+        textViewInfo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dismiss();
+            }
+        });
         return view;
     }
 

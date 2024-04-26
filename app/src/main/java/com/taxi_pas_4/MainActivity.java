@@ -87,8 +87,8 @@ import com.taxi_pas_4.ui.home.MyBottomSheetCityFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetGPSFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetMessageFragment;
-import com.taxi_pas_4.ui.maps.CostJSONParser;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
+import com.taxi_pas_4.utils.VerifyUserTask;
 import com.taxi_pas_4.utils.activ_push.MyService;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.download.AppUpdater;
@@ -111,7 +111,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -168,7 +167,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
     public static String countryState;
     private static String verifyInternet;
     public static final long MAX_TASK_EXECUTION_TIME_SECONDS = 3;
-    private static String versionServer;
+    public static String versionServer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -246,7 +245,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
 
     }
 
-    private void checkNotificationPermissionAndRequestIfNeeded() {
+    void checkNotificationPermissionAndRequestIfNeeded() {
         // Проверяем разрешение на отправку уведомлений
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (!notificationManager.areNotificationsEnabled()) {
@@ -1391,7 +1390,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
         Log.d(TAG, "newUser: " + userEmail);
 
         if(userEmail.equals("email")) {
-
+//            checkNotificationPermissionAndRequestIfNeeded();
             new Thread(() -> insertPushDate(getApplicationContext())).start();
 
             try {
@@ -1405,16 +1404,13 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
             }
             Toast.makeText(this, R.string.checking, Toast.LENGTH_SHORT).show();
             startFireBase();
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    checkNotificationPermissionAndRequestIfNeeded();
-                }
-            }, 15000);
+
         } else {
             new Thread(() -> updatePushDate(getApplicationContext())).start();
 
-            new VerifyUserTask().execute();
+            String application =  getString(R.string.application);
+            new VerifyUserTask(userEmail, application, getApplicationContext()).execute();
+
             UserPermissions.getPermissions(userEmail, getApplicationContext());
             new UsersMessages(userEmail, getApplicationContext());
 
@@ -1532,29 +1528,28 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
         userPhoneThread.start();
 
 // Task 4: Get card token for "fondy" in a separate thread
-//        Thread fondyCardThread = new Thread(() -> {
-//
-//            getCardToken("fondy", TABLE_FONDY_CARDS, email);
-//        });
-//        fondyCardThread.start();
+        Thread fondyCardThread = new Thread(() -> {
+            getCardToken("fondy", TABLE_FONDY_CARDS, email);
+
+        });
+        fondyCardThread.start();
 
 // Task 5: Get card token for "mono" in a separate thread
-        Thread monoCardThread = new Thread(() -> {
-            getCardToken("mono", TABLE_MONO_CARDS, email);
-        });
-        monoCardThread.start();
+//        Thread monoCardThread = new Thread(() -> {
+//            getCardToken("mono", TABLE_MONO_CARDS, email);
+//        });
+//        monoCardThread.start();
 
 // Wait for all threads to finish (optional)
         try {
             updateUserInfoThread.join();
             addUserNoNameThread.join();
             userPhoneThread.join();
-//            fondyCardThread.join();
-            monoCardThread.join();
+            fondyCardThread.join();
+//            monoCardThread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
 
     }
     // Ограничение времени в секундах
@@ -1745,6 +1740,9 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
                     Log.d(TAG, "onResponse: cards" + cards);
                     if (cards != null && !cards.isEmpty()) {
                         SQLiteDatabase database = openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+                        // Очистка таблицы
+                        database.delete(table, "1", null);
+
                         for (CardInfo cardInfo : cards) {
                             ContentValues cv = new ContentValues();
                             String masked_card = cardInfo.getMasked_card(); // Маска карты
@@ -1763,11 +1761,20 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
                             cv.put("rectoken_check", "-1");
                             database.insert(table, null, cv);
                         }
-                        ContentValues cv = new ContentValues();
-                        cv.put("rectoken_check", "1");
-                        database.update(table, cv, "id = ?",
-                                new String[] { "1" });
+                        // Выбираем минимальное значение ID из таблицы
+                        Cursor cursor = database.rawQuery("SELECT MIN(id) FROM " + table, null);
+                        if (cursor != null && cursor.moveToFirst()) {
+                            // Получаем минимальное значение ID
+                            int minId = cursor.getInt(0);
+                            cursor.close();
+
+                            // Обновляем строку с минимальным ID
+                            ContentValues cv = new ContentValues();
+                            cv.put("rectoken_check", "1");
+                            database.update(table, cv, "id = ?", new String[] { String.valueOf(minId) });
+                        }
                         database.close();
+
                     }
                 }
 
@@ -1828,49 +1835,49 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
 
 
 
-    @SuppressLint("StaticFieldLeak")
-    public class VerifyUserTask extends AsyncTask<Void, Void, Map<String, String>> {
-        private Exception exception;
-        @Override
-        protected Map<String, String> doInBackground(Void... voids) {
-            String userEmail = logCursor(TABLE_USER_INFO).get(3);
-
-            String url = "https://m.easy-order-taxi.site/android/verifyBlackListUser/" + userEmail + "/" + getString(R.string.application);
-            try {
-                return CostJSONParser.sendURL(url);
-            } catch (Exception e) {
-                exception = e;
-//                Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
-                VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
-                return null;
-            }
-
-        }
-
-        @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
-        @Override
-        protected void onPostExecute(Map<String, String> sendUrlMap) {
-            String message = sendUrlMap.get("message");
-            ContentValues cv = new ContentValues();
-            SQLiteDatabase database = openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-            if (message != null) {
-
-                if (message.equals("В черном списке")) {
-
-                    cv.put("verifyOrder", "0");
-                    database.update(TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
-                } else {
-                    versionServer = message;
-                    //                        version(message);
-
-                    cv.put("verifyOrder", "1");
-                    database.update(TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
-
-                }
-            }
-            database.close();
-        }
-    }
+//    @SuppressLint("StaticFieldLeak")
+//    public class VerifyUserTask extends AsyncTask<Void, Void, Map<String, String>> {
+//        private Exception exception;
+//        @Override
+//        protected Map<String, String> doInBackground(Void... voids) {
+//            String userEmail = logCursor(TABLE_USER_INFO).get(3);
+//
+//            String url = "https://m.easy-order-taxi.site/android/verifyBlackListUser/" + userEmail + "/" + getString(R.string.application);
+//            try {
+//                return CostJSONParser.sendURL(url);
+//            } catch (Exception e) {
+//                exception = e;
+////                Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
+//                VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
+//                return null;
+//            }
+//
+//        }
+//
+//        @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
+//        @Override
+//        protected void onPostExecute(Map<String, String> sendUrlMap) {
+//            String message = sendUrlMap.get("message");
+//            ContentValues cv = new ContentValues();
+//            SQLiteDatabase database = openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+//            if (message != null) {
+//
+//                if (message.equals("В черном списке")) {
+//
+//                    cv.put("verifyOrder", "0");
+//                    database.update(TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
+//                } else {
+//                    versionServer = message;
+//                    //                        version(message);
+//
+//                    cv.put("verifyOrder", "1");
+//                    database.update(TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
+//
+//                }
+//            }
+//            database.close();
+//        }
+//    }
 
     private static final String PREFS_NAME_VERSION = "MyPrefsFileNew";
     private static final String LAST_NOTIFICATION_TIME_KEY = "lastNotificationTimeNew";

@@ -3,6 +3,7 @@ package com.taxi_pas_4.ui.home;
 import static android.content.Context.MODE_PRIVATE;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -15,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -71,6 +73,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
     private static SQLiteDatabase database;
     private static String[] userPayPermissions;
     private static String email;
+    String city;
     public MyBottomSheetBonusFragment() {
     }
 
@@ -122,32 +125,43 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
 
         userPayPermissions = UserPermissions.getUserPayPermissions(requireActivity());
 
-        fistItem();
+
 
         String bonus = logCursor(MainActivity.TABLE_USER_INFO).get(5);
 
         List<String> stringList = logCursor(MainActivity.CITY_INFO);
-        String city = stringList.get(1);
-        //
+        city = stringList.get(1);
+        Log.d(TAG, "onCreateView: " + city);
 
         switch (city) {
-            case "Kyiv City":
+            case "foreign countries":
             case "Dnipropetrovsk Oblast":
             case "Odessa":
             case "Zaporizhzhia":
             case "Cherkasy Oblast":
+                listView.setItemChecked(0, true);
+                paymentType(arrayCode [0], requireContext());
                 adapter.setItemEnabled(1, false);
+                adapter.setItemEnabled(2, false);
+                break;
+            case "Kyiv City":
+                adapter.setItemEnabled(1, false);
+                fistItem();
+                break;
             case "OdessaTest":
                 if(Long.parseLong(bonus) <= cost * 100 ) {
                     adapter.setItemEnabled(1, false);
-                    break;
+
+                } else {
+                    if(userPayPermissions[0].equals("0")) {
+                        adapter.setItemEnabled(1, false);
+                    }
+                    if(userPayPermissions[1].equals("0")) {
+                        adapter.setItemEnabled(2, false);
+                    }
                 }
-                if(userPayPermissions[0].equals("0")) {
-                    adapter.setItemEnabled(1, false);
-                }
-                if(userPayPermissions[1].equals("0")) {
-                    adapter.setItemEnabled(2, false);
-                }
+                fistItem();
+                break;
 
         }
 
@@ -296,7 +310,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
 
     @SuppressLint("Range")
     private void fistItem() {
-
+        reCount();
         String payment_type = logCursor(MainActivity.TABLE_SETTINGS_INFO).get(4);
 
         Log.d(TAG, "fistItem: " + payment_type);
@@ -330,6 +344,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
             case "card_payment":
             case "fondy_payment":
             case "mono_payment":
+
                 if(userPayPermissions[1].equals("0")) {
                     adapter.setItemEnabled(2, false);
                 } else  {
@@ -422,8 +437,13 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
                 HomeFragment.costFirstForMin = firstCost;
                 String costUpdate = String.valueOf(firstCost);
                 textView.setText(costUpdate);
-
+            }  else {
+                progressBar.setVisibility(View.INVISIBLE);
+                if (pos == 1 || pos == 2) {
+                    changePayMethodToNal();
+                }
             }
+
         }
         if (rout != null && rout.equals("visicom")) {
             String urlCost = null;
@@ -451,6 +471,11 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
                             VisicomFragment.firstCostForMin = firstCost;
                             costUpdate = String.valueOf(firstCost);
                             textView.setText(costUpdate);
+                        } else {
+                            progressBar.setVisibility(View.INVISIBLE);
+                            if (pos == 1 || pos == 2) {
+                                changePayMethodToNal();
+                            }
                         }
                     }
                 }
@@ -487,6 +512,11 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
                             GalleryFragment.costFirstForMin = firstCost;
                             costUpdate = String.valueOf(firstCost);
                             textView.setText(costUpdate);
+                        } else {
+                            progressBar.setVisibility(View.INVISIBLE);
+                            if (pos == 1 || pos == 2) {
+                                changePayMethodToNal();
+                            }
                         }
                     }
                 }
@@ -500,6 +530,45 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
         progressBar.setVisibility(View.GONE);
         btn_ok.setVisibility(View.VISIBLE);
     }
+    private AlertDialog alertDialog;
+    private void changePayMethodToNal() {
+        // Инфлейтим макет для кастомного диалога
+        LayoutInflater inflater = LayoutInflater.from(requireActivity());
+        View dialogView = inflater.inflate(R.layout.custom_dialog_layout, null);
+
+        alertDialog = new AlertDialog.Builder(requireActivity()).create();
+        alertDialog.setView(dialogView);
+        alertDialog.setCancelable(false);
+        // Настраиваем элементы макета
+
+
+        TextView messageTextView = dialogView.findViewById(R.id.dialog_message);
+        String messagePaymentType = getString(R.string.to_nal_payment_count);
+        messageTextView.setText(messagePaymentType);
+
+        Button okButton = dialogView.findViewById(R.id.dialog_ok_button);
+        okButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                listView.setItemChecked(0, true);
+                paymentType(arrayCode [0], requireContext());
+                progressBar.setVisibility(View.GONE);
+                alertDialog.dismiss();
+            }
+        });
+
+        Button cancelButton = dialogView.findViewById(R.id.dialog_cancel_button);
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                progressBar.setVisibility(View.GONE);
+                alertDialog.dismiss();
+            }
+        });
+
+        alertDialog.show();
+    }
+
     private void updateAddCost(String addCost) {
         ContentValues cv = new ContentValues();
         Log.d(TAG, "updateAddCost: addCost" + addCost);
@@ -712,6 +781,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
 
         String url = "https://m.easy-order-taxi.site/" + api + "/android/" + urlAPI + "/"
                 + parameters + "/" + result + "/" + city  + "/" + context.getString(R.string.application);
+        Log.d(TAG, "getTaxiUrlSearchMarkers: " + url);
         database.close();
         return url;
     }

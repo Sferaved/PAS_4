@@ -6,13 +6,16 @@ import static android.content.Context.MODE_PRIVATE;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.NotificationManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
@@ -21,6 +24,8 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -63,6 +68,7 @@ import com.taxi_pas_4.ui.maps.FromJSONParser;
 import com.taxi_pas_4.ui.maps.ToJSONParser;
 import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
 import com.taxi_pas_4.ui.open_map.visicom.ActivityVisicomOnePage;
+import com.taxi_pas_4.utils.VerifyUserTask;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.ip.ApiServiceCountry;
 import com.taxi_pas_4.utils.ip.CountryResponse;
@@ -130,6 +136,7 @@ public class VisicomFragment extends Fragment{
     private FusedLocationProviderClient fusedLocationProviderClient;
     private LocationCallback locationCallback;
     private NetworkChangeReceiver networkChangeReceiver;
+    public static boolean gps_ubd;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -139,6 +146,7 @@ public class VisicomFragment extends Fragment{
         View root = binding.getRoot();
         progressBar = binding.progressBar;
         progressBar.setVisibility(View.VISIBLE);
+        gps_ubd = true;
 //        networkChangeReceiver = new NetworkChangeReceiver();
         return root;
     }
@@ -263,7 +271,6 @@ public class VisicomFragment extends Fragment{
 
         return result;
     }
-    @RequiresApi(api = Build.VERSION_CODES.O)
     @SuppressLint("Range")
     public String getTaxiUrlSearchMarkers(String urlAPI, Context context) {
         Log.d(TAG, "getTaxiUrlSearchMarkers: " + urlAPI);
@@ -405,18 +412,19 @@ public class VisicomFragment extends Fragment{
       return hasConnect;
     }
     @SuppressLint("ResourceAsColor")
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    private void orderRout() {
-        if(!verifyOrder(requireContext())) {
+    private boolean orderRout() {
+        boolean black_list_yes = verifyOrder(requireContext());
+        Log.d(TAG, "orderRout:verifyOrder(requireContext() " + black_list_yes);
+        if(!black_list_yes) {
             MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.black_list_message));
             bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
             progressBar.setVisibility(View.INVISIBLE);
-            return;
+            return false;
+        } else {
+            urlOrder = getTaxiUrlSearchMarkers( "orderSearchMarkersVisicom", requireActivity());
+            Log.d(TAG, "order:  urlOrder "  + urlOrder);
+            return true;
         }
-
-        urlOrder = getTaxiUrlSearchMarkers( "orderSearchMarkersVisicom", requireActivity());
-        Log.d(TAG, "order:  urlOrder "  + urlOrder);
-
 
     }
     public void orderFinished() throws MalformedURLException {
@@ -425,7 +433,7 @@ public class VisicomFragment extends Fragment{
                 getPhoneNumber();
             }
             if (!verifyPhone(requireActivity())) {
-                bottomSheetDialogFragment = new MyPhoneDialogFragment("visicom", text_view_cost.getText().toString(), true);
+                bottomSheetDialogFragment = new MyPhoneDialogFragment(getActivity(),"visicom", text_view_cost.getText().toString(), true);
                 bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
                 progressBar.setVisibility(View.INVISIBLE);
             }
@@ -434,14 +442,15 @@ public class VisicomFragment extends Fragment{
         }
         if (verifyPhone(requireContext())) {
             Map<String, String> sendUrlMap = ToJSONParser.sendURL(urlOrder);
-            Log.d("TAG", "Map sendUrlMap = ToJSONParser.sendURL(urlOrder); " + sendUrlMap);
+            Log.d("T", "Map sendUrlMap = ToJSONParser.sendURL(urlOrder); " + sendUrlMap);
 
             String orderWeb = sendUrlMap.get("order_cost");
-            String message = requireActivity().getString(R.string.error_message);
+            String message = sendUrlMap.get("message");
             if (!orderWeb.equals("0")) {
                 String to_name;
                 if (Objects.equals(sendUrlMap.get("routefrom"), sendUrlMap.get("routeto"))) {
                     to_name = getString(R.string.on_city_tv);
+                    Log.d(TAG, "orderFinished: to_name 1 " + to_name);
                     if (!sendUrlMap.get("lat").equals("0")) {
                         insertRecordsOrders(
                                 sendUrlMap.get("routefrom"), sendUrlMap.get("routefrom"),
@@ -458,7 +467,7 @@ public class VisicomFragment extends Fragment{
                     } else {
                         to_name = sendUrlMap.get("routeto") + " " + sendUrlMap.get("to_number");
                     }
-
+                    Log.d(TAG, "orderFinished: to_name 2 " + to_name);
                     if (!sendUrlMap.get("lat").equals("0")) {
                         insertRecordsOrders(
                                 sendUrlMap.get("routefrom"), to_name,
@@ -469,14 +478,37 @@ public class VisicomFragment extends Fragment{
                         );
                     }
                 }
+                Log.d(TAG, "orderFinished: to_name 3" + to_name);
+                String to_name_local = to_name;
+                if(to_name.contains("по місту")
+                        ||to_name.contains("по городу")
+                        || to_name.contains("around the city")
+                ) {
+                    to_name_local = getString(R.string.on_city_tv);
+                }
+                Log.d(TAG, "orderFinished: to_name 4" + to_name_local);
+                String pay_method_message = getString(R.string.pay_method_message_main);
+                switch (pay_method) {
+                    case "bonus_payment":
+                        pay_method_message += " " + getString(R.string.pay_method_message_bonus);
+                        break;
+                    case "card_payment":
+                    case "fondy_payment":
+                    case "mono_payment":
+                        pay_method_message += " " + getString(R.string.pay_method_message_card);
+                        break;
+                    default:
+                        pay_method_message += " " + getString(R.string.pay_method_message_nal);
+                }
                 String messageResult = getString(R.string.thanks_message) +
                         sendUrlMap.get("routefrom") + " " + getString(R.string.to_message) +
-                        to_name + "." +
-                        getString(R.string.call_of_order) + orderWeb + getString(R.string.UAH);
+                        to_name_local + "." +
+                        getString(R.string.call_of_order) + orderWeb + getString(R.string.UAH) + " " + pay_method_message;
                 String messageFondy = getString(R.string.fondy_message) + " " +
                         sendUrlMap.get("routefrom") + " " + getString(R.string.to_message) +
-                        to_name + ".";
-
+                        to_name_local + ".";
+                Log.d(TAG, "orderFinished: messageResult " + messageResult);
+                Log.d(TAG, "orderFinished: to_name " + to_name);
                 Intent intent = new Intent(requireActivity(), FinishActivity.class);
                 intent.putExtra("messageResult_key", messageResult);
                 intent.putExtra("messageFondy_key", messageFondy);
@@ -485,9 +517,25 @@ public class VisicomFragment extends Fragment{
                 intent.putExtra("UID_key", Objects.requireNonNull(sendUrlMap.get("dispatching_order_uid")));
                 startActivity(intent);
             } else {
+                if (message.contains("Дублирование")) {
+                    message = getResources().getString(R.string.double_order_error);
+                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
+                    bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                } else {
+                    switch (pay_method) {
+                        case "bonus_payment":
+                        case "card_payment":
+                        case "fondy_payment":
+                        case "mono_payment":
+                            changePayMethodToNal();
+                            break;
+                        default:
+                            message = getResources().getString(R.string.error_message);
+                            MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
+                            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                    }
 
-//            MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
-//            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                }
                 progressBar.setVisibility(View.INVISIBLE);
             }
         } else {
@@ -670,11 +718,53 @@ public class VisicomFragment extends Fragment{
                 }
 
                 try {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        orderRout();
+                    if(orderRout()) {
+                        orderFinished();
                     }
-                    orderFinished();
+                } catch (MalformedURLException e) {
+                    throw new RuntimeException(e);
+                }
+                progressBar.setVisibility(View.GONE);
+                alertDialog.dismiss();
+            }
+        });
 
+        Button cancelButton = dialogView.findViewById(R.id.dialog_cancel_button);
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                progressBar.setVisibility(View.GONE);
+                alertDialog.dismiss();
+            }
+        });
+
+        alertDialog.show();
+    }
+    private void changePayMethodToNal() {
+        // Инфлейтим макет для кастомного диалога
+        LayoutInflater inflater = LayoutInflater.from(requireActivity());
+        View dialogView = inflater.inflate(R.layout.custom_dialog_layout, null);
+
+        alertDialog = new AlertDialog.Builder(requireActivity()).create();
+        alertDialog.setView(dialogView);
+        alertDialog.setCancelable(false);
+        // Настраиваем элементы макета
+
+
+        TextView messageTextView = dialogView.findViewById(R.id.dialog_message);
+        String messagePaymentType = getString(R.string.to_nal_payment);
+        messageTextView.setText(messagePaymentType);
+
+        Button okButton = dialogView.findViewById(R.id.dialog_ok_button);
+        okButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                paymentType("nal_payment");
+
+                try {
+                    if(orderRout()){
+                        orderFinished();
+                    }
                 } catch (MalformedURLException e) {
                     throw new RuntimeException(e);
                 }
@@ -705,11 +795,17 @@ public class VisicomFragment extends Fragment{
         database.close();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
+
     @Override
     public void onResume() {
         super.onResume();
         progressBar.setVisibility(View.VISIBLE);
+        String userEmail = logCursor(MainActivity.TABLE_USER_INFO, requireActivity()).get(3);
+
+        String application =  getString(R.string.application);
+        new VerifyUserTask(userEmail, application, requireActivity()).execute();
+
+
         List<String> listCity = logCursor(MainActivity.CITY_INFO, requireActivity());
         String city = listCity.get(1);
         switch (city){
@@ -717,21 +813,24 @@ public class VisicomFragment extends Fragment{
                 cityMenu = getString(R.string.city_kyiv);
                 MainActivity.countryState = "UA";
                 break;
-
             case "Dnipropetrovsk Oblast":
                 cityMenu = getString(R.string.city_dnipro);
+                paymentType("nal_payment");
                 break;
             case "Odessa":
                 cityMenu = getString(R.string.city_odessa);
                 MainActivity.countryState = "UA";
+                paymentType("nal_payment");
                 break;
             case "Zaporizhzhia":
                 cityMenu = getString(R.string.city_zaporizhzhia);
                 MainActivity.countryState = "UA";
+                paymentType("nal_payment");
                 break;
             case "Cherkasy Oblast":
                 cityMenu = getString(R.string.city_cherkasy);
                 MainActivity.countryState = "UA";
+                paymentType("nal_payment");
                 break;
             case "OdessaTest":
                 cityMenu = "Test";
@@ -739,6 +838,7 @@ public class VisicomFragment extends Fragment{
                 break;
             default:
                 cityMenu = getString(R.string.foreign_countries);
+                paymentType("nal_payment");
                 break;
         }
 
@@ -851,28 +951,6 @@ public class VisicomFragment extends Fragment{
         btn_minus.setOnClickListener(v -> {
 
             List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity());
-            addCost = Long.parseLong(stringListInfo.get(5));
-            String costText = text_view_cost.getText().toString();
-            if (!costText.isEmpty()) {
-                try {
-                    long cost = Long.parseLong(costText);
-                    // Proceed with using the 'cost' variable
-                } catch (NumberFormatException e) {
-                    // Handle the case where the input string is not a valid long value
-                    e.printStackTrace(); // Or log the error, display an error message, etc.
-                }
-            }
-            cost -= 5;
-            addCost -= 5;
-            if (cost >= MIN_COST_VALUE) {
-                updateAddCost(String.valueOf(addCost));
-                text_view_cost.setText(String.valueOf(cost));
-            }
-        });
-
-        btn_plus.setOnClickListener(v -> {
-            List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity());
-
 
             String costString = text_view_cost.getText().toString();
             if (!costString.isEmpty()) {
@@ -884,7 +962,26 @@ public class VisicomFragment extends Fragment{
                 addCost = Long.parseLong(addCostString);
             }
 
+            cost -= 5;
+            addCost -= 5;
+            if (cost >= MIN_COST_VALUE) {
+                updateAddCost(String.valueOf(addCost));
+                text_view_cost.setText(String.valueOf(cost));
+            }
+        });
 
+        btn_plus.setOnClickListener(v -> {
+            List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity());
+
+            String costString = text_view_cost.getText().toString();
+            if (!costString.isEmpty()) {
+                cost = Long.parseLong(costString);
+            }
+
+            String addCostString = stringListInfo.get(5);
+            if (!addCostString.isEmpty()) {
+                addCost = Long.parseLong(addCostString);
+            }
 
             cost += 5;
             addCost += 5;
@@ -931,16 +1028,13 @@ public class VisicomFragment extends Fragment{
                             if (Long.parseLong(bonus_max_pay) <= Long.parseLong(text_view_cost.getText().toString()) * 100) {
                                 changePayMethodMax(text_view_cost.getText().toString(), pay_method);
                             } else {
-                                orderRout();
-
-
-                                try {
-                                    orderFinished();
-                                } catch (MalformedURLException e) {
-                                    throw new RuntimeException(e);
+                                if(orderRout()) {
+                                    try {
+                                        orderFinished();
+                                    } catch (MalformedURLException e) {
+                                        throw new RuntimeException(e);
+                                    }
                                 }
-
-
                             }
                             break;
                         case "card_payment":
@@ -949,26 +1043,23 @@ public class VisicomFragment extends Fragment{
                             if (Long.parseLong(card_max_pay) <= Long.parseLong(text_view_cost.getText().toString())) {
                                 changePayMethodMax(text_view_cost.getText().toString(), pay_method);
                             } else {
-                                orderRout();
-
-                                try {
-
+                                if(orderRout()) {
+                                    try {
                                         orderFinished();
-
-                                } catch (MalformedURLException e) {
-                                    throw new RuntimeException(e);
+                                    } catch (MalformedURLException e) {
+                                        throw new RuntimeException(e);
+                                    }
                                 }
                             }
                             break;
                         default:
-                            orderRout();
-
+                            if(orderRout()) {
                                 try {
                                     orderFinished();
                                 } catch (MalformedURLException e) {
                                     throw new RuntimeException(e);
                                 }
-                            break;
+                            }
 
                     }
                 }
@@ -1001,8 +1092,8 @@ public class VisicomFragment extends Fragment{
         num2 = binding.num2;
 
         gpsbut = binding.gpsbut;
+        LocationManager locationManager = (LocationManager) requireActivity().getSystemService(Context.LOCATION_SERVICE);
         gpsbut.setOnClickListener(v -> {
-            LocationManager locationManager = (LocationManager) requireActivity().getSystemService(Context.LOCATION_SERVICE);
             if (locationManager != null) {
                 if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                     // GPS включен, выполните ваш код здесь
@@ -1047,22 +1138,30 @@ public class VisicomFragment extends Fragment{
 
                 } else {
                     // GPS выключен, выполните необходимые действия
-                    // Например, показать диалоговое окно с предупреждением о включении GPS
-//                    checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
-//                    checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
+
                     MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment();
                     bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
                 }
             } else {
-//                checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
-//                checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
+
                 MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment();
                 bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
             }
         });
-
-
-
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    && ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                gpsbut.setBackground(getResources().getDrawable(R.drawable.btn_red));
+                gpsbut.setTextColor(Color.WHITE);
+            } else {
+                gpsbut.setBackground(getResources().getDrawable(R.drawable.btn_green));
+                gpsbut.setTextColor(Color.WHITE);
+//                gpsbut.performClick();
+            }
+        } else {
+            gpsbut.setBackground(getResources().getDrawable(R.drawable.btn_yellow));
+            gpsbut.setTextColor(Color.BLACK);
+        }
 
         if (MainActivity.countryState == null) {
 
@@ -1082,33 +1181,125 @@ public class VisicomFragment extends Fragment{
                 VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
             }
         }
- 
-
-
-
 
         textfrom.setVisibility(View.INVISIBLE);
         num1.setVisibility(View.INVISIBLE);
 
         if (NetworkUtils.isNetworkAvailable(requireContext())) {
-
-            if (!newRout()) {
-                visicomCost();
-
-            } else {
-                progressBar.setVisibility(View.INVISIBLE);
+            if(geoText.getText().toString().equals("")) {
+                btn_clear_from_text.setVisibility(View.VISIBLE);
+                String unuString = new String(Character.toChars(0x1F449));
+                unuString += " " + getString(R.string.search_text);
+                btn_clear_from_text.setText(unuString);
+                binding.textfrom.setVisibility(View.INVISIBLE);
                 binding.textwhere.setVisibility(View.INVISIBLE);
                 btn_clear_from.setVisibility(View.INVISIBLE);
                 textfrom.setVisibility(View.INVISIBLE);
                 num1.setVisibility(View.INVISIBLE);
                 progressBar.setVisibility(View.INVISIBLE);
 
-                btn_clear_from_text.setVisibility(View.VISIBLE);
+                textfrom.setVisibility(View.INVISIBLE);
+                num1.setVisibility(View.INVISIBLE);
+
+
 
                 btn_clear_from.setVisibility(View.GONE);
                 btn_clear_to.setVisibility(View.GONE);
-
             }
+
+            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                        && ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+                    if (!newRout()) {
+                        Log.d(TAG, "onResume: 1");
+                        progressBar.setVisibility(View.VISIBLE);
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                visicomCost();
+                            }
+                        }, 200);
+
+
+                    } else {
+                        Log.d(TAG, "onResume: 2");
+                        progressBar.setVisibility(View.INVISIBLE);
+                        binding.textwhere.setVisibility(View.INVISIBLE);
+                        btn_clear_from.setVisibility(View.INVISIBLE);
+                        textfrom.setVisibility(View.INVISIBLE);
+                        num1.setVisibility(View.INVISIBLE);
+                        progressBar.setVisibility(View.INVISIBLE);
+
+                        btn_clear_from_text.setVisibility(View.VISIBLE);
+
+                        btn_clear_from.setVisibility(View.GONE);
+                        btn_clear_to.setVisibility(View.GONE);
+
+                    }
+                } else {
+                    if(gps_ubd){
+                        Log.d(TAG, "onResume: 3");
+                        firstLocation();
+                    } else {
+                        if (!newRout()) {
+                            Log.d(TAG, "onResume: 4");
+                            progressBar.setVisibility(View.VISIBLE);
+                            new Handler().postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    visicomCost();
+                                }
+                            }, 200);
+
+
+                        } else {
+                            Log.d(TAG, "onResume: 5");
+                            progressBar.setVisibility(View.INVISIBLE);
+                            binding.textwhere.setVisibility(View.INVISIBLE);
+                            btn_clear_from.setVisibility(View.INVISIBLE);
+                            textfrom.setVisibility(View.INVISIBLE);
+                            num1.setVisibility(View.INVISIBLE);
+                            progressBar.setVisibility(View.INVISIBLE);
+
+                            btn_clear_from_text.setVisibility(View.VISIBLE);
+
+                            btn_clear_from.setVisibility(View.GONE);
+                            btn_clear_to.setVisibility(View.GONE);
+
+                        }
+                    }
+
+                }
+            } else {
+                if (!newRout()) {
+                    Log.d(TAG, "onResume: 6");
+                    progressBar.setVisibility(View.VISIBLE);
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            visicomCost();
+                        }
+                    }, 200);
+
+
+                } else {
+                    Log.d(TAG, "onResume: 7");
+                    progressBar.setVisibility(View.INVISIBLE);
+                    binding.textwhere.setVisibility(View.INVISIBLE);
+                    btn_clear_from.setVisibility(View.INVISIBLE);
+                    textfrom.setVisibility(View.INVISIBLE);
+                    num1.setVisibility(View.INVISIBLE);
+                    progressBar.setVisibility(View.INVISIBLE);
+
+                    btn_clear_from_text.setVisibility(View.VISIBLE);
+
+                    btn_clear_from.setVisibility(View.GONE);
+                    btn_clear_to.setVisibility(View.GONE);
+
+                }
+            }
+
 
         } else {
 
@@ -1128,39 +1319,13 @@ public class VisicomFragment extends Fragment{
             btn_clear_from.setVisibility(View.GONE);
             btn_clear_to.setVisibility(View.GONE);
         }
-        Log.d(TAG, "onResume:geoText.getText().toString() " +geoText.getText().toString());
-        if(geoText.getText().toString().equals("")) {
-            btn_clear_from_text.setVisibility(View.VISIBLE);
-            String unuString = new String(Character.toChars(0x1F449));
-            unuString += " " + getString(R.string.search_text);
-            btn_clear_from_text.setText(unuString);
-            binding.textfrom.setVisibility(View.INVISIBLE);
-            binding.textwhere.setVisibility(View.INVISIBLE);
-            btn_clear_from.setVisibility(View.INVISIBLE);
-            textfrom.setVisibility(View.INVISIBLE);
-            num1.setVisibility(View.INVISIBLE);
-            progressBar.setVisibility(View.INVISIBLE);
-
-            textfrom.setVisibility(View.INVISIBLE);
-            num1.setVisibility(View.INVISIBLE);
 
 
-
-            btn_clear_from.setVisibility(View.GONE);
-            btn_clear_to.setVisibility(View.GONE);
-        } else {
-//            textfrom.setVisibility(View.VISIBLE);
-//            num1.setVisibility(View.VISIBLE);
-            btn_clear_from_text.setVisibility(View.INVISIBLE);
-            btn_clear_from.setVisibility(View.INVISIBLE);
-            btn_clear_to.setVisibility(View.INVISIBLE);
-        }
 
     }
 
 
-
-    private void firstLocation() {
+     private void firstLocation() {
         progressBar.setVisibility(View.VISIBLE);
         Toast.makeText(requireContext(), getString(R.string.search), Toast.LENGTH_SHORT).show();
 
@@ -1170,13 +1335,9 @@ public class VisicomFragment extends Fragment{
         gpsbut.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                progressBar.setVisibility(View.INVISIBLE);
+
                 if (fusedLocationProviderClient != null && locationCallback != null) {
                     fusedLocationProviderClient.removeLocationUpdates(locationCallback);
-                    Log.d(TAG, "Location updates cancelled");
-                    // Дополнительные действия, которые вы хотите выполнить при отмене геопоиска
-                    // Например, изменение текста на кнопке или другие обновления интерфейса
-                    // Предположим, что текст на кнопке изменяется на "Start GPS"
                 }
                 gpsbut.setText(R.string.change);
                 gpsbut.setOnClickListener(new View.OnClickListener() {
@@ -1192,8 +1353,7 @@ public class VisicomFragment extends Fragment{
                                         && ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                                         checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
                                         checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
-//                                    MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment();
-//                                    bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+
                                 } else if (isAdded() && isVisible())  {
                                     List<String> settings = new ArrayList<>();
 
@@ -1228,14 +1388,11 @@ public class VisicomFragment extends Fragment{
                             } else {
                                 // GPS выключен, выполните необходимые действия
                                 // Например, показать диалоговое окно с предупреждением о включении GPS
-//                                checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
-//                                checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
                                 MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment();
                                 bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
                             }
                         } else {
-//                            checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
-//                            checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
+
                             MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment();
                             bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
                         }
@@ -1270,9 +1427,7 @@ public class VisicomFragment extends Fragment{
 
                     } catch (MalformedURLException | InterruptedException |
                              JSONException e) {
-//                        MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
-//                        bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
-                        progressBar.setVisibility(View.INVISIBLE);
+                            progressBar.setVisibility(View.INVISIBLE);
                     }
                     assert sendUrlFrom != null;
                     String FromAdressString = (String) sendUrlFrom.get("route_address_from");
@@ -1417,30 +1572,14 @@ public class VisicomFragment extends Fragment{
                     });
 //                    if(settings.size() != 0) {
                         updateRoutMarker(settings);
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+
                         visicomCost();
-                    }
+
 //                    }
 
                 }
             }
-//            @Override
-//            public void onLocationAvailability(@NonNull LocationAvailability locationAvailability) {
-//                if (!locationAvailability.isLocationAvailable()) {
-//                    // GPS недоступен
-//                    // Добавьте здесь обработку этой ситуации
-//                    String message = getString(R.string.error_message);
-//                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
-//
-//                    // Проверяем, что активность не в состоянии сохранения
-//                    if (!requireActivity().isFinishing() && !requireActivity().isDestroyed()) {
-//                        // Проверяем, что фрагмент готов к выполнению транзакции
-//                        if (!getChildFragmentManager().isStateSaved()) {
-//                            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
-//                        }
-//                    }
-//                }
-//            }
+
         };
         if (ContextCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -1538,9 +1677,9 @@ public class VisicomFragment extends Fragment{
         textViewTo.setText(finish);
 
         String urlCost = null;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            urlCost = getTaxiUrlSearchMarkers("costSearchMarkers", requireActivity());
-        }
+
+        urlCost = getTaxiUrlSearchMarkers("costSearchMarkers", requireActivity());
+
         Log.d(TAG, "visicomCost: " + urlCost);
         Map<String, String> sendUrlMapCost = null;
         try {
@@ -1549,9 +1688,7 @@ public class VisicomFragment extends Fragment{
             throw new RuntimeException(e);
         }
 
-
-        progressBar.setVisibility(View.INVISIBLE);
-        String orderCost = sendUrlMapCost.get("order_cost");
+ String orderCost = sendUrlMapCost.get("order_cost");
         Log.d(TAG, "startCost: orderCost " + orderCost);
 
         assert orderCost != null;
@@ -1611,17 +1748,40 @@ public class VisicomFragment extends Fragment{
                 btn_clear_from_text.setVisibility(View.GONE);
 
             }
-//            if(!phoneFull()) {
-//                if (!verifyPhone(requireActivity())) {
-//                    bottomSheetDialogFragment = new MyPhoneDialogFragment("visicom", text_view_cost.getText().toString(), false);
-//                    bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
-//                    progressBar.setVisibility(View.INVISIBLE);
-//                }
-//            } else {
-//                MainActivity.verifyPhone = true;
-//            }
+
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    checkNotificationPermissionAndRequestIfNeeded();
+                }
+            }, 2000);
+
         }
    }
+    void checkNotificationPermissionAndRequestIfNeeded() {
+        if (isAdded()) {
+            // Получаем доступ к настройкам приложения
+            SharedPreferences sharedPreferences = requireActivity().getPreferences(Context.MODE_PRIVATE);
+
+            // Проверяем, было ли уже запрошено разрешение
+            boolean isNotificationPermissionRequested = sharedPreferences.getBoolean("notification_permission_requested", false);
+            // Если разрешение еще не запрашивалось
+            if (!isNotificationPermissionRequested) {
+                // Показываем системный экран для запроса разрешения
+                NotificationManager notificationManager = (NotificationManager) requireActivity().getSystemService(Context.NOTIFICATION_SERVICE);
+                if (!notificationManager.areNotificationsEnabled()) {
+                    Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+                    intent.putExtra(Settings.EXTRA_APP_PACKAGE, requireActivity().getPackageName());
+                    startActivity(intent);
+                }
+
+                // Сохраняем информацию о том, что разрешение было запрошено
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putBoolean("notification_permission_requested", true);
+                editor.apply();
+            }
+        }
+    }
 
     private static class GetPublicIPAddressTask extends AsyncTask<Void, Void, String> {
         FragmentManager fragmentManager;

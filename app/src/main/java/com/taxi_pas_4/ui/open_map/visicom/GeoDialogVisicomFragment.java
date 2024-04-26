@@ -68,6 +68,7 @@ import com.taxi_pas_4.ui.open_map.visicom.key_visicom.ApiCallback;
 import com.taxi_pas_4.ui.open_map.visicom.key_visicom.ApiClient;
 import com.taxi_pas_4.ui.open_map.visicom.key_visicom.ApiResponse;
 import com.taxi_pas_4.ui.start.ResultSONParser;
+import com.taxi_pas_4.utils.VerifyUserTask;
 
 import org.json.JSONException;
 import org.osmdroid.config.Configuration;
@@ -122,7 +123,7 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
     private String apiKey; // Впишіть апі ключ
     private static List<String> addresses;
 
-
+    private AlertDialog alertDialog;
 
     public static ImageButton btn_clear_from, btn_clear_to;
     public static GeoDialogVisicomFragment newInstance() {
@@ -326,10 +327,10 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
                             if (Long.parseLong(bonus_max_pay) <= Long.parseLong(text_view_cost.getText().toString()) * 100) {
                                 changePayMethodMax(text_view_cost.getText().toString(), pay_method);
                             } else {
-                                orderRout();
-
                                 try {
-                                    orderFinished();
+                                    if(orderRout()){
+                                        orderFinished();
+                                    }
                                 } catch (MalformedURLException e) {
                                     throw new RuntimeException(e);
                                 }
@@ -341,24 +342,23 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
                             if (Long.parseLong(card_max_pay) <= Long.parseLong(text_view_cost.getText().toString())) {
                                 changePayMethodMax(text_view_cost.getText().toString(), pay_method);
                             } else {
-                                orderRout();
-
                                 try {
-                                    orderFinished();
-
+                                    if(orderRout()){
+                                        orderFinished();
+                                    }
                                 } catch (MalformedURLException e) {
                                     throw new RuntimeException(e);
                                 }
                             }
                             break;
                         default:
-                            orderRout();
                             try {
-                                orderFinished();
+                                if(orderRout()){
+                                    orderFinished();
+                                }
                             } catch (MalformedURLException e) {
                                 throw new RuntimeException(e);
                             }
-                            break;
 
                     }
                     OpenStreetMapActivity.ToAdressString = null;
@@ -1079,16 +1079,20 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
     }
 
     @SuppressLint("ResourceAsColor")
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    private void orderRout() {
+    private boolean orderRout() {
         if(!verifyOrder(requireContext())) {
             MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.black_list_message));
             bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
-            return;
+            progressBar.setVisibility(View.INVISIBLE);
+            return false;
+        } else {
+            urlOrder = getTaxiUrlSearchMarkers( "orderSearchMarkersVisicom", requireActivity());
+            Log.d(TAG, "order: urlOrder "  + urlOrder);
+            progressBar.setVisibility(View.INVISIBLE);
+            return true;
         }
 
-        urlOrder = getTaxiUrlSearchMarkers( "orderSearchMarkersVisicom", requireActivity());
-        Log.d(TAG, "order: urlOrder "  + urlOrder);
+
 
     }
     public void orderFinished() throws MalformedURLException {
@@ -1096,7 +1100,7 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
             getPhoneNumber();
         }
         if (!verifyPhone(requireActivity())) {
-            bottomSheetDialogFragment = new MyPhoneDialogFragment("visicom", text_view_cost.getText().toString(), true);
+            bottomSheetDialogFragment = new MyPhoneDialogFragment(getActivity(),"visicom", text_view_cost.getText().toString(), true);
             bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
             progressBar.setVisibility(View.INVISIBLE);
         }
@@ -1105,7 +1109,8 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
             Log.d("TAG", "Map sendUrlMap = ToJSONParser.sendURL(urlOrder); " + sendUrlMap);
 
             String orderWeb = sendUrlMap.get("order_cost");
-            String message = requireActivity().getString(R.string.error_message);
+            String message = sendUrlMap.get("message");
+
             if (!orderWeb.equals("0")) {
                 String to_name;
                 if (Objects.equals(sendUrlMap.get("routefrom"), sendUrlMap.get("routeto"))) {
@@ -1137,13 +1142,35 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
                         );
                     }
                 }
+                String pay_method = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity()).get(4);
+
+                String pay_method_message = getString(R.string.pay_method_message_main);
+                switch (pay_method) {
+                    case "bonus_payment":
+                        pay_method_message += " " + getString(R.string.pay_method_message_bonus);
+                        break;
+                    case "card_payment":
+                    case "fondy_payment":
+                    case "mono_payment":
+                        pay_method_message += " " + getString(R.string.pay_method_message_card);
+                        break;
+                    default:
+                        pay_method_message += " " + getString(R.string.pay_method_message_nal);
+                }
+                String to_name_local = to_name;
+                if(to_name.contains("по місту")
+                        ||to_name.contains("по городу")
+                        || to_name.contains("around the city")
+                ) {
+                    to_name_local = getString(R.string.on_city_tv);
+                }
                 String messageResult = getString(R.string.thanks_message) +
                         sendUrlMap.get("routefrom") + " " + getString(R.string.to_message) +
-                        to_name + "." +
-                        getString(R.string.call_of_order) + orderWeb + getString(R.string.UAH);
+                        to_name_local + "." +
+                        getString(R.string.call_of_order) + orderWeb + getString(R.string.UAH) + " " + pay_method_message;
                 String messageFondy = getString(R.string.fondy_message) + " " +
                         sendUrlMap.get("routefrom") + " " + getString(R.string.to_message) +
-                        to_name + ".";
+                        to_name_local + ".";
 
                 Intent intent = new Intent(requireActivity(), FinishActivity.class);
                 intent.putExtra("messageResult_key", messageResult);
@@ -1154,8 +1181,25 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
                 startActivity(intent);
             } else {
 
-                MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.error_message));
-                bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                if (message.contains("Дублирование")) {
+                    message = getResources().getString(R.string.double_order_error);
+                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
+                    bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                } else {
+                    switch (pay_method) {
+                        case "bonus_payment":
+                        case "card_payment":
+                        case "fondy_payment":
+                        case "mono_payment":
+                            changePayMethodToNal();
+                            break;
+                        default:
+                            message = getResources().getString(R.string.error_message);
+                            MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
+                            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                    }
+
+                }
                 progressBar.setVisibility(View.INVISIBLE);
             }
         } else {
@@ -1165,7 +1209,50 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
         }
 
     }
+    private void changePayMethodToNal() {
+        // Инфлейтим макет для кастомного диалога
+        LayoutInflater inflater = LayoutInflater.from(requireActivity());
+        View dialogView = inflater.inflate(R.layout.custom_dialog_layout, null);
 
+        alertDialog = new AlertDialog.Builder(requireActivity()).create();
+        alertDialog.setView(dialogView);
+        alertDialog.setCancelable(false);
+        // Настраиваем элементы макета
+
+
+        TextView messageTextView = dialogView.findViewById(R.id.dialog_message);
+        String messagePaymentType = getString(R.string.to_nal_payment);
+        messageTextView.setText(messagePaymentType);
+
+        Button okButton = dialogView.findViewById(R.id.dialog_ok_button);
+        okButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                paymentType("nal_payment");
+
+                if(orderRout()){
+                    try {
+                        orderFinished();
+                    } catch (MalformedURLException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                progressBar.setVisibility(View.GONE);
+                alertDialog.dismiss();
+            }
+        });
+
+        Button cancelButton = dialogView.findViewById(R.id.dialog_cancel_button);
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                progressBar.setVisibility(View.GONE);
+                alertDialog.dismiss();
+            }
+        });
+
+        alertDialog.show();
+    }
     private void updateRoutGeo(List<String> settings) {
         ContentValues cv = new ContentValues();
         SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
@@ -1367,11 +1454,9 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
                 }
 
                 try {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    orderRout();
+                    if(orderRout()){
+                        orderFinished();
                     }
-                    orderFinished();
-
                 } catch (MalformedURLException e) {
                     throw new RuntimeException(e);
                 }
@@ -1429,6 +1514,11 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
     @Override
     public void onResume() {
         super.onResume();
+        String userEmail = logCursor(MainActivity.TABLE_USER_INFO, requireActivity()).get(3);
+
+        String application =  getString(R.string.application);
+        new VerifyUserTask(userEmail, application, requireActivity()).execute();
+
         if(bottomSheetDialogFragment != null) {
             bottomSheetDialogFragment.dismiss();
         }

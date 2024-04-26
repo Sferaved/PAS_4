@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
@@ -36,6 +37,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.navigation.NavController;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -43,6 +45,7 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.NetworkChangeReceiver;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.cities.Kyiv.KyivRegion;
 import com.taxi_pas_4.cities.Kyiv.KyivRegionRu;
@@ -129,7 +132,8 @@ public class ActivityVisicomOnePage extends AppCompatActivity
     private static String apiKeyMapBox;
     private boolean extraExit;
     private long timeout = 50;
-
+    NavController navController;
+    LocationManager locationManager;
     @SuppressLint("MissingInflatedId")
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Nullable
@@ -141,6 +145,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity
         start = getIntent().getStringExtra("start");
         end = getIntent().getStringExtra("end");
 
+        NetworkChangeReceiver networkChangeReceiver = new NetworkChangeReceiver();
 
         List<String> stringList = logCursor(MainActivity.CITY_INFO);
         switch (LocaleHelper.getLocale()) {
@@ -431,6 +436,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity
             public void onClick(View v) {
                 progressBar.setVisibility(View.VISIBLE);
                 VisicomFragment.text_view_cost.setText("");
+                VisicomFragment.gps_ubd = false;
                 // Получаем доступ к InputMethodManager
                 InputMethodManager immHide = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                 // Пытаемся скрыть клавиатуру
@@ -584,6 +590,20 @@ public class ActivityVisicomOnePage extends AppCompatActivity
             toEditAddress.setSelection(toEditAddress.getText().toString().length());
             KeyboardUtils.showKeyboard(getApplicationContext(), toEditAddress);
         }
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                btn_change.setBackground(getResources().getDrawable(R.drawable.btn_red));
+                btn_change.setTextColor(Color.WHITE);
+            } else {
+                btn_change.setBackground(getResources().getDrawable(R.drawable.btn_green));
+                btn_change.setTextColor(Color.WHITE);
+            }
+        } else {
+            btn_change.setBackground(getResources().getDrawable(R.drawable.btn_yellow));
+            btn_change.setTextColor(Color.BLACK);
+        }
     }
 
 
@@ -716,6 +736,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getApplicationContext());
         Log.d(TAG, "firstLocation: ");
         btn_change.setText(R.string.cancel_gps);
+
         btn_change.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -728,11 +749,12 @@ public class ActivityVisicomOnePage extends AppCompatActivity
                     // Например, изменение текста на кнопке или другие обновления интерфейса
                     btn_change.setText(R.string.change); // Предположим, что текст на кнопке изменяется на "Start GPS"
                 }
+
                 btn_change.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
 
-                        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
                         if (locationManager != null) {
                             if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                                 Log.d(TAG, "locationManager: " + locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER));
@@ -937,6 +959,11 @@ public class ActivityVisicomOnePage extends AppCompatActivity
     @Override
     public void onResume() {
         super.onResume();
+
+        if (!NetworkUtils.isNetworkAvailable(getApplicationContext())) {
+            startActivity(new Intent(this, MainActivity.class));
+        }
+
         if (MainActivity.countryState != null) {
             if (!MainActivity.countryState.equals("UA")) {
                 mapboxKey(this);
@@ -1121,6 +1148,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity
                 url = url
                         + "?"
                         + "categories=poi_railway_station"
+                        + ",adm_settlement"
                         + ",poi_bus_station"
                         + ",poi_airport_terminal"
                         + ",poi_airport"
@@ -1134,6 +1162,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity
                         + ",poi_grocery"
                         + ",poi_swimming_pool"
                         + ",poi_sports_complexe"
+                        + ",poi_post_office"
                         + ",poi_underground_railway_station"
                         + ",adr_street"
                         + "&l=20"
@@ -1227,6 +1256,29 @@ public class ActivityVisicomOnePage extends AppCompatActivity
 
                     if (properties.getString("country_code").equals("ua")) {
                         switch (properties.getString("categories")) {
+                            case "adm_settlement":
+
+                                // Проверка по Киевской области
+                                if (citySearch.equals("Київ") || citySearch.equals("Киев")) {
+
+                                        String addressAdm = String.format("%s %s\t",
+                                                properties.getString("type"),
+                                                properties.getString("name")
+                                        );
+
+                                        double longitude = geoCentroid.getJSONArray("coordinates").getDouble(0);
+                                        double latitude = geoCentroid.getJSONArray("coordinates").getDouble(1);
+
+                                        addAddressOne(
+                                                addressAdm,
+                                                "",
+                                                "",
+                                                "",
+                                                longitude,
+                                                latitude);
+
+                                }
+                                break;
                             case "adr_street":
                                 String settlement = properties.optString("settlement", "").toLowerCase();
                                 String city = citySearch.toLowerCase();
@@ -1431,6 +1483,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity
                             case "poi_railway_station":
                             case "poi_bus_station":
                             case "poi_airport_terminal":
+                            case "poi_post_office":
                             case "poi_airport":
                                 settlement = properties.optString("address", "").toLowerCase();
                                 city = citySearch.toLowerCase();
@@ -1848,6 +1901,9 @@ public class ActivityVisicomOnePage extends AppCompatActivity
                                         btn_ok.performClick();
                                     }
                                 }, timeout);
+                            } else {
+                                textGeoError.setVisibility(View.VISIBLE);
+                                textGeoError.setText(R.string.house_vis_mes);
                             }
 
                         }
@@ -1900,6 +1956,9 @@ public class ActivityVisicomOnePage extends AppCompatActivity
                                         btn_ok.performClick();
                                     }
                                 }, timeout);
+                            } else {
+                                text_toError.setVisibility(View.VISIBLE);
+                                text_toError.setText(R.string.house_vis_mes);
                             }
 
                         }

@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.066</string>
-    <string name="version">Версія: 4.066</string>
+    <string name="version_code">4.067</string>
+    <string name="version">Версія: 4.067</string>
 
 
     <string name="app_name">Таксі Дюк Попутник</string>
@@ -53,11 +53,11 @@
     <string name="verify_phone">Перевірка телефону</string>
     <string name="format_phone">Формат вводу номера телефону: +380936665544</string>
     <string name="sent_button">Відправити</string>
-    <string name="verify_internet">Перевірте інтернет-підключення або зателефонуйте оператору.</string>
+    <string name="verify_internet">Перевірте інтернет-з\'єднання, зателефонуйте оператору або перевантажте програму.</string>
     <string name="save_button">Зберегти</string>
     <string name="you_this">"Ви зараз тут: "</string>
     <string name="make_rout_message">Сформуйте маршрут</string>
-    <string name="error_message">Відбулася помилка. Зателефонуйте оператору</string>
+    <string name="error_message">Сталася помилка. Наберите оператора через "ДОПОМОГА" або натисніть тут для перезавантаження сторінки</string>
     <string name="to_point">"Місце призначення: "</string>
     <string name="cost_of_order">" Вартість поїздки: "</string>
     <string name="firebase_false_message">грн. Вибачте, без перевірки Google-акаунту замовлення не можливе.</string>
@@ -197,7 +197,7 @@
     <string name="close_resone_8">Виконаний</string>
     <string name="close_resone_9">Знятий клієнтом</string>
     <string name="close_resone_from">"Від "</string>
-    <string name="close_resone_to">" до "</string>
+    <string name="close_resone_to">" -> "</string>
     <string name="close_resone_cost">", вартість: "</string>
     <string name="close_resone_time">", время заказу: "</string>
     <string name="close_resone_text">", стан: "</string>
@@ -339,5 +339,24 @@
     <string name="pos_z">просп. Соборний, буд. 139, місто Запоріжжя\t</string>
     <string name="pos_c">вул.Байди Вишневецького, буд.36, місто Черкаси\t</string>
     <string name="cancel_gps">Скасувати</string>
-
+    <string name="ok_error">Зрозуміло</string>
+    <string name="to_nal_payment">Оплата вибраним методом на даний момент неможлива. Замовити з оплатою готівкою?</string>
+    <string name="to_nal_payment_count">Оплата вибраним методом на даний момент неможлива. Розрахувати поїздку з оплатою готівкою?</string>
+    <string name="tarif">Тариф:</string>
+    <string name="tar">Тариф</string>
+    <string name="double_order_error">Дублювання замовлення. Ви не можете створювати подібне замовлення, поки не знайшлася машина на попереднє замовлення.</string>
+    <string name="user_cards">Ваші картки для оплати подорожей:</string>
+    <string name="error_payment_card">Помилка обробки платежу. Виберіть другу картку або замовте подорож за готівку.</string>
+    <string name="nal_payment_btn">За готівку</string>
+    <string name="new_card_btn">Нова карта</string>
+    <string name="chois_card_btn">Вибраною карткою</string>
+    <string name="cancel_0">Запит на скасування замовлення надіслано. Замовлення не вдалося скасувати.</string>
+    <string name="cancel_1">Запит на скасування замовлення надіслано. Замовлення скасоване.</string>
+    <string name="cancel_2">Запит на скасування замовлення надіслано. Вимагає підтвердження клієнтом скасування диспетчерської.</string>
+    <string name="cancel_3">Запит на скасування замовлення надіслано. Статус поїздки дізнайтесь у диспетчера.</string>
+    <string name="test_city">Тест</string>
+    <string name="pay_method_message_main">Оплата за поїздку</string>
+    <string name="pay_method_message_bonus">бонусами. Приємної подорожі.</string>
+    <string name="pay_method_message_card">банківською карткою. Приємної подорожі.</string>
+    <string name="pay_method_message_nal">готівкою водію. Приємної подорожі.</string>
 </resources>
