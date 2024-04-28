@@ -80,6 +80,7 @@ import com.taxi_pas_4.ui.card.CardInfo;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.ApiService;
 import com.taxi_pas_4.ui.finish.City;
+import com.taxi_pas_4.ui.finish.RouteResponse;
 import com.taxi_pas_4.ui.fondy.callback.CallbackResponse;
 import com.taxi_pas_4.ui.fondy.callback.CallbackService;
 import com.taxi_pas_4.ui.home.HomeFragment;
@@ -91,6 +92,7 @@ import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.VerifyUserTask;
 import com.taxi_pas_4.utils.activ_push.MyService;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
+import com.taxi_pas_4.utils.db.DatabaseHelper;
 import com.taxi_pas_4.utils.download.AppUpdater;
 import com.taxi_pas_4.utils.ip.IPUtil;
 import com.taxi_pas_4.utils.messages.UsersMessages;
@@ -108,6 +110,7 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -169,6 +172,11 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
     public static final long MAX_TASK_EXECUTION_TIME_SECONDS = 3;
     public static String versionServer;
 
+    DatabaseHelper databaseHelper;
+    String baseUrl = "https://m.easy-order-taxi.site";
+    private List<RouteResponse> routeList;
+    String[] array;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -204,6 +212,9 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
 // Initialize VisicomFragment and set AutoClickListener
         VisicomFragment visicomFragment = new VisicomFragment();
         visicomFragment.setAutoClickListener(this); // "this" refers to the MainActivity
+
+        VisicomFragment.gps_ubd = getIntent().getBooleanExtra("gps_ubd", true);
+
     }
 
 
@@ -1397,8 +1408,6 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
                 FirebaseApp.initializeApp(MainActivity.this);
             } catch (Exception e) {
                 Log.e(TAG, "Exception during authentication", e);
-                e.printStackTrace();
-//                Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
                 VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
 
             }
@@ -1406,6 +1415,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
             startFireBase();
 
         } else {
+            new Thread(() -> fetchRoutes(userEmail)).start();
             new Thread(() -> updatePushDate(getApplicationContext())).start();
 
             String application =  getString(R.string.application);
@@ -1416,7 +1426,6 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
 
             // Проверка новой версии в маркете
             new Thread(this::versionFromMarket).start();
-
         }
 
 
@@ -1480,6 +1489,8 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
                 settingsNewUser(user.getEmail());
                 Toast.makeText(this, R.string.city_search, Toast.LENGTH_SHORT).show();
                 startGetPublicIPAddressTask(fm, getApplicationContext());
+
+                new Thread(() -> fetchRoutes(user.getEmail())).start();
             } else {
 
                 MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.firebase_error));
@@ -1500,6 +1511,147 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
             VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
         }
     }
+    private void fetchRoutes(String value) {
+
+        String url = baseUrl + "/android/UIDStatusShowEmail/" + value;
+        Call<List<RouteResponse>> call = ApiClient.getApiService().getRoutes(url);
+        routeList = new ArrayList<>();
+        Log.d("TAG", "fetchRoutes: " + url);
+        call.enqueue(new Callback<List<RouteResponse>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<RouteResponse>> call, @NonNull Response<List<RouteResponse>> response) {
+                if (response.isSuccessful()) {
+                    List<RouteResponse> routes = response.body();
+                    Log.d("TAG", "onResponse: " + routes);
+                    if (routes != null && !routes.isEmpty()) {
+                        boolean hasRouteWithAsterisk = false;
+                        for (RouteResponse route : routes) {
+                            if ("*".equals(route.getRouteFrom())) {
+                                // Найден объект с routefrom = "*"
+                                hasRouteWithAsterisk = true;
+                                break;  // Выход из цикла, так как условие уже выполнено
+                            }
+                        }
+                        if (!hasRouteWithAsterisk) {
+                            routeList.addAll(routes);
+                            processRouteList();
+                        }
+
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<List<RouteResponse>> call, @NonNull Throwable t) {
+
+            }
+        });
+    }
+
+    private void processRouteList() {
+        // В этом методе вы можете использовать routeList для выполнения дополнительных действий с данными.
+
+        // Создайте массив строк
+
+        array = new String[routeList.size()];
+        databaseHelper = new DatabaseHelper(getApplicationContext());
+        databaseHelper.clearTable();
+
+        String closeReasonText = getString(R.string.close_resone_def);
+
+        for (int i = 0; i < routeList.size(); i++) {
+            RouteResponse route = routeList.get(i);
+            String routeFrom = route.getRouteFrom();
+            String routefromnumber = route.getRouteFromNumber();
+            String routeTo = route.getRouteTo();
+            String routeTonumber = route.getRouteToNumber();
+            String webCost = route.getWebCost();
+            String createdAt = route.getCreatedAt();
+            String closeReason = route.getCloseReason();
+            String auto = route.getAuto();
+
+            switch (closeReason){
+                case "-1":
+                    closeReasonText = getString(R.string.close_resone_in_work);
+                    break;
+                case "0":
+                    closeReasonText = getString(R.string.close_resone_0);
+                    break;
+                case "1":
+                    closeReasonText = getString(R.string.close_resone_1);
+                    break;
+                case "2":
+                    closeReasonText = getString(R.string.close_resone_2);
+                    break;
+                case "3":
+                    closeReasonText = getString(R.string.close_resone_3);
+                    break;
+                case "4":
+                    closeReasonText = getString(R.string.close_resone_4);
+                    break;
+                case "5":
+                    closeReasonText = getString(R.string.close_resone_5);
+                    break;
+                case "6":
+                    closeReasonText = getString(R.string.close_resone_6);
+                    break;
+                case "7":
+                    closeReasonText = getString(R.string.close_resone_7);
+                    break;
+                case "8":
+                    closeReasonText = getString(R.string.close_resone_8);
+                    break;
+                case "9":
+                    closeReasonText = getString(R.string.close_resone_9);
+                    break;
+
+            }
+
+            if(routeFrom.equals("Місце відправлення")) {
+                routeFrom = getString(R.string.start_point_text);
+            }
+
+
+            if(routeTo.equals("Точка на карте")) {
+                routeTo = getString(R.string.end_point_marker);
+            }
+            if(routeTo.contains("по городу")) {
+                routeTo = getString(R.string.on_city);
+            }
+            if(routeTo.contains("по місту")) {
+                routeTo = getString(R.string.on_city);
+            }
+            String routeInfo = "";
+
+            if(auto == null) {
+                auto = "??";
+            }
+
+            if(routeFrom.equals(routeTo)) {
+                routeInfo = getString(R.string.close_resone_from) + routeFrom + " " + routefromnumber
+                        + getString(R.string.close_resone_to)
+                        + getString(R.string.on_city)
+                        + getString(R.string.close_resone_cost) + webCost + " " + getString(R.string.UAH)
+                        + getString(R.string.auto_info) + " " + auto + " "
+                        + getString(R.string.close_resone_time)
+                        + createdAt + getString(R.string.close_resone_text) + closeReasonText;
+            } else {
+                routeInfo = getString(R.string.close_resone_from) + routeFrom + " " + routefromnumber
+                        + getString(R.string.close_resone_to) + routeTo + " " + routeTonumber
+                        + getString(R.string.close_resone_cost) + webCost + " " + getString(R.string.UAH)
+                        + getString(R.string.auto_info) + " " + auto + " "
+                        + getString(R.string.close_resone_time)
+                        + createdAt + getString(R.string.close_resone_text) + closeReasonText;
+            }
+
+//                array[i] = routeInfo;
+            databaseHelper.addRouteInfo(routeInfo);
+
+        }
+        array = databaseHelper.readRouteInfo();
+        Log.d("TAG", "processRouteList: array " + Arrays.toString(array));
+    }
+
     private void settingsNewUser (String email) {
         // Assuming this code is inside a method or a runnable block
 

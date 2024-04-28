@@ -1,8 +1,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.068</string>
-    <string name="version">Версия: 4.068</string>
+    <string name="version_code">4.069</string>
+    <string name="version">Версия: 4.069</string>
 
     <string name="app_name">Такси Дюк Попутчик</string>
 
@@ -16,7 +16,6 @@
     <string name="nav_header_subtitle">Быстрые поездки по городам Украины</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Настройки</string>
-
     <string name="menu_maps">Карта</string>
     <string name="menu_home">По адресу (старое)</string>
     <string name="menu_gallery">Мои маршруты</string>

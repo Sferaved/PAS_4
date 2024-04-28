@@ -138,7 +138,7 @@ public class VisicomFragment extends Fragment{
     private NetworkChangeReceiver networkChangeReceiver;
     public static boolean gps_ubd;
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
+
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
@@ -148,6 +148,7 @@ public class VisicomFragment extends Fragment{
         progressBar.setVisibility(View.VISIBLE);
         gps_ubd = true;
 //        networkChangeReceiver = new NetworkChangeReceiver();
+
         return root;
     }
     @Override
@@ -881,6 +882,10 @@ public class VisicomFragment extends Fragment{
         geoText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (fusedLocationProviderClient != null && locationCallback != null) {
+                    fusedLocationProviderClient.removeLocationUpdates(locationCallback);
+                    gpsbut.setText(R.string.change);
+                }
                 Intent intent = new Intent(getContext(), ActivityVisicomOnePage.class);
                 intent.putExtra("start", "ok");
                 intent.putExtra("end", "no");
