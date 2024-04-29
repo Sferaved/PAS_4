@@ -52,7 +52,6 @@ import com.taxi_pas_4.ui.maps.FromJSONParser;
 import com.taxi_pas_4.ui.open_map.api.ApiResponse;
 import com.taxi_pas_4.ui.open_map.api.ApiService;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
-import com.taxi_pas_4.utils.VerifyUserTask;
 
 import org.json.JSONException;
 import org.osmdroid.api.IMapController;
@@ -70,6 +69,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import okhttp3.OkHttpClient;
@@ -460,7 +460,9 @@ public class OpenStreetMapVisicomActivity extends AppCompatActivity {
     }
 
     public static void makeApiCall(double latitude, double longitude) {
-        Call<ApiResponse> call = apiService.reverseAddress(latitude, longitude);
+        Locale locale = Locale.getDefault();
+        String language = locale.getLanguage(); // Получаем язык устройства
+        Call<ApiResponse> call = apiService.reverseAddressLocal(latitude, longitude, language);
         call.enqueue(new Callback<ApiResponse>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
@@ -538,11 +540,11 @@ public class OpenStreetMapVisicomActivity extends AppCompatActivity {
 
                             }
                             if (finishMarker.equals("ok")) {
-                                if (!result.equals("404")) {
+                                if(!result.equals("Точка на карте")) {
                                     ToAdressString = result;
-                                } else {
-                                    ToAdressString = endPointNoText;
                                 }
+
+
                                 assert map != null;
                                 marker = new Marker(map);
                                 marker.setPosition(new GeoPoint(endPoint.getLatitude(), endPoint.getLongitude()));
@@ -744,7 +746,11 @@ public class OpenStreetMapVisicomActivity extends AppCompatActivity {
 
                         }
                     }
-                    String urlFrom = "https://m.easy-order-taxi.site/" + api + "/android/fromSearchGeo/" + startLat + "/" + startLan;
+                    Locale locale = Locale.getDefault();
+                    String language = locale.getLanguage(); // Получаем язык устройства
+
+                    String urlFrom = "https://m.easy-order-taxi.site/" + api + "/android/fromSearchGeoLocal/"  + startLat + "/" + startLan + "/" + language;
+
                     Map sendUrlFrom = null;
                     try {
                         sendUrlFrom = FromJSONParser.sendURL(urlFrom);
@@ -773,12 +779,9 @@ public class OpenStreetMapVisicomActivity extends AppCompatActivity {
                     map.invalidate();
                 }
             };
-                if (ContextCompat.checkSelfPermission(OpenStreetMapVisicomActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)
-                        == PackageManager.PERMISSION_GRANTED) {
+
                     startLocationUpdates();
-                } else {
-                    requestLocationPermission();
-                }
+
         }
 
             }

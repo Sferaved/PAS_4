@@ -70,6 +70,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -374,11 +375,11 @@ public class MyBottomSheetVisicomFragment extends BottomSheetDialogFragment impl
                     double latitude = firstLocation.getLatitude();
                     double longitude = firstLocation.getLongitude();
 
+                    Locale locale = Locale.getDefault();
+                    String language = locale.getLanguage(); // Получаем язык устройства
 
-//                    List<String> stringList = logCursor(MainActivity.CITY_INFO, getContext());
-//                    String api =  stringList.get(2);
+                    String urlFrom = "https://m.easy-order-taxi.site/" + api + "/android/fromSearchGeoLocal/"  + latitude + "/" + longitude + "/" + language;
 
-                    String urlFrom = urlBase + "/android/fromSearchGeo/" + latitude + "/" + longitude;
                     Map sendUrlFrom = null;
                     try {
                         sendUrlFrom = FromJSONParser.sendURL(urlFrom);
@@ -450,12 +451,8 @@ public class MyBottomSheetVisicomFragment extends BottomSheetDialogFragment impl
                 }
             }
         };
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
+
             startLocationUpdates();
-        } else {
-            requestLocationPermission();
-        }
 
     }
 

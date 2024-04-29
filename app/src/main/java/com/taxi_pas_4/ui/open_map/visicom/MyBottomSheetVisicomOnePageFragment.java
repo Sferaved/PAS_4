@@ -70,6 +70,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -372,7 +373,12 @@ public class MyBottomSheetVisicomOnePageFragment extends BottomSheetDialogFragme
                     if (isAdded() && getActivity() != null) {
                         List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
                         String api =  stringList.get(2);
-                        String urlFrom = "https://m.easy-order-taxi.site/" + api + "/android/fromSearchGeo/" + latitude + "/" + longitude;
+
+                        Locale locale = Locale.getDefault();
+                        String language = locale.getLanguage(); // Получаем язык устройства
+
+                        String urlFrom = "https://m.easy-order-taxi.site/" + api + "/android/fromSearchGeoLocal/"  + latitude + "/" + longitude + "/" + language;
+
                         Map sendUrlFrom = null;
                         try {
                             sendUrlFrom = FromJSONParser.sendURL(urlFrom);
@@ -445,12 +451,8 @@ public class MyBottomSheetVisicomOnePageFragment extends BottomSheetDialogFragme
                 }
             }
         };
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            startLocationUpdates();
-        } else {
-            requestLocationPermission();
-        }
+
+        startLocationUpdates();
 
     }
 
@@ -1141,7 +1143,6 @@ public class MyBottomSheetVisicomOnePageFragment extends BottomSheetDialogFragme
         OpenStreetMapVisicomActivity.showRout(startPoint, OpenStreetMapVisicomActivity.endPoint);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
     private void visicomCost() {
         String urlCost = getTaxiUrlSearchMarkers("costSearchMarkers", requireActivity());
         Log.d(TAG, "visicomCost: " + urlCost);
@@ -1222,7 +1223,6 @@ public class MyBottomSheetVisicomOnePageFragment extends BottomSheetDialogFragme
         database.close();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
     @SuppressLint("Range")
     public String getTaxiUrlSearchMarkers(String urlAPI, Context context) {
         Log.d(TAG, "getTaxiUrlSearchMarkers: " + urlAPI);

@@ -60,7 +60,6 @@ import com.taxi_pas_4.ui.home.MyBottomSheetBonusFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetGeoFragment;
 import com.taxi_pas_4.ui.home.MyPhoneDialogFragment;
-import com.taxi_pas_4.ui.maps.CostJSONParser;
 import com.taxi_pas_4.ui.maps.FromJSONParser;
 import com.taxi_pas_4.ui.maps.ToJSONParser;
 import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
@@ -79,6 +78,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -89,7 +89,7 @@ import retrofit2.Response;
 
 
 public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implements ApiCallback{
-    private static final String TAG = "TAG_GEO";
+    private static final String TAG = "GeoDialogVisicomFragment";
     public static AppCompatButton button, old_address, btn_minus, btn_plus, btnOrder, buttonBonus;
     public static TextView geoText;
     static String api;
@@ -210,8 +210,13 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
                                 double longitude = firstLocation.getLongitude();
                                 OpenStreetMapActivity.startLat = latitude;
                                 OpenStreetMapActivity.startLan = longitude;
-                                String urlFrom = "https://m.easy-order-taxi.site/" + api + "/android/fromSearchGeo/" +
-                                        String.valueOf(OpenStreetMapActivity.startLat) + "/" + String.valueOf(OpenStreetMapActivity.startLan);
+
+                                Locale locale = Locale.getDefault();
+                                String language = locale.getLanguage(); // Получаем язык устройства
+
+                                String urlFrom = "https://m.easy-order-taxi.site/" + api + "/android/fromSearchGeoLocal/"  +
+                                        OpenStreetMapActivity.startLat + "/" + OpenStreetMapActivity.startLan + "/" + language;
+
                                 Map sendUrlFrom = null;
                                 try {
                                     sendUrlFrom = FromJSONParser.sendURL(urlFrom);
@@ -232,12 +237,8 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
 
                     };
                 };
-                if (ContextCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION)
-                        == PackageManager.PERMISSION_GRANTED) {
+
                     startLocationUpdates();
-                } else {
-                    requestLocationPermission();
-                }
 
             }
         });
@@ -279,7 +280,7 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
                 addCost = MIN_COST_VALUE - firstCostForMin;
             }
             updateAddCost(String.valueOf(addCost));
-            Log.d("TAG", "startCost: addCost " + addCost);
+            Log.d(TAG, "startCost: addCost " + addCost);
             text_view_cost.setText(String.valueOf(firstCost));
         });
 
@@ -289,7 +290,7 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
             firstCost += 5;
             addCost += 5;
             updateAddCost(String.valueOf(addCost));
-            Log.d("TAG", "startCost: addCost " + addCost);
+            Log.d(TAG, "startCost: addCost " + addCost);
             text_view_cost.setText(String.valueOf(firstCost));
         });
         btnOrder.setOnClickListener(new View.OnClickListener() {
@@ -430,8 +431,8 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
     private void updateMyPosition(Double startLat, Double startLan, String position) {
         SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
         ContentValues cv = new ContentValues();
-        Log.d("TAG", "updateMyPosition: startLat" + startLat);
-        Log.d("TAG", "updateMyPosition: startLan" + startLan);
+        Log.d(TAG, "updateMyPosition: startLat" + startLat);
+        Log.d(TAG, "updateMyPosition: startLan" + startLan);
         cv.put("startLat", startLat); // Сохраняем как число, а не строку
         database.update(MainActivity.TABLE_POSITION_INFO, cv, "id = ?",
                 new String[] { "1" });
@@ -444,8 +445,8 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
         database.close();
 
 
-        Log.d("TAG", "updateMyPosition: logCursor(MainActivity.TABLE_POSITION_INFO " + logCursor(MainActivity.TABLE_POSITION_INFO, requireActivity()));
-        Log.d("TAG", "updateMyPosition: getFromTablePositionInfo(requireActivity(), \"startLat\" ) " + getFromTablePositionInfo(requireActivity(), "startLat" ));
+        Log.d(TAG, "updateMyPosition: logCursor(MainActivity.TABLE_POSITION_INFO " + logCursor(MainActivity.TABLE_POSITION_INFO, requireActivity()));
+        Log.d(TAG, "updateMyPosition: getFromTablePositionInfo(requireActivity(), \"startLat\" ) " + getFromTablePositionInfo(requireActivity(), "startLat" ));
     }
 
     private void startCost() {
@@ -470,19 +471,19 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
 
             Log.d(TAG, "startCost: Geo" + settings);
             updateRoutGeo(settings);
-            urlCost = getTaxiUrlSearchMarkers("costSearchMarkers", requireActivity());
+            urlCost = getTaxiUrlSearchMarkers("costSearchMarkersLocal", requireActivity());
         }
 
         Map<String, String> sendUrlMapCost = null;
         try {
-            sendUrlMapCost = CostJSONParser.sendURL(urlCost);
+            sendUrlMapCost = ToJSONParser.sendURL(urlCost);
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
 
         String message = sendUrlMapCost.get("message");
         String orderCost = sendUrlMapCost.get("order_cost");
-        Log.d("TAG", "startCost: orderCost " + orderCost);
+        Log.d(TAG, "startCost: orderCost " + orderCost);
 
         if (orderCost.equals("0")) {
             MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.error_message));
@@ -490,7 +491,7 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
         }
         if (!orderCost.equals("0")) {
 
-            String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, getContext()).get(3);
+            String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity()).get(3);
             long discountInt = Integer.parseInt(discountText);
 
             firstCost = Long.parseLong(orderCost);
@@ -503,8 +504,8 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
         }
         if(!text_view_cost.getText().toString().equals("")) {
             firstCost = Long.parseLong(text_view_cost.getText().toString());
-            Log.d("TAG", "startCost: firstCost " + firstCost);
-            Log.d("TAG", "startCost: addCost " + addCost);
+            Log.d(TAG, "startCost: firstCost " + firstCost);
+            Log.d(TAG, "startCost: addCost " + addCost);
 
             }
     }
@@ -530,20 +531,20 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
 
         String urlCost = null;
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            urlCost = getTaxiUrlSearchMarkers("costSearchMarkers", requireActivity());
-        }
+
+        urlCost = getTaxiUrlSearchMarkers("costSearchMarkersLocal", requireActivity());
+
 
         Map<String, String> sendUrlMapCost = null;
         try {
-            sendUrlMapCost = CostJSONParser.sendURL(urlCost);
+            sendUrlMapCost = ToJSONParser.sendURL(urlCost);
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
 
         String message = sendUrlMapCost.get("message");
         String orderCost = sendUrlMapCost.get("order_cost");
-        Log.d("TAG", "startCost: orderCost " + orderCost);
+        Log.d(TAG, "startCost: orderCost " + orderCost);
 
         if (orderCost.equals("0")) {
             MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.error_message));
@@ -564,8 +565,8 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
         }
         if(!text_view_cost.getText().toString().equals("")) {
             firstCost = Long.parseLong(text_view_cost.getText().toString());
-            Log.d("TAG", "startCost: firstCost " + firstCost);
-            Log.d("TAG", "startCost: addCost " + addCost);
+            Log.d(TAG, "startCost: firstCost " + firstCost);
+            Log.d(TAG, "startCost: addCost " + addCost);
 
             }
     }
@@ -623,7 +624,7 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
                 }
 
             };
-            Log.d("TAG", "arrayAdressAdapter: adressArrLoc " + adressArrLoc.toString());
+            Log.d(TAG, "arrayAdressAdapter: adressArrLoc " + adressArrLoc.toString());
         } else {
             arrayRouts = null;
         }
@@ -661,7 +662,7 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
 
         return arrayRouts;
     }
-    @RequiresApi(api = Build.VERSION_CODES.O)
+
     @SuppressLint("Range")
     public String getTaxiUrlSearchMarkers(String urlAPI, Context context) {
         Log.d(TAG, "getTaxiUrlSearchMarkers: " + urlAPI);
@@ -712,13 +713,16 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
         String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
         String displayName = logCursor(MainActivity.TABLE_USER_INFO, context).get(4);
 
-        if(urlAPI.equals("costSearchMarkers")) {
+        if(urlAPI.equals("costSearchMarkersLocal")) {
             Cursor c = database.query(MainActivity.TABLE_USER_INFO, null, null, null, null, null, null);
 
             if (c.getCount() == 1) {
                 phoneNumber = logCursor(MainActivity.TABLE_USER_INFO, context).get(2);
                 c.close();
             }
+
+
+
             parameters = str_origin + "/" + str_dest + "/" + tarif + "/" + phoneNumber + "/"
                     + displayName + "*" + userEmail  + "*" + payment_type;
         }
@@ -773,17 +777,25 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
         List<String> listCity = logCursor(MainActivity.CITY_INFO, requireActivity());
         String city = listCity.get(1);
         String api = listCity.get(2);
-
-        String url = "https://m.easy-order-taxi.site/" + api + "/android/" + urlAPI + "/"
-                + parameters + "/" + result + "/" + city  + "/" + context.getString(R.string.application);
-        Log.d(TAG, "getTaxiUrlSearchMarkers: " + url);
+        Locale locale = Locale.getDefault();
+        String language = locale.getLanguage(); // Получаем язык устройства
+        String url;
+        if(urlAPI.equals("costSearchMarkersLocal")) {
+            url = "https://m.easy-order-taxi.site/" + api + "/android/" + urlAPI + "/"
+                    + parameters + "/" + result + "/" + city + "/" + context.getString(R.string.application) + "/" + language;
+            Log.d(TAG, "getTaxiUrlSearchMarkers: " + url);
+        } else {
+            url = "https://m.easy-order-taxi.site/" + api + "/android/" + urlAPI + "/"
+                    + parameters + "/" + result + "/" + city + "/" + context.getString(R.string.application);
+            Log.d(TAG, "getTaxiUrlSearchMarkers: " + url);
+        }
         database.close();
 
         return url;
     }
     private boolean connected() {
 
-        Boolean hasConnect = false;
+        boolean hasConnect = false;
 
         ConnectivityManager cm = (ConnectivityManager) requireActivity().getSystemService(
                 Context.CONNECTIVITY_SERVICE);
@@ -919,8 +931,8 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
                 OpenStreetMapActivity.finishLat = to_lat;
                 OpenStreetMapActivity.finishLan = to_lng;
 
-                Log.d("TAG", "onClick: OpenStreetMapActivity.finishLat " + OpenStreetMapActivity.finishLat);
-                Log.d("TAG", "onClick: OpenStreetMapActivity.finishLan " + OpenStreetMapActivity.finishLan);
+                Log.d(TAG, "onClick: OpenStreetMapActivity.finishLat " + OpenStreetMapActivity.finishLat);
+                Log.d(TAG, "onClick: OpenStreetMapActivity.finishLan " + OpenStreetMapActivity.finishLan);
 
                 to = adressArr.get(listView.getCheckedItemPosition()).get("street").toString();
                 textViewTo.setText(to);
@@ -948,14 +960,14 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
 
                 try {
 
-                    urlAddress = getTaxiUrlSearchMarkers("costSearchMarkers", requireActivity());
+                    urlAddress = getTaxiUrlSearchMarkers("costSearchMarkersLocal", requireActivity());
 
-                    Map<String, String> sendUrlMapCost = CostJSONParser.sendURL(urlAddress);
+                    Map<String, String> sendUrlMapCost = ToJSONParser.sendURL(urlAddress);
 
                     String message = sendUrlMapCost.get("message");
                     String orderCost = sendUrlMapCost.get("order_cost");
                     geo_marker = "marker";
-                    Log.d("TAG", "onClick urlAddress: " + urlAddress);
+                    Log.d(TAG, "onClick urlAddress: " + urlAddress);
 
                     if (orderCost.equals("0")) {
                         MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.error_message));
@@ -986,7 +998,7 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
                                 };
                                 String urlCost = "https://m.easy-order-taxi.site/" + api + "/android/autocompleteSearchComboHid/" + to;
 
-                                Log.d("TAG", "onClick urlCost: " + urlCost);
+                                Log.d(TAG, "onClick urlCost: " + urlCost);
 
                                 try {
                                     sendUrlMapCost = ResultSONParser.sendURL(urlCost);
@@ -995,7 +1007,7 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
                                 }
 
                                 orderCost = (String) sendUrlMapCost.get("message");
-                                Log.d("TAG", "onClick Hid : " + orderCost);
+                                Log.d(TAG, "onClick Hid : " + orderCost);
 
                                 if (orderCost.equals("1")) {
                                     to_number.setVisibility(View.VISIBLE);
@@ -1106,7 +1118,7 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
         }
         if (verifyPhone(requireContext())) {
             Map<String, String> sendUrlMap = ToJSONParser.sendURL(urlOrder);
-            Log.d("TAG", "Map sendUrlMap = ToJSONParser.sendURL(urlOrder); " + sendUrlMap);
+            Log.d(TAG, "Map sendUrlMap = ToJSONParser.sendURL(urlOrder); " + sendUrlMap);
 
             String orderWeb = sendUrlMap.get("order_cost");
             String message = sendUrlMap.get("message");
@@ -1305,7 +1317,7 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
         if (cursor.getCount() == 1) {
 
             if (logCursor(MainActivity.TABLE_USER_INFO, context).get(1).equals("0")) {
-                verify = false;Log.d("TAG", "verifyOrder:verify " +verify);
+                verify = false;Log.d(TAG, "verifyOrder:verify " +verify);
             }
             cursor.close();
         }
@@ -1333,8 +1345,8 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
         TelephonyManager tMgr = (TelephonyManager) requireActivity().getSystemService(Context.TELEPHONY_SERVICE);
 
         if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.READ_PHONE_NUMBERS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            Log.d("TAG", "Manifest.permission.READ_PHONE_NUMBERS: " + ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.READ_PHONE_NUMBERS));
-            Log.d("TAG", "Manifest.permission.READ_PHONE_STATE: " + ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.READ_PHONE_STATE));
+            Log.d(TAG, "Manifest.permission.READ_PHONE_NUMBERS: " + ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.READ_PHONE_NUMBERS));
+            Log.d(TAG, "Manifest.permission.READ_PHONE_STATE: " + ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.READ_PHONE_STATE));
             return;
         }
         mPhoneNumber = tMgr.getLine1Number();
@@ -1342,10 +1354,10 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
         if(mPhoneNumber != null) {
             String PHONE_PATTERN = "((\\+?380)(\\d{9}))$";
             boolean val = Pattern.compile(PHONE_PATTERN).matcher(mPhoneNumber).matches();
-            Log.d("TAG", "onClick No validate: " + val);
+            Log.d(TAG, "onClick No validate: " + val);
             if (val == false) {
                 Toast.makeText(requireActivity(), getString(R.string.format_phone) , Toast.LENGTH_SHORT).show();
-                Log.d("TAG", "onClick:phoneNumber.getText().toString() " + mPhoneNumber);
+                Log.d(TAG, "onClick:phoneNumber.getText().toString() " + mPhoneNumber);
 //                requireActivity().finish();
 
             } else {
@@ -1364,7 +1376,7 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
         int updCount = database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?",
                 new String[] { "1" });
-        Log.d("TAG", "updated rows count = " + updCount);
+        Log.d(TAG, "updated rows count = " + updCount);
     }
 
     private static void insertRecordsOrders( String from, String to,

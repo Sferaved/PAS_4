@@ -34,7 +34,7 @@ import androidx.annotation.RequiresApi;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
-import com.taxi_pas_4.ui.maps.CostJSONParser;
+import com.taxi_pas_4.ui.maps.ToJSONParser;
 import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
 
 import java.net.MalformedURLException;
@@ -413,17 +413,17 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
         }
 
     }
-    @RequiresApi(api = Build.VERSION_CODES.O)
     private void changeCost() throws MalformedURLException {
         String newCost = "0";
 
         String  url = getTaxiUrlSearchMarkers("costSearchMarkers", requireActivity());
 
-        Map<String, String> sendUrl = CostJSONParser.sendURL(url);
+        Map<String, String> sendUrl = ToJSONParser.sendURL(url);
 
         String mes = sendUrl.get("message");
         String orderC = sendUrl.get("order_cost");
 
+        assert orderC != null;
         if (orderC.equals("0")) {
             MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(mes);
             bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
