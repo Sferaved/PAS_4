@@ -19,7 +19,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -60,7 +59,7 @@ public class CostJSONParser {
         Future<String> asyncTaskFuture = Executors.newSingleThreadExecutor().submit(asyncTaskCallable);
 
         try {
-            String response = asyncTaskFuture.get(10, TimeUnit.SECONDS);
+            String response = asyncTaskFuture.get(30, TimeUnit.SECONDS);
             Log.d(TAG, "sendURL: response " + response);
             if (response != null) {
                 if (response.equals("400")) {
@@ -82,12 +81,6 @@ public class CostJSONParser {
                 costMap.put("order_cost", "0");
                 costMap.put("message", "Сталася помилка");
             }
-            return costMap;
-        } catch (TimeoutException e) {
-            e.printStackTrace();
-            asyncTaskFuture.cancel(true);
-            costMap.put("order_cost", "0");
-            costMap.put("message", "Сталася помилка");
             return costMap;
         } catch (Exception e) {
             e.printStackTrace();

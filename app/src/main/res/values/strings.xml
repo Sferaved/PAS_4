@@ -1,8 +1,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.071</string>
-    <string name="version">Версия: 4.071</string>
+    <string name="version_code">4.073</string>
+    <string name="version">Версия: 4.073</string>
 
     <string name="app_name">Такси Дюк Попутчик</string>
 
@@ -50,7 +50,7 @@
     <string name="verify_phone">Проверка телефона</string>
     <string name="format_phone">Формат ввода телефонного номера: +380936665544</string>
     <string name="sent_button">Отправить</string>
-    <string name="verify_internet">Проверьте интернет-подключение, позвоните оператору или перегрузите приложение.</string>
+    <string name="verify_internet">Проверьте интернет-подключение, позвоните оператору или перезагрузите приложение.</string>
     <string name="save_button">Сохранить</string>
     <string name="you_this">"Вы сейчас здесь: "</string>
     <string name="make_rout_message">Сформируйте маршрут</string>

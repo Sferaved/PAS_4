@@ -43,7 +43,6 @@ import com.taxi_pas_4.ui.fondy.token_pay.PaymentApiToken;
 import com.taxi_pas_4.ui.fondy.token_pay.RequestDataToken;
 import com.taxi_pas_4.ui.fondy.token_pay.StatusRequestToken;
 import com.taxi_pas_4.ui.fondy.token_pay.SuccessResponseDataToken;
-import com.taxi_pas_4.ui.home.MyBottomSheetBlackListFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetErrorPaymentFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetMessageFragment;
@@ -87,6 +86,8 @@ public class FinishActivity extends AppCompatActivity {
     public static String uid_Double;
     public static Button btn_reset_status;
     public static Button btn_cancel_order;
+    public static Button btn_again;
+    public static Button btn_cancel;
     private long delayMillis, delayMillisStatus;
     public static Runnable myRunnable;
     public static Runnable runnableBonusBtn;
@@ -252,27 +253,22 @@ public class FinishActivity extends AppCompatActivity {
             }
         });
 
-        Button btn_again = findViewById(R.id.btn_again);
+        btn_again = findViewById(R.id.btn_again);
         btn_again.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 MainActivity.order_id = null;
                 updateAddCost(String.valueOf(0));
-                if(!verifyOrder()) {
-                    MyBottomSheetBlackListFragment bottomSheetDialogFragment = new MyBottomSheetBlackListFragment("orderCost");
-                    bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
+                if(connected()){
+                    startActivity(new Intent(getApplicationContext(), MainActivity.class));
                 } else {
-                    if(connected()){
-                        startActivity(new Intent(getApplicationContext(), MainActivity.class));
-                    } else {
-                        MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
-                        bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
-                    }
+                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
+                    bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
                 }
             }
         });
 
-        Button btn_cancel = findViewById(R.id.btn_cancel);
+        btn_cancel = findViewById(R.id.btn_cancel);
         btn_cancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -935,7 +931,14 @@ public class FinishActivity extends AppCompatActivity {
                             case "mono_payment":
                                 getReversMono(MainActivity.invoiceId, comment, Integer.parseInt(amount));
                                 break;
+                            case "nal_payment":
+                                btn_again.setVisibility(View.VISIBLE);
+                                btn_cancel.setVisibility(View.VISIBLE);
+
+                                break;
+
                         }
+
                     }
                 } else {
                     // Обработка неуспешного ответа
@@ -1001,7 +1004,12 @@ public class FinishActivity extends AppCompatActivity {
                             case "mono_payment":
                                 getReversMono(MainActivity.invoiceId, comment, Integer.parseInt(amount));
                                 break;
+                            case "nal_payment":
+                                btn_again.setVisibility(View.VISIBLE);
+                                btn_cancel.setVisibility(View.VISIBLE);
+                                break;
                         }
+
                     }
                 } else {
                     // Обработка неуспешного ответа
@@ -1057,12 +1065,10 @@ public class FinishActivity extends AppCompatActivity {
                     Log.d(TAG, "JSON Response: " + new Gson().toJson(apiResponse));
                     if (apiResponse != null) {
                         SuccessResponseDataRevers responseData = apiResponse.getResponse();
+                       // Обработка успешного ответа
                         Log.d(TAG, "onResponse: " + responseData.toString());
-                        if (responseData != null) {
-                            // Обработка успешного ответа
-                            Log.d(TAG, "onResponse: " + responseData.toString());
-
-                        }
+                        btn_again.setVisibility(View.VISIBLE);
+                        btn_cancel.setVisibility(View.VISIBLE);
                     }
                 } else {
                     // Обработка ошибки запроса
