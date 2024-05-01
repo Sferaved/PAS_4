@@ -331,8 +331,10 @@ public class ActivityVisicomOnePage extends AppCompatActivity
                             Toast.makeText(getApplicationContext(), getString(R.string.verify_internet), Toast.LENGTH_SHORT).show();
                         } else {
 
-                            if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                            if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                                    || ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                                 checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                                checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
                             } else {
                                 String searchText = getString(R.string.search_text) + "...";
 
@@ -426,7 +428,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity
             public void onClick(View v) {
                 progressBar.setVisibility(View.VISIBLE);
                 VisicomFragment.text_view_cost.setText("");
-                VisicomFragment.gps_ubd = false;
+
                 // Получаем доступ к InputMethodManager
                 InputMethodManager immHide = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                 // Пытаемся скрыть клавиатуру
@@ -517,11 +519,13 @@ public class ActivityVisicomOnePage extends AppCompatActivity
                             KeyboardUtils.showKeyboard(getApplicationContext(), fromEditAddress);
                         }
                         if (verifyRoutStart && verifyBuildingStart) {
-                            finish();
+                            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                            intent.putExtra("gps_upd", false);
+                            startActivity(intent);
                         }
                     }
                     if(end.equals("ok")) {
-                        verifyRoutFinish = false;
+
                         verifyRoutFinish = false;
 
                         if (toEditAddress.getText().toString().equals(getString(R.string.on_city_tv))) {
@@ -556,8 +560,9 @@ public class ActivityVisicomOnePage extends AppCompatActivity
                             new Handler().postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
-
-                                    finish();
+                                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                                    intent.putExtra("gps_upd", false);
+                                    startActivity(intent);
                                 }
                             }, 200);
 
@@ -726,8 +731,10 @@ public class ActivityVisicomOnePage extends AppCompatActivity
                                     Toast.makeText(getApplicationContext(), getString(R.string.verify_internet), Toast.LENGTH_SHORT).show();
                                 } else {
 
-                                    if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                                    if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                                            || ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                                         checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                                        checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
                                     } else {
                                         String searchText = getString(R.string.search_text) + "...";
                                         Toast.makeText(ActivityVisicomOnePage.this, searchText, Toast.LENGTH_SHORT).show();
@@ -868,8 +875,10 @@ public class ActivityVisicomOnePage extends AppCompatActivity
     }
     private void startLocationUpdates() {
         LocationRequest locationRequest = createLocationRequest();
-        if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                || ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
+            checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
             return;
         }
         fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
@@ -919,13 +928,13 @@ public class ActivityVisicomOnePage extends AppCompatActivity
             fromEditAddress.setSelection(fromEditAddress.getText().toString().length());
             KeyboardUtils.showKeyboard(getApplicationContext(), fromEditAddress);
             if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                        || ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     btn_change.setBackground(getResources().getDrawable(R.drawable.btn_yellow));
                     btn_change.setTextColor(Color.BLACK);
                 } else {
                     btn_change.setBackground(getResources().getDrawable(R.drawable.btn_green));
                     btn_change.setTextColor(Color.WHITE);
-//                    btn_change.performClick();
                 }
             } else {
                 btn_change.setBackground(getResources().getDrawable(R.drawable.btn_red));

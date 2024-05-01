@@ -18,6 +18,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.graphics.BlendMode;
+import android.graphics.Color;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -157,6 +158,7 @@ public class HomeFragment extends Fragment {
     ArrayAdapter<String> adapter;
     NavController navController;
     String city;
+    LocationManager locationManager;
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
@@ -209,16 +211,15 @@ public class HomeFragment extends Fragment {
 
         text_view_cost = binding.textViewCost;
         btnGeo = binding.btnGeo;
-        if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            btnGeo.setVisibility(View.VISIBLE);
-        }  else {
-            btnGeo.setVisibility(View.INVISIBLE);
 
-        }
         btnGeo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                        || ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                    checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                }
             }
         });
         if(!text_view_cost.getText().toString().isEmpty()) {
@@ -356,33 +357,35 @@ public class HomeFragment extends Fragment {
         });
 
         gpsbut = binding.gpsbut;
+        locationManager = (LocationManager) requireActivity().getSystemService(Context.LOCATION_SERVICE);
         gpsbut.setOnClickListener(v -> {
-            LocationManager lm = (LocationManager) requireActivity().getSystemService(Context.LOCATION_SERVICE);
-            boolean gps_enabled = false;
-            boolean network_enabled = false;
+            if (locationManager != null) {
+                if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 
-            try {
-                gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
-            } catch(Exception ignored) {
-            }
+                    // GPS включен, выполните ваш код здесь
+                    if (!NetworkUtils.isNetworkAvailable(requireActivity())) {
+                        Toast.makeText(requireActivity(), getString(R.string.verify_internet), Toast.LENGTH_SHORT).show();
+                    } else if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                            || ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                        checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                    } else if (isAdded() && isVisible())  {
+                        startActivity(new Intent(requireContext(), OpenStreetMapActivity.class));
+                    }
 
-            try {
-                network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-            } catch(Exception ignored) {
-            }
+                } else {
+                    // GPS выключен, выполните необходимые действия
 
-            if(!gps_enabled || !network_enabled) {
+                    MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment();
+                    bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                }
+            } else {
+
                 MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment();
                 bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
-            }  else  {
-                // Разрешения уже предоставлены, выполнить ваш код
-                if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
-                }  else {
-                    startActivity(new Intent(requireContext(), OpenStreetMapActivity.class));
-                }
             }
         });
+
         on_map = binding.btnMap;
         on_map.setOnClickListener(v -> {
             LocationManager lm = (LocationManager) requireActivity().getSystemService(Context.LOCATION_SERVICE);
@@ -404,8 +407,10 @@ public class HomeFragment extends Fragment {
                 bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
             }  else  {
                 // Разрешения уже предоставлены, выполнить ваш код
-                if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                        || ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                    checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
                 }  else {
                     startActivity(new Intent(requireContext(), OpenStreetMapActivity.class));
                 }
@@ -777,9 +782,27 @@ public class HomeFragment extends Fragment {
         }
     }
 
+    @SuppressLint("UseCompatLoadingForDrawables")
     @Override
     public void onResume() {
         super.onResume();
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    || ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                gpsbut.setBackground(getResources().getDrawable(R.drawable.btn_yellow));
+                gpsbut.setTextColor(Color.BLACK);
+                btnGeo.setVisibility(View.VISIBLE);
+            } else {
+                gpsbut.setBackground(getResources().getDrawable(R.drawable.btn_green));
+                gpsbut.setTextColor(Color.WHITE);
+                btnGeo.setVisibility(View.INVISIBLE);
+            }
+        } else {
+            gpsbut.setBackground(getResources().getDrawable(R.drawable.btn_red));
+            gpsbut.setTextColor(Color.WHITE);
+            btnGeo.setVisibility(View.VISIBLE);
+        }
+
         String userEmail = logCursor(MainActivity.TABLE_USER_INFO, requireActivity()).get(3);
 
         String application =  getString(R.string.application);

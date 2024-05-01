@@ -176,7 +176,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
     String baseUrl = "https://m.easy-order-taxi.site";
     private List<RouteResponse> routeList;
     String[] array;
-
+    public static boolean gps_upd;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -213,7 +213,8 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
         VisicomFragment visicomFragment = new VisicomFragment();
         visicomFragment.setAutoClickListener(this); // "this" refers to the MainActivity
 
-        VisicomFragment.gps_ubd = getIntent().getBooleanExtra("gps_ubd", true);
+
+
 
     }
 
@@ -244,16 +245,20 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
         WorkManager.getInstance(this).cancelAllWork();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    @Override
 
+    @Override
     protected void onResume() {
         super.onResume();
         insertOrUpdatePushDate();
         Log.d(TAG, "onResume: isServiceRunning())  " );
         isServiceRunning();
         startService(new Intent(this, MyService.class));
-
+        if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            gps_upd = getIntent().getBooleanExtra("gps_upd", true);
+        } else {
+            gps_upd = false;
+        };
     }
 
     void checkNotificationPermissionAndRequestIfNeeded() {

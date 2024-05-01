@@ -196,7 +196,7 @@ public class OpenStreetMapVisicomActivity extends AppCompatActivity {
         fab_open_map = findViewById(R.id.fab_open_map);
         fab_open_map.setOnClickListener(v -> {
             Intent intent = new Intent(OpenStreetMapVisicomActivity.this, MainActivity.class);
-            intent.putExtra("gps_ubd", false);
+            intent.putExtra("gps_upd", false);
             startActivity(intent);
         });
         fab_open_marker = findViewById(R.id.fab_open_marker);

@@ -137,7 +137,7 @@ public class VisicomFragment extends Fragment{
     private FusedLocationProviderClient fusedLocationProviderClient;
     private LocationCallback locationCallback;
     private NetworkChangeReceiver networkChangeReceiver;
-    public static boolean gps_ubd;
+
 
 
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -147,7 +147,7 @@ public class VisicomFragment extends Fragment{
         View root = binding.getRoot();
         progressBar = binding.progressBar;
         progressBar.setVisibility(View.VISIBLE);
-        gps_ubd = true;
+
 //        networkChangeReceiver = new NetworkChangeReceiver();
 
         return root;
@@ -192,6 +192,7 @@ public class VisicomFragment extends Fragment{
     }
     public void checkPermission(String permission, int requestCode) {
         // Checking if permission is not granted
+        Log.d(TAG, "checkPermission: " + permission);
         if (ContextCompat.checkSelfPermission(requireActivity(), permission) == PackageManager.PERMISSION_DENIED) {
             ActivityCompat.requestPermissions(requireActivity(), new String[]{permission}, requestCode);
         }
@@ -803,9 +804,6 @@ public class VisicomFragment extends Fragment{
         super.onResume();
         progressBar.setVisibility(View.VISIBLE);
 
-        gps_ubd = ContextCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED;
-
         String userEmail = logCursor(MainActivity.TABLE_USER_INFO, requireActivity()).get(3);
 
         String application =  getString(R.string.application);
@@ -1105,11 +1103,14 @@ public class VisicomFragment extends Fragment{
         gpsbut.setOnClickListener(v -> {
             if (locationManager != null) {
                 if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+
                     // GPS включен, выполните ваш код здесь
                     if (!NetworkUtils.isNetworkAvailable(requireActivity())) {
                         Toast.makeText(requireActivity(), getString(R.string.verify_internet), Toast.LENGTH_SHORT).show();
-                    } else if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    } else if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                            || ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                         checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                        checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
                     } else if (isAdded() && isVisible())  {
                             List<String> settings = new ArrayList<>();
 
@@ -1154,7 +1155,8 @@ public class VisicomFragment extends Fragment{
             }
         });
         if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    || ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 gpsbut.setBackground(getResources().getDrawable(R.drawable.btn_yellow));
                 gpsbut.setTextColor(Color.BLACK);
             } else {
@@ -1211,7 +1213,8 @@ public class VisicomFragment extends Fragment{
             }
 
             if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                        || ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
                     if (!newRout()) {
                         Log.d(TAG, "onResume: 1");
@@ -1240,7 +1243,7 @@ public class VisicomFragment extends Fragment{
 
                     }
                 } else {
-                    if(gps_ubd){
+                    if(MainActivity.gps_upd){
                         Log.d(TAG, "onResume: 3");
                         firstLocation();
                     } else {
@@ -1347,6 +1350,13 @@ public class VisicomFragment extends Fragment{
                 if (fusedLocationProviderClient != null && locationCallback != null) {
                     fusedLocationProviderClient.removeLocationUpdates(locationCallback);
                 }
+//                boolean fine_loc =ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+//                boolean coarse_loc =ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+//                if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+//                    checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
+//                }
+//                Log.d(TAG, "onClick:fine_loc  " +fine_loc );
+//                Log.d(TAG, "onClick:coarse_loc  " +coarse_loc );
                 gpsbut.setText(R.string.change);
                 gpsbut.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -1354,11 +1364,21 @@ public class VisicomFragment extends Fragment{
                         LocationManager locationManager = (LocationManager) requireActivity().getSystemService(Context.LOCATION_SERVICE);
                         if (locationManager != null) {
                             if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+//                                boolean fine_loc =ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+//                                boolean coarse_loc =ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+//                                if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+//                                    checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
+//                                }
+//                                Log.d(TAG, "onClick:fine_loc  " +fine_loc );
+//                                Log.d(TAG, "onClick:coarse_loc  " +coarse_loc );
+
                                 // GPS включен, выполните ваш код здесь
                                 if (!NetworkUtils.isNetworkAvailable(requireActivity())) {
                                     Toast.makeText(requireActivity(), getString(R.string.verify_internet), Toast.LENGTH_SHORT).show();
-                                } else if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                                        checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                                } else if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                                        || ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                                    checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                                    checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
                                 } else if (isAdded() && isVisible())  {
                                     List<String> settings = new ArrayList<>();
 
@@ -1526,8 +1546,10 @@ public class VisicomFragment extends Fragment{
                                     // GPS включен, выполните ваш код здесь
                                     if (!NetworkUtils.isNetworkAvailable(requireActivity())) {
                                         Toast.makeText(requireActivity(), getString(R.string.verify_internet), Toast.LENGTH_SHORT).show();
-                                    } else if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                                        checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);;
+                                    } else if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                                            || ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                                        checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                                        checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
                                     } else if (isAdded() && isVisible())  {
                                         List<String> settings = new ArrayList<>();
 
@@ -1585,8 +1607,10 @@ public class VisicomFragment extends Fragment{
     }
     private void startLocationUpdates() {
         LocationRequest locationRequest = createLocationRequest();
-        if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);;
+        if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                || ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
+            checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
             return;
         }
         fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);

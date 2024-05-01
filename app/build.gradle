@@ -11,8 +11,8 @@ android {
         applicationId "com.taxi_pas_4"
         minSdk 24
         targetSdk 33
-        versionCode 4073
-        versionName '4.073'
+        versionCode 4074
+        versionName '4.074'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += ['ru', 'uk']
