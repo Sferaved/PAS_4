@@ -2,7 +2,6 @@ package com.taxi_pas_4.ui.home;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.LayoutInflater;
@@ -11,7 +10,6 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.widget.AppCompatButton;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
@@ -25,7 +23,7 @@ public class MyBottomSheetGPSFragment extends BottomSheetDialogFragment {
 
 
     @SuppressLint("MissingInflatedId")
-    @RequiresApi(api = Build.VERSION_CODES.O)
+     
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {

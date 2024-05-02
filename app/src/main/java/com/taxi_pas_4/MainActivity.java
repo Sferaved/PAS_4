@@ -177,6 +177,12 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
     private List<RouteResponse> routeList;
     String[] array;
     public static boolean gps_upd;
+    VisicomFragment visicomFragment;
+    public static SharedPreferences sharedPreferences;
+    public static SharedPreferences sharedPreferencesCount;
+    public static final String PERMISSIONS_PREF_NAME = "Permissions";
+    public static final String PERMISSION_REQUEST_COUNT_KEY = "PermissionRequestCount";
+    public static boolean location_update;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -210,15 +216,32 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
         verifyInternet = getString(R.string.verify_internet);
 
 // Initialize VisicomFragment and set AutoClickListener
-        VisicomFragment visicomFragment = new VisicomFragment();
+        visicomFragment = new VisicomFragment();
         visicomFragment.setAutoClickListener(this); // "this" refers to the MainActivity
 
-
+        sharedPreferences = getSharedPreferences(MainActivity.PERMISSIONS_PREF_NAME, Context.MODE_PRIVATE);
+        sharedPreferencesCount = getSharedPreferences(MainActivity.PERMISSION_REQUEST_COUNT_KEY, Context.MODE_PRIVATE);
+// Обработка отсутствия необходимых разрешений
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                // Обработка отсутствия необходимых разрешений
+                MainActivity.location_update = true;
+            }
+        } else MainActivity.location_update = ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                || ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
 
 
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
+        // Передаем результаты обратно вашему фрагменту для обработки
+        if (visicomFragment != null) {
+            visicomFragment.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
 
 
     @SuppressLint("NewApi")

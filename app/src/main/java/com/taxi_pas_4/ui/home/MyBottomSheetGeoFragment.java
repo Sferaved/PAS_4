@@ -9,7 +9,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.SparseBooleanArray;
@@ -29,7 +28,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.taxi_pas_4.MainActivity;
@@ -72,7 +70,7 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
     public MyBottomSheetGeoFragment() {
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
+     
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -282,7 +280,7 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
         database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?", new String[] { "1" });
         database.close();
     }
-    @RequiresApi(api = Build.VERSION_CODES.O)
+     
     @Override
     public void onPause() {
         super.onPause();
@@ -472,7 +470,7 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
                 new String[] { "1" });
         database.close();
     }
-    @RequiresApi(api = Build.VERSION_CODES.O)
+     
     private static String getTaxiUrlSearchGeo(double originLatitude, double originLongitude,
                                               String to, String to_number,
                                               String urlAPI, Context context) {
@@ -543,7 +541,7 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
 
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
+     
     @SuppressLint("Range")
     public String getTaxiUrlSearchMarkers(String urlAPI, Context context) {
         Log.d("TAG", "getTaxiUrlSearchMarkers: " + urlAPI);

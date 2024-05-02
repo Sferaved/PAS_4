@@ -11,6 +11,7 @@ import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
@@ -43,7 +44,6 @@ import android.widget.Toast;
 
 import androidx.annotation.ColorRes;
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -132,7 +132,7 @@ public class HomeFragment extends Fragment {
     public static int routeIdToCheck = 123;
     private boolean finiched;
     private AlertDialog alertDialog;
-
+    private final int LOCATION_PERMISSION_REQUEST_CODE = 123;
     public static String[] arrayServiceCode() {
         return new String[]{
                 "BAGGAGE",
@@ -215,11 +215,35 @@ public class HomeFragment extends Fragment {
         btnGeo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                        || ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
-                    checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                if(loadPermissionRequestCount() >= 3 && !MainActivity.location_update) {
+                    MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment();
+                    bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                } else {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                            // Обработка отсутствия необходимых разрешений
+                            checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                        }
+                    } else {
+                        // Для версий Android ниже 10
+                        if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                                || ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                            // Обработка отсутствия необходимых разрешений
+                            checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                            checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                        }
+                    }
                 }
+
+                // Обработка отсутствия необходимых разрешений
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                        // Обработка отсутствия необходимых разрешений
+                        MainActivity.location_update = true;
+                    }
+                } else MainActivity.location_update = ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                        || ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+
             }
         });
         if(!text_view_cost.getText().toString().isEmpty()) {
@@ -361,15 +385,39 @@ public class HomeFragment extends Fragment {
         gpsbut.setOnClickListener(v -> {
             if (locationManager != null) {
                 if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                    if(loadPermissionRequestCount() >= 3 && !MainActivity.location_update) {
+                        MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment();
+                        bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                    } else {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                                // Обработка отсутствия необходимых разрешений
+                                checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                            }
+                        } else {
+                            // Для версий Android ниже 10
+                            if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                                    || ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                                // Обработка отсутствия необходимых разрешений
+                                checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                                checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                            }
+                        }
+                    }
+
+                    // Обработка отсутствия необходимых разрешений
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                            // Обработка отсутствия необходимых разрешений
+                            MainActivity.location_update = true;
+                        }
+                    } else MainActivity.location_update = ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                            || ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
 
                     // GPS включен, выполните ваш код здесь
                     if (!NetworkUtils.isNetworkAvailable(requireActivity())) {
                         Toast.makeText(requireActivity(), getString(R.string.verify_internet), Toast.LENGTH_SHORT).show();
-                    } else if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                            || ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                        checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
-                        checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
-                    } else if (isAdded() && isVisible())  {
+                    }  else if (isAdded() && isVisible() && MainActivity.location_update)  {
                         startActivity(new Intent(requireContext(), OpenStreetMapActivity.class));
                     }
 
@@ -769,10 +817,49 @@ public class HomeFragment extends Fragment {
 
     public void checkPermission(String permission, int requestCode) {
         // Checking if permission is not granted
+        Log.d(TAG, "checkPermission: " + permission);
         if (ContextCompat.checkSelfPermission(requireActivity(), permission) == PackageManager.PERMISSION_DENIED) {
-            ActivityCompat.requestPermissions(requireActivity(), new String[]{permission}, requestCode);
-
+            ActivityCompat.requestPermissions(requireActivity(), new String[]{permission}, LOCATION_PERMISSION_REQUEST_CODE);
         }
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        Log.d(TAG, "onRequestPermissionsResult: " + requestCode);
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (permissions.length > 0) {
+                SharedPreferences.Editor editor = MainActivity.sharedPreferences.edit();
+                for (int i = 0; i < permissions.length; i++) {
+                    editor.putInt(permissions[i], grantResults[i]);
+
+                }
+                editor.apply();
+
+                int permissionRequestCount = loadPermissionRequestCount();
+
+                // Увеличение счетчика запросов разрешений при необходимости
+                permissionRequestCount++;
+
+                // Сохранение обновленного значения счетчика
+                savePermissionRequestCount(permissionRequestCount);
+                Log.d("loadPermission", "permissionRequestCount: " + permissionRequestCount);
+                // Далее вы можете загрузить сохраненные разрешения и их результаты в любом месте вашего приложения,
+                // используя тот же самый объект SharedPreferences
+            }
+        }
+    }
+
+
+    // Метод для сохранения количества запросов разрешений в SharedPreferences
+    private void savePermissionRequestCount(int count) {
+        SharedPreferences.Editor editor = MainActivity.sharedPreferencesCount.edit();
+        editor.putInt(MainActivity.PERMISSION_REQUEST_COUNT_KEY, count);
+        editor.apply();
+    }
+
+    // Метод для загрузки количества запросов разрешений из SharedPreferences
+    private int loadPermissionRequestCount() {
+        return MainActivity.sharedPreferencesCount.getInt(MainActivity.PERMISSION_REQUEST_COUNT_KEY, 0);
     }
     @Override
     public void onPause() {
@@ -1549,7 +1636,7 @@ public class HomeFragment extends Fragment {
         paymentType("nal_payment");
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
+
     private String getTaxiUrlSearch(String urlAPI, Context context) throws UnsupportedEncodingException {
         Log.d(TAG, "startCost: discountText" + logCursor(MainActivity.TABLE_SETTINGS_INFO, getContext()).toString());
 

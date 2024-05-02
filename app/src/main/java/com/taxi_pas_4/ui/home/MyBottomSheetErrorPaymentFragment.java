@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -21,7 +20,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.FragmentManager;
 
@@ -99,7 +97,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
     }
 
     @SuppressLint("MissingInflatedId")
-    @RequiresApi(api = Build.VERSION_CODES.O)
+     
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -236,7 +234,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
+     
     @SuppressLint("Range")
     public String getTaxiUrlSearchMarkers(String urlAPI, Context context) {
         Log.d(TAG, "getTaxiUrlSearchMarkers: " + urlAPI);

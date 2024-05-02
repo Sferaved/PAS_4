@@ -23,7 +23,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.widget.AppCompatButton;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
@@ -88,7 +87,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
     }
 
     @SuppressLint({"MissingInflatedId", "Range"})
-    @RequiresApi(api = Build.VERSION_CODES.O)
+     
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -581,7 +580,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
         database.close();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
+     
     private String getTaxiUrlSearch(String urlAPI, Context context) throws UnsupportedEncodingException {
 
         List<String> stringListRout = logCursor(MainActivity.ROUT_HOME);
@@ -667,7 +666,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
     }
 
     @SuppressLint("Range")
-    @RequiresApi(api = Build.VERSION_CODES.O)
+     
     private String getTaxiUrlSearchMarkers(String urlAPI, Context context) {
 
 //        List<String> stringListRout = logCursor(MainActivity.ROUT_MARKER);

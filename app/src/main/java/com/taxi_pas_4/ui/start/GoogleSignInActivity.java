@@ -195,7 +195,7 @@ public class GoogleSignInActivity extends Activity {
         executorService.shutdown();
     }
 }
-    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001; // Произвольный код для запроса разрешений
+    public static final int LOCATION_PERMISSION_REQUEST_CODE = 1001; // Произвольный код для запроса разрешений
 
 
     private void requestLocationPermissions() {

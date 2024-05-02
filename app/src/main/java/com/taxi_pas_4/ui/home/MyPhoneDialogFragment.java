@@ -367,7 +367,7 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
+     
     @SuppressLint("Range")
     public String getTaxiUrlSearchMarkersVisicom(String urlAPI, Context context) {
         Log.d(TAG, "getTaxiUrlSearchMarkers: " + urlAPI);
@@ -601,7 +601,7 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
 
         return hasConnect;
     }
-    @RequiresApi(api = Build.VERSION_CODES.O)
+     
     private String getTaxiUrlSearch(String urlAPI) {
 
         List<String> stringListRout = logCursor(MainActivity.ROUT_HOME);

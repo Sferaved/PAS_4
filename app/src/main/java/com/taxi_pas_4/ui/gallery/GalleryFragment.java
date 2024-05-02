@@ -26,7 +26,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
@@ -239,7 +238,7 @@ public class GalleryFragment extends Fragment {
 
         }
         btnRouts.setOnClickListener(new View.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.O)
+
             @Override
             public void onClick(View view) {
                 List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
@@ -510,7 +509,7 @@ public class GalleryFragment extends Fragment {
         database.close();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
+
     private void dialogFromToOneRout(Map <String, String> rout) throws MalformedURLException, InterruptedException, JSONException {
         NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
         if (!NetworkUtils.isNetworkAvailable(requireContext())) {
@@ -598,7 +597,7 @@ public class GalleryFragment extends Fragment {
         Log.d(TAG, "routMaps: " + rout);
         return rout;
     }
-    @RequiresApi(api = Build.VERSION_CODES.O)
+
     @SuppressLint("Range")
     public String getTaxiUrlSearchMarkers(String urlAPI, Context context) {
         Log.d(TAG, "getTaxiUrlSearchMarkers: " + urlAPI);

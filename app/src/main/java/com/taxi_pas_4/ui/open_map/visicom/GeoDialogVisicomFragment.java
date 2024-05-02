@@ -40,7 +40,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -367,21 +366,31 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
             }
         });
         btn_clear_from = view.findViewById(R.id.btn_clear_from);
-        btn_clear_from.setOnClickListener(new View.OnClickListener() {
+        btn_clear_from.setVisibility(View.INVISIBLE);
+        geoText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                geoText.setText("");
-                MyBottomSheetVisicomFragment bottomSheetDialogFragment = new MyBottomSheetVisicomFragment("map");
-                bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+//                geoText.setText("");
+//                MyBottomSheetVisicomFragment bottomSheetDialogFragment = new MyBottomSheetVisicomFragment("map");
+//                bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                Intent intent = new Intent(getContext(), ActivityVisicomOnePage.class);
+                intent.putExtra("start", "ok");
+                intent.putExtra("end", "no");
+                startActivity(intent);
              }
         });
         btn_clear_to = view.findViewById(R.id.btn_clear_to);
-        btn_clear_to.setOnClickListener(new View.OnClickListener() {
+        btn_clear_to.setVisibility(View.INVISIBLE);
+        textViewTo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 textViewTo.setText("");
-                MyBottomSheetVisicomFragment bottomSheetDialogFragment = new MyBottomSheetVisicomFragment("map");
-                bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+//                MyBottomSheetVisicomFragment bottomSheetDialogFragment = new MyBottomSheetVisicomFragment("map");
+//                bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                Intent intent = new Intent(getContext(), ActivityVisicomOnePage.class);
+                intent.putExtra("start", "no");
+                intent.putExtra("end", "ok");
+                startActivity(intent);
              }
         });
 
@@ -920,7 +929,7 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
             }
         });
         builder.setPositiveButton(R.string.order, new DialogInterface.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.O)
+
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
