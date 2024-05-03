@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.076</string>
-    <string name="version">Version: 4.076</string>
+    <string name="version_code">4.077</string>
+    <string name="version">Version: 4.077</string>
 
     <string name="app_name">Taxi Duke Fellow</string>
     <string name="back4app_server_url">https://parseapi.back4app.com/</string>
@@ -68,8 +68,8 @@
     <string name="help">Support</string>
     <string name="show_to_point">Show destination</string>
     <string name="change">by GPS</string>
-    <string name="on_city">" around the city."</string>
-    <string name="on_city_tv">" around the city"</string>
+    <string name="on_city">"around the city."</string>
+    <string name="on_city_tv">"around the city"</string>
     <string name="help_button">Support</string>
     <string name="try_again">Reboot</string>
     <string name="ok_button">Ok</string>
@@ -355,4 +355,5 @@
     <string name="pay_method_message_bonus">bonuses. Have a nice trip.</string>
     <string name="pay_method_message_card">bank card. Have a nice trip.</string>
     <string name="pay_method_message_nal">cash to the driver. Have a nice trip.</string>
+    <string name="location_on">Enable ACCURATE location</string>
 </resources>

@@ -1281,7 +1281,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
         Log.d("TAG", "onOptionsItemSelected gps_enabled: " + gps_enabled);
         Log.d("TAG", "onOptionsItemSelected network_enabled: " + network_enabled);
         if(!gps_enabled || !network_enabled) {
-            MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment();
+            MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment("");
             bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
         } else {
             Toast.makeText(this, getString(R.string.gps_ok), Toast.LENGTH_SHORT).show();

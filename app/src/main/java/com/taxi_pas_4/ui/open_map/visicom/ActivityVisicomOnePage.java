@@ -277,7 +277,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity
 
 
         toEditAddress = findViewById(R.id.text_to);
-        toEditAddress.setText(VisicomFragment.textViewTo.getText().toString());
+//        toEditAddress.setText(VisicomFragment.textViewTo.getText().toString());
         inputType = toEditAddress.getInputType() | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS;
         toEditAddress.setInputType(inputType);
 
@@ -295,7 +295,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity
                 fromEditAddress.setText("");
                 btn_clear_from.setVisibility(View.INVISIBLE);
                 textGeoError.setVisibility(View.GONE);
-                Log.d(TAG, "onClick: wwww");
+
                 fromEditAddress.requestFocus();
                 KeyboardUtils.showKeyboard(getApplicationContext(), fromEditAddress);
             }
@@ -333,7 +333,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity
                     if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 
                         if(loadPermissionRequestCount() >= 3  && !location_update) {
-                            MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment();
+                            MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment(getString(R.string.location_on));
                             bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
                         } else {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -373,14 +373,14 @@ public class ActivityVisicomOnePage extends AppCompatActivity
                                 firstLocation();
                             }
                         } else {
-                        MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment();
+                        MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment("");
                         bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
                     }
 
                     } else {
                         // GPS выключен, выполните необходимые действия
                         // Например, показать диалоговое окно с предупреждением о включении GPS
-                        MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment();
+                        MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment("");
                         bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
                     }
                 }
@@ -758,7 +758,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity
                             if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                                 Log.d(TAG, "locationManager: " + locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER));
                                 if(loadPermissionRequestCount() >= 3  && !location_update) {
-                                    MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment();
+                                    MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment(getString(R.string.location_on));
                                     bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
                                 } else {
                                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -803,7 +803,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity
                             } else {
                                 // GPS выключен, выполните необходимые действия
                                 // Например, показать диалоговое окно с предупреждением о включении GPS
-                                MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment();
+                                MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment("");
                                 bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
                             }
                         }

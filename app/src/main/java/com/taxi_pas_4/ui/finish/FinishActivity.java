@@ -245,6 +245,8 @@ public class FinishActivity extends AppCompatActivity {
                 } else {
                     progressBar.setVisibility(View.INVISIBLE);
                     text_status.setText(R.string.verify_internet);
+                    btn_again.setVisibility(View.VISIBLE);
+                    btn_cancel.setVisibility(View.VISIBLE);
                 }
 
                 btn_reset_status.setVisibility(View.GONE);
@@ -598,42 +600,6 @@ public class FinishActivity extends AppCompatActivity {
         });
     }
 
-//    private void cancelOrderDismiss(String value) {
-//        List<String> listCity = logCursor(MainActivity.CITY_INFO);
-//        String city = listCity.get(1);
-//        String api = listCity.get(2);
-//
-//
-//        String url = baseUrl + "/" + api + "/android/webordersCancel/" + value + "/" + city  + "/" + getString(R.string.application);
-//
-//        Call<Status> call = ApiClient.getApiService().cancelOrder(url);
-//        Log.d(TAG, "cancelOrderWithDifferentValue cancelOrderUrl: " + url);
-//
-//        call.enqueue(new Callback<Status>() {
-//            @Override
-//            public void onResponse(Call<Status> call, Response<Status> response) {
-//                Status status = response.body();
-//                if (status != null) {
-//
-//                    String result =  String.valueOf(status.getResponse());
-//                    Log.d(TAG, "onResponse: result" + result);
-//                    FinishActivity.text_status.setText(result + getString(R.string.pay_failure));
-//
-//                } else {
-//                    FinishActivity.text_status.setText(R.string.verify_internet);
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(Call<Status> call, Throwable t) {
-//                // Обработка ошибок сети или других ошибок
-//                String errorMessage = t.getMessage();
-//                t.printStackTrace();
-//                Log.d(TAG, "onFailure: " + errorMessage);
-//
-//            }
-//        });
-//    }
 
     private void getUrlToPaymentMono(String amount, String reference, String comment) {
 
@@ -944,6 +910,8 @@ public class FinishActivity extends AppCompatActivity {
                     // Обработка неуспешного ответа
                     if (pay_method.equals("nal_payment")) {
                         text_status.setText(R.string.verify_internet);
+                        btn_again.setVisibility(View.VISIBLE);
+                        btn_cancel.setVisibility(View.VISIBLE);
                     }
                 }
                 progressBar.setVisibility(View.INVISIBLE);
@@ -956,6 +924,8 @@ public class FinishActivity extends AppCompatActivity {
                 t.printStackTrace();
                 Log.d(TAG, "onFailure: " + errorMessage);
                 text_status.setText(R.string.verify_internet);
+                btn_again.setVisibility(View.VISIBLE);
+                btn_cancel.setVisibility(View.VISIBLE);
                 progressBar.setVisibility(View.INVISIBLE);
             }
         });
@@ -1015,6 +985,8 @@ public class FinishActivity extends AppCompatActivity {
                     // Обработка неуспешного ответа
                     if (pay_method.equals("nal_payment")) {
                         text_status.setText(R.string.verify_internet);
+                        btn_again.setVisibility(View.VISIBLE);
+                        btn_cancel.setVisibility(View.VISIBLE);
                     }
                 }
                 progressBar.setVisibility(View.INVISIBLE);
@@ -1027,6 +999,8 @@ public class FinishActivity extends AppCompatActivity {
                 t.printStackTrace();
                 Log.d(TAG, "onFailure: " + errorMessage);
                 text_status.setText(R.string.verify_internet);
+                btn_again.setVisibility(View.VISIBLE);
+                btn_cancel.setVisibility(View.VISIBLE);
                 progressBar.setVisibility(View.INVISIBLE);
             }
         });

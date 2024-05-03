@@ -1,8 +1,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.076</string>
-    <string name="version">Версия: 4.076</string>
+    <string name="version_code">4.077</string>
+    <string name="version">Версия: 4.077</string>
 
     <string name="app_name">Такси Дюк Попутчик</string>
 
@@ -67,8 +67,8 @@
     <string name="help">Поддержка</string>
     <string name="show_to_point">Укажите место назначения</string>
     <string name="change">по GPS</string>
-    <string name="on_city">" по городу."</string>
-    <string name="on_city_tv">" по городу"</string>
+    <string name="on_city">"по городу."</string>
+    <string name="on_city_tv">"по городу"</string>
     <string name="help_button">Поддержка</string>
     <string name="try_again">Перезагрузить</string>
     <string name="ok_button">Ок</string>
@@ -348,14 +348,15 @@
     <string name="nal_payment_btn">За наличные</string>
     <string name="new_card_btn">Новая карта</string>
     <string name="chois_card_btn">Выбраной картой</string>
-    <string name="cancel_0">Запит на скасування замовлення надіслано. Замовлення не вдалося скасувати.</string>
-    <string name="cancel_1">Запит на скасування замовлення надіслано. Замовлення скасоване.</string>
-    <string name="cancel_2">Запит на скасування замовлення надіслано. Вимагає підтвердження клієнтом скасування диспетчерської.</string>
-    <string name="cancel_3">Запит на скасування замовлення надіслано. Статус поїздки дізнайтесь у диспетчера.</string>
+    <string name="cancel_0">Запрос на отмену заказа отправлен. Не удалось отменить заказ.</string>
+    <string name="cancel_1">Запрос на отмену заказа отправлен. Заказ отменен.</string>
+    <string name="cancel_2">Запрос на отмену заказа отправлен. Требует подтверждения клиентом отмены диспетчерской.</string>
+    <string name="cancel_3">Запрос на отмену заказа отправлен. Статус поездки узнайте у диспетчера.</string>
     <string name="test_city">Тест</string>
     <string name="pay_method_message_main">Оплата за поездку</string>
     <string name="pay_method_message_bonus">бонусами. Приятной поездки.</string>
     <string name="pay_method_message_card">банковской картой. Приятной поездки.</string>
     <string name="pay_method_message_nal">наличными водителю. Приятной поездки.</string>
+    <string name="location_on">Включите ТОЧНОЕ определение местонахождения</string>
 
 </resources>

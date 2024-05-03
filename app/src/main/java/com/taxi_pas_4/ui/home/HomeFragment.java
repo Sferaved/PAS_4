@@ -54,7 +54,6 @@ import androidx.navigation.Navigation;
 import androidx.room.Room;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.gson.Gson;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.cities.Cherkasy.Cherkasy;
@@ -65,11 +64,6 @@ import com.taxi_pas_4.cities.Odessa.OdessaTest;
 import com.taxi_pas_4.cities.Zaporizhzhia.Zaporizhzhia;
 import com.taxi_pas_4.databinding.FragmentHomeBinding;
 import com.taxi_pas_4.ui.finish.FinishActivity;
-import com.taxi_pas_4.ui.fondy.revers.ApiResponseRev;
-import com.taxi_pas_4.ui.fondy.revers.ReversApi;
-import com.taxi_pas_4.ui.fondy.revers.ReversRequestData;
-import com.taxi_pas_4.ui.fondy.revers.ReversRequestSent;
-import com.taxi_pas_4.ui.fondy.revers.SuccessResponseDataRevers;
 import com.taxi_pas_4.ui.home.room.AppDatabase;
 import com.taxi_pas_4.ui.home.room.RouteCost;
 import com.taxi_pas_4.ui.home.room.RouteCostDao;
@@ -82,7 +76,6 @@ import com.taxi_pas_4.utils.connect.NetworkUtils;
 
 import org.json.JSONException;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -91,12 +84,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 public class HomeFragment extends Fragment {
 
@@ -163,7 +150,7 @@ public class HomeFragment extends Fragment {
                              ViewGroup container, Bundle savedInstanceState) {
         navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
         List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
-        Log.d(TAG, "onViewCreated: " + stringList);
+
         city = stringList.get(1);
         if (!NetworkUtils.isNetworkAvailable(requireContext()) || city.equals("foreign countries")) {
             navController.navigate(R.id.nav_visicom);
@@ -216,7 +203,7 @@ public class HomeFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if(loadPermissionRequestCount() >= 3 && !MainActivity.location_update) {
-                    MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment();
+                    MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment(getString(R.string.location_on));
                     bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
                 } else {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -386,7 +373,7 @@ public class HomeFragment extends Fragment {
             if (locationManager != null) {
                 if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                     if(loadPermissionRequestCount() >= 3 && !MainActivity.location_update) {
-                        MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment();
+                        MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment(getString(R.string.location_on));
                         bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
                     } else {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -424,12 +411,12 @@ public class HomeFragment extends Fragment {
                 } else {
                     // GPS выключен, выполните необходимые действия
 
-                    MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment();
+                    MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment("");
                     bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
                 }
             } else {
 
-                MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment();
+                MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment("");
                 bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
             }
         });
@@ -451,7 +438,7 @@ public class HomeFragment extends Fragment {
             }
 
             if(!gps_enabled || !network_enabled) {
-                MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment();
+                MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment("");
                 bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
             }  else  {
                 // Разрешения уже предоставлены, выполнить ваш код
@@ -503,68 +490,6 @@ public class HomeFragment extends Fragment {
         });
 //        getLocalIpAddress();
         return root;
-    }
-
-    private void getRevers(String orderId, String comment, String amount) {
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://pay.fondy.eu/api/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        ReversApi apiService = retrofit.create(ReversApi.class);
-        List<String>  arrayList = logCursor(MainActivity.CITY_INFO, requireActivity());
-        String MERCHANT_ID = arrayList.get(6);
-        String merchantPassword = arrayList.get(7);
-
-        ReversRequestData reversRequestData = new ReversRequestData(
-                orderId,
-                comment,
-                amount,
-               MERCHANT_ID,
-                merchantPassword
-        );
-        Log.d("TAG1", "getRevers: " + reversRequestData.toString());
-        ReversRequestSent reversRequestSent = new ReversRequestSent(reversRequestData);
-
-
-        Call<ApiResponseRev<SuccessResponseDataRevers>> call = apiService.makeRevers(reversRequestSent);
-
-        call.enqueue(new Callback<ApiResponseRev<SuccessResponseDataRevers>>() {
-            @Override
-            public void onResponse(Call<ApiResponseRev<SuccessResponseDataRevers>> call, Response<ApiResponseRev<SuccessResponseDataRevers>> response) {
-
-                if (response.isSuccessful()) {
-                    ApiResponseRev<SuccessResponseDataRevers> apiResponse = response.body();
-                    Log.d("TAG1", "JSON Response: " + new Gson().toJson(apiResponse));
-                    if (apiResponse != null) {
-                        SuccessResponseDataRevers responseData = apiResponse.getResponse();
-                        Log.d("TAG1", "onResponse: " + responseData.toString());
-                        if (responseData != null) {
-                            // Обработка успешного ответа
-                            Log.d("TAG1", "onResponse: " + responseData.toString());
-
-                        }
-                    }
-                } else {
-                    // Обработка ошибки запроса
-                    Log.d(TAG, "onResponse: Ошибка запроса, код " + response.code());
-                    try {
-                        String errorBody = response.errorBody().string();
-                        Log.d(TAG, "onResponse: Тело ошибки: " + errorBody);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ApiResponseRev<SuccessResponseDataRevers>> call, Throwable t) {
-                // Обработка ошибки сети или другие ошибки
-                Log.d(TAG, "onFailure: Ошибка сети: " + t.getMessage());
-            }
-        });
-
     }
 
     private void orderFinished() {
@@ -935,31 +860,31 @@ public class HomeFragment extends Fragment {
             });
             costRoutHome(stringListRoutHome);
         } else {
+            resetRoutHome();
+//            text_view_cost.setVisibility(View.INVISIBLE);
+//            btn_minus.setVisibility(View.INVISIBLE);
+//            btn_plus.setVisibility(View.INVISIBLE);
+//            buttonAddServices.setVisibility(View.INVISIBLE);
+//            buttonBonus.setVisibility(View.INVISIBLE);
+//            textViewFrom.setText("");
+//            from_number.setText("");
+//            from_number.setVisibility(View.INVISIBLE);
+//            textViewTo.setText("");
+//            textViewTo.setVisibility(View.INVISIBLE);
+//            btn_clear.setVisibility(View.INVISIBLE);
+//            binding.textTo.setVisibility(View.INVISIBLE);
+//            binding.num2.setVisibility(View.INVISIBLE);
+//
+//            btn_order.setVisibility(View.INVISIBLE);
 
-            text_view_cost.setVisibility(View.INVISIBLE);
-            btn_minus.setVisibility(View.INVISIBLE);
-            btn_plus.setVisibility(View.INVISIBLE);
-            buttonAddServices.setVisibility(View.INVISIBLE);
-            buttonBonus.setVisibility(View.INVISIBLE);
-            textViewFrom.setText("");
-            from_number.setText("");
-            from_number.setVisibility(View.INVISIBLE);
-            textViewTo.setText("");
-            textViewTo.setVisibility(View.INVISIBLE);
-            btn_clear.setVisibility(View.INVISIBLE);
-            binding.textTo.setVisibility(View.INVISIBLE);
-            binding.num2.setVisibility(View.INVISIBLE);
-
-            btn_order.setVisibility(View.INVISIBLE);
-
-            from = null;
-            to = null;
+//            from = null;
+//            to = null;
             updateAddCost("0");
-            text_view_cost.setText("");
-            textViewFrom.setText("");
-            from_number.setText("");
-            textViewTo.setText("");
-            to_number.setText("");
+//            text_view_cost.setText("");
+//            textViewFrom.setText("");
+//            from_number.setText("");
+//            textViewTo.setText("");
+//            to_number.setText("");
         }
 
 
@@ -1187,23 +1112,22 @@ public class HomeFragment extends Fragment {
         } else {
             toCost = to;
         }
-
+        List<String> settings = new ArrayList<>();
+        String urlCost;
         try {
-            String urlCost = null;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                List<String> settings = new ArrayList<>();
-                settings.add(from);
-                settings.add(from_numberCost);
-                settings.add(toCost);
-                settings.add(to_numberCost);
-                updateRoutHome(settings);
-                urlCost = getTaxiUrlSearch("costSearch", requireActivity());
-            }
+
+            settings.add(from);
+            settings.add(from_numberCost);
+            settings.add(toCost);
+            settings.add(to_numberCost);
+            updateRoutHome(settings);
+            urlCost = getTaxiUrlSearch("costSearch", requireActivity());
 
             Map<String, String> sendUrlMapCost = CostJSONParser.sendURL(urlCost);
 
             handleCostResponse(sendUrlMapCost);
         } catch (MalformedURLException | UnsupportedEncodingException e) {
+            resetRoutHome();
             MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
             bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
         }
@@ -1248,23 +1172,13 @@ public class HomeFragment extends Fragment {
             insertRouteCostToDatabase();
 
         } else {
+            resetRoutHome();
             message = getString(R.string.error_message);
             MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
             bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
 
-            text_view_cost.setVisibility(View.INVISIBLE);
-            btn_minus.setVisibility(View.INVISIBLE);
-            btn_plus.setVisibility(View.INVISIBLE);
-            buttonAddServices.setVisibility(View.INVISIBLE);
-            buttonBonus.setVisibility(View.INVISIBLE);
-            textViewFrom.setText("");
-            from_number.setText("");
-            from_number.setVisibility(View.INVISIBLE);
-            textViewTo.setText("");
-            textViewTo.setVisibility(View.INVISIBLE);
-            btn_clear.setVisibility(View.INVISIBLE);
-            binding.textTo.setVisibility(View.INVISIBLE);
-            binding.num2.setVisibility(View.INVISIBLE);
+
+
         }
     }
 
@@ -1436,13 +1350,12 @@ public class HomeFragment extends Fragment {
 
         btn_order.setVisibility(View.VISIBLE);
 
+        String urlCost;
+        String message;
         try {
-            String urlCost = null;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                urlCost = getTaxiUrlSearch("costSearch", requireActivity());
-            }
 
-            Map sendUrlMapCost = CostJSONParser.sendURL(urlCost);
+            urlCost = getTaxiUrlSearch("costSearch", requireActivity());
+            Map<String, String> sendUrlMapCost = CostJSONParser.sendURL(urlCost);
             String orderCostStr = (String) sendUrlMapCost.get("order_cost");
 
             List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireContext());
@@ -1451,31 +1364,31 @@ public class HomeFragment extends Fragment {
             assert orderCostStr != null;
             long orderCostLong = Long.parseLong(orderCostStr);
             String orderCost = String.valueOf(orderCostLong + addCost);
-            String message = (String) sendUrlMapCost.get("message");
+            message = (String) sendUrlMapCost.get("message");
 
             if (orderCost.equals("0")) {
-                message = getString(R.string.error_message);
-                MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
-                bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                if (message.contains("Дублирование")) {
+                    resetRoutHome();
+                    message = getResources().getString(R.string.double_order_error);
+                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
+                    bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                } else {
+                    switch (pay_method) {
+                        case "bonus_payment":
+                        case "card_payment":
+                        case "fondy_payment":
+                        case "mono_payment":
+                            changePayMethodToNal();
+                            break;
+                        default:
+                            resetRoutHome();
+                            message = getResources().getString(R.string.error_message);
+                            MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
+                            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                    }
 
-                text_view_cost.setVisibility(View.INVISIBLE);
-                btn_minus.setVisibility(View.INVISIBLE);
-                btn_plus.setVisibility(View.INVISIBLE);
-                buttonAddServices.setVisibility(View.INVISIBLE);
-                buttonBonus.setVisibility(View.INVISIBLE);
-                textViewFrom.setText("");
-                from_number.setText("");
-                from_number.setVisibility(View.INVISIBLE);
-                textViewTo.setText("");
-                textViewTo.setVisibility(View.INVISIBLE);
-                btn_clear.setVisibility(View.INVISIBLE);
-                binding.textwhere.setVisibility(View.INVISIBLE);
-                binding.num2.setVisibility(View.INVISIBLE);
-                btn_order.setVisibility(View.INVISIBLE);
-
-
-            }
-            if (!orderCost.equals("0")) {
+                }
+            } else  {
                 text_view_cost.setVisibility(View.VISIBLE);
                 btn_minus.setVisibility(View.VISIBLE);
                 btn_plus.setVisibility(View.VISIBLE);
@@ -1496,12 +1409,11 @@ public class HomeFragment extends Fragment {
 
                 costFirstForMin = cost;
                 MIN_COST_VALUE = (long) (cost * 0.6);
-            } else {
-//                MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
-//                bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
             }
         } catch (MalformedURLException | UnsupportedEncodingException e) {
-            MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
+            resetRoutHome();
+            message = getString(R.string.error_message);
+            MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
             bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
         }
     }
@@ -1634,6 +1546,21 @@ public class HomeFragment extends Fragment {
         database.close();
         updateAddCost("0");
         paymentType("nal_payment");
+        text_view_cost.setVisibility(View.INVISIBLE);
+        btn_minus.setVisibility(View.INVISIBLE);
+        btn_plus.setVisibility(View.INVISIBLE);
+        buttonAddServices.setVisibility(View.INVISIBLE);
+        buttonBonus.setVisibility(View.INVISIBLE);
+        textViewFrom.setText("");
+        from_number.setText("");
+        from_number.setVisibility(View.INVISIBLE);
+        textViewTo.setText("");
+        textViewTo.setVisibility(View.INVISIBLE);
+        btn_clear.setVisibility(View.INVISIBLE);
+        binding.textTo.setVisibility(View.INVISIBLE);
+        binding.num2.setVisibility(View.INVISIBLE);
+        binding.textwhere.setVisibility(View.INVISIBLE);
+        to_number.setVisibility(View.INVISIBLE);
     }
 
 
