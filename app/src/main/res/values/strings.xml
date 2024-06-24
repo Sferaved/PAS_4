@@ -1,8 +1,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.077</string>
-    <string name="version">Версия: 4.077</string>
+    <string name="version_code">4.078</string>
+    <string name="version">Версия: 4.078</string>
 
     <string name="app_name">Такси Дюк Попутчик</string>
 
@@ -93,7 +93,7 @@
     <string name="please_phone_message">Приложение передает номер вашего мобильного телефона для включения функции заказа такси. Нажав кнопку Сохранить Вы подтверждаете согласие на передачу телефонного номера диспетчеру для поиска автомобиля и сохранения его для следующих заказов.</string><string name="check_message">Ждите, идет подключение.</string>
     <string name="find_of_map">Попробуйте найти на карте</string>
     <string name="end_point_marker">Место назначения</string>
-    <string name="error_firebase_start">Ошибка проверки. Наберите оператора.</string>
+    <string name="error_firebase_start">Ошибка проверки. Наберите оператора через "ПОМОЩЬ"</string>
     <string name="address_error_message">Ошибка ввода адреса</string>
 
     <string name="BAGGAGE">Загрузка салона</string>
@@ -153,7 +153,7 @@
     <string name="gps_message">Для использования карты включите GPS</string>
     <string name="city">Город</string>
     <string name="change_message">"Изменение базы адресов. "</string>
-    <string name="server_error_connected">Сервер не принял запрос, наберите операторов</string>
+    <string name="server_error_connected">Сервер не принял запрос. Наберите оператора через "ПОМОЩЬ"</string>
     <string name="GDPR">GDPR</string>
     <string name="ok_GDPR">Согласиться</string>
     <string name="Dnipro_city">Днепр</string>
@@ -347,7 +347,7 @@
     <string name="error_payment_card">Ошибка обработки платежа. Выберитие другую карту или закажите поездку за наличные.</string>
     <string name="nal_payment_btn">За наличные</string>
     <string name="new_card_btn">Новая карта</string>
-    <string name="chois_card_btn">Выбраной картой</string>
+    <string name="chois_card_btn">Выбранной картой</string>
     <string name="cancel_0">Запрос на отмену заказа отправлен. Не удалось отменить заказ.</string>
     <string name="cancel_1">Запрос на отмену заказа отправлен. Заказ отменен.</string>
     <string name="cancel_2">Запрос на отмену заказа отправлен. Требует подтверждения клиентом отмены диспетчерской.</string>
@@ -357,6 +357,26 @@
     <string name="pay_method_message_bonus">бонусами. Приятной поездки.</string>
     <string name="pay_method_message_card">банковской картой. Приятной поездки.</string>
     <string name="pay_method_message_nal">наличными водителю. Приятной поездки.</string>
-    <string name="location_on">Включите ТОЧНОЕ определение местонахождения</string>
-
+    <string name="location_on">Включите ТОЧНОЕ определение местонахождения в Разрешениях</string>
+    <string name="start_t">Старт</string>
+    <string name="base_onl_t">Базовий онлайн</string>
+    <string name="base_t">Базовый</string>
+    <string name="univers_t">Универсал</string>
+    <string name="bisnes_t">Бизнес-класс</string>
+    <string name="prem_t">Премиум-класс</string>
+    <string name="econom_t">Эконом-класс</string>
+    <string name="bus_t">Микроавтобус</string>
+    <string name="pending">Платеж отправлен на проверку. Попробуйте другую карту или повторите позднее.</string>
+    <string name="pending_error">Не удалось произвести оплату. Повторите попытку оплаты позже или свяжитесь с продавцом по адресу, в котором вы производите платеж.</string>
+    <string name="pending_error_0">Время на проведение платежа истекло, повторите оплату снова</string>
+    <string name="pending_error_1">Ваш платеж обрабатывается. Как только транзакция будет обработана, вы получите уведомление о состоянии платежа</string>
+    <string name="order_again">Заказать повторно</string>
+    <string name="order_continue">Продолжить просмотр</string>
+    <string name="anr_message">Извините, пришлось немного подождать</string>
+    <string name="change_tarrif">Выберите другой тариф</string>
+    <string name="checkout_status">Ожидайте, идет проверка статуса заказа ...</string>
+    <string name="check_order_mes">Ожидайте регистрации заказа...</string>
+    <string name="sent_cancel_message">Запрос на отмену заказа отправлен</string>
+    <string name="aplay_card_message">Ваша карта принята и отправлена на проверку. Вскоре она станет доступной для оплаты поездок.</string>
+    <string name="status_checkout_message">Запрошено обновление статуса. Ожидайте или уточните у оператора</string>
 </resources>

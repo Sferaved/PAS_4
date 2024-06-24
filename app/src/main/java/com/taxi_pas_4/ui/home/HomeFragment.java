@@ -7,6 +7,7 @@ import static com.taxi_pas_4.R.string.address_error_message;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
@@ -49,6 +50,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.room.Room;
@@ -67,12 +69,12 @@ import com.taxi_pas_4.ui.finish.FinishActivity;
 import com.taxi_pas_4.ui.home.room.AppDatabase;
 import com.taxi_pas_4.ui.home.room.RouteCost;
 import com.taxi_pas_4.ui.home.room.RouteCostDao;
-import com.taxi_pas_4.ui.maps.CostJSONParser;
-import com.taxi_pas_4.ui.maps.ToJSONParser;
 import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
 import com.taxi_pas_4.ui.start.ResultSONParser;
 import com.taxi_pas_4.utils.VerifyUserTask;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
+import com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
+import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 
 import org.json.JSONException;
 
@@ -84,6 +86,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class HomeFragment extends Fragment {
 
@@ -146,10 +152,16 @@ public class HomeFragment extends Fragment {
     NavController navController;
     String city;
     LocationManager locationManager;
+    Activity context;
+    FragmentManager fragmentManager;
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
-        List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
+        context = requireActivity();
+        fragmentManager = getParentFragmentManager();
+        navController = Navigation.findNavController(context, R.id.nav_host_fragment_content_main);
+
+
+        List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
 
         city = stringList.get(1);
         if (!NetworkUtils.isNetworkAvailable(requireContext()) || city.equals("foreign countries")) {
@@ -160,7 +172,7 @@ public class HomeFragment extends Fragment {
         View root = binding.getRoot();
         finiched = true;
 
-        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+        context.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
 
         progressBar = binding.progressBar;
         buttonBonus = binding.btnBonus;
@@ -193,7 +205,7 @@ public class HomeFragment extends Fragment {
                     arrayStreet = KyivCity.arrayStreet();
                     break;
             };
-            adapter = new ArrayAdapter<>(requireActivity(),R.layout.drop_down_layout, arrayStreet);
+            adapter = new ArrayAdapter<>(context,R.layout.drop_down_layout, arrayStreet);
         }
 
         text_view_cost = binding.textViewCost;
@@ -204,17 +216,17 @@ public class HomeFragment extends Fragment {
             public void onClick(View v) {
                 if(loadPermissionRequestCount() >= 3 && !MainActivity.location_update) {
                     MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment(getString(R.string.location_on));
-                    bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                 } else {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                             // Обработка отсутствия необходимых разрешений
                             checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
                         }
                     } else {
                         // Для версий Android ниже 10
-                        if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                                || ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                                || ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                             // Обработка отсутствия необходимых разрешений
                             checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
                             checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
@@ -224,12 +236,12 @@ public class HomeFragment extends Fragment {
 
                 // Обработка отсутствия необходимых разрешений
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                         // Обработка отсутствия необходимых разрешений
                         MainActivity.location_update = true;
                     }
-                } else MainActivity.location_update = ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-                        || ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+                } else MainActivity.location_update = ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                        || ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
 
             }
         });
@@ -247,7 +259,7 @@ public class HomeFragment extends Fragment {
             Log.d(TAG, "onCreateView: cost " +cost);
             Log.d(TAG, "onCreateView: MIN_COST_VALUE " +MIN_COST_VALUE);
 
-                List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity());
+                List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, context);
                 addCost = Long.parseLong(stringListInfo.get(5));
                 cost = Long.parseLong(text_view_cost.getText().toString());
                 cost -= 5;
@@ -261,7 +273,7 @@ public class HomeFragment extends Fragment {
         btn_plus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity());
+                List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, context);
                 addCost = Long.parseLong(stringListInfo.get(5));
                 cost = Long.parseLong(text_view_cost.getText().toString());
                 cost += 5;
@@ -290,10 +302,10 @@ public class HomeFragment extends Fragment {
             @SuppressLint("UseRequireInsteadOfGet")
             @Override
             public void onClick(View v) {
-                progressBar.setVisibility(View.VISIBLE);
+                btnVisible(View.VISIBLE);
                 if(connected()) {
-                    List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
-                    List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity());
+                    List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
+                    List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, context);
                     pay_method =  stringListInfo.get(4);
                     switch (stringList.get(1)) {
                         case "Kyiv City":
@@ -304,7 +316,7 @@ public class HomeFragment extends Fragment {
                             break;
                         case "OdessaTest":
                             if(pay_method.equals("bonus_payment")) {
-                                String bonus = logCursor(MainActivity.TABLE_USER_INFO, requireActivity()).get(5);
+                                String bonus = logCursor(MainActivity.TABLE_USER_INFO, context).get(5);
                                 if(Long.parseLong(bonus) < cost * 100 ) {
                                     paymentType("nal_payment");
                                 }
@@ -315,7 +327,7 @@ public class HomeFragment extends Fragment {
 
 
                         Log.d(TAG, "onClick: pay_method" + pay_method);
-                        List<String> stringListCity = logCursor(MainActivity.CITY_INFO, requireActivity());
+                        List<String> stringListCity = logCursor(MainActivity.CITY_INFO, context);
                         String card_max_pay = stringListCity.get(4);
 
                         String bonus_max_pay = stringListCity.get(5);
@@ -362,29 +374,29 @@ public class HomeFragment extends Fragment {
 
                 } else {
                     MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
-                    bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                 }
             }
         });
 
         gpsbut = binding.gpsbut;
-        locationManager = (LocationManager) requireActivity().getSystemService(Context.LOCATION_SERVICE);
+        locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         gpsbut.setOnClickListener(v -> {
             if (locationManager != null) {
                 if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                     if(loadPermissionRequestCount() >= 3 && !MainActivity.location_update) {
                         MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment(getString(R.string.location_on));
-                        bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                     } else {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                                 // Обработка отсутствия необходимых разрешений
                                 checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
                             }
                         } else {
                             // Для версий Android ниже 10
-                            if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                                    || ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                                    || ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                                 // Обработка отсутствия необходимых разрешений
                                 checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
                                 checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
@@ -394,16 +406,16 @@ public class HomeFragment extends Fragment {
 
                     // Обработка отсутствия необходимых разрешений
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                             // Обработка отсутствия необходимых разрешений
                             MainActivity.location_update = true;
                         }
-                    } else MainActivity.location_update = ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-                            || ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+                    } else MainActivity.location_update = ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                            || ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
 
                     // GPS включен, выполните ваш код здесь
-                    if (!NetworkUtils.isNetworkAvailable(requireActivity())) {
-                        Toast.makeText(requireActivity(), getString(R.string.verify_internet), Toast.LENGTH_SHORT).show();
+                    if (!NetworkUtils.isNetworkAvailable(context)) {
+                        Toast.makeText(context, getString(R.string.verify_internet), Toast.LENGTH_SHORT).show();
                     }  else if (isAdded() && isVisible() && MainActivity.location_update)  {
                         startActivity(new Intent(requireContext(), OpenStreetMapActivity.class));
                     }
@@ -412,18 +424,18 @@ public class HomeFragment extends Fragment {
                     // GPS выключен, выполните необходимые действия
 
                     MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment("");
-                    bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                 }
             } else {
 
                 MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment("");
-                bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
             }
         });
 
         on_map = binding.btnMap;
         on_map.setOnClickListener(v -> {
-            LocationManager lm = (LocationManager) requireActivity().getSystemService(Context.LOCATION_SERVICE);
+            LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
             boolean gps_enabled = false;
             boolean network_enabled = false;
 
@@ -439,11 +451,11 @@ public class HomeFragment extends Fragment {
 
             if(!gps_enabled || !network_enabled) {
                 MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment("");
-                bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
             }  else  {
                 // Разрешения уже предоставлены, выполнить ваш код
-                if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                        || ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                        || ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
                     checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
                 }  else {
@@ -458,7 +470,7 @@ public class HomeFragment extends Fragment {
 //                getRevers("V_20240416093908005_L3KA", "повернення замовлення", "4000");
 
                 Intent intent = new Intent(Intent.ACTION_DIAL);
-                List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
+                List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
                 String phone = stringList.get(3);
                 intent.setData(Uri.parse(phone));
                 startActivity(intent);
@@ -470,13 +482,13 @@ public class HomeFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 MyBottomSheetDialogFragment bottomSheetDialogFragment = new MyBottomSheetDialogFragment();
-                bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
             }
         });
         buttonBonus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
+                List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
                 String api =  stringList.get(2);
                 updateAddCost("0");
                 MyBottomSheetBonusFragment bottomSheetDialogFragment = new MyBottomSheetBonusFragment(
@@ -485,7 +497,7 @@ public class HomeFragment extends Fragment {
                         api,
                         text_view_cost
                 );
-                bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
             }
         });
 //        getLocalIpAddress();
@@ -497,104 +509,133 @@ public class HomeFragment extends Fragment {
         if (!verifyPhone(requireContext())) {
             getPhoneNumber();
         }
-        if (!verifyPhone(requireActivity())) {
+        if (!verifyPhone(context)) {
             bottomSheetDialogFragment = new MyPhoneDialogFragment(getActivity(),"home", text_view_cost.getText().toString(), true);
-            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
-            progressBar.setVisibility(View.INVISIBLE);
+            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+            btnVisible(View.INVISIBLE);
         }
         if (verifyPhone(requireContext())) {
+            Toast.makeText(context, R.string.check_order_mes, Toast.LENGTH_SHORT).show();
+            ToJSONParserRetrofit parser = new ToJSONParserRetrofit();
 
-            try {
+//            // Пример строки URL с параметрами
+            Log.d(TAG, "orderFinished: "  + "https://m.easy-order-taxi.site"+ urlOrder);
+            parser.sendURL(urlOrder, new Callback<Map<String, String>>() {
+                @Override
+                public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
+                    Map<String, String> sendUrlMap = response.body();
 
-                Map<String, String> sendUrlMap = ToJSONParser.sendURL(urlOrder);
+                    assert sendUrlMap != null;
+                    String orderWeb = sendUrlMap.get("order_cost");
+                    String message = sendUrlMap.get("message");
 
-                String orderWeb = sendUrlMap.get("order_cost");
-                String message = sendUrlMap.get("message");
+                    assert orderWeb != null;
+                    if (!orderWeb.equals("0")) {
 
-                if (!orderWeb.equals("0")) {
+                        String from_name = sendUrlMap.get("routefrom");
+                        String to_name = sendUrlMap.get("routeto");
 
-                    String from_name = sendUrlMap.get("routefrom");
-                    String to_name = sendUrlMap.get("routeto");
-
-                    if (from_name.equals(to_name)) {
-                        messageResult = getString(R.string.thanks_message) +
-                                from_name + " " + from_number.getText() + getString(R.string.on_city) +
-                                getString(R.string.cost_of_order) + orderWeb + getString(R.string.UAH);
-                    } else {
-                        messageResult = getString(R.string.thanks_message) +
-                                from_name + " " + from_number.getText() + " " + getString(R.string.to_message) +
-                                to_name + " " + to_number.getText() + "." +
-                                getString(R.string.cost_of_order) + orderWeb + getString(R.string.UAH);
-                    }
-                    Log.d(TAG, "order: sendUrlMap.get(\"from_lat\")" + sendUrlMap.get("from_lat"));
-                    Log.d(TAG, "order: sendUrlMap.get(\"lat\")" + sendUrlMap.get("lat"));
-                    if (!sendUrlMap.get("from_lat").equals("0") && !sendUrlMap.get("lat").equals("0")) {
+                        assert from_name != null;
                         if (from_name.equals(to_name)) {
-                            insertRecordsOrders(
-                                    from_name, from_name,
-                                    from_number.getText().toString(), from_number.getText().toString(),
-                                    sendUrlMap.get("from_lat"), sendUrlMap.get("from_lng"),
-                                    sendUrlMap.get("from_lat"), sendUrlMap.get("from_lng"),
-                                    requireContext()
-                            );
+                            messageResult = getString(R.string.thanks_message) +
+                                    from_name + " " + from_number.getText() + getString(R.string.on_city) +
+                                    getString(R.string.cost_of_order) + orderWeb + getString(R.string.UAH);
                         } else {
-                            insertRecordsOrders(
-                                    from_name, to_name,
-                                    from_number.getText().toString(), to_number.getText().toString(),
-                                    sendUrlMap.get("from_lat"), sendUrlMap.get("from_lng"),
-                                    sendUrlMap.get("lat"), sendUrlMap.get("lng"),
-                                    requireContext()
-                            );
+                            messageResult = getString(R.string.thanks_message) +
+                                    from_name + " " + from_number.getText() + " " + getString(R.string.to_message) +
+                                    to_name + " " + to_number.getText() + "." +
+                                    getString(R.string.cost_of_order) + orderWeb + getString(R.string.UAH);
                         }
-                    }
-                    insertRouteCostToDatabase();
-                    Intent intent = new Intent(requireActivity(), FinishActivity.class);
-                    intent.putExtra("messageResult_key", messageResult);
-                    intent.putExtra("messageCost_key", orderWeb);
-                    intent.putExtra("sendUrlMap", new HashMap<>(sendUrlMap));
-                    intent.putExtra("UID_key", String.valueOf(sendUrlMap.get("dispatching_order_uid")));
-                    startActivity(intent);
-                    progressBar.setVisibility(View.INVISIBLE);
-
-                } else {
-                    if (message.contains("Дублирование")) {
-                        message = getResources().getString(R.string.double_order_error);
-                        MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
-                        bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
-                    } else {
+                        Log.d(TAG, "order: sendUrlMap.get(\"from_lat\")" + sendUrlMap.get("from_lat"));
+                        Log.d(TAG, "order: sendUrlMap.get(\"lat\")" + sendUrlMap.get("lat"));
+                        if (!Objects.equals(sendUrlMap.get("from_lat"), "0") && !Objects.equals(sendUrlMap.get("lat"), "0")) {
+                            if (from_name.equals(to_name)) {
+                                insertRecordsOrders(
+                                        from_name, from_name,
+                                        from_number.getText().toString(), from_number.getText().toString(),
+                                        sendUrlMap.get("from_lat"), sendUrlMap.get("from_lng"),
+                                        sendUrlMap.get("from_lat"), sendUrlMap.get("from_lng"),
+                                        requireContext()
+                                );
+                            } else {
+                                insertRecordsOrders(
+                                        from_name, to_name,
+                                        from_number.getText().toString(), to_number.getText().toString(),
+                                        sendUrlMap.get("from_lat"), sendUrlMap.get("from_lng"),
+                                        sendUrlMap.get("lat"), sendUrlMap.get("lng"),
+                                        requireContext()
+                                );
+                            }
+                        }
+//                    insertRouteCostToDatabase();
+                        String pay_method_message = getString(R.string.pay_method_message_main);
                         switch (pay_method) {
                             case "bonus_payment":
+                                pay_method_message += " " + getString(R.string.pay_method_message_bonus);
+                                break;
                             case "card_payment":
                             case "fondy_payment":
                             case "mono_payment":
-                                changePayMethodToNal();
+                            case "wfp_payment":
+                                pay_method_message += " " + getString(R.string.pay_method_message_card);
                                 break;
                             default:
-                                message = getResources().getString(R.string.error_message);
-                                MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
-                                bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                                pay_method_message += " " + getString(R.string.pay_method_message_nal);
                         }
+                        messageResult += ". " + pay_method_message;
+                        Intent intent = new Intent(context, FinishActivity.class);
+                        intent.putExtra("messageResult_key", messageResult);
+                        intent.putExtra("messageCost_key", orderWeb);
+                        intent.putExtra("sendUrlMap", new HashMap<>(sendUrlMap));
+                        intent.putExtra("UID_key", String.valueOf(sendUrlMap.get("dispatching_order_uid")));
+                        startActivity(intent);
+                        progressBar.setVisibility(View.INVISIBLE);
+
+                    } else {
+                        btnVisible(View.INVISIBLE);
+                        assert message != null;
+                        if (message.equals("ErrorMessage")) {
+                            message = getString(R.string.server_error_connected);
+                        } else if (message.contains("Дублирование")) {
+                            message = getResources().getString(R.string.double_order_error);
+                        } else {
+                            switch (pay_method) {
+                                case "bonus_payment":
+                                case "card_payment":
+                                case "fondy_payment":
+                                case "mono_payment":
+                                    changePayMethodToNal();
+                                    break;
+                                default:
+                                    message = getResources().getString(R.string.error_message);
+
+                            }
+                        }
+                        MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
+                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                     }
                 }
 
-
-            } catch (MalformedURLException e) {
-                MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
-                bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
-            }
+                @Override
+                public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
+                    btnVisible(View.VISIBLE);
+                    t.printStackTrace();
+                }
+            });
         }  else {
+            btnVisible(View.VISIBLE);
             String message = getString(R.string.phone_input_error);
             MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
-            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
         }
     }
 
     private void changePayMethodToNal() {
         // Инфлейтим макет для кастомного диалога
-        LayoutInflater inflater = LayoutInflater.from(requireActivity());
+        LayoutInflater inflater = LayoutInflater.from(context);
         View dialogView = inflater.inflate(R.layout.custom_dialog_layout, null);
 
-        alertDialog = new AlertDialog.Builder(requireActivity()).create();
+        alertDialog = new AlertDialog.Builder(context).create();
         alertDialog.setView(dialogView);
         alertDialog.setCancelable(false);
         // Настраиваем элементы макета
@@ -638,11 +679,11 @@ public class HomeFragment extends Fragment {
     private boolean orderRout() throws UnsupportedEncodingException {
         if(!verifyOrder(requireContext())) {
             MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.black_list_message));
-            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
             progressBar.setVisibility(View.INVISIBLE);
             return false;
         } else {
-            List<String> stringListRoutHome = logCursor(MainActivity.ROUT_HOME, requireActivity());
+            List<String> stringListRoutHome = logCursor(MainActivity.ROUT_HOME, context);
             progressBar.setVisibility(View.INVISIBLE);
             if (stringListRoutHome.get(1).equals(" ") && !textViewTo.getText().equals("")) {
                 boolean stop = false;
@@ -723,7 +764,7 @@ public class HomeFragment extends Fragment {
                 updateRoutHome(settings);
             }
 
-            urlOrder = getTaxiUrlSearch( "orderSearch", requireActivity());
+            urlOrder = getTaxiUrlSearch( "orderSearch", context);
             return true;
         }
 
@@ -734,7 +775,7 @@ public class HomeFragment extends Fragment {
         cv.put("addCost", addCost);
 
         // обновляем по id
-        SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
         database.update(MainActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
                 new String[] { "1" });
         database.close();
@@ -743,8 +784,8 @@ public class HomeFragment extends Fragment {
     public void checkPermission(String permission, int requestCode) {
         // Checking if permission is not granted
         Log.d(TAG, "checkPermission: " + permission);
-        if (ContextCompat.checkSelfPermission(requireActivity(), permission) == PackageManager.PERMISSION_DENIED) {
-            ActivityCompat.requestPermissions(requireActivity(), new String[]{permission}, LOCATION_PERMISSION_REQUEST_CODE);
+        if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_DENIED) {
+            ActivityCompat.requestPermissions(context, new String[]{permission}, LOCATION_PERMISSION_REQUEST_CODE);
         }
     }
     @Override
@@ -773,7 +814,21 @@ public class HomeFragment extends Fragment {
             }
         }
     }
+    private void btnVisible (int visible) {
+        text_view_cost.setVisibility(visible);
+        btn_minus.setVisibility(visible);
+        btn_plus.setVisibility(visible);
+        buttonAddServices.setVisibility(visible);
+        buttonBonus.setVisibility(visible);
+        btn_clear.setVisibility(visible);
+        btn_order.setVisibility(visible);
 
+        if (visible == View.INVISIBLE) {
+            progressBar.setVisibility(View.VISIBLE);
+        } else {
+            progressBar.setVisibility(View.INVISIBLE);
+        }
+    }
 
     // Метод для сохранения количества запросов разрешений в SharedPreferences
     private void savePermissionRequestCount(int count) {
@@ -799,8 +854,8 @@ public class HomeFragment extends Fragment {
     public void onResume() {
         super.onResume();
         if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                    || ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    || ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 gpsbut.setBackground(getResources().getDrawable(R.drawable.btn_yellow));
                 gpsbut.setTextColor(Color.BLACK);
                 btnGeo.setVisibility(View.VISIBLE);
@@ -815,13 +870,13 @@ public class HomeFragment extends Fragment {
             btnGeo.setVisibility(View.VISIBLE);
         }
 
-        String userEmail = logCursor(MainActivity.TABLE_USER_INFO, requireActivity()).get(3);
+        String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
 
         String application =  getString(R.string.application);
-        new VerifyUserTask(userEmail, application, requireActivity()).execute();
+        new VerifyUserTask(userEmail, application, context).execute();
 
         progressBar.setVisibility(View.INVISIBLE);
-        pay_method =  logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity()).get(4);
+        pay_method =  logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(4);
 
         if(bottomSheetDialogFragment != null) {
             bottomSheetDialogFragment.dismiss();
@@ -842,7 +897,7 @@ public class HomeFragment extends Fragment {
                 }
             }
         });
-        List<String> stringListRoutHome = logCursor(MainActivity.ROUT_HOME, requireActivity());
+        List<String> stringListRoutHome = logCursor(MainActivity.ROUT_HOME, context);
         String valueAtIndex1 = stringListRoutHome.get(1);
         rout();
 
@@ -921,7 +976,7 @@ public class HomeFragment extends Fragment {
                     if (from.indexOf("/") != -1) {
                         from = from.substring(0,  from.indexOf("/"));
                     };
-                    List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
+                    List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
                     String city = stringList.get(1);
                     String api =  stringList.get(2);
 
@@ -932,20 +987,20 @@ public class HomeFragment extends Fragment {
                         sendUrlMapCost = ResultSONParser.sendURL(url);
                     } catch (MalformedURLException | InterruptedException | JSONException e) {
                         MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.error_firebase_start));
-                        bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                     }
                     assert sendUrlMapCost != null;
                     String orderCost = (String) sendUrlMapCost.get("message");
                     switch (Objects.requireNonNull(orderCost)) {
                         case "200": {
                             MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.error_firebase_start));
-                            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                             break;
                         }
                         case "400": {
                             textViewFrom.setTextColor(RED);
                             MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(address_error_message));
-                            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                             break;
                         }
                         case "1":
@@ -970,7 +1025,7 @@ public class HomeFragment extends Fragment {
                 } else {
                     progressBar.setVisibility(View.INVISIBLE);
                     MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
-                    bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                 }
 
             }
@@ -1012,7 +1067,7 @@ public class HomeFragment extends Fragment {
                         if (to.indexOf("/") != -1) {
                             to = to.substring(0, to.indexOf("/"));
                         }
-                        List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
+                        List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
                         String city = stringList.get(1);
                         String api =  stringList.get(2);
 
@@ -1022,7 +1077,7 @@ public class HomeFragment extends Fragment {
                         try {
                             sendUrlMapCost = ResultSONParser.sendURL(url);
                         } catch (MalformedURLException | InterruptedException | JSONException e) {
-                            Toast.makeText(requireActivity(), R.string.error_firebase_start, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, R.string.error_firebase_start, Toast.LENGTH_SHORT).show();
                         }
 
                         String orderCost = (String) sendUrlMapCost.get("message");
@@ -1030,12 +1085,12 @@ public class HomeFragment extends Fragment {
                         switch (Objects.requireNonNull(orderCost)) {
                             case "200":
                                 bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.error_firebase_start));
-                                bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                                bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                                 break;
                             case "400":
                                 textViewTo.setTextColor(RED);
                                 bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.address_error_message));
-                                bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                                bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                                 break;
                             case "1":
                                 to_number.setVisibility(View.VISIBLE);
@@ -1067,7 +1122,7 @@ public class HomeFragment extends Fragment {
                 }
                     else {
                         bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
-                        bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                     }
             };
 
@@ -1121,20 +1176,32 @@ public class HomeFragment extends Fragment {
             settings.add(toCost);
             settings.add(to_numberCost);
             updateRoutHome(settings);
-            urlCost = getTaxiUrlSearch("costSearch", requireActivity());
+            urlCost = getTaxiUrlSearch("costSearch", context);
 
-            Map<String, String> sendUrlMapCost = CostJSONParser.sendURL(urlCost);
+            CostJSONParserRetrofit parser = new CostJSONParserRetrofit();
+            parser.sendURL(urlCost, new Callback<Map<String, String>>() {
+                @Override
+                public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
+                    Map<String, String> sendUrlMapCost = response.body();
+                    assert sendUrlMapCost != null;
+                    handleCostResponse(sendUrlMapCost);
+                }
 
-            handleCostResponse(sendUrlMapCost);
+                @Override
+                public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
+                    t.printStackTrace();
+                }
+            });
+
         } catch (MalformedURLException | UnsupportedEncodingException e) {
             resetRoutHome();
             MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
-            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
         }
     }
 
     private void handleCostResponse(Map<String, String> response) {
-        String message = response.get("message");
+        String message = response.get("Message");
         String orderCostStr = response.get("order_cost");
 
         List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireContext());
@@ -1153,7 +1220,7 @@ public class HomeFragment extends Fragment {
             buttonBonus.setVisibility(View.VISIBLE);
             btn_order.setVisibility(View.VISIBLE);
 
-            String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, getContext()).get(3);
+            String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(3);
             long discountInt = Integer.parseInt(discountText);
             Log.d(TAG, "discountInt: " + discountInt);
             cost = Long.parseLong(orderCost);
@@ -1173,9 +1240,27 @@ public class HomeFragment extends Fragment {
 
         } else {
             resetRoutHome();
-            message = getString(R.string.error_message);
+
+            assert message != null;
+            if (message.equals("ErrorMessage")) {
+                message = getString(R.string.server_error_connected);
+            } else if (message.contains("Дублирование")) {
+                message = getResources().getString(R.string.double_order_error);
+            } else {
+                switch (pay_method) {
+                    case "bonus_payment":
+                    case "card_payment":
+                    case "fondy_payment":
+                    case "mono_payment":
+                        changePayMethodToNal();
+                        break;
+                    default:
+                        message = getResources().getString(R.string.error_message);
+
+                }
+            }
             MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
-            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
 
 
 
@@ -1183,12 +1268,12 @@ public class HomeFragment extends Fragment {
     }
 
     private void insertRouteCostToDatabase() {
-        AppDatabase db = Room.databaseBuilder(requireActivity(), AppDatabase.class, "app-database")
+        AppDatabase db = Room.databaseBuilder(context, AppDatabase.class, "app-database")
                 .addMigrations(AppDatabase.MIGRATION_1_3) // Добавьте миграцию
                 .build();
         RouteCostDao routeCostDao = db.routeCostDao();
         int routeId = routeIdToCheck; // Получите routeId
-        List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity());
+        List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, context);
         String tarif =  stringListInfo.get(2);
         String payment_type =  stringListInfo.get(4);
         String addCost = stringListInfo.get(5);
@@ -1196,7 +1281,7 @@ public class HomeFragment extends Fragment {
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
-//                List<String> servicesChecked = logCursor(MainActivity.TABLE_SERVICE_INFO, requireActivity());
+//                List<String> servicesChecked = logCursor(MainActivity.TABLE_SERVICE_INFO, context);
 //                Log.d(TAG, "insertRouteCostToDatabase: " + servicesChecked.toString());
                 RouteCost existingRouteCost = routeCostDao.getRouteCost(routeId);
                 if (existingRouteCost == null) {
@@ -1246,7 +1331,7 @@ public class HomeFragment extends Fragment {
     }
 
 
-    @SuppressLint("SetTextI18n")
+    @SuppressLint({"SetTextI18n", "StaticFieldLeak"})
     private void costRoutHome(final List<String> stringListRoutHome) {
         progressBar.setVisibility(View.VISIBLE);
 
@@ -1254,7 +1339,7 @@ public class HomeFragment extends Fragment {
             @Override
             protected RouteCost doInBackground(Integer... params) {
                 int routeIdToCheck = params[0];
-                AppDatabase db = Room.databaseBuilder(requireActivity(), AppDatabase.class, "app-database")
+                AppDatabase db = Room.databaseBuilder(context, AppDatabase.class, "app-database")
                         .addMigrations(AppDatabase.MIGRATION_1_3) // Добавьте миграцию
                         .build();
                 RouteCostDao routeCostDao = db.routeCostDao();
@@ -1303,7 +1388,7 @@ public class HomeFragment extends Fragment {
                     } else {
                         to_number.setVisibility(View.INVISIBLE);
                     }
-                    List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity());
+                    List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, context);
                     long addCostforMin = Long.parseLong(stringListInfo.get(5));
                     Log.d(TAG, "onPostExecute: addCostforMin" + addCostforMin);
                     MIN_COST_VALUE = (long) ((Long.parseLong(retrievedRouteCost.text_view_cost) - addCostforMin) * 0.6);
@@ -1354,67 +1439,85 @@ public class HomeFragment extends Fragment {
         String message;
         try {
 
-            urlCost = getTaxiUrlSearch("costSearch", requireActivity());
-            Map<String, String> sendUrlMapCost = CostJSONParser.sendURL(urlCost);
-            String orderCostStr = (String) sendUrlMapCost.get("order_cost");
-
+            urlCost = getTaxiUrlSearch("costSearch", context);
             List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireContext());
             long addCost = Long.parseLong(stringListInfo.get(5));
+            String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(3);
+            
+            CostJSONParserRetrofit parser = new CostJSONParserRetrofit();
+            parser.sendURL(urlCost, new Callback<Map<String, String>>() {
+                @SuppressLint("SetTextI18n")
+                @Override
+                public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
+                    Map<String, String> sendUrlMapCost = response.body();
+                    assert sendUrlMapCost != null;
+                    String orderCostStr = sendUrlMapCost.get("order_cost");
 
-            assert orderCostStr != null;
-            long orderCostLong = Long.parseLong(orderCostStr);
-            String orderCost = String.valueOf(orderCostLong + addCost);
-            message = (String) sendUrlMapCost.get("message");
 
-            if (orderCost.equals("0")) {
-                if (message.contains("Дублирование")) {
-                    resetRoutHome();
-                    message = getResources().getString(R.string.double_order_error);
-                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
-                    bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
-                } else {
-                    switch (pay_method) {
-                        case "bonus_payment":
-                        case "card_payment":
-                        case "fondy_payment":
-                        case "mono_payment":
-                            changePayMethodToNal();
-                            break;
-                        default:
+
+                    assert orderCostStr != null;
+                    long orderCostLong = Long.parseLong(orderCostStr);
+                    String orderCost = String.valueOf(orderCostLong + addCost);
+                    String message = sendUrlMapCost.get("Message");
+
+                    if (orderCost.equals("0")) {
+                        assert message != null;
+                        if (message.contains("Дублирование")) {
                             resetRoutHome();
-                            message = getResources().getString(R.string.error_message);
+                            message = getResources().getString(R.string.double_order_error);
                             MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
-                            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                        } else {
+                            switch (pay_method) {
+                                case "bonus_payment":
+                                case "card_payment":
+                                case "fondy_payment":
+                                case "mono_payment":
+                                    changePayMethodToNal();
+                                    break;
+                                default:
+                                    resetRoutHome();
+                                    message = getResources().getString(R.string.error_message);
+                                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
+                                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                            }
+
+                        }
+                    } else  {
+                        text_view_cost.setVisibility(View.VISIBLE);
+                        btn_minus.setVisibility(View.VISIBLE);
+                        btn_plus.setVisibility(View.VISIBLE);
+                        buttonAddServices.setVisibility(View.VISIBLE);
+                        buttonBonus.setVisibility(View.VISIBLE);
+                        btn_order.setVisibility(View.VISIBLE);
+                        btn_clear.setVisibility(View.VISIBLE);
+
+
+                        long discountInt = Integer.parseInt(discountText);
+                        Log.d(TAG, "costRoutHome:discountInt " + discountInt);
+
+                        cost = Long.parseLong(orderCost);
+                        discount = cost * discountInt / 100;
+                        cost = cost + discount;
+                        updateAddCost(String.valueOf(discount));
+                        text_view_cost.setText(Long.toString(cost));
+
+                        costFirstForMin = cost;
+                        MIN_COST_VALUE = (long) (cost * 0.6);
                     }
-
                 }
-            } else  {
-                text_view_cost.setVisibility(View.VISIBLE);
-                btn_minus.setVisibility(View.VISIBLE);
-                btn_plus.setVisibility(View.VISIBLE);
-                buttonAddServices.setVisibility(View.VISIBLE);
-                buttonBonus.setVisibility(View.VISIBLE);
-                btn_order.setVisibility(View.VISIBLE);
-                btn_clear.setVisibility(View.VISIBLE);
 
-                String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, getContext()).get(3);
-                long discountInt = Integer.parseInt(discountText);
-                Log.d(TAG, "costRoutHome:discountInt " + discountInt);
+                @Override
+                public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
+                    t.printStackTrace();
+                }
+            });
 
-                cost = Long.parseLong(orderCost);
-                discount = cost * discountInt / 100;
-                cost = cost + discount;
-                updateAddCost(String.valueOf(discount));
-                text_view_cost.setText(Long.toString(cost));
-
-                costFirstForMin = cost;
-                MIN_COST_VALUE = (long) (cost * 0.6);
-            }
         } catch (MalformedURLException | UnsupportedEncodingException e) {
             resetRoutHome();
             message = getString(R.string.error_message);
             MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
-            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
         }
     }
 
@@ -1498,7 +1601,7 @@ public class HomeFragment extends Fragment {
 
         boolean hasConnect = false;
 
-        ConnectivityManager cm = (ConnectivityManager) requireActivity().getSystemService(
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(
                 Context.CONNECTIVITY_SERVICE);
         NetworkInfo wifiNetwork = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
         if (wifiNetwork != null && wifiNetwork.isConnected()) {
@@ -1525,7 +1628,7 @@ public class HomeFragment extends Fragment {
         cv.put("to_number", settings.get(3));
 
         // обновляем по id
-        SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
         database.update(MainActivity.ROUT_HOME, cv, "id = ?",
                 new String[] { "1" });
         database.close();
@@ -1540,7 +1643,7 @@ public class HomeFragment extends Fragment {
         cv.put("to_number", " ");
 
         // обновляем по id
-        SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
         database.update(MainActivity.ROUT_HOME, cv, "id = ?",
                 new String[] { "1" });
         database.close();
@@ -1565,7 +1668,7 @@ public class HomeFragment extends Fragment {
 
 
     private String getTaxiUrlSearch(String urlAPI, Context context) throws UnsupportedEncodingException {
-        Log.d(TAG, "startCost: discountText" + logCursor(MainActivity.TABLE_SETTINGS_INFO, getContext()).toString());
+        Log.d(TAG, "startCost: discountText" + logCursor(MainActivity.TABLE_SETTINGS_INFO, context).toString());
 
         List<String> stringListRout = logCursor(MainActivity.ROUT_HOME, context);
         Log.d(TAG, "getTaxiUrlSearch: stringListRout" + stringListRout);
@@ -1596,7 +1699,7 @@ public class HomeFragment extends Fragment {
         String str_dest = to + "/" + to_number;
 
         //City Table
-        List<String> stringListCity = logCursor(MainActivity.CITY_INFO, requireActivity());
+        List<String> stringListCity = logCursor(MainActivity.CITY_INFO, context);
         String city = stringListCity.get(1);
         String api =  stringListCity.get(2);
 
@@ -1678,7 +1781,7 @@ public class HomeFragment extends Fragment {
         }
 
 
-        String url = "https://m.easy-order-taxi.site/" + api + "/android/" + urlAPI + "/"
+        String url = "/" + api + "/android/" + urlAPI + "/"
                 + parameters + "/" + result + "/" + city  + "/" + context.getString(R.string.application);
 
         Log.d(TAG, "getTaxiUrlSearch: " + url);
@@ -1689,15 +1792,15 @@ public class HomeFragment extends Fragment {
     }
 
     private void changePayMethodMax(String textCost, String paymentType) {
-        List<String> stringListCity = logCursor(MainActivity.CITY_INFO, requireActivity());
+        List<String> stringListCity = logCursor(MainActivity.CITY_INFO, context);
         String card_max_pay = stringListCity.get(4);
         String bonus_max_pay = stringListCity.get(5);
 
         // Инфлейтим макет для кастомного диалога
-        LayoutInflater inflater = LayoutInflater.from(requireActivity());
+        LayoutInflater inflater = LayoutInflater.from(context);
         View dialogView = inflater.inflate(R.layout.custom_dialog_layout, null);
 
-        alertDialog = new AlertDialog.Builder(requireActivity()).create();
+        alertDialog = new AlertDialog.Builder(context).create();
         alertDialog.setView(dialogView);
         alertDialog.setCancelable(false);
         // Настраиваем элементы макета
@@ -1777,11 +1880,11 @@ public class HomeFragment extends Fragment {
     }
     private void getPhoneNumber () {
         String mPhoneNumber;
-        TelephonyManager tMgr = (TelephonyManager) requireActivity().getSystemService(Context.TELEPHONY_SERVICE);
+        TelephonyManager tMgr = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
 
-        if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.READ_PHONE_NUMBERS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "Manifest.permission.READ_PHONE_NUMBERS: " + ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.READ_PHONE_NUMBERS));
-            Log.d(TAG, "Manifest.permission.READ_PHONE_STATE: " + ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.READ_PHONE_STATE));
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_NUMBERS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "Manifest.permission.READ_PHONE_NUMBERS: " + ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_NUMBERS));
+            Log.d(TAG, "Manifest.permission.READ_PHONE_STATE: " + ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE));
             return;
         }
         mPhoneNumber = tMgr.getLine1Number();
@@ -1791,12 +1894,12 @@ public class HomeFragment extends Fragment {
             boolean val = Pattern.compile(PHONE_PATTERN).matcher(mPhoneNumber).matches();
             Log.d(TAG, "onClick No validate: " + val);
             if (val == false) {
-                Toast.makeText(requireActivity(), getString(R.string.format_phone) , Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, getString(R.string.format_phone) , Toast.LENGTH_SHORT).show();
                 Log.d(TAG, "onClick:phoneNumber.getText().toString() " + mPhoneNumber);
-//                requireActivity().finish();
+//                context.finish();
 
             } else {
-                updateRecordsUser(mPhoneNumber, getContext());
+                updateRecordsUser(mPhoneNumber, context);
             }
         }
 
@@ -1854,7 +1957,7 @@ public class HomeFragment extends Fragment {
         ContentValues cv = new ContentValues();
         cv.put("payment_type", paymentCode);
         // обновляем по id
-        SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
         database.update(MainActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
                 new String[] { "1" });
         database.close();

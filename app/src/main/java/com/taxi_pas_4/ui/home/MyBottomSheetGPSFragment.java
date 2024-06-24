@@ -22,7 +22,9 @@ import com.taxi_pas_4.ui.visicom.VisicomFragment;
 
 
 public class MyBottomSheetGPSFragment extends BottomSheetDialogFragment {
-
+    public MyBottomSheetGPSFragment() {
+        // Пустой конструктор обязателен для фрагментов
+    }
     AppCompatButton btn_ok, btn_no;
 
     String errorMessage;
@@ -36,13 +38,13 @@ public class MyBottomSheetGPSFragment extends BottomSheetDialogFragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.gps_layout, container, false);
-        if (errorMessage.equals(getString(R.string.location_on))) {
+
+        if (errorMessage != null && errorMessage.equals(getString(R.string.location_on))) {
             TextView text_message = view.findViewById(R.id.text_message);
             text_message.setText(errorMessage);
         }
 
-
-        btn_ok = view.findViewById(R.id.btn_ok);
+    btn_ok = view.findViewById(R.id.btn_ok);
         btn_ok.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

@@ -15,7 +15,6 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -36,6 +35,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.FragmentManager;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -47,7 +47,6 @@ import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.cities.Kyiv.KyivRegion;
 import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
-import com.taxi_pas_4.ui.maps.CostJSONParser;
 import com.taxi_pas_4.ui.maps.FromJSONParser;
 import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
 import com.taxi_pas_4.ui.open_map.visicom.key_visicom.ApiCallback;
@@ -56,6 +55,7 @@ import com.taxi_pas_4.ui.open_map.visicom.key_visicom.ApiResponse;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.KeyboardUtils;
 import com.taxi_pas_4.utils.LocaleHelper;
+import com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -111,6 +111,7 @@ public class MyBottomSheetVisicomFragment extends BottomSheetDialogFragment impl
     private LocationCallback locationCallback;
     private String urlBase;
     private String api;
+    private FragmentManager fragmentManager;
 
     public MyBottomSheetVisicomFragment(String fragmentInput) {
         this.fragmentInput = fragmentInput;
@@ -121,7 +122,7 @@ public class MyBottomSheetVisicomFragment extends BottomSheetDialogFragment impl
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.visicom_address_layout, container, false);
-
+        fragmentManager = getParentFragmentManager();
         setCancelable(false);
         visicomKey(this);
         List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
@@ -200,10 +201,12 @@ public class MyBottomSheetVisicomFragment extends BottomSheetDialogFragment impl
 //                            Log.d(TAG, "onClick: verifyBuildingStart" + verifyBuildingStart);
 //                            Log.d(TAG, "onClick: verifyBuildingFinish" + verifyBuildingFinish);
                 if (!verifyBuildingStart && !verifyBuildingFinish && verifyRoutStart && verifyRoutFinish) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    try {
                         visicomCost();
-                        dismiss();
+                    } catch (MalformedURLException e) {
+                        throw new RuntimeException(e);
                     }
+                    dismiss();
                 }
 
             }
@@ -349,74 +352,75 @@ public class MyBottomSheetVisicomFragment extends BottomSheetDialogFragment impl
 
                     String urlFrom = "https://m.easy-order-taxi.site/" + api + "/android/fromSearchGeoLocal/"  + latitude + "/" + longitude + "/" + language;
 
-                    Map sendUrlFrom = null;
                     try {
-                        sendUrlFrom = FromJSONParser.sendURL(urlFrom);
+                        FromJSONParser parser = new FromJSONParser(urlFrom);
+                        Map<String, String> sendUrlFrom = parser.sendURL(urlFrom);
+                        assert sendUrlFrom != null;
+                        String FromAdressString = (String) sendUrlFrom.get("route_address_from");
+                        if (FromAdressString != null) {
+                            if (FromAdressString.equals("Точка на карте")) {
+                                FromAdressString = getString(R.string.startPoint);
+                            }
+                        }
+                        updateMyPosition(latitude, longitude, FromAdressString, requireActivity());
+                        fromEditAddress.setText(FromAdressString);
+                        fromEditAddress.setSelection(FromAdressString.length());
+                        btn_clear_from.setVisibility(View.VISIBLE);
+                        switch (fragmentInput) {
+                            case "map":
+                                GeoDialogVisicomFragment.geoText.setText(FromAdressString);
+                                break;
+                            case "home":
+                                VisicomFragment.geoText.setText(FromAdressString);
+                                break;
+                        }
+
+                        List<String> settings = new ArrayList<>();
+                        String ToAdressString = toEditAddress.getText().toString();
+                        if(ToAdressString.equals(getString(R.string.on_city_tv)) ||
+                                ToAdressString.equals("") ) {
+                            settings.add(Double.toString(latitude));
+                            settings.add(Double.toString(longitude));
+                            settings.add(Double.toString(latitude));
+                            settings.add(Double.toString(longitude));
+                            settings.add(FromAdressString);
+                            settings.add(getString(R.string.on_city_tv));
+                        } else {
+
+                            String query = "SELECT * FROM " + MainActivity.ROUT_MARKER + " LIMIT 1";
+                            SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+                            Cursor cursor = database.rawQuery(query, null);
+
+                            cursor.moveToFirst();
+
+                            // Получите значения полей из первой записи
+
+
+                            @SuppressLint("Range") double toLatitude = cursor.getDouble(cursor.getColumnIndex("to_lat"));
+                            @SuppressLint("Range") double toLongitude = cursor.getDouble(cursor.getColumnIndex("to_lng"));
+                            cursor.close();
+                            database.close();
+//
+//                        @SuppressLint("Range") String finish = cursor.getString(cursor.getColumnIndex("finish"));
+
+
+                            settings.add(Double.toString(latitude));
+                            settings.add(Double.toString(longitude));
+                            settings.add(Double.toString(toLatitude));
+                            settings.add(Double.toString(toLongitude));
+                            settings.add(FromAdressString);
+                            settings.add(ToAdressString);
+                        }
+                        updateRoutMarker(settings);
+//                    visicomCost();
+                        btn_ok.setVisibility(View.VISIBLE);
 
                     } catch (MalformedURLException | InterruptedException |
                              JSONException e) {
                         MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
                         bottomSheetDialogFragment.show(getParentFragmentManager(), bottomSheetDialogFragment.getTag());
                     }
-                    assert sendUrlFrom != null;
-                    String FromAdressString = (String) sendUrlFrom.get("route_address_from");
-                    if (FromAdressString != null) {
-                        if (FromAdressString.equals("Точка на карте")) {
-                            FromAdressString = getString(R.string.startPoint);
-                        }
-                    }
-                    updateMyPosition(latitude, longitude, FromAdressString, requireActivity());
-                    fromEditAddress.setText(FromAdressString);
-                    fromEditAddress.setSelection(FromAdressString.length());
-                    btn_clear_from.setVisibility(View.VISIBLE);
-                    switch (fragmentInput) {
-                        case "map":
-                            GeoDialogVisicomFragment.geoText.setText(FromAdressString);
-                            break;
-                        case "home":
-                            VisicomFragment.geoText.setText(FromAdressString);
-                            break;
-                    }
 
-                    List<String> settings = new ArrayList<>();
-                    String ToAdressString = toEditAddress.getText().toString();
-                    if(ToAdressString.equals(getString(R.string.on_city_tv)) ||
-                            ToAdressString.equals("") ) {
-                        settings.add(Double.toString(latitude));
-                        settings.add(Double.toString(longitude));
-                        settings.add(Double.toString(latitude));
-                        settings.add(Double.toString(longitude));
-                        settings.add(FromAdressString);
-                        settings.add(getString(R.string.on_city_tv));
-                    } else {
-
-                        String query = "SELECT * FROM " + MainActivity.ROUT_MARKER + " LIMIT 1";
-                        SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-                        Cursor cursor = database.rawQuery(query, null);
-
-                        cursor.moveToFirst();
-
-                        // Получите значения полей из первой записи
-
-
-                        @SuppressLint("Range") double toLatitude = cursor.getDouble(cursor.getColumnIndex("to_lat"));
-                        @SuppressLint("Range") double toLongitude = cursor.getDouble(cursor.getColumnIndex("to_lng"));
-                        cursor.close();
-                        database.close();
-//
-//                        @SuppressLint("Range") String finish = cursor.getString(cursor.getColumnIndex("finish"));
-
-
-                        settings.add(Double.toString(latitude));
-                        settings.add(Double.toString(longitude));
-                        settings.add(Double.toString(toLatitude));
-                        settings.add(Double.toString(toLongitude));
-                        settings.add(FromAdressString);
-                        settings.add(ToAdressString);
-                    }
-                    updateRoutMarker(settings);
-//                    visicomCost();
-                    btn_ok.setVisibility(View.VISIBLE);
                 }
             }
         };
@@ -1107,69 +1111,76 @@ public class MyBottomSheetVisicomFragment extends BottomSheetDialogFragment impl
     }
 
      
-    private void visicomCost() {
+    private void visicomCost() throws MalformedURLException {
         String urlCost = getTaxiUrlSearchMarkers("costSearchMarkers", requireActivity());
         Log.d(TAG, "visicomCost: " + urlCost);
-        Map<String, String> sendUrlMapCost = null;
-        try {
-            sendUrlMapCost = CostJSONParser.sendURL(urlCost);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
 
-        String message = sendUrlMapCost.get("message");
-        String orderCost = sendUrlMapCost.get("order_cost");
-        Log.d(TAG, "startCost: orderCost " + orderCost);
+        CostJSONParserRetrofit parser = new CostJSONParserRetrofit();
+        parser.sendURL(urlCost, new Callback<Map<String, String>>() {
+            @Override
+            public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
+                Map<String, String> sendUrlMapCost = response.body();
+                assert sendUrlMapCost != null;
+                String message = sendUrlMapCost.get("Message");
+                String orderCost = sendUrlMapCost.get("order_cost");
+                Log.d(TAG, "startCost: orderCost " + orderCost);
 
-        assert orderCost != null;
-        if (orderCost.equals("0")) {
-            message = getString(R.string.error_message);
-            MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
-            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
-        } else {
-            String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireContext()).get(3);
-            long discountInt = Integer.parseInt(discountText);
-            long discount;
-            switch (fragmentInput) {
-                case "map":
-                    GeoDialogVisicomFragment.geoText.setText(fromEditAddress.getText().toString());
-                    GeoDialogVisicomFragment.firstCost = Long.parseLong(orderCost);
-                    discount = GeoDialogVisicomFragment.firstCost * discountInt / 100;
-                    GeoDialogVisicomFragment.firstCost = GeoDialogVisicomFragment.firstCost + discount;
-                    updateAddCost(String.valueOf(discount));
-                    GeoDialogVisicomFragment.text_view_cost.setText(String.valueOf(GeoDialogVisicomFragment.firstCost));
-                    GeoDialogVisicomFragment.MIN_COST_VALUE = (long) (GeoDialogVisicomFragment.firstCost * 0.6);
-                    GeoDialogVisicomFragment.firstCostForMin = GeoDialogVisicomFragment.firstCost;
-                    break;
-                case "home":
-                    VisicomFragment.geoText.setText(fromEditAddress.getText().toString());
-                    VisicomFragment.firstCost = Long.parseLong(orderCost);
-                    discount = VisicomFragment.firstCost * discountInt / 100;
-                    VisicomFragment.firstCost = VisicomFragment.firstCost + discount;
-                    updateAddCost(String.valueOf(discount));
-                    VisicomFragment.text_view_cost.setText(String.valueOf(VisicomFragment.firstCost));
-                    VisicomFragment.MIN_COST_VALUE = (long) (VisicomFragment.firstCost * 0.6);
-                    VisicomFragment.firstCostForMin = VisicomFragment.firstCost;
+                assert orderCost != null;
+                if (orderCost.equals("0")) {
+                    message = getString(R.string.error_message);
+                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
+                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                } else {
+                    String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireContext()).get(3);
+                    long discountInt = Integer.parseInt(discountText);
+                    long discount;
+                    switch (fragmentInput) {
+                        case "map":
+                            GeoDialogVisicomFragment.geoText.setText(fromEditAddress.getText().toString());
+                            GeoDialogVisicomFragment.firstCost = Long.parseLong(orderCost);
+                            discount = GeoDialogVisicomFragment.firstCost * discountInt / 100;
+                            GeoDialogVisicomFragment.firstCost = GeoDialogVisicomFragment.firstCost + discount;
+                            updateAddCost(String.valueOf(discount));
+                            GeoDialogVisicomFragment.text_view_cost.setText(String.valueOf(GeoDialogVisicomFragment.firstCost));
+                            GeoDialogVisicomFragment.MIN_COST_VALUE = (long) (GeoDialogVisicomFragment.firstCost * 0.6);
+                            GeoDialogVisicomFragment.firstCostForMin = GeoDialogVisicomFragment.firstCost;
+                            break;
+                        case "home":
+                            VisicomFragment.geoText.setText(fromEditAddress.getText().toString());
+                            VisicomFragment.firstCost = Long.parseLong(orderCost);
+                            discount = VisicomFragment.firstCost * discountInt / 100;
+                            VisicomFragment.firstCost = VisicomFragment.firstCost + discount;
+                            updateAddCost(String.valueOf(discount));
+                            VisicomFragment.text_view_cost.setText(String.valueOf(VisicomFragment.firstCost));
+                            VisicomFragment.MIN_COST_VALUE = (long) (VisicomFragment.firstCost * 0.6);
+                            VisicomFragment.firstCostForMin = VisicomFragment.firstCost;
 
 
-                    VisicomFragment.geoText.setVisibility(View.VISIBLE);
-                    VisicomFragment.btn_clear_from.setVisibility(View.VISIBLE);
-                    VisicomFragment.textwhere.setVisibility(View.VISIBLE);
-                    VisicomFragment.num2.setVisibility(View.VISIBLE);
-                    VisicomFragment.textViewTo.setVisibility(View.VISIBLE);
-                    VisicomFragment.btn_clear_to.setVisibility(View.VISIBLE);
-                    VisicomFragment.btnAdd.setVisibility(View.VISIBLE);
-                    VisicomFragment.buttonBonus.setVisibility(View.VISIBLE);
-                    VisicomFragment.btn_minus.setVisibility(View.VISIBLE);
-                    VisicomFragment.text_view_cost.setVisibility(View.VISIBLE);
-                    VisicomFragment.btn_plus.setVisibility(View.VISIBLE);
-                    VisicomFragment.btnOrder.setVisibility(View.VISIBLE);
+                            VisicomFragment.geoText.setVisibility(View.VISIBLE);
+                            VisicomFragment.btn_clear_from.setVisibility(View.VISIBLE);
+                            VisicomFragment.textwhere.setVisibility(View.VISIBLE);
+                            VisicomFragment.num2.setVisibility(View.VISIBLE);
+                            VisicomFragment.textViewTo.setVisibility(View.VISIBLE);
+                            VisicomFragment.btn_clear_to.setVisibility(View.VISIBLE);
+                            VisicomFragment.btnAdd.setVisibility(View.VISIBLE);
+                            VisicomFragment.buttonBonus.setVisibility(View.VISIBLE);
+                            VisicomFragment.btn_minus.setVisibility(View.VISIBLE);
+                            VisicomFragment.text_view_cost.setVisibility(View.VISIBLE);
+                            VisicomFragment.btn_plus.setVisibility(View.VISIBLE);
+                            VisicomFragment.btnOrder.setVisibility(View.VISIBLE);
 
-                    VisicomFragment.btn_clear_from_text.setVisibility(View.GONE);
-                    break;
+                            VisicomFragment.btn_clear_from_text.setVisibility(View.GONE);
+                            break;
+                    }
+
+                }
             }
+            @Override
+            public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
+                t.printStackTrace();
+            }
+        });
 
-        }
 
 
 
@@ -1303,7 +1314,7 @@ public class MyBottomSheetVisicomFragment extends BottomSheetDialogFragment impl
         List<String> listCity = logCursor(MainActivity.CITY_INFO, requireActivity());
         String city = listCity.get(1);
 
-        String url = urlBase + "/android/" + urlAPI + "/"
+        String url = "/" + "/android/" + urlAPI + "/"
                 + parameters + "/" + result + "/" + city + "/" + context.getString(R.string.application);
 
         database.close();

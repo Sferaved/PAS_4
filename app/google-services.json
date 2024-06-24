@@ -14,6 +14,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "10844390327-8cij74nce1quhodls1nu3sr17h6hri7j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.taxi_pas_4",
+            "certificate_hash": "0a8e2446cf4bf72175a36961d565d18a22949d43"
+          }
+        },
+        {
+          "client_id": "10844390327-f501c1mmsscfotukqsf371pro0rdv0ut.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.taxi_pas_4",
+            "certificate_hash": "48925fd4407332c70e0cd330b8eb951597c25324"
+          }
+        },
+        {
           "client_id": "10844390327-27uu2skt57ljujfongpds6sca40e7q69.apps.googleusercontent.com",
           "client_type": 3
         }

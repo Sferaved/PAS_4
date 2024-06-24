@@ -1,18 +1,22 @@
 package com.taxi_pas_4.ui.uid;
 
 import static android.content.Context.MODE_PRIVATE;
-import static com.taxi_pas_4.R.string.verify_internet;
 
 import android.annotation.SuppressLint;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
@@ -22,6 +26,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
@@ -34,6 +39,8 @@ import com.taxi_pas_4.ui.finish.RouteResponse;
 import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.db.DatabaseHelper;
+import com.taxi_pas_4.utils.db.DatabaseHelperUid;
+import com.taxi_pas_4.utils.db.RouteInfo;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,21 +51,29 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+
 public class UIDFragment extends Fragment {
 
+    private static final String TAG = "UIDFragment";
     private @NonNull FragmentUidBinding binding;
     private ListView listView;
     private String[] array;
+    private RouteInfo routeInfo;
     private static TextView textView;
     private NetworkChangeReceiver networkChangeReceiver;
     ProgressBar progressBar;
     NavController navController;
     DatabaseHelper databaseHelper;
+    DatabaseHelperUid databaseHelperUid;
     String baseUrl = "https://m.easy-order-taxi.site";
     private List<RouteResponse> routeList;
 
     AppCompatButton upd_but;
     private ImageButton scrollButtonDown, scrollButtonUp;
+    private TextView textUid;
+    private String email;
+    private FragmentManager fragmentManager;
+
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
@@ -66,17 +81,21 @@ public class UIDFragment extends Fragment {
         binding = FragmentUidBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
+        fragmentManager = getParentFragmentManager();
         requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
 
         listView = binding.listView;
         progressBar = binding.progressBar;
         networkChangeReceiver = new NetworkChangeReceiver();
 
-        @SuppressLint("UseRequireInsteadOfGet") String email = logCursor(MainActivity.TABLE_USER_INFO, Objects.requireNonNull(requireActivity())).get(3);
+        email = logCursor(MainActivity.TABLE_USER_INFO, Objects.requireNonNull(requireActivity())).get(3);
         routeList = new ArrayList<>();
         databaseHelper = new DatabaseHelper(getContext());
         array = databaseHelper.readRouteInfo();
 
+        databaseHelperUid = new DatabaseHelperUid(getContext());
+
+        textUid  = binding.textUid;
         upd_but = binding.updBut;
         upd_but.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -86,6 +105,7 @@ public class UIDFragment extends Fragment {
                 } else {
                     progressBar.setVisibility(View.VISIBLE);
                     fetchRoutes(email);
+
                 }
 
             }
@@ -117,7 +137,8 @@ public class UIDFragment extends Fragment {
         if (array == null || array.length == 0) {
             // Вызов метода fetchRoutes(email) только если массив пуст
             progressBar.setVisibility(View.VISIBLE);
-            fetchRoutes(email);
+//            fetchRoutes(email);
+            progressBar.setVisibility(View.GONE);
             scrollButtonDown.setVisibility(View.INVISIBLE);
             scrollButtonUp.setVisibility(View.INVISIBLE);
         } else {
@@ -127,18 +148,85 @@ public class UIDFragment extends Fragment {
             listView.setAdapter(adapter);
             scrollButtonDown.setVisibility(View.VISIBLE);
             scrollButtonUp.setVisibility(View.VISIBLE);
-        }
-        scrollButtonUp = binding.scrollButtonUp;
-        scrollButtonDown = binding.scrollButtonDown;
-        int desiredHeight = 1200; // Ваше желаемое значение высоты в пикселях
-        ViewGroup.LayoutParams layoutParams = listView.getLayoutParams();
-        layoutParams.height = desiredHeight;
-        listView.setLayoutParams(layoutParams);
 
+            scrollButtonUp = binding.scrollButtonUp;
+            scrollButtonDown = binding.scrollButtonDown;
+            int desiredHeight = 1200; // Ваше желаемое значение высоты в пикселях
+            ViewGroup.LayoutParams layoutParams = listView.getLayoutParams();
+            layoutParams.height = desiredHeight;
+            listView.setLayoutParams(layoutParams);
+            registerForContextMenu(listView);
+        }
         return root;
     }
 
+    @Override
+    public void onCreateContextMenu(@NonNull ContextMenu menu, @NonNull View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        MenuInflater inflater = requireActivity().getMenuInflater();
+        inflater.inflate(R.menu.context_menu, menu);
+    }
 
+    @SuppressLint("NonConstantResourceId")
+    @Override
+    public boolean onContextItemSelected(@NonNull MenuItem item) {
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        assert info != null;
+        int position = info.position;
+
+        if (item.getItemId() == R.id.action_order) {
+
+            // Обработка действия "Edit"
+//            Toast.makeText(requireActivity(), "Edit: " + array[position], Toast.LENGTH_SHORT).show();
+//            Log.d(TAG, "onContextItemSelected: " + position);
+            Log.d(TAG, "onContextItemSelected: " + array[position]);
+
+            routeInfo = databaseHelperUid.getRouteInfoById(position+1);
+            if (routeInfo != null) {
+                Log.d(TAG, "onContextItemSelected: " + routeInfo.toString());
+            } else {
+                Log.d(TAG, "onContextItemSelected: RouteInfo not found for id: " + (position + 1));
+            }
+            List<String> settings = new ArrayList<>();
+            settings.add(routeInfo.getStartLat());
+            settings.add(routeInfo.getStartLan());
+            settings.add(routeInfo.getToLat());
+            settings.add(routeInfo.getToLng());
+            settings.add(routeInfo.getStart());
+            settings.add(routeInfo.getFinish());
+
+            updateRoutMarker(settings);
+
+            navController.navigate(R.id.nav_visicom);
+            MainActivity.gps_upd = false;
+            return true;
+        } else if (item.getItemId() == R.id.action_exit) {
+// Обработка действия "Delete"
+
+            return true;
+        }   else {
+            return super.onContextItemSelected(item);
+        }
+
+    }
+    private void updateRoutMarker(List<String> settings) {
+        Log.d(TAG, "updateRoutMarker: " + settings.toString());
+        ContentValues cv = new ContentValues();
+
+        cv.put("startLat", Double.parseDouble(settings.get(0)));
+        cv.put("startLan", Double.parseDouble(settings.get(1)));
+        cv.put("to_lat", Double.parseDouble(settings.get(2)));
+        cv.put("to_lng", Double.parseDouble(settings.get(3)));
+        cv.put("start", settings.get(4));
+        cv.put("finish", settings.get(5));
+        if(isAdded()) {
+            // обновляем по id
+            SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+            database.update(MainActivity.ROUT_MARKER, cv, "id = ?",
+                    new String[]{"1"});
+            database.close();
+        }
+    }
 
     private void fetchRoutes(String value) {
 
@@ -173,17 +261,17 @@ public class UIDFragment extends Fragment {
                             routeList.addAll(routes);
                             processRouteList();
                         }  else {
-                            binding.textUid.setVisibility(View.VISIBLE);
-                            binding.textUid.setText(R.string.no_routs);
+                            textUid.setVisibility(View.VISIBLE);
+                            textUid.setText(R.string.no_routs);
                         }
 
                     } else {
-                        binding.textUid.setVisibility(View.VISIBLE);
-                        binding.textUid.setText(R.string.no_routs);
+                        textUid.setVisibility(View.VISIBLE);
+                        textUid.setText(R.string.no_routs);
                     }
                 } else {
                     MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
-                    bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
 
                 }
                 upd_but.setText(getString(R.string.order));
@@ -196,6 +284,7 @@ public class UIDFragment extends Fragment {
                 String errorMessage = t.getMessage();
                 t.printStackTrace();
                 upd_but.setText(getString(R.string.order));
+                progressBar.setVisibility(View.GONE);
             }
         });
     }
@@ -306,6 +395,16 @@ public class UIDFragment extends Fragment {
             listView.setAdapter(adapter);
             scrollButtonDown.setVisibility(View.VISIBLE);
             scrollButtonUp.setVisibility(View.VISIBLE);
+            progressBar.setVisibility(View.GONE);
+            upd_but.setVisibility(View.VISIBLE);
+
+            listView.setAdapter(adapter);
+
+            int desiredHeight = 1200; // Ваше желаемое значение высоты в пикселях
+            ViewGroup.LayoutParams layoutParams = listView.getLayoutParams();
+            layoutParams.height = desiredHeight;
+            listView.setLayoutParams(layoutParams);
+            registerForContextMenu(listView);
         }
     }
 
