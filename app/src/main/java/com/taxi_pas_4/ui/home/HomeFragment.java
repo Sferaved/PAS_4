@@ -56,6 +56,7 @@ import androidx.navigation.Navigation;
 import androidx.room.Room;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.cities.Cherkasy.Cherkasy;
@@ -341,6 +342,7 @@ public class HomeFragment extends Fragment {
                                             orderFinished();
                                         };
                                     } catch (UnsupportedEncodingException e) {
+                                        FirebaseCrashlytics.getInstance().recordException(e);
                                         throw new RuntimeException(e);
                                     }
 
@@ -358,6 +360,7 @@ public class HomeFragment extends Fragment {
                                             orderFinished();
                                         };
                                     } catch (UnsupportedEncodingException e) {
+                                        FirebaseCrashlytics.getInstance().recordException(e);
                                         throw new RuntimeException(e);
                                     }
                                 }
@@ -368,6 +371,7 @@ public class HomeFragment extends Fragment {
                                         orderFinished();
                                     };
                                 } catch (UnsupportedEncodingException e) {
+                                    FirebaseCrashlytics.getInstance().recordException(e);
                                     throw new RuntimeException(e);
                                 }
                         }
@@ -441,12 +445,14 @@ public class HomeFragment extends Fragment {
 
             try {
                 gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
-            } catch(Exception ignored) {
+            } catch(Exception e) {
+                FirebaseCrashlytics.getInstance().recordException(e);
             }
 
             try {
                 network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-            } catch(Exception ignored) {
+            } catch(Exception e) {
+                FirebaseCrashlytics.getInstance().recordException(e);
             }
 
             if(!gps_enabled || !network_enabled) {
@@ -619,7 +625,7 @@ public class HomeFragment extends Fragment {
                 @Override
                 public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
                     btnVisible(View.VISIBLE);
-                    t.printStackTrace();
+                    FirebaseCrashlytics.getInstance().recordException(t);
                 }
             });
         }  else {
@@ -656,6 +662,7 @@ public class HomeFragment extends Fragment {
                         orderFinished();
                     }
                 } catch (UnsupportedEncodingException e) {
+                    FirebaseCrashlytics.getInstance().recordException(e);
                     throw new RuntimeException(e);
                 }
                 progressBar.setVisibility(View.GONE);
@@ -986,6 +993,7 @@ public class HomeFragment extends Fragment {
                     try {
                         sendUrlMapCost = ResultSONParser.sendURL(url);
                     } catch (MalformedURLException | InterruptedException | JSONException e) {
+                        FirebaseCrashlytics.getInstance().recordException(e);
                         MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.error_firebase_start));
                         bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                     }
@@ -1077,6 +1085,7 @@ public class HomeFragment extends Fragment {
                         try {
                             sendUrlMapCost = ResultSONParser.sendURL(url);
                         } catch (MalformedURLException | InterruptedException | JSONException e) {
+                            FirebaseCrashlytics.getInstance().recordException(e);
                             Toast.makeText(context, R.string.error_firebase_start, Toast.LENGTH_SHORT).show();
                         }
 
@@ -1189,12 +1198,13 @@ public class HomeFragment extends Fragment {
 
                 @Override
                 public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
-                    t.printStackTrace();
+                    FirebaseCrashlytics.getInstance().recordException(t);
                 }
             });
 
         } catch (MalformedURLException | UnsupportedEncodingException e) {
             resetRoutHome();
+            FirebaseCrashlytics.getInstance().recordException(e);
             MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
             bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
         }
@@ -1509,12 +1519,13 @@ public class HomeFragment extends Fragment {
 
                 @Override
                 public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
-                    t.printStackTrace();
+                    FirebaseCrashlytics.getInstance().recordException(t);
                 }
             });
 
         } catch (MalformedURLException | UnsupportedEncodingException e) {
             resetRoutHome();
+            FirebaseCrashlytics.getInstance().recordException(e);
             message = getString(R.string.error_message);
             MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
             bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
@@ -1833,6 +1844,7 @@ public class HomeFragment extends Fragment {
                         orderFinished();
                     };
                 } catch (UnsupportedEncodingException e) {
+                    FirebaseCrashlytics.getInstance().recordException(e);
                     throw new RuntimeException(e);
                 }
 

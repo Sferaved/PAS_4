@@ -61,11 +61,8 @@ public class CostJSONParserRetrofit {
             }
 
             @Override
-            public void onFailure(Call<Map<String, String>> call, Throwable t) {
-                Map<String, String> costMap = new HashMap<>();
-                costMap.put("order_cost", "0");
-                costMap.put("Message", "ErrorMessage");
-                callback.onResponse(call, Response.success(costMap));
+            public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
+                callback.onFailure(call, t);
             }
         });
     }

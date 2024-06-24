@@ -24,6 +24,7 @@ import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.FragmentManager;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.taxi_pas_4.MainActivity;
@@ -87,7 +88,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
     String MERCHANT_ID;
     String rectoken;
     Context context;
-
+    FragmentManager fragmentManager;
     public MyBottomSheetErrorPaymentFragment(
             String pay_method,
             String messageFondy,
@@ -108,7 +109,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
         View view = inflater.inflate(R.layout.error_payment_layout, container, false);
         arrayList = logCursor(MainActivity.CITY_INFO, requireContext());
         MERCHANT_ID = arrayList.get(6);
-
+        fragmentManager = getParentFragmentManager();
         btn_help = view.findViewById(R.id.btn_help);
         btn_help.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -133,7 +134,9 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
                 public void run() {
                  try {
                       orderFinished(page);
-                    } catch (MalformedURLException ignored) {}
+                    } catch (MalformedURLException e) {
+                     FirebaseCrashlytics.getInstance().recordException(e);
+                 }
                 }
             }, 5000);
 
@@ -151,6 +154,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
                         try {
                             paymentByTokenFondy(messageFondy, amount, rectoken);
                         } catch (UnsupportedEncodingException e) {
+                            FirebaseCrashlytics.getInstance().recordException(e);
                             throw new RuntimeException(e);
                         }
                         break;
@@ -184,7 +188,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
     }
 
     private void getUrlToPaymentWfp() {
-        FragmentManager fragmentManager = getParentFragmentManager();
+        
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
@@ -263,7 +267,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
             String amount,
             String rectoken
     ) {
-        FragmentManager fragmentManager = getParentFragmentManager();
+        
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
@@ -412,7 +416,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
 
             @Override
             public void onFailure(Call<Map<String, String>> call, Throwable t) {
-                t.printStackTrace();
+                FirebaseCrashlytics.getInstance().recordException(t);
             }
         });
 
@@ -650,8 +654,10 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
 //                            getUrlToPaymentFondy(messageFondy, amount);
                                 }
                             } catch (JsonSyntaxException e) {
+                                FirebaseCrashlytics.getInstance().recordException(e);
                                 // Возникла ошибка при разборе JSON, возможно, сервер вернул неправильный формат ответа
                                 Log.e(TAG, "Error parsing JSON response: " + e.getMessage());
+                                FirebaseCrashlytics.getInstance().recordException(e);
                                 FinishActivity.btn_again.setVisibility(View.VISIBLE);
                                 FinishActivity.btn_cancel.setVisibility(View.VISIBLE);
                                 FinishActivity.progressBar.setVisibility(View.INVISIBLE);
@@ -771,8 +777,10 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
                             cancelOrderDouble();
                         }
                     } catch (JsonSyntaxException e) {
+                        FirebaseCrashlytics.getInstance().recordException(e);
                         // Возникла ошибка при разборе JSON, возможно, сервер вернул неправильный формат ответа
                         Log.e(TAG, "Error parsing JSON response: " + e.getMessage());
+                        FirebaseCrashlytics.getInstance().recordException(e);
                         cancelOrderDouble();
                     }
                 } else {
@@ -833,7 +841,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
             public void onFailure(@NonNull Call<Status> call, @NonNull Throwable t) {
                 // Обработка ошибок сети или других ошибок
                 String errorMessage = t.getMessage();
-                t.printStackTrace();
+                FirebaseCrashlytics.getInstance().recordException(t);
                 Log.d(TAG, "onFailure: " + errorMessage);
                 FinishActivity.text_status.setText(R.string.verify_internet);
                 FinishActivity.progressBar.setVisibility(View.INVISIBLE);

@@ -28,6 +28,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.cities.api.CityApiClient;
@@ -67,6 +68,7 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
     private String cityMenu;
     private String message;
     String pay_method;
+    FragmentManager fragmentManager;
     public MyBottomSheetCityFragment() {
         // Пустой конструктор без аргументов
     }
@@ -108,7 +110,7 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
 
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.cities_list_layout, container, false);
-
+        fragmentManager = getParentFragmentManager();
         listView = view.findViewById(R.id.listViewBonus);
         VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
 
@@ -333,7 +335,7 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
     }
 
     private void pay_system(String cityCodeNew) {
-        FragmentManager fragmentManager = getParentFragmentManager();
+        
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -800,6 +802,7 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
             } catch (Exception e) {
                 // Log the exception
                 Log.e(TAG, "Exception in doInBackground: " + e.getMessage());
+                FirebaseCrashlytics.getInstance().recordException(e);
                 // Return null or handle the exception as needed
                 return null;
             }
@@ -817,6 +820,7 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
             } catch (Exception e) {
                 // Log the exception
                 Log.e(TAG, "Exception in onPostExecute: " + e.getMessage());
+                FirebaseCrashlytics.getInstance().recordException(e);
                 // Handle the exception as needed
             }
 

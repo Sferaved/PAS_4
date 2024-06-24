@@ -2,6 +2,8 @@ package com.taxi_pas_4.ui.start;
 
 import android.util.Log;
 
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -19,7 +21,6 @@ import java.util.concurrent.Exchanger;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -46,7 +47,8 @@ public class ResultSONParser {
                 } else {
                     return "400";
                 }
-            } catch (IOException ignored) {
+            } catch (IOException e) {
+                FirebaseCrashlytics.getInstance().recordException(e);
             } finally {
                 if (urlConnection != null) {
                     urlConnection.disconnect();
@@ -80,14 +82,8 @@ public class ResultSONParser {
                 costMap.put("message", "Сталася помилка");
             }
             return costMap;
-        }  catch (TimeoutException e) {
-            e.printStackTrace();
-            asyncTaskFuture.cancel(true);
-            costMap.put("order_cost", "0");
-            costMap.put("message", "Сталася помилка");
-            return costMap;
-        } catch (Exception e) {
-            e.printStackTrace();
+        }  catch (Exception e) {
+            FirebaseCrashlytics.getInstance().recordException(e);
             asyncTaskFuture.cancel(true);
             costMap.put("order_cost", "0");
             costMap.put("message", "Сталася помилка");
@@ -108,12 +104,12 @@ public class ResultSONParser {
                 sb.append(line).append('\n');
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            FirebaseCrashlytics.getInstance().recordException(e);
         } finally {
             try {
                 is.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                FirebaseCrashlytics.getInstance().recordException(e);
             }
         }
 

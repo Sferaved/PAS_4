@@ -30,6 +30,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.NetworkChangeReceiver;
 import com.taxi_pas_4.R;
@@ -282,7 +283,7 @@ public class UIDFragment extends Fragment {
             public void onFailure(Call<List<RouteResponse>> call, Throwable t) {
                 // Обработка ошибок сети или других ошибок
                 String errorMessage = t.getMessage();
-                t.printStackTrace();
+                FirebaseCrashlytics.getInstance().recordException(t);
                 upd_but.setText(getString(R.string.order));
                 progressBar.setVisibility(View.GONE);
             }

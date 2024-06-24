@@ -32,6 +32,7 @@ import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.FragmentManager;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.finish.FinishActivity;
@@ -270,7 +271,7 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
 
                     @Override
                     public void onFailure(Call<Map<String, String>> call, Throwable t) {
-                        t.printStackTrace();
+                        FirebaseCrashlytics.getInstance().recordException(t);
                     }
                 });
         } else {
@@ -379,7 +380,7 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
 
                 @Override
                 public void onFailure(Call<Map<String, String>> call, Throwable t) {
-                    t.printStackTrace();
+                    FirebaseCrashlytics.getInstance().recordException(t);
                 }
             });
         } else {
@@ -582,7 +583,7 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
 
                 @Override
                 public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
-                    t.printStackTrace();
+                    FirebaseCrashlytics.getInstance().recordException(t);
                 }
             });
         } else {

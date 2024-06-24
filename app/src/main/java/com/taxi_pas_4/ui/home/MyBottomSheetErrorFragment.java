@@ -33,13 +33,15 @@ public class MyBottomSheetErrorFragment extends BottomSheetDialogFragment {
     AppCompatButton btn_help, btn_ok;
     String errorMessage;
 
-    public MyBottomSheetErrorFragment(String errorMessage) {
-        this.errorMessage = errorMessage;
-    }
-
     public MyBottomSheetErrorFragment() {
     }
 
+    public MyBottomSheetErrorFragment(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+    // Публичный безаргументный конструктор
+
+     
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {

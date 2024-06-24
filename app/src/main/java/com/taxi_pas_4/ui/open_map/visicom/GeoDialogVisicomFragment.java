@@ -52,6 +52,7 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.finish.FinishActivity;
@@ -181,7 +182,7 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
                         bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                     } catch (NumberFormatException e) {
                         // Обработка исключения, если строка не может быть преобразована в long
-                        e.printStackTrace();
+                        FirebaseCrashlytics.getInstance().recordException(e);
                         Toast.makeText(getContext(), "Invalid number format", Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -541,7 +542,7 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
 
             @Override
             public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
-                t.printStackTrace();
+                FirebaseCrashlytics.getInstance().recordException(t);
             }
         });
 
@@ -554,7 +555,7 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
             super.dismissAllowingStateLoss();
         } catch (IllegalStateException e) {
             // Ловим исключение, если фрагмент не привязан к менеджеру фрагментов
-            e.printStackTrace();
+            FirebaseCrashlytics.getInstance().recordException(e);
         }
 
         // Добавьте проверку на null для избежания NullPointerException
@@ -608,7 +609,7 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
 
             @Override
             public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
-                t.printStackTrace();
+                FirebaseCrashlytics.getInstance().recordException(t);
             }
         });
 
@@ -1111,7 +1112,7 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
 
                     @Override
                     public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
-                        t.printStackTrace();
+                        FirebaseCrashlytics.getInstance().recordException(t);
                     }
                 });
 
@@ -1306,7 +1307,7 @@ public class GeoDialogVisicomFragment extends BottomSheetDialogFragment implemen
 
                 @Override
                 public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
-                    t.printStackTrace();
+                    FirebaseCrashlytics.getInstance().recordException(t);
                 }
             });
 

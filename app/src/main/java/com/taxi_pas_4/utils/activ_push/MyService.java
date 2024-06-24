@@ -14,13 +14,15 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import androidx.annotation.Nullable;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.R;
 import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
-import com.taxi_pas_4.R;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -173,7 +175,7 @@ public class MyService extends Service {
                 }
 
             } catch (Exception e) {
-                e.printStackTrace();
+                FirebaseCrashlytics.getInstance().recordException(e);
             } finally {
                 database.close();
             }
@@ -197,7 +199,7 @@ public class MyService extends Service {
                 assert date != null;
                 lastActivityTimestamp = date.getTime();
             } catch (ParseException e) {
-                e.printStackTrace();
+                FirebaseCrashlytics.getInstance().recordException(e);
             }
             cursor.close();
         }

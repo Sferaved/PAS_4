@@ -29,6 +29,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.gson.Gson;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
@@ -590,7 +591,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                         String errorBody = response.errorBody().string();
                         Log.d("TAG", "onResponse: Тело ошибки: " + errorBody);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        FirebaseCrashlytics.getInstance().recordException(e);
                     }
                 }
 
@@ -766,7 +767,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                         String errorBody = response.errorBody().string();
                         Log.d("TAG2", "onResponse: Тело ошибки: " + errorBody);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        FirebaseCrashlytics.getInstance().recordException(e);
                     }
                 }
             }

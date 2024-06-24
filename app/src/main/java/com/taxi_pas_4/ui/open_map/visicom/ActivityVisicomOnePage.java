@@ -43,6 +43,7 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.NetworkChangeReceiver;
 import com.taxi_pas_4.R;
@@ -1226,7 +1227,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity
                         Log.d(TAG, "onResponse: " + responseData);
                         processAddressData(responseData, point);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        FirebaseCrashlytics.getInstance().recordException(e);
                     }
                 }
 
@@ -1235,7 +1236,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity
                 }
             });
         } catch (Exception e) {
-            e.printStackTrace();
+            FirebaseCrashlytics.getInstance().recordException(e);
         }
 
 
@@ -1821,7 +1822,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity
 
 
         } catch (JSONException e) {
-            e.printStackTrace();
+            FirebaseCrashlytics.getInstance().recordException(e);
         }
         Log.d(TAG, "processAddressData: 44444444");
         if (addresses.size() != 0) {
@@ -2494,7 +2495,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity
             @Override
             public void onFailure(@NonNull Call<MapboxResponse> call, @NonNull Throwable t) {
                 // Обработка ошибки при выполнении запроса
-                t.printStackTrace();
+                FirebaseCrashlytics.getInstance().recordException(t);
 //                MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
 //                bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
             }

@@ -54,6 +54,7 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.NetworkChangeReceiver;
 import com.taxi_pas_4.R;
@@ -837,7 +838,7 @@ public class VisicomFragment extends Fragment implements ApiCallback, ApiCallbac
                 @Override
                 public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
                     btnVisible(View.VISIBLE);
-                    t.printStackTrace();
+                    FirebaseCrashlytics.getInstance().recordException(t);
                 }
             });
         } else {
@@ -1027,6 +1028,7 @@ public class VisicomFragment extends Fragment implements ApiCallback, ApiCallbac
                         orderFinished();
                     }
                 } catch (MalformedURLException e) {
+                    FirebaseCrashlytics.getInstance().recordException(e);
                     throw new RuntimeException(e);
                 }
                 progressBar.setVisibility(View.GONE);
@@ -1073,6 +1075,7 @@ public class VisicomFragment extends Fragment implements ApiCallback, ApiCallbac
                         orderFinished();
                     }
                 } catch (MalformedURLException e) {
+                    FirebaseCrashlytics.getInstance().recordException(e);
                     throw new RuntimeException(e);
                 }
                 progressBar.setVisibility(View.GONE);
@@ -1353,6 +1356,7 @@ public class VisicomFragment extends Fragment implements ApiCallback, ApiCallbac
                                 try {
                                     orderFinished();
                                 } catch (MalformedURLException e) {
+                                    FirebaseCrashlytics.getInstance().recordException(e);
                                     throw new RuntimeException(e);
                                 }
                             }
@@ -1368,6 +1372,7 @@ public class VisicomFragment extends Fragment implements ApiCallback, ApiCallbac
                                 try {
                                     orderFinished();
                                 } catch (MalformedURLException e) {
+                                    FirebaseCrashlytics.getInstance().recordException(e);
                                     throw new RuntimeException(e);
                                 }
                             }
@@ -1378,6 +1383,7 @@ public class VisicomFragment extends Fragment implements ApiCallback, ApiCallbac
                             try {
                                 orderFinished();
                             } catch (MalformedURLException e) {
+                                FirebaseCrashlytics.getInstance().recordException(e);
                                 throw new RuntimeException(e);
                             }
                         }
@@ -1523,6 +1529,7 @@ public class VisicomFragment extends Fragment implements ApiCallback, ApiCallbac
             try {
                 new GetPublicIPAddressTask(fragmentManager, city, context).execute().get(MainActivity.MAX_TASK_EXECUTION_TIME_SECONDS, TimeUnit.SECONDS);
             } catch (ExecutionException | InterruptedException | TimeoutException e) {
+                FirebaseCrashlytics.getInstance().recordException(e);
                 MainActivity.countryState = "UA";
 
                 VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
@@ -1567,6 +1574,7 @@ public class VisicomFragment extends Fragment implements ApiCallback, ApiCallbac
                                 try {
                                     visicomCost();
                                 } catch (MalformedURLException e) {
+                                    FirebaseCrashlytics.getInstance().recordException(e);
                                     throw new RuntimeException(e);
                                 }
                             }
@@ -1609,6 +1617,7 @@ public class VisicomFragment extends Fragment implements ApiCallback, ApiCallbac
                                     try {
                                         visicomCost();
                                     } catch (MalformedURLException e) {
+                                        FirebaseCrashlytics.getInstance().recordException(e);
                                         throw new RuntimeException(e);
                                     }
                                 }
@@ -1644,6 +1653,7 @@ public class VisicomFragment extends Fragment implements ApiCallback, ApiCallbac
                             try {
                                 visicomCost();
                             } catch (MalformedURLException e) {
+                                FirebaseCrashlytics.getInstance().recordException(e);
                                 throw new RuntimeException(e);
                             }
                         }
@@ -2031,6 +2041,7 @@ public class VisicomFragment extends Fragment implements ApiCallback, ApiCallbac
                             try {
                                 visicomCost();
                             } catch (MalformedURLException e) {
+                                FirebaseCrashlytics.getInstance().recordException(e);
                                 throw new RuntimeException(e);
                             }
                         } else {
@@ -2117,11 +2128,9 @@ public class VisicomFragment extends Fragment implements ApiCallback, ApiCallbac
 
     private void visicomCost() throws MalformedURLException {
 
-//        costSearchMarkersLocalTariffs(context);
-        FragmentManager fragmentManager = getParentFragmentManager();
         String query = "SELECT * FROM " + MainActivity.ROUT_MARKER + " LIMIT 1";
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-        Cursor cursor = database.rawQuery(query, null);
+        @SuppressLint("Recycle") Cursor cursor = database.rawQuery(query, null);
 
         cursor.moveToFirst();
 
@@ -2225,7 +2234,7 @@ public class VisicomFragment extends Fragment implements ApiCallback, ApiCallbac
             }
             @Override
             public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
-                t.printStackTrace();
+                FirebaseCrashlytics.getInstance().recordException(t);
             }
         });
 
@@ -2274,6 +2283,7 @@ public class VisicomFragment extends Fragment implements ApiCallback, ApiCallbac
                 return IPUtil.getPublicIPAddress();
             } catch (Exception e) {
                 // Log the exception
+                FirebaseCrashlytics.getInstance().recordException(e);
                 Log.e(TAG, "Exception in doInBackground: " + e.getMessage());
                 // Return null or handle the exception as needed
                 return null;
@@ -2292,6 +2302,7 @@ public class VisicomFragment extends Fragment implements ApiCallback, ApiCallbac
             } catch (Exception e) {
                 // Log the exception
                 Log.e(TAG, "Exception in onPostExecute: " + e.getMessage());
+                FirebaseCrashlytics.getInstance().recordException(e);
                 MainActivity.countryState = "UA";
 //                Toast.makeText(context, context.getString(verify_internet), Toast.LENGTH_SHORT).show();
                 VisicomFragment.progressBar.setVisibility(View.INVISIBLE);

@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.databinding.FragmentAboutBinding;
 
@@ -69,8 +70,8 @@ public class AboutFragment extends Fragment {
 
                 try {
                     startActivity(Intent.createChooser(emailIntent, getString(R.string.share)));
-                } catch (android.content.ActivityNotFoundException ignored) {
-
+                } catch (android.content.ActivityNotFoundException e) {
+                    FirebaseCrashlytics.getInstance().recordException(e);
                 }
 
             }

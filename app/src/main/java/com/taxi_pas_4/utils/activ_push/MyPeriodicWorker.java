@@ -18,6 +18,7 @@ import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
@@ -143,7 +144,7 @@ public class MyPeriodicWorker extends Worker {
 
 
             } catch (Exception e) {
-                e.printStackTrace();
+                FirebaseCrashlytics.getInstance().recordException(e);
             } finally {
                 database.close();
             }
@@ -168,7 +169,7 @@ public class MyPeriodicWorker extends Worker {
                 assert date != null;
                 lastActivityTimestamp = date.getTime();
             } catch (ParseException e) {
-                e.printStackTrace();
+                FirebaseCrashlytics.getInstance().recordException(e);
             }
             cursor.close();
         }

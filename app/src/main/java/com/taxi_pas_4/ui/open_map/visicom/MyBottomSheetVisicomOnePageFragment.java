@@ -43,6 +43,7 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.cities.Kyiv.KyivRegion;
@@ -564,17 +565,17 @@ public class MyBottomSheetVisicomOnePageFragment extends BottomSheetDialogFragme
                         Log.d(TAG, "onResponse: " + responseData);
                         processAddressData(responseData, point);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        FirebaseCrashlytics.getInstance().recordException(e);
                     }
                 }
 
                 @Override
                 public void onFailure(@NonNull okhttp3.Call call, @NonNull IOException e) {
-                    e.printStackTrace();
+                    FirebaseCrashlytics.getInstance().recordException(e);
                 }
             });
         } catch (Exception e) {
-            e.printStackTrace();
+            FirebaseCrashlytics.getInstance().recordException(e);
             // Log the exception or display an error message
         }
     }
@@ -1156,7 +1157,7 @@ public class MyBottomSheetVisicomOnePageFragment extends BottomSheetDialogFragme
 
 
         } catch (JSONException e) {
-            e.printStackTrace();
+            FirebaseCrashlytics.getInstance().recordException(e);
         }
         Log.d(TAG, "processAddressData: 44444444");
         if (addresses.size() != 0) {
@@ -1533,7 +1534,7 @@ public class MyBottomSheetVisicomOnePageFragment extends BottomSheetDialogFragme
             }
             @Override
             public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
-                t.printStackTrace();
+                FirebaseCrashlytics.getInstance().recordException(t);
             }
         });
 

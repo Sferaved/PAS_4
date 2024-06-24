@@ -32,6 +32,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.databinding.FragmentGalleryBinding;
@@ -231,6 +232,7 @@ public class GalleryFragment extends Fragment {
                     try {
                         dialogFromToOneRout(routChoice(selectedItem));
                     } catch (MalformedURLException | InterruptedException | JSONException e) {
+                        FirebaseCrashlytics.getInstance().recordException(e);
                         Log.d(TAG, "onItemClick: " + e.toString());
                     }
 
@@ -470,7 +472,7 @@ public class GalleryFragment extends Fragment {
             @Override
             public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
                 btnVisible(View.VISIBLE);
-                t.printStackTrace();
+                FirebaseCrashlytics.getInstance().recordException(t);
             }
         });
 
@@ -626,7 +628,7 @@ public class GalleryFragment extends Fragment {
 
                 @Override
                 public void onFailure(Call<Map<String, String>> call, Throwable t) {
-                    t.printStackTrace();
+                    FirebaseCrashlytics.getInstance().recordException(t);
                 }
             });
 

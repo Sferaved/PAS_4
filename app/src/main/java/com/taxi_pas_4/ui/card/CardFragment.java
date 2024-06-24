@@ -28,6 +28,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.taxi_pas_4.MainActivity;
@@ -186,6 +187,7 @@ public class CardFragment extends Fragment {
                                             try {
                                                 getUrlToPaymentWfp(MainActivity.order_id, messageFondy);
                                             } catch (UnsupportedEncodingException e) {
+                                                FirebaseCrashlytics.getInstance().recordException(e);
                                                 throw new RuntimeException(e);
                                             }
                                             break;
@@ -193,6 +195,7 @@ public class CardFragment extends Fragment {
                                             try {
                                                 getUrlToPaymentFondy(MainActivity.order_id, messageFondy);
                                             } catch (UnsupportedEncodingException e) {
+                                                FirebaseCrashlytics.getInstance().recordException(e);
                                                 throw new RuntimeException(e);
                                             }
                                             break;
@@ -452,7 +455,7 @@ public class CardFragment extends Fragment {
                         String errorBody = response.errorBody().string();
                         Log.d("TAG2", "onResponse: Тело ошибки: " + errorBody);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        FirebaseCrashlytics.getInstance().recordException(e);
                     }
                 }
             }
@@ -701,7 +704,7 @@ public class CardFragment extends Fragment {
                                 }
                             } catch (JsonSyntaxException e) {
                                 // Возникла ошибка при разборе JSON, возможно, сервер вернул неправильный формат ответа
-
+                                FirebaseCrashlytics.getInstance().recordException(e);
                             }
                         } else {
                             // Обработка ошибки

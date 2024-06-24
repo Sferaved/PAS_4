@@ -23,6 +23,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.taxi_pas_4.MainActivity;
@@ -349,6 +350,7 @@ public class FinishActivity extends AppCompatActivity {
                 try {
                     payWfp();
                 } catch (UnsupportedEncodingException e) {
+                    FirebaseCrashlytics.getInstance().recordException(e);
                     throw new RuntimeException(e);
                 }
                 break;
@@ -356,6 +358,7 @@ public class FinishActivity extends AppCompatActivity {
                 try {
                     payFondy();
                 } catch (UnsupportedEncodingException e) {
+                    FirebaseCrashlytics.getInstance().recordException(e);
                     throw new RuntimeException(e);
                 }
                 break;
@@ -823,6 +826,7 @@ public class FinishActivity extends AppCompatActivity {
                                 }
                             } catch (JsonSyntaxException e) {
                                 // Возникла ошибка при разборе JSON, возможно, сервер вернул неправильный формат ответа
+                                FirebaseCrashlytics.getInstance().recordException(e);
                                 Log.e(TAG, "Error parsing JSON response: " + e.getMessage());
 //                        Toast.makeText(FinishActivity.this, R.string.pay_failure_mes, Toast.LENGTH_SHORT).show();
                                 MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(FinishActivity.this);
@@ -1037,7 +1041,7 @@ public class FinishActivity extends AppCompatActivity {
                             } catch (JsonSyntaxException e) {
                                 // Возникла ошибка при разборе JSON, возможно, сервер вернул неправильный формат ответа
                                 Log.e(TAG, "Error parsing JSON response: " + e.getMessage());
-
+                                FirebaseCrashlytics.getInstance().recordException(e);
 
                                 MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(FinishActivity.this);
                                 callOrderIdMemory(MainActivity.order_id, uid, pay_method);
@@ -1137,6 +1141,7 @@ public class FinishActivity extends AppCompatActivity {
                     } catch (JsonSyntaxException e) {
                         // Возникла ошибка при разборе JSON, возможно, сервер вернул неправильный формат ответа
                         Log.e(TAG, "Error parsing JSON response: " + e.getMessage());
+                        FirebaseCrashlytics.getInstance().recordException(e);
                         cancelOrderDouble();
                     }
                 } else {
@@ -1221,7 +1226,7 @@ public class FinishActivity extends AppCompatActivity {
             public void onFailure(Call<BonusResponse> call, Throwable t) {
                 // Обработка ошибок сети или других ошибок
                 String errorMessage = t.getMessage();
-                t.printStackTrace();
+                FirebaseCrashlytics.getInstance().recordException(t);
                 // Дополнительная обработка ошибки
             }
         });
@@ -1587,6 +1592,7 @@ public class FinishActivity extends AppCompatActivity {
         try {
             date = inputFormat.parse(requiredTime);
         } catch (ParseException e) {
+            FirebaseCrashlytics.getInstance().recordException(e);
             Log.d(TAG, "onCreate:" + new RuntimeException(e));
         }
 
@@ -1606,6 +1612,7 @@ public class FinishActivity extends AppCompatActivity {
             try {
                 return CostJSONParser.sendURL(url);
             } catch (Exception e) {
+                FirebaseCrashlytics.getInstance().recordException(e);
                 exception = e;
                 return null;
             }

@@ -314,7 +314,6 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
 
     private void getStatusWfp() {
         Log.d(TAG, "getStatusWfp: ");
-        FragmentManager fragmentManager = getParentFragmentManager();
 
         List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
         String city = stringList.get(1);
@@ -394,7 +393,7 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
     }
 
     private void getCardTokenWfp(String city) {
-        FragmentManager fragmentManager = getParentFragmentManager();
+
         Log.d(TAG, "getCardTokenWfp: ");
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);

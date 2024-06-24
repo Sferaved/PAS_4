@@ -41,6 +41,7 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.NetworkChangeReceiver;
 import com.taxi_pas_4.R;
@@ -351,11 +352,15 @@ public class OpenStreetMapVisicomActivity extends AppCompatActivity {
 
         try {
             gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        } catch(Exception ignored) {}
+        } catch(Exception e) {
+            FirebaseCrashlytics.getInstance().recordException(e);
+        }
 
         try {
             network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-        } catch(Exception ignored) {}
+        } catch(Exception e) {
+            FirebaseCrashlytics.getInstance().recordException(e);
+        }
 
        return gps_enabled && network_enabled;
     }
