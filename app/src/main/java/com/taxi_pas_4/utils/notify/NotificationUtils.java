@@ -3,7 +3,10 @@ package com.taxi_pas_4.utils.notify;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
 
 import java.util.List;
 
@@ -11,6 +14,7 @@ public class NotificationUtils {
 
     private static final String TAG = "NotificationUtils";
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public static void logNotificationChannels(Context context) {
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         Log.d(TAG, "logNotificationChannels: ");
@@ -24,6 +28,7 @@ public class NotificationUtils {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public static void updateNotificationChannel(Context context, String channelId) {
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (notificationManager != null) {
@@ -38,6 +43,7 @@ public class NotificationUtils {
             }
         }
     }
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public static void resetNotificationChannel(Context context, String channelId) {
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (notificationManager != null) {
@@ -51,6 +57,7 @@ public class NotificationUtils {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public static void disableNotificationChannel(Context context, String channelId) {
         logNotificationChannels(context);
         NotificationUtils.resetNotificationChannel(context, "ForegroundServiceChannel");

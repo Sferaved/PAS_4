@@ -1047,6 +1047,9 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
                     Log.d(TAG, "onTextChanged:startPoint " + startPoint);
                     Log.d(TAG, "onTextChanged:fromEditAddress.getText().toString() " + fromEditAddress.getText().toString());
                     Log.d(TAG, "onTextChanged:MainActivity.countryState " + MainActivity.countryState);
+                    if (MainActivity.countryState == null) {
+                        MainActivity.countryState = "UA";
+                    }
                     if (startPoint == null) {
                         if(MainActivity.countryState.equals("UA")) {
                             performAddressSearch(inputString, "start");
