@@ -9,17 +9,15 @@ import android.util.Log;
 
 public class BootReceiver extends BroadcastReceiver {
 
+    @Override
     public void onReceive(Context context, Intent intent) {
         Log.d("BootReceiver", "onReceive called");
         Log.d("BootReceiver", "Action: " + intent.getAction());
         try {
-            if (intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) {
+            if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
                 Log.d("BootReceiver", "Boot completed action received");
-                Intent serviceIntent = new Intent(context, MyService.class);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    context.startForegroundService(serviceIntent);
-                } else {
-                    context.startService(serviceIntent);
+                if (!isServiceRunning(context, MyService.class)) {
+                    startMyService(context);
                 }
             }
         } catch (Exception e) {
@@ -27,14 +25,25 @@ public class BootReceiver extends BroadcastReceiver {
         }
     }
 
-    private boolean isServiceRunning(Context context) {
+    private void startMyService(Context context) {
+        Intent serviceIntent = new Intent(context, MyService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(serviceIntent);
+        } else {
+            context.startService(serviceIntent);
+        }
+    }
+
+    private boolean isServiceRunning(Context context, Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (MyService.class.getName().equals(service.service.getClassName())) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
                 return true;
             }
         }
         return false;
     }
 }
+
+
 
