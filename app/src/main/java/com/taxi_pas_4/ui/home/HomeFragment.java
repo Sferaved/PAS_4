@@ -20,7 +20,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.graphics.BlendMode;
-import android.graphics.Color;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -205,7 +204,7 @@ public class HomeFragment extends Fragment {
                 default:
                     arrayStreet = KyivCity.arrayStreet();
                     break;
-            };
+            }
             adapter = new ArrayAdapter<>(context,R.layout.drop_down_layout, arrayStreet);
         }
 
@@ -340,7 +339,7 @@ public class HomeFragment extends Fragment {
                                     try {
                                         if (orderRout()) {
                                             orderFinished();
-                                        };
+                                        }
                                     } catch (UnsupportedEncodingException e) {
                                         FirebaseCrashlytics.getInstance().recordException(e);
                                         throw new RuntimeException(e);
@@ -352,13 +351,14 @@ public class HomeFragment extends Fragment {
                             case "card_payment":
                             case "fondy_payment":
                             case "mono_payment":
+                            case "wfp_payment":
                                 if (Long.parseLong(card_max_pay) <= Long.parseLong(text_view_cost.getText().toString())) {
                                     changePayMethodMax(text_view_cost.getText().toString(), pay_method);
                                 } else {
                                     try {
                                         if (orderRout()) {
                                             orderFinished();
-                                        };
+                                        }
                                     } catch (UnsupportedEncodingException e) {
                                         FirebaseCrashlytics.getInstance().recordException(e);
                                         throw new RuntimeException(e);
@@ -369,7 +369,7 @@ public class HomeFragment extends Fragment {
                                 try {
                                     if (orderRout()) {
                                         orderFinished();
-                                    };
+                                    }
                                 } catch (UnsupportedEncodingException e) {
                                     FirebaseCrashlytics.getInstance().recordException(e);
                                     throw new RuntimeException(e);
@@ -384,6 +384,7 @@ public class HomeFragment extends Fragment {
         });
 
         gpsbut = binding.gpsbut;
+        gpsbut.setVisibility(View.INVISIBLE);
         locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         gpsbut.setOnClickListener(v -> {
             if (locationManager != null) {
@@ -438,6 +439,7 @@ public class HomeFragment extends Fragment {
         });
 
         on_map = binding.btnMap;
+        on_map.setVisibility(View.INVISIBLE);
         on_map.setOnClickListener(v -> {
             LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
             boolean gps_enabled = false;
@@ -516,7 +518,7 @@ public class HomeFragment extends Fragment {
             getPhoneNumber();
         }
         if (!verifyPhone(context)) {
-            bottomSheetDialogFragment = new MyPhoneDialogFragment(getActivity(),"home", text_view_cost.getText().toString(), true);
+            bottomSheetDialogFragment = new MyPhoneDialogFragment(context,"home");
             bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
             btnVisible(View.INVISIBLE);
         }
@@ -610,6 +612,7 @@ public class HomeFragment extends Fragment {
                                 case "card_payment":
                                 case "fondy_payment":
                                 case "mono_payment":
+                                case "wfp_payment":
                                     changePayMethodToNal();
                                     break;
                                 default:
@@ -860,22 +863,22 @@ public class HomeFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                    || ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                gpsbut.setBackground(getResources().getDrawable(R.drawable.btn_yellow));
-                gpsbut.setTextColor(Color.BLACK);
-                btnGeo.setVisibility(View.VISIBLE);
-            } else {
-                gpsbut.setBackground(getResources().getDrawable(R.drawable.btn_green));
-                gpsbut.setTextColor(Color.WHITE);
-                btnGeo.setVisibility(View.INVISIBLE);
-            }
-        } else {
-            gpsbut.setBackground(getResources().getDrawable(R.drawable.btn_red));
-            gpsbut.setTextColor(Color.WHITE);
-            btnGeo.setVisibility(View.VISIBLE);
-        }
+//        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+//            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+//                    || ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//                gpsbut.setBackground(getResources().getDrawable(R.drawable.btn_yellow));
+//                gpsbut.setTextColor(Color.BLACK);
+//                btnGeo.setVisibility(View.VISIBLE);
+//            } else {
+//                gpsbut.setBackground(getResources().getDrawable(R.drawable.btn_green));
+//                gpsbut.setTextColor(Color.WHITE);
+//                btnGeo.setVisibility(View.INVISIBLE);
+//            }
+//        } else {
+//            gpsbut.setBackground(getResources().getDrawable(R.drawable.btn_red));
+//            gpsbut.setTextColor(Color.WHITE);
+//            btnGeo.setVisibility(View.VISIBLE);
+//        }
 
         String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
 
@@ -923,30 +926,7 @@ public class HomeFragment extends Fragment {
             costRoutHome(stringListRoutHome);
         } else {
             resetRoutHome();
-//            text_view_cost.setVisibility(View.INVISIBLE);
-//            btn_minus.setVisibility(View.INVISIBLE);
-//            btn_plus.setVisibility(View.INVISIBLE);
-//            buttonAddServices.setVisibility(View.INVISIBLE);
-//            buttonBonus.setVisibility(View.INVISIBLE);
-//            textViewFrom.setText("");
-//            from_number.setText("");
-//            from_number.setVisibility(View.INVISIBLE);
-//            textViewTo.setText("");
-//            textViewTo.setVisibility(View.INVISIBLE);
-//            btn_clear.setVisibility(View.INVISIBLE);
-//            binding.textTo.setVisibility(View.INVISIBLE);
-//            binding.num2.setVisibility(View.INVISIBLE);
-//
-//            btn_order.setVisibility(View.INVISIBLE);
-
-//            from = null;
-//            to = null;
             updateAddCost("0");
-//            text_view_cost.setText("");
-//            textViewFrom.setText("");
-//            from_number.setText("");
-//            textViewTo.setText("");
-//            to_number.setText("");
         }
 
 
@@ -982,7 +962,7 @@ public class HomeFragment extends Fragment {
                     from = String.valueOf(adapter.getItem(position));
                     if (from.indexOf("/") != -1) {
                         from = from.substring(0,  from.indexOf("/"));
-                    };
+                    }
                     List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
                     String city = stringList.get(1);
                     String api =  stringList.get(2);
@@ -1133,7 +1113,7 @@ public class HomeFragment extends Fragment {
                         bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
                         bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                     }
-            };
+            }
 
         });
 
@@ -1262,6 +1242,7 @@ public class HomeFragment extends Fragment {
                     case "card_payment":
                     case "fondy_payment":
                     case "mono_payment":
+                    case "wfp_payment":
                         changePayMethodToNal();
                         break;
                     default:
@@ -1483,6 +1464,7 @@ public class HomeFragment extends Fragment {
                                 case "card_payment":
                                 case "fondy_payment":
                                 case "mono_payment":
+                                case "wfp_payment":
                                     changePayMethodToNal();
                                     break;
                                 default:
@@ -1679,7 +1661,7 @@ public class HomeFragment extends Fragment {
 
 
     private String getTaxiUrlSearch(String urlAPI, Context context) throws UnsupportedEncodingException {
-        Log.d(TAG, "startCost: discountText" + logCursor(MainActivity.TABLE_SETTINGS_INFO, context).toString());
+        Log.d(TAG, "startCost: discountText" + logCursor(MainActivity.TABLE_SETTINGS_INFO, context));
 
         List<String> stringListRout = logCursor(MainActivity.ROUT_HOME, context);
         Log.d(TAG, "getTaxiUrlSearch: stringListRout" + stringListRout);
@@ -1833,6 +1815,7 @@ public class HomeFragment extends Fragment {
                     case "card_payment":
                     case "fondy_payment":
                     case "mono_payment":
+                    case "wfp_payment":
                         if (Long.parseLong(card_max_pay) <= Long.parseLong(textCost)) {
                             paymentType("nal_payment");
                         }
@@ -1842,7 +1825,7 @@ public class HomeFragment extends Fragment {
                 try {
                     if (orderRout()) {
                         orderFinished();
-                    };
+                    }
                 } catch (UnsupportedEncodingException e) {
                     FirebaseCrashlytics.getInstance().recordException(e);
                     throw new RuntimeException(e);
@@ -1905,7 +1888,7 @@ public class HomeFragment extends Fragment {
             String PHONE_PATTERN = "((\\+?380)(\\d{9}))$";
             boolean val = Pattern.compile(PHONE_PATTERN).matcher(mPhoneNumber).matches();
             Log.d(TAG, "onClick No validate: " + val);
-            if (val == false) {
+            if (!val) {
                 Toast.makeText(context, getString(R.string.format_phone) , Toast.LENGTH_SHORT).show();
                 Log.d(TAG, "onClick:phoneNumber.getText().toString() " + mPhoneNumber);
 //                context.finish();

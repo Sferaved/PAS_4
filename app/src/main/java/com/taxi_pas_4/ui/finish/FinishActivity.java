@@ -169,7 +169,7 @@ public class FinishActivity extends AppCompatActivity {
         if (pay_method.equals("bonus_payment")) {
             handlerBonusBtn = new Handler();
 
-            String url = baseUrl + "/bonusBalance/recordsBloke/" + uid + "/" + getString(R.string.application);;
+            String url = baseUrl + "/bonusBalance/recordsBloke/" + uid + "/" + getString(R.string.application);
 
             fetchBonus(url);
         }
@@ -186,7 +186,7 @@ public class FinishActivity extends AppCompatActivity {
                         || !newStatus.contains(getString(R.string.error_payment_card))
                         || !newStatus.contains(getString(R.string.double_order_error))
                         || !newStatus.contains(getString(R.string.call_btn_cancel)) ) {
-                    String cancelText = getApplicationContext().getString(R.string.status_checkout_message);;
+                    String cancelText = getApplicationContext().getString(R.string.status_checkout_message);
                     text_status.setText(cancelText);
 
                 } else {
@@ -251,7 +251,7 @@ public class FinishActivity extends AppCompatActivity {
                         || !newStatus.contains(getString(R.string.error_payment_card))
                         || !newStatus.contains(getString(R.string.double_order_error))
                         || !newStatus.contains(getString(R.string.call_btn_cancel)) ) {
-                    String cancelText = getApplicationContext().getString(R.string.status_checkout_message);;
+                    String cancelText = getApplicationContext().getString(R.string.status_checkout_message);
                     text_status.setText(cancelText);
 
                 } else {
@@ -615,6 +615,7 @@ public class FinishActivity extends AppCompatActivity {
                             break;
                         default:
                             MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(getApplicationContext());
+                            callOrderIdMemory(MainActivity.order_id, uid, pay_method);
                             MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", FinishActivity.messageFondy, amount, getApplicationContext());
                             bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
 
@@ -795,7 +796,7 @@ public class FinishActivity extends AppCompatActivity {
 
                             Log.d(TAG, "onResponse: " +  new Gson().toJson(apiResponse));
                             try {
-                                SuccessResponseDataToken responseBody = response.body().getResponse();;
+                                SuccessResponseDataToken responseBody = response.body().getResponse();
 
                                 // Теперь у вас есть объект ResponseBodyRev для обработки
                                 if (responseBody != null) {
@@ -840,6 +841,7 @@ public class FinishActivity extends AppCompatActivity {
                             Log.d(TAG, "onFailure: " + response.code());
 //                    Toast.makeText(FinishActivity.this, R.string.pay_failure_mes, Toast.LENGTH_SHORT).show();
                             MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(FinishActivity.this);
+                            callOrderIdMemory(MainActivity.order_id, uid, pay_method);
                             MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("fondy_payment", messageFondy, amount, getApplicationContext());
                             bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
 //                    getUrlToPaymentFondy(messageFondy, amount);
@@ -849,7 +851,7 @@ public class FinishActivity extends AppCompatActivity {
 
                     @Override
                     public void onFailure(Call<ApiResponseToken<SuccessResponseDataToken>> call, Throwable t) {
-                        Log.d(TAG, "onFailure1111: " + t.toString());
+                        Log.d(TAG, "onFailure1111: " + t);
 //                Toast.makeText(FinishActivity.this, R.string.pay_failure_mes, Toast.LENGTH_SHORT).show();
 
                         MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(FinishActivity.this);
@@ -989,7 +991,7 @@ public class FinishActivity extends AppCompatActivity {
 
 
                 StatusRequestPay statusRequest = new StatusRequestPay(paymentRequest);
-                Log.d(TAG, "getUrlToPayment: " + statusRequest.toString());
+                Log.d(TAG, "getUrlToPayment: " + statusRequest);
 
                 Call<ApiResponsePay<SuccessResponseDataPay>> call = paymentApi.makePayment(statusRequest);
 
@@ -1004,7 +1006,7 @@ public class FinishActivity extends AppCompatActivity {
 
                             Log.d(TAG, "onResponse: " +  new Gson().toJson(apiResponse));
                             try {
-                                SuccessResponseDataPay responseBody = response.body().getResponse();;
+                                SuccessResponseDataPay responseBody = response.body().getResponse();
 
                                 // Теперь у вас есть объект ResponseBodyRev для обработки
                                 if (responseBody != null) {
@@ -1064,7 +1066,7 @@ public class FinishActivity extends AppCompatActivity {
 
                     @Override
                     public void onFailure(@NonNull Call<ApiResponsePay<SuccessResponseDataPay>> call, Throwable t) {
-                        Log.d(TAG, "onFailure1111: " + t.toString());
+                        Log.d(TAG, "onFailure1111: " + t);
                         MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(FinishActivity.this);
                         callOrderIdMemory(MainActivity.order_id, uid, pay_method);
                         MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("fondy_payment", messageFondy, amount, getApplicationContext());
@@ -1101,7 +1103,7 @@ public class FinishActivity extends AppCompatActivity {
                 comment
         );
 
-        Log.d(TAG, "getUrlToPayment: " + paymentRequest.toString());
+        Log.d(TAG, "getUrlToPayment: " + paymentRequest);
 
         String token = getResources().getString(R.string.mono_key_storage); // Получение токена из ресурсов
         Call<ResponsePayMono> call = monoApi.invoiceCreate(token, paymentRequest);
@@ -1117,8 +1119,8 @@ public class FinishActivity extends AppCompatActivity {
                     Log.d(TAG, "onResponse: " +  new Gson().toJson(apiResponse));
                     try {
                         assert response.body() != null;
-                        String pageUrl = response.body().getPageUrl();;
-                        MainActivity.invoiceId = response.body().getInvoiceId();;
+                        String pageUrl = response.body().getPageUrl();
+                        MainActivity.invoiceId = response.body().getInvoiceId();
 
                         // Теперь у вас есть объект ResponseBodyRev для обработки
                         if (pageUrl != null || !pageUrl.equals("null") ) {
@@ -1153,7 +1155,7 @@ public class FinishActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<ResponsePayMono> call, Throwable t) {
-                Log.d(TAG, "onFailure1111: " + t.toString());
+                Log.d(TAG, "onFailure1111: " + t);
                 cancelOrderDouble();
             }
 
@@ -1260,7 +1262,7 @@ public class FinishActivity extends AppCompatActivity {
 
     }
 
-    public void callOrderIdMemory(String orderId, String uid, String paySystem) {
+    public static void callOrderIdMemory(String orderId, String uid, String paySystem) {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -1361,7 +1363,7 @@ public class FinishActivity extends AppCompatActivity {
                 if (response.isSuccessful()) {
                     Status status = response.body();
                     assert status != null;
-                    Log.d(TAG, "cancelOrder status: " + status.toString());
+                    Log.d(TAG, "cancelOrder status: " + status);
                 } else {
                     // Обработка неуспешного ответа
                         text_status.setText(R.string.verify_internet);

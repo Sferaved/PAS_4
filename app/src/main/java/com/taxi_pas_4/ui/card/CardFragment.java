@@ -80,10 +80,10 @@ public class CardFragment extends Fragment {
     public static AppCompatButton btnCardLink;
 
     private NetworkChangeReceiver networkChangeReceiver;
-    private String baseUrl = "https://m.easy-order-taxi.site";
+    private final String baseUrl = "https://m.easy-order-taxi.site";
     private String messageFondy;
     public static ProgressBar progressBar;
-    private String TAG = "TAG_CARD";
+    private final String TAG = "TAG_CARD";
     String email;
     String amount = "100";
     public static TextView textCard;
@@ -180,6 +180,7 @@ public class CardFragment extends Fragment {
                                     navController.navigate(R.id.nav_visicom);
                                 } else {
                                     MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(getActivity());
+
                                     messageFondy = getString(R.string.fondy_message);
 
                                     switch (pay_method) {
@@ -228,6 +229,7 @@ public class CardFragment extends Fragment {
                         if (!cardMaps.isEmpty()) {
                             CustomCardAdapter listAdapter = new CustomCardAdapter(context, cardMaps, table, pay_method);
                             listView.setAdapter(listAdapter);
+                            textCard.setVisibility(View.GONE);
                             progressBar.setVisibility(View.GONE);
                         } else {
                             textCard.setVisibility(View.VISIBLE);
@@ -343,7 +345,7 @@ public class CardFragment extends Fragment {
             @Override
             public void onFailure(@NonNull Call<CallbackResponseWfp> call, @NonNull Throwable t) {
                 // Обработка ошибки запроса
-                Log.d(TAG, "onResponse: failure " + t.toString());
+                Log.d(TAG, "onResponse: failure " + t);
             }
         });
         progressBar.setVisibility(View.INVISIBLE);
@@ -415,7 +417,7 @@ public class CardFragment extends Fragment {
                 extRef,
                 amount
         );
-        Log.d("TAG1", "getRevers: " + paymentRequest.toString());
+        Log.d("TAG1", "getRevers: " + paymentRequest);
 
         String token = getResources().getString(R.string.mono_key_storage); // Получение токена из ресурсов
         Call<ResponseCancelMono> call = monoApi.invoiceCancel(token, paymentRequest);
@@ -429,7 +431,7 @@ public class CardFragment extends Fragment {
                     Log.d("TAG2", "JSON Response: " + new Gson().toJson(apiResponse));
                     if (apiResponse != null) {
                         String responseData = apiResponse.getStatus();
-                        Log.d("TAG2", "onResponse: " + responseData.toString());
+                        Log.d("TAG2", "onResponse: " + responseData);
                         // Обработка успешного ответа
 
                         switch (responseData) {
@@ -660,7 +662,7 @@ public class CardFragment extends Fragment {
 
 
                 StatusRequestPay statusRequest = new StatusRequestPay(paymentRequest);
-                Log.d(TAG, "getUrlToPaymentFondy: " + statusRequest.toString());
+                Log.d(TAG, "getUrlToPaymentFondy: " + statusRequest);
 
                 Call<ApiResponsePay<SuccessResponseDataPay>> call = paymentApi.makePayment(statusRequest);
 
@@ -674,7 +676,7 @@ public class CardFragment extends Fragment {
 
                             Log.d(TAG, "onResponse: " +  new Gson().toJson(apiResponse));
                             try {
-                                SuccessResponseDataPay responseBody = response.body().getResponse();;
+                                SuccessResponseDataPay responseBody = response.body().getResponse();
 
                                 // Теперь у вас есть объект ResponseBodyRev для обработки
                                 if (responseBody != null) {
@@ -718,7 +720,7 @@ public class CardFragment extends Fragment {
                     @Override
                     public void onFailure(@NonNull Call<ApiResponsePay<SuccessResponseDataPay>> call, @NonNull Throwable t) {
                         progressBar.setVisibility(View.GONE);
-                        Log.d("TAG1", "onFailure1111: " + t.toString());
+                        Log.d("TAG1", "onFailure1111: " + t);
                     }
 
 

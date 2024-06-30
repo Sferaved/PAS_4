@@ -14,15 +14,14 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import android.util.Log;
-
 import androidx.annotation.Nullable;
+import android.util.Log;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.R;
 import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
+import com.taxi_pas_4.R;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -33,6 +32,7 @@ public class MyService extends Service {
     private static final String TAG = "MyService";
     private static final String CHANNEL_ID = "ForegroundServiceChannel";
 
+    @SuppressLint("ForegroundServiceType")
     @Override
     public void onCreate() {
         super.onCreate();
@@ -148,7 +148,7 @@ public class MyService extends Service {
         // PendingIntent для открытия MainActivity
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, openMainActivityIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        // Используйте ваш класс NotificationHelper для отправки уведомления
+        // Используйте ваш класс NotificationHelperFGS для отправки уведомления
         NotificationHelper.showNotificationMessageOpen(context, title, message, pendingIntent);
         insertOrUpdatePushDate(context);
     }

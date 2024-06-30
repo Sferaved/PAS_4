@@ -81,7 +81,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
     public static ListView listView;
     String pay_method;
     String page ="orderSearchMarkersVisicom";
-    private String TAG = "MyBottomSheetErrorPaymentFragment";
+    private final String TAG = "MyBottomSheetErrorPaymentFragment";
     private static String messageFondy;
     String amount;
     List<String>  arrayList;
@@ -96,7 +96,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
             Context context
     ) {
         this.pay_method = pay_method;
-        this.messageFondy = messageFondy;
+        MyBottomSheetErrorPaymentFragment.messageFondy = messageFondy;
         this.amount = amount;
         this.context = context;
     }
@@ -173,10 +173,10 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
             public void onClick(View v) {
                 switch (pay_method) {
                     case "fondy_payment":
-                        getUrlToPaymentFondy(messageFondy, amount, getParentFragmentManager());;
+                        getUrlToPaymentFondy(messageFondy, amount, getParentFragmentManager());
                         break;
                     case "wfp_payment":
-                        getUrlToPaymentWfp();;
+                        getUrlToPaymentWfp();
                         break;
                 }
 
@@ -307,7 +307,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
                         // Ошибка при парсинге ответа
                         Log.d(TAG, "Ошибка при парсинге ответа");
                         MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-
+                        FinishActivity.callOrderIdMemory(MainActivity.order_id, FinishActivity.uid, pay_method);
                         MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, getActivity());
                         bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                     }
@@ -315,7 +315,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
                     // Ошибка запроса
                     Log.d(TAG, "Ошибка запроса");
                     MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-
+                    FinishActivity.callOrderIdMemory(MainActivity.order_id, FinishActivity.uid, pay_method);
                     MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, getActivity());
                     bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                 }
@@ -326,7 +326,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
                 // Ошибка при выполнении запроса
                 Log.d(TAG, "Ошибка при выполнении запроса");
                 MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-
+                FinishActivity.callOrderIdMemory(MainActivity.order_id, FinishActivity.uid, pay_method);
                 MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, getActivity());
                 bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
             }
@@ -553,6 +553,8 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(requireActivity());
+        FinishActivity.callOrderIdMemory(MainActivity.order_id, FinishActivity.uid, pay_method);
+
         PaymentApiToken paymentApi = retrofit.create(PaymentApiToken.class);
 
 //        String merchantPassword = arrayList.get(7);
@@ -624,7 +626,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
 
                             Log.d(TAG, "onResponse: " +  new Gson().toJson(apiResponse));
                             try {
-                                SuccessResponseDataToken responseBody = response.body().getResponse();;
+                                SuccessResponseDataToken responseBody = response.body().getResponse();
 
                                 // Теперь у вас есть объект ResponseBodyRev для обработки
                                 if (responseBody != null) {
@@ -676,7 +678,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
 
                     @Override
                     public void onFailure(@NonNull Call<ApiResponseToken<SuccessResponseDataToken>> call, @NonNull Throwable t) {
-                        Log.d(TAG, "onFailure1111: " + t.toString());
+                        Log.d(TAG, "onFailure1111: " + t);
 
                         FinishActivity.btn_again.setVisibility(View.VISIBLE);
                         FinishActivity.btn_cancel.setVisibility(View.VISIBLE);
@@ -729,7 +731,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
 
 
         StatusRequestPay statusRequest = new StatusRequestPay(paymentRequest);
-        Log.d(TAG, "getUrlToPayment: " + statusRequest.toString());
+        Log.d(TAG, "getUrlToPayment: " + statusRequest);
 
         Call<ApiResponsePay<SuccessResponseDataPay>> call = paymentApi.makePayment(statusRequest);
 
@@ -743,7 +745,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
 
                     Log.d(TAG, "onResponse: " +  new Gson().toJson(apiResponse));
                     try {
-                        SuccessResponseDataPay responseBody = response.body().getResponse();;
+                        SuccessResponseDataPay responseBody = response.body().getResponse();
 
                         // Теперь у вас есть объект ResponseBodyRev для обработки
                         if (responseBody != null) {
@@ -793,7 +795,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
 
             @Override
             public void onFailure(@NonNull Call<ApiResponsePay<SuccessResponseDataPay>> call, Throwable t) {
-                Log.d(TAG, "onFailure1111: " + t.toString());
+                Log.d(TAG, "onFailure1111: " + t);
 
                 cancelOrderDouble();
             }

@@ -18,7 +18,7 @@ import java.net.MalformedURLException;
 public class MarkerOverlayVisicom extends Overlay {
     Marker marker;
     String point;
-    private String TAG = "TAG_OPENMAP";
+    private final String TAG = "MarkerOverlayVisicom";
 
 
     public MarkerOverlayVisicom(Context context, String point) {

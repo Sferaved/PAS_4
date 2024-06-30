@@ -79,7 +79,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
     public MyBottomSheetBonusFragment() {
     }
 
-    private String baseUrl = "https://m.easy-order-taxi.site";
+    private final String baseUrl = "https://m.easy-order-taxi.site";
 
     public MyBottomSheetBonusFragment(long cost, String rout, String api, TextView textView) {
         this.cost = cost;
@@ -333,11 +333,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
                 listView.setItemChecked(0, true);
                 pos = 0;
 //                paymentType(arrayCode [pos], requireContext());
-                if(userPayPermissions[1].equals("0")) {
-                    adapter.setItemEnabled(2, false);
-                } else {
-                    adapter.setItemEnabled(2, true);
-                }
+                adapter.setItemEnabled(2, !userPayPermissions[1].equals("0"));
                 break;
             case "bonus_payment":
 
@@ -354,11 +350,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
                     }
                 }
 
-                if(userPayPermissions[1].equals("0")) {
-                    adapter.setItemEnabled(2, false);
-                } else {
-                    adapter.setItemEnabled(2, true);
-                }
+                adapter.setItemEnabled(2, !userPayPermissions[1].equals("0"));
                 break;
 
             case "fondy_payment":

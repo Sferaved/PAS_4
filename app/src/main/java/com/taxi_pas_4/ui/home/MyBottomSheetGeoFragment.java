@@ -68,7 +68,7 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
     final static long MIN_VALUE = -90;
     final static long MAX_VALUE = 200;
     TextView texViewCost;
-    private String TAG = "MyBottomSheetGeoFragment";
+    private final String TAG = "MyBottomSheetGeoFragment";
     TimeZone timeZone;
     SQLiteDatabase database;
     Activity context;
@@ -177,7 +177,7 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
                 spinner.setSelection(7);
                 break;
             default:
-                spinner.setSelection(0);;
+                spinner.setSelection(0);
         }
 
 
@@ -267,7 +267,7 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
                     discountFist = MIN_VALUE;
                 }
                 if(discountFist > 0) {
-                    discount.setText("+" + String.valueOf(discountFist));
+                    discount.setText("+" + discountFist);
                 } else {
                     discount.setText( String.valueOf(discountFist));
                 }
@@ -282,7 +282,7 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
                     discountFist = MAX_VALUE;
                 }
                 if(discountFist > 0) {
-                    discount.setText("+" + String.valueOf(discountFist));
+                    discount.setText("+" + discountFist);
                 } else {
                     discount.setText( String.valueOf(discountFist));
                 }

@@ -47,7 +47,6 @@ import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.ui.maps.CostJSONParser;
 import com.taxi_pas_4.ui.maps.FromJSONParser;
-import com.taxi_pas_4.ui.open_map.visicom.GeoDialogVisicomFragment;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 
 import org.json.JSONException;
@@ -76,7 +75,7 @@ import retrofit2.Response;
 
 
 public class OpenStreetMapActivity extends AppCompatActivity {
-    private static final String TAG = "TAG_OPENMAP";
+    private static final String TAG = "OpenStreetMapActivity";
     public static IMapController mapController;
     public String[] arrayStreet;
     public static FloatingActionButton  fab_call, fab_open_map, fab_open_marker;
@@ -101,7 +100,6 @@ public class OpenStreetMapActivity extends AppCompatActivity {
     @SuppressLint("StaticFieldLeak")
     public static ProgressBar progressBar;
     @SuppressLint("StaticFieldLeak")
-    public static GeoDialogVisicomFragment bottomSheetDialogFragment;
     private String city;
 
 
@@ -215,11 +213,7 @@ public class OpenStreetMapActivity extends AppCompatActivity {
             gpsSwitch.setChecked(switchState());
         });
 
-        fab_open_marker.setOnClickListener(v -> {
-            progressBar.setVisibility(View.INVISIBLE);
-            GeoDialogVisicomFragment bottomSheet = new GeoDialogVisicomFragment();
-            bottomSheet.show(fragmentManager, bottomSheet.getTag());
-        });
+
     }
 
     private void switchToRegion() {
@@ -354,9 +348,6 @@ public class OpenStreetMapActivity extends AppCompatActivity {
                 GeoPoint initialGeoPoint = new GeoPoint(startLat-0.0009, startLan);
                 map.getController().setCenter(initialGeoPoint);
                 setMarker(startLat, startLan, FromAdressString, getApplicationContext());
-
-                bottomSheetDialogFragment = GeoDialogVisicomFragment.newInstance();
-                bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
                 map.invalidate();
             } else {
                 Toast.makeText(this, R.string.check_position, Toast.LENGTH_SHORT).show();
@@ -396,15 +387,13 @@ public class OpenStreetMapActivity extends AppCompatActivity {
                             FromJSONParser parser = new FromJSONParser(urlFrom);
                             Map<String, String> sendUrlFrom = parser.sendURL(urlFrom);
                             assert sendUrlFrom != null;
-                            FromAdressString = (String) sendUrlFrom.get("route_address_from");
+                            FromAdressString = sendUrlFrom.get("route_address_from");
                             if(FromAdressString != null) {
                                 if (FromAdressString.equals("Точка на карте")) {
                                     FromAdressString = getString(R.string.startPoint);
                                 }
                             }
                             updateMyPosition(startLat, startLan, FromAdressString, getApplicationContext());
-                            bottomSheetDialogFragment = GeoDialogVisicomFragment.newInstance();
-                            bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
 
                             map.getOverlays().add(markerOverlay);
 //                        setMarker(startLat, startLan, FromAdressString, getApplicationContext());
@@ -472,8 +461,6 @@ public class OpenStreetMapActivity extends AppCompatActivity {
                             }
                         }
                         updateMyPosition(startLat, startLan, FromAdressString, getApplicationContext());
-                        bottomSheetDialogFragment = GeoDialogVisicomFragment.newInstance();
-                        bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
 
                         map.getOverlays().add(markerOverlay);
                         setMarker(startLat, startLan, FromAdressString, getApplicationContext());
@@ -528,7 +515,7 @@ public class OpenStreetMapActivity extends AppCompatActivity {
         m.setIcon(scaledDrawable);
 
         // Set the marker as draggable
-        final GeoDialogVisicomFragment bottomSheetDialogFragment = GeoDialogVisicomFragment.newInstance();
+
         m.setOnMarkerClickListener(new Marker.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker, MapView mapView) {
@@ -570,17 +557,9 @@ public class OpenStreetMapActivity extends AppCompatActivity {
                     FromJSONParser parser = new FromJSONParser(urlFrom);
                     Map<String, String> sendUrlFrom = parser.sendURL(urlFrom);
                     assert sendUrlFrom != null;
-                    FromAdressString = (String) sendUrlFrom.get("route_address_from");
+                    FromAdressString = sendUrlFrom.get("route_address_from");
 
                     updateMyPosition(startLat, startLan, FromAdressString, context);
-
-                    if (!bottomSheetDialogFragment.isAdded()) {
-                        // Если нет, используем getSupportFragmentManager()
-                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-                    } else {
-                        // Если присоединен, используем getChildFragmentManager()
-                        bottomSheetDialogFragment.show(bottomSheetDialogFragment.getChildFragmentManager(), bottomSheetDialogFragment.getTag());
-                    }
                 } catch (MalformedURLException | InterruptedException |
                          JSONException ignored) {
                 }
@@ -719,8 +698,6 @@ public class OpenStreetMapActivity extends AppCompatActivity {
 
                             map.invalidate();
 
-                            GeoDialogVisicomFragment bottomSheet = new GeoDialogVisicomFragment();
-                            bottomSheet.show(fragmentManager, bottomSheet.getTag());
                         }
                     }
 

@@ -36,18 +36,18 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class CustomCardAdapter extends ArrayAdapter<Map<String, String>> {
     private static final String TAG = "CustomCardAdapter";
-    private ArrayList<Map<String, String>> cardMaps;
+    private final ArrayList<Map<String, String>> cardMaps;
     private int selectedPosition = 0;
     public static String rectoken;
     public static String table;
     public static String pay_method;
 
-    private String baseUrl = "https://m.easy-order-taxi.site";
+    private final String baseUrl = "https://m.easy-order-taxi.site";
     public CustomCardAdapter(Context context, ArrayList<Map<String, String>> cardMaps, String table, String pay_method) {
         super(context, R.layout.cards_adapter_layout, cardMaps);
         this.cardMaps = cardMaps;
-        this.table = table;
-        this.pay_method = pay_method;
+        CustomCardAdapter.table = table;
+        CustomCardAdapter.pay_method = pay_method;
     }
 
     @Override

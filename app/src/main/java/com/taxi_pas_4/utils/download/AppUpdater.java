@@ -10,13 +10,13 @@ import com.google.android.play.core.install.InstallStateUpdatedListener;
 import com.google.android.play.core.install.model.AppUpdateType;
 import com.google.android.play.core.install.model.InstallStatus;
 import com.google.android.play.core.install.model.UpdateAvailability;
-import com.google.android.play.core.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 
 public class AppUpdater {
 
-    private AppUpdateManager appUpdateManager;
-    private Activity activity;
+    private final AppUpdateManager appUpdateManager;
+    private final Activity activity;
     private static final int MY_REQUEST_CODE = 100;
     private OnUpdateListener onUpdateListener;
 
@@ -55,7 +55,7 @@ public class AppUpdater {
     }
 
     // Слушатель для обновления состояния установки
-    private InstallStateUpdatedListener installStateUpdatedListener = new InstallStateUpdatedListener() {
+    private final InstallStateUpdatedListener installStateUpdatedListener = new InstallStateUpdatedListener() {
         @Override
         public void onStateUpdate(InstallState state) {
             if (state.installStatus() == InstallStatus.DOWNLOADED) {

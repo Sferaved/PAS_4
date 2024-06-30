@@ -56,7 +56,7 @@ public Map<String, String> sendURL(String urlString) throws MalformedURLExceptio
     Future<String> asyncTaskFuture = Executors.newSingleThreadExecutor().submit(asyncTaskCallable);
 
     try {
-        String response = asyncTaskFuture.get(30, TimeUnit.SECONDS);
+        String response = asyncTaskFuture.get(60, TimeUnit.SECONDS);
         if (response != null) {
 
             JSONObject jsonarray = new JSONObject(response);

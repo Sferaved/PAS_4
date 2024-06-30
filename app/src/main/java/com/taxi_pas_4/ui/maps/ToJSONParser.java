@@ -59,7 +59,7 @@ public class ToJSONParser {
         Future<String> asyncTaskFuture = Executors.newSingleThreadExecutor().submit(asyncTaskCallable);
 
         try {
-            String response = asyncTaskFuture.get(30, TimeUnit.SECONDS);
+            String response = asyncTaskFuture.get(60, TimeUnit.SECONDS);
             if (response != null) {
                 if (response.equals("400")) {
                     costMap.put("order_cost", "0");

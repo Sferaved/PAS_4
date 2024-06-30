@@ -184,7 +184,7 @@ public class UIDFragment extends Fragment {
 
             routeInfo = databaseHelperUid.getRouteInfoById(position+1);
             if (routeInfo != null) {
-                Log.d(TAG, "onContextItemSelected: " + routeInfo.toString());
+                Log.d(TAG, "onContextItemSelected: " + routeInfo);
             } else {
                 Log.d(TAG, "onContextItemSelected: RouteInfo not found for id: " + (position + 1));
             }

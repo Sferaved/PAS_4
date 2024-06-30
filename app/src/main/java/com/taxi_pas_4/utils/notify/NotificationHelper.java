@@ -123,7 +123,6 @@ public class NotificationHelper {
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setAutoCancel(true)
                 .setContentIntent(pendingIntent); // Добавление действия при нажатии на всё уведомление
-        ;
 
         // Отображение уведомления
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);

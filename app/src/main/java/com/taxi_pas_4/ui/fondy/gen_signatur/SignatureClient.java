@@ -14,7 +14,7 @@ public class SignatureClient {
 
     private static final String BASE_URL = "https://m.easy-order-taxi.site/";
 
-    private ApiService apiService;
+    private final ApiService apiService;
 
     public SignatureClient() {
         Retrofit retrofit = new Retrofit.Builder()

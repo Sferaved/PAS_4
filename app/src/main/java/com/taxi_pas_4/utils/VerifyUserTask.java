@@ -19,9 +19,9 @@ import java.util.Map;
 
 public class VerifyUserTask extends AsyncTask<Void, Void, Map<String, String>> {
     private Exception exception;
-    private String userEmail;
-    private String application;
-    private Context context;
+    private final String userEmail;
+    private final String application;
+    private final Context context;
 
     public VerifyUserTask(String userEmail, String application, Context context) {
         this.userEmail = userEmail;

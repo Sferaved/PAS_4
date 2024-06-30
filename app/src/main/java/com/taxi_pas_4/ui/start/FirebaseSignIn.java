@@ -41,7 +41,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -104,7 +104,7 @@ public class FirebaseSignIn extends AppCompatActivity {
                 FirebaseApp.initializeApp(FirebaseSignIn.this);
 
                 // Choose authentication providers
-                List<AuthUI.IdpConfig> providers = Arrays.asList(
+                List<AuthUI.IdpConfig> providers = Collections.singletonList(
                         new AuthUI.IdpConfig.GoogleBuilder().build());
 
                 // Create and launch sign-in intent
@@ -292,7 +292,7 @@ public class FirebaseSignIn extends AppCompatActivity {
 
         // Дождитесь завершения выполнения задачи с тайм-аутом
         try {
-            addUserFuture.get(30, TimeUnit.SECONDS);
+            addUserFuture.get(60, TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             // Обработка ошибок
             FirebaseCrashlytics.getInstance().recordException(e);

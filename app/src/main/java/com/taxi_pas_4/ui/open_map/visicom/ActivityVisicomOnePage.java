@@ -36,7 +36,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.navigation.NavController;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -58,18 +57,11 @@ import com.taxi_pas_4.ui.open_map.mapbox.Geometry;
 import com.taxi_pas_4.ui.open_map.mapbox.MapboxApiClient;
 import com.taxi_pas_4.ui.open_map.mapbox.MapboxResponse;
 import com.taxi_pas_4.ui.open_map.mapbox.MapboxService;
-import com.taxi_pas_4.ui.open_map.visicom.key_mapbox.ApiCallbackMapbox;
-import com.taxi_pas_4.ui.open_map.visicom.key_mapbox.ApiClientMapbox;
-import com.taxi_pas_4.ui.open_map.visicom.key_mapbox.ApiResponseMapbox;
-import com.taxi_pas_4.ui.open_map.visicom.key_visicom.ApiCallback;
-import com.taxi_pas_4.ui.open_map.visicom.key_visicom.ApiClient;
-import com.taxi_pas_4.ui.open_map.visicom.key_visicom.ApiResponse;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.KeyboardUtils;
 import com.taxi_pas_4.utils.LocaleHelper;
 import com.taxi_pas_4.utils.connect.ConnectionSpeedTester;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
-import com.taxi_pas_4.utils.ip.OnIPAddressReceivedListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -95,8 +87,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 
-public class ActivityVisicomOnePage extends AppCompatActivity
-        implements OnIPAddressReceivedListener {
+public class ActivityVisicomOnePage extends AppCompatActivity {
 
     private static final String TAG = "TAG_VIS_ADDR";
 
@@ -105,7 +96,6 @@ public class ActivityVisicomOnePage extends AppCompatActivity
     ProgressBar progressBar;
     EditText fromEditAddress, toEditAddress;
     private ImageButton btn_clear_from, btn_clear_to, btn_ok, btn_no;
-    private String apiKey;
     private static List<double[]> coordinatesList;
     private static List<String[]> addresses;
     private final OkHttpClient client = new OkHttpClient();
@@ -130,12 +120,10 @@ public class ActivityVisicomOnePage extends AppCompatActivity
     private String start;
     private String end;
     ArrayAdapter<String> addressAdapter;
-    private static String apiKeyMapBox;
     private boolean extraExit;
-    private long timeout = 50;
-    NavController navController;
+    private final long timeout = 50;
     LocationManager locationManager;
-    private int LOCATION_PERMISSION_REQUEST_CODE = 123;
+    private final int LOCATION_PERMISSION_REQUEST_CODE = 123;
     private boolean location_update;
 
     @SuppressLint({"MissingInflatedId", "UseCompatLoadingForDrawables"})
@@ -146,8 +134,6 @@ public class ActivityVisicomOnePage extends AppCompatActivity
 
         start = getIntent().getStringExtra("start");
         end = getIntent().getStringExtra("end");
-
-        NetworkChangeReceiver networkChangeReceiver = new NetworkChangeReceiver();
 
         List<String> stringList = logCursor(MainActivity.CITY_INFO);
         switch (LocaleHelper.getLocale()) {
@@ -239,21 +225,6 @@ public class ActivityVisicomOnePage extends AppCompatActivity
 
                     btn_clear_from.setVisibility(View.INVISIBLE);
                     btn_clear_to.setVisibility(View.INVISIBLE);
-
-                    VisicomFragment.textwhere.setVisibility(View.INVISIBLE);
-                    VisicomFragment.num2.setVisibility(View.INVISIBLE);
-                    VisicomFragment.textViewTo.setVisibility(View.INVISIBLE);
-
-                    VisicomFragment.btnAdd.setVisibility(View.INVISIBLE);
-
-                    VisicomFragment.buttonBonus.setVisibility(View.INVISIBLE);
-                    VisicomFragment.btn_minus.setVisibility(View.INVISIBLE);
-                    VisicomFragment.text_view_cost.setVisibility(View.INVISIBLE);
-                    VisicomFragment.btn_plus.setVisibility(View.INVISIBLE);
-                    VisicomFragment.btnOrder.setVisibility(View.INVISIBLE);
-                    VisicomFragment.btn_clear_to.setVisibility(View.INVISIBLE);
-
-
                 }
                                 new Handler().postDelayed(new Runnable() {
                     @Override
@@ -391,8 +362,11 @@ public class ActivityVisicomOnePage extends AppCompatActivity
         }
         if(end.equals("ok")) {
             oldAddresses("finish");
+            findViewById(R.id.textfrom).setVisibility(View.GONE);
+            findViewById(R.id.num1).setVisibility(View.GONE);
             fromEditAddress.setVisibility(View.GONE);
             btn_clear_from.setVisibility(View.GONE);
+
             textGeoError.setVisibility(View.GONE);
             btn_change.setText(getString(R.string.on_city_tv));
             btn_change.setOnClickListener(new View.OnClickListener() {
@@ -826,7 +800,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity
                         FromJSONParser parser = new FromJSONParser(urlFrom);
                         Map<String, String> sendUrlFrom = parser.sendURL(urlFrom);
                         assert sendUrlFrom != null;
-                        String FromAdressString = (String) sendUrlFrom.get("route_address_from");
+                        String FromAdressString = sendUrlFrom.get("route_address_from");
                         if (FromAdressString != null) {
                             if (FromAdressString.contains("Точка на карте")) {
                                 FromAdressString = getString(R.string.startPoint);
@@ -2164,7 +2138,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity
             // Выбираем значение 'address' из массива и добавляем его в addressesList
             addressesList.add(addressArray[0]);
         }
-        Log.d(TAG, "onCreate: " + addressesList.toString());
+        Log.d(TAG, "onCreate: " + addressesList);
         addressAdapter = new ArrayAdapter<>(getApplicationContext(), R.layout.custom_list_item, addressesList);
         addressListView.setVisibility(View.VISIBLE);
         addressListView.setAdapter(addressAdapter);
@@ -2415,19 +2389,6 @@ public class ActivityVisicomOnePage extends AppCompatActivity
             coordinatesList.add(new double[]{longitude, latitude});
         }
     }
-
-    @Override
-    public void onIPAddressReceived(String ipAddress) {
-        if (ipAddress != null) {
-            Log.d(TAG, "Global IP Address: " + ipAddress);
-            // Вызываем AsyncTask для определения страны по IP-адресу
-
-        } else {
-            Log.e(TAG, "Failed to retrieve global IP Address");
-        }
-    }
-
-
 
     public interface ConnectionSpeedTestCallback {
         void onConnectionTestResult(boolean isConnectionFast, long duration);

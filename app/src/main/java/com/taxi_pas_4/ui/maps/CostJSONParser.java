@@ -62,7 +62,7 @@ public class CostJSONParser {
         Future<String> asyncTaskFuture = Executors.newSingleThreadExecutor().submit(asyncTaskCallable);
 
         try {
-            String response = asyncTaskFuture.get(30, TimeUnit.SECONDS);
+            String response = asyncTaskFuture.get(60, TimeUnit.SECONDS);
             Log.d(TAG, "sendURL: response " + response);
             if (response != null) {
                 if (response.equals("400")) {

@@ -107,7 +107,7 @@ public class ErrorPayActivity extends AppCompatActivity {
                     ApiResponseRev<SuccessResponseDataRevers> apiResponse = response.body();
                     Log.d("TAG1", "JSON Response: " + new Gson().toJson(apiResponse));
                     try {
-                        SuccessResponseDataRevers responseBody = response.body().getResponse();;
+                        SuccessResponseDataRevers responseBody = response.body().getResponse();
 
                         // Теперь у вас есть объект ResponseBodyRev для обработки
                         if (responseBody != null) {

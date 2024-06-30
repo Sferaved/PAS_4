@@ -233,7 +233,7 @@ public class GalleryFragment extends Fragment {
                         dialogFromToOneRout(routChoice(selectedItem));
                     } catch (MalformedURLException | InterruptedException | JSONException e) {
                         FirebaseCrashlytics.getInstance().recordException(e);
-                        Log.d(TAG, "onItemClick: " + e.toString());
+                        Log.d(TAG, "onItemClick: " + e);
                     }
 
 
@@ -285,6 +285,7 @@ public class GalleryFragment extends Fragment {
                     case "card_payment":
                     case "fondy_payment":
                     case "mono_payment":
+                    case "wfp_payment":
                         if (Long.parseLong(card_max_pay) <= Long.parseLong(text_view_cost.getText().toString())) {
                             changePayMethodMax(text_view_cost.getText().toString(), pay_method);
                         } else {
@@ -455,6 +456,7 @@ public class GalleryFragment extends Fragment {
                             case "card_payment":
                             case "fondy_payment":
                             case "mono_payment":
+                            case "wfp_payment":
                                 changePayMethodToNal();
                                 break;
                             default:
@@ -570,7 +572,7 @@ public class GalleryFragment extends Fragment {
             Log.d(TAG, "dialogFromToOneRout: FromAddressString" + FromAddressString);
             ToAddressString = rout.get("to_street") + rout.get("to_number");
             if(rout.get("from_street").equals(rout.get("to_street"))) {
-                ToAddressString =  getString(R.string.on_city_tv);;
+                ToAddressString =  getString(R.string.on_city_tv);
             }
             Log.d(TAG, "dialogFromToOneRout: ToAddressString" + ToAddressString);
             List<String> settings = new ArrayList<>();
@@ -804,6 +806,7 @@ public class GalleryFragment extends Fragment {
                     case "card_payment":
                     case "fondy_payment":
                     case "mono_payment":
+                    case "wfp_payment":
                         if (Long.parseLong(card_max_pay) <= Long.parseLong(textCost)) {
                             paymentType("nal_payment");
                         }

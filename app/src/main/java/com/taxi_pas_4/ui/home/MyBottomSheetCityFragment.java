@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -45,8 +44,9 @@ import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
 import com.taxi_pas_4.utils.ip.ApiServiceCountry;
 import com.taxi_pas_4.utils.ip.CountryResponse;
-import com.taxi_pas_4.utils.ip.IPUtil;
 import com.taxi_pas_4.utils.ip.RetrofitClient;
+import com.taxi_pas_4.utils.ip.ip_util_retrofit.IpResponse;
+import com.taxi_pas_4.utils.ip.ip_util_retrofit.IpifyService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,6 +63,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
 
     private static final String TAG = "TAG_CITY";
+    private static final String BASE_URL = "https://api64.ipify.org";
+
     ListView listView;
     String city;
     private String cityMenu;
@@ -168,7 +170,8 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
                 positionFirst = 6;
                 phoneNumber = Kyiv_City_phone;
                 cityMenu = context.getString(R.string.foreign_countries);
-                new GetPublicIPAddressTask().execute();
+                getPublicIPAddress();
+//                new GetPublicIPAddressTask().execute();
         }
         Log.d(TAG, "onCreateView: city" + city);
         updateMyPosition(city);
@@ -229,7 +232,7 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
                 }
                 String cityCodeNew;
                     if (positionFirst == 6) {
-                        new GetPublicIPAddressTask().execute();
+                        getPublicIPAddress();
                         cityCodeNew = cityCode[0];
                     } else {
                         cityCodeNew = cityCode[positionFirst];
@@ -329,7 +332,7 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
             @Override
             public void onFailure(@NonNull Call<CallbackResponseWfp> call, @NonNull Throwable t) {
                 // Обработка ошибки запроса
-                Log.d(TAG, "onResponse: failure " + t.toString());
+                Log.d(TAG, "onResponse: failure " + t);
             }
         });
     }
@@ -718,7 +721,7 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
                 @Override
                 public void onFailure(@NonNull Call<CallbackResponse> call, @NonNull Throwable t) {
                     // Обработка ошибки запроса
-                    Log.d(TAG, "onResponse: failure " + t.toString());
+                    Log.d(TAG, "onResponse: failure " + t);
 //                Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
                     VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
                 }
@@ -793,39 +796,40 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
         return list;
     }
 
-    private static class GetPublicIPAddressTask extends AsyncTask<Void, Void, String> {
+    public void getPublicIPAddress() {
+        IpifyService apiService = com.taxi_pas_4.utils.ip.ip_util_retrofit.RetrofitClient.getClient(BASE_URL).create(IpifyService.class);
+        Call<IpResponse> call = apiService.getPublicIPAddress();
 
-        @Override
-        protected String doInBackground(Void... voids) {
-            try {
-                return IPUtil.getPublicIPAddress();
-            } catch (Exception e) {
-                // Log the exception
-                Log.e(TAG, "Exception in doInBackground: " + e.getMessage());
-                FirebaseCrashlytics.getInstance().recordException(e);
-                // Return null or handle the exception as needed
-                return null;
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String ipAddress) {
-            try {
-                if (ipAddress != null) {
-                    Log.d(TAG, "onCreate: Local IP Address: " + ipAddress);
+        call.enqueue(new Callback<IpResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<IpResponse> call, @NonNull Response<IpResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    String ipAddress = response.body().getIp();
+                    Log.d(TAG, "onResponse: Local IP Address: " + ipAddress);
                     getCountryByIP(ipAddress);
                 } else {
+                    Log.e(TAG, "Error in API response: " + response.errorBody());
                     MainActivity.countryState = "UA";
                 }
-            } catch (Exception e) {
-                // Log the exception
-                Log.e(TAG, "Exception in onPostExecute: " + e.getMessage());
-                FirebaseCrashlytics.getInstance().recordException(e);
-                // Handle the exception as needed
+                // Hide progress bar after response
+                if (VisicomFragment.progressBar != null) {
+                    VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
+                }
             }
 
-        }
+            @Override
+            public void onFailure(@NonNull Call<IpResponse> call, @NonNull Throwable t) {
+                Log.e(TAG, "Exception in getPublicIPAddress: " + t.getMessage());
+                FirebaseCrashlytics.getInstance().recordException(t);
+                MainActivity.countryState = "UA";
+                // Hide progress bar after failure
+                if (VisicomFragment.progressBar != null) {
+                    VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
+                }
+            }
+        });
     }
+
     private static void getCountryByIP(String ipAddress) {
         ApiServiceCountry apiService = RetrofitClient.getClient().create(ApiServiceCountry.class);
         Call<CountryResponse> call = apiService.getCountryByIP(ipAddress);

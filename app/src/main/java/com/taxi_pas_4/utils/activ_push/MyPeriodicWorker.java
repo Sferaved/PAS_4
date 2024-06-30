@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 public class MyPeriodicWorker extends Worker {
 
-    private String TAG = "TAG_Per";
+    private final String TAG = "TAG_Per";
     private static final String PREFS_NAME = "UserActivityPrefs";
     private static final String LAST_ACTIVITY_KEY = "lastActivityTimestamp";
 
@@ -85,7 +85,7 @@ public class MyPeriodicWorker extends Worker {
         }
 
         // Проверка, прошло ли менее 60 секунд с последней активности
-        boolean isActive = (currentTime - lastActivityTimestamp) <= (25 *  24 * 60 * 60 * 1000);
+        boolean isActive = (currentTime - lastActivityTimestamp) <= (25L *  24 * 60 * 60 * 1000);
         Log.d(TAG, "checkUserActivity: " + isActive);
         return isActive;
     }
@@ -107,7 +107,7 @@ public class MyPeriodicWorker extends Worker {
         // PendingIntent для открытия MainActivity
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, openMainActivityIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        // Используйте ваш класс NotificationHelper для отправки уведомления
+        // Используйте ваш класс NotificationHelperFGS для отправки уведомления
         NotificationHelper.showNotificationMessageOpen(context, title, message, pendingIntent);
         insertOrUpdatePushDate(context);
     }

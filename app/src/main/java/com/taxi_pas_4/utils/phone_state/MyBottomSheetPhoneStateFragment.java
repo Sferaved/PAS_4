@@ -29,7 +29,7 @@ public class MyBottomSheetPhoneStateFragment extends BottomSheetDialogFragment {
 
     AppCompatButton btn_ok, btn_no;
     TextView text_message;
-    private String TAG = "MyBottomSheetPhoneStateFragment";
+    private final String TAG = "MyBottomSheetPhoneStateFragment";
 
     @SuppressLint("MissingInflatedId")
     @Nullable

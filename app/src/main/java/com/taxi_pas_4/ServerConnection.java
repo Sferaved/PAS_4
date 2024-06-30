@@ -1,5 +1,7 @@
 package com.taxi_pas_4;
 
+import androidx.annotation.NonNull;
+
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 
 import java.io.IOException;
@@ -36,7 +38,7 @@ public class ServerConnection {
             }
 
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 FirebaseCrashlytics.getInstance().recordException(e); // Вывести исключение для отладки
                 callback.onConnectionResult(false);
             }

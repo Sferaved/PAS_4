@@ -81,7 +81,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 
 public class OpenStreetMapVisicomActivity extends AppCompatActivity {
-    private static final String TAG = "TAG_OPENMAP";
+    private static final String TAG = "OpenStreetMapVisicomActivity";
     public static IMapController mapController;
     private static final String BASE_URL = "https://m.easy-order-taxi.site/";
     private static ApiService apiService;
@@ -147,7 +147,7 @@ public class OpenStreetMapVisicomActivity extends AppCompatActivity {
 
 
 
-    @SuppressLint({"MissingInflatedId", "InflateParams"})
+    @SuppressLint({"MissingInflatedId", "InflateParams", "UseCompatLoadingForDrawables"})
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -383,7 +383,7 @@ public class OpenStreetMapVisicomActivity extends AppCompatActivity {
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
 
-            Log.d(TAG, "Request URL: " + retrofit.baseUrl().toString());
+            Log.d(TAG, "Request URL: " + retrofit.baseUrl());
 
             HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(new HttpLoggingInterceptor.Logger() {
                 @Override
@@ -430,7 +430,7 @@ public class OpenStreetMapVisicomActivity extends AppCompatActivity {
                         .addConverterFactory(GsonConverterFactory.create())
                         .build();
 
-                Log.d(TAG, "Request URL: " + retrofit.baseUrl().toString());
+                Log.d(TAG, "Request URL: " + retrofit.baseUrl());
 
                 HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(new HttpLoggingInterceptor.Logger() {
                     @Override
@@ -761,7 +761,7 @@ public class OpenStreetMapVisicomActivity extends AppCompatActivity {
                         FromJSONParser parser = new FromJSONParser(urlFrom);
                         Map<String, String> sendUrlFrom = parser.sendURL(urlFrom);
                         assert sendUrlFrom != null;
-                        FromAdressString = (String) sendUrlFrom.get("route_address_from");
+                        FromAdressString = sendUrlFrom.get("route_address_from");
                         if (FromAdressString != null) {
                             if (FromAdressString.equals("Точка на карте")) {
                                 FromAdressString = getString(R.string.startPoint);

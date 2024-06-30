@@ -10,6 +10,7 @@ import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -26,12 +27,12 @@ import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -65,8 +66,8 @@ import com.google.android.play.core.appupdate.AppUpdateManager;
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
 import com.google.android.play.core.install.model.AppUpdateType;
 import com.google.android.play.core.install.model.UpdateAvailability;
-import com.google.android.play.core.tasks.OnSuccessListener;
-import com.google.android.play.core.tasks.Task;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -78,8 +79,6 @@ import com.taxi_pas_4.cities.api.CityService;
 import com.taxi_pas_4.databinding.ActivityMainBinding;
 import com.taxi_pas_4.ui.card.CardInfo;
 import com.taxi_pas_4.ui.finish.ApiClient;
-import com.taxi_pas_4.ui.finish.ApiService;
-import com.taxi_pas_4.ui.finish.City;
 import com.taxi_pas_4.ui.finish.RouteResponse;
 import com.taxi_pas_4.ui.fondy.callback.CallbackResponse;
 import com.taxi_pas_4.ui.fondy.callback.CallbackService;
@@ -91,13 +90,14 @@ import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
 import com.taxi_pas_4.utils.VerifyUserTask;
+
 import com.taxi_pas_4.utils.activ_push.MyService;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.db.DatabaseHelper;
 import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.download.AppUpdater;
-import com.taxi_pas_4.utils.ip.IPUtil;
 import com.taxi_pas_4.utils.messages.UsersMessages;
+import com.taxi_pas_4.utils.notify.MyNotificationListenerService;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.utils.permissions.UserPermissions;
 import com.taxi_pas_4.utils.phone.ApiClientPhone;
@@ -117,7 +117,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import okhttp3.OkHttpClient;
@@ -240,6 +239,24 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
         }
     }
 
+    private boolean isNotificationServiceEnabled() {
+        String pkgName = getPackageName();
+        final String flat = Settings.Secure.getString(getContentResolver(),
+                "enabled_notification_listeners");
+        if (flat != null && !flat.isEmpty()) {
+            final String[] names = flat.split(":");
+            for (String name : names) {
+                final ComponentName componentName = ComponentName.unflattenFromString(name);
+                if (componentName != null) {
+                    if (TextUtils.equals(pkgName, componentName.getPackageName())) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -279,6 +296,9 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
     @Override
     protected void onResume() {
         super.onResume();
+
+
+
         databaseHelper = new DatabaseHelper(getApplicationContext());
         databaseHelper.clearTable();
 
@@ -294,7 +314,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
             gps_upd = getIntent().getBooleanExtra("gps_upd", true);
         } else {
             gps_upd = false;
-        };
+        }
     }
 
     void checkNotificationPermissionAndRequestIfNeeded() {
@@ -1477,13 +1497,16 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
             // Проверка новой версии в маркете
             new Thread(this::versionFromMarket).start();
 
-            Thread wfpCardThread = new Thread(() -> {
-                List<String> stringList = logCursor(MainActivity.CITY_INFO);
-                String city = stringList.get(1);
-                getCardTokenWfp(city,"wfp", userEmail);
-
-            });
-            wfpCardThread.start();
+//            Thread wfpCardThread = new Thread(() -> {
+//                List<String> stringList = logCursor(MainActivity.CITY_INFO);
+//                String city = stringList.get(1);
+//                if(city != null) {
+//                    getCardTokenWfp(city,"wfp", userEmail);
+//                }
+//
+//
+//            });
+//            wfpCardThread.start();
         }
 
 
@@ -1566,7 +1589,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
             @Override
             public void onFailure(@NonNull Call<CallbackResponseWfp> call, @NonNull Throwable t) {
                 // Обработка ошибки запроса
-                Log.d(TAG, "onResponse: failure " + t.toString());
+                Log.d(TAG, "onResponse: failure " + t);
             }
         });
     }
@@ -1628,12 +1651,12 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
                 assert user != null;
                 settingsNewUser(user.getEmail());
                 Toast.makeText(this, R.string.city_search, Toast.LENGTH_SHORT).show();
-                startGetPublicIPAddressTask(fm, getApplicationContext());
+//                startGetPublicIPAddressTask(fm, getApplicationContext());
 
                 new Thread(() -> fetchRoutes(user.getEmail())).start();
             } else {
                 Toast.makeText(this, getString(R.string.firebase_error), Toast.LENGTH_SHORT).show();
-
+                VisicomFragment.progressBar.setVisibility(View.GONE);
                 cv.put("verifyOrder", "0");
                 SQLiteDatabase database = getApplicationContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
                 database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
@@ -1643,7 +1666,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
         } catch (Exception e) {
             FirebaseCrashlytics.getInstance().recordException(e);
             Toast.makeText(this, getString(R.string.firebase_error), Toast.LENGTH_SHORT).show();
-
+            VisicomFragment.progressBar.setVisibility(View.GONE);
             cv.put("verifyOrder", "0");
             SQLiteDatabase database = getApplicationContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
             database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
@@ -1869,23 +1892,6 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
         }
 
     }
-    // Ограничение времени в секундах
-
-    private void startGetPublicIPAddressTask(FragmentManager fm, Context context) {
-        AsyncTask<Void, Void, String> getPublicIPAddressTask = new GetPublicIPAddressTask(fm, context);
-
-        try {
-
-            getPublicIPAddressTask.execute().get(MAX_TASK_EXECUTION_TIME_SECONDS, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            // Обработка исключения, возникающего при превышении времени выполнения задачи
-            FirebaseCrashlytics.getInstance().recordException(e);
-            // Дополнительные действия...
-            getCityByIP("31.202.139.47", fm, context);
-//            Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
-            VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
-        }
-    }
 
 
     public static void addUserNoName(String email, Context context) {
@@ -1904,7 +1910,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
         // Асинхронный вызов
         call.enqueue(new Callback<UserResponse>() {
             @Override
-            public void onResponse(Call<UserResponse> call, Response<UserResponse> response) {
+            public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
                 if (response.isSuccessful()) {
                     UserResponse userResponse = response.body();
                     if (userResponse != null) {
@@ -2104,7 +2110,7 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
         @Override
         public void onFailure(@NonNull Call<CallbackResponse> call, @NonNull Throwable t) {
             // Обработка ошибки запроса
-            Log.d(TAG, "onResponse: failure " + t.toString());
+            Log.d(TAG, "onResponse: failure " + t);
 //                Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
             VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
         }
@@ -2293,91 +2299,5 @@ public class MainActivity extends AppCompatActivity implements VisicomFragment.A
             }
         });
     }
-    private static class GetPublicIPAddressTask extends AsyncTask<Void, Void, String> {
-        FragmentManager fragmentManager;
-        Context context;
-        public GetPublicIPAddressTask(FragmentManager fragmentManager, Context context) {
-            this.fragmentManager = fragmentManager;
-            this.context = context;
-        }
-
-        @Override
-        protected String doInBackground(Void... voids) {
-            try {
-                return IPUtil.getPublicIPAddress();
-            } catch (Exception e) {
-                // Log the exception
-                FirebaseCrashlytics.getInstance().recordException(e);
-                Log.e(TAG, "Exception in doInBackground: " + e.getMessage());
-                // Return null or handle the exception as needed
-                getCityByIP("31.202.139.47",fragmentManager, context);
-//                Toast.makeText(context, context.getString(verify_internet), Toast.LENGTH_SHORT).show();
-                VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
-                return null;
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String ipAddress) {
-            try {
-                if (ipAddress != null) {
-                    Log.d(TAG, "onCreate: Local IP Address: " + ipAddress);
-                    getCityByIP(ipAddress, fragmentManager, context);
-                } else {
-                    getCityByIP("31.202.139.47",fragmentManager, context);
-                }
-            } catch (Exception e) {
-                // Log the exception
-                FirebaseCrashlytics.getInstance().recordException(e);
-                Log.e(TAG, "Exception in onPostExecute: " + e.getMessage());
-                // Handle the exception as needed
-                getCityByIP("31.202.139.47",fragmentManager, context);
-//                Toast.makeText(context, context.getString(verify_internet), Toast.LENGTH_SHORT).show();
-                VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
-            }
-
-        }
-    }
-
-    private static void getCityByIP(String ip, FragmentManager fm, Context context) {
-
-        ApiService apiService = ApiClient.getApiService();
-
-        Call<City> call = apiService.cityByIp(ip);
-
-        call.enqueue(new Callback<City>() {
-            @Override
-            public void onResponse(@NonNull Call<City> call, @NonNull Response<City> response) {
-                if (response.isSuccessful()) {
-                    City status = response.body();
-                    if (status != null) {
-                        String result = status.getResponse();
-                        Log.d("TAG", "onResponse:result " + result);
-
-                        MyBottomSheetCityFragment bottomSheetDialogFragment = new MyBottomSheetCityFragment(result, context);
-
-                        if (!fm.isStateSaved()) {
-                            bottomSheetDialogFragment.show(fm, bottomSheetDialogFragment.getTag());
-                        } else {
-                            Log.w("TAG", "Fragment state is already saved. Cannot perform transaction.");
-                        }
-                    }
-                }
-
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<City> call, @NonNull Throwable t) {
-                // Обработка ошибок сети или других ошибок
-                String errorMessage = t.getMessage();
-                FirebaseCrashlytics.getInstance().recordException(t);
-                Log.d("TAG", "onFailure: " + errorMessage);
-//                Toast.makeText(context, context.getString(verify_internet), Toast.LENGTH_SHORT).show();
-                VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
-            }
-        });
-//        }
-    }
-
 
 }

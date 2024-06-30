@@ -50,7 +50,7 @@ public class MyBottomSheetTokenFragment extends BottomSheetDialogFragment {
     ListView listView;
     String tableToken;
     private AppCompatButton btn_ok;
-    private int selectedPosition = -1;
+    private final int selectedPosition = -1;
 
     public MyBottomSheetTokenFragment(String tableToken) {
         this.tableToken = tableToken;
@@ -128,7 +128,7 @@ public class MyBottomSheetTokenFragment extends BottomSheetDialogFragment {
 
                     Log.d("TAG1", "onResponse: " +  new Gson().toJson(apiResponse));
                     try {
-                        SuccessResponseDataToken responseBody = response.body().getResponse();;
+                        SuccessResponseDataToken responseBody = response.body().getResponse();
 
                         // Теперь у вас есть объект ResponseBodyRev для обработки
                         if (responseBody != null) {
@@ -165,7 +165,7 @@ public class MyBottomSheetTokenFragment extends BottomSheetDialogFragment {
 
             @Override
             public void onFailure(@NonNull Call<ApiResponseToken<SuccessResponseDataToken>> call, @NonNull Throwable t) {
-                Log.d("TAG1", "onFailure1111: " + t.toString());
+                Log.d("TAG1", "onFailure1111: " + t);
 
                 cancelOrderDismiss(FinishActivity.uid);
                 cancelOrderDismiss(FinishActivity.uid_Double);

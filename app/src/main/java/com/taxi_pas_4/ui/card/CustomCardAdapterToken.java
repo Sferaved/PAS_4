@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 public class CustomCardAdapterToken extends ArrayAdapter<Map<String, String>> {
-    private ArrayList<Map<String, String>> cardMaps;
+    private final ArrayList<Map<String, String>> cardMaps;
     private int selectedPosition = 0;
     public static String rectoken;
 

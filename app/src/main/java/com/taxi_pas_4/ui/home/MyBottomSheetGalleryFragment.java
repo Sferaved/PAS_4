@@ -66,7 +66,7 @@ public class MyBottomSheetGalleryFragment extends BottomSheetDialogFragment {
     final static long MIN_VALUE = -90;
     final static long MAX_VALUE = 200;
     TimeZone timeZone;
-    private String TAG = "MyBottomSheetGalleryFragment";
+    private final String TAG = "MyBottomSheetGalleryFragment";
     SQLiteDatabase database;
     @Nullable
     @Override
@@ -162,7 +162,7 @@ public class MyBottomSheetGalleryFragment extends BottomSheetDialogFragment {
                 spinner.setSelection(7);
                 break;
             default:
-                spinner.setSelection(0);;
+                spinner.setSelection(0);
         }
 
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -241,7 +241,7 @@ public class MyBottomSheetGalleryFragment extends BottomSheetDialogFragment {
                     discountFist = MIN_VALUE;
                 }
                 if(discountFist > 0) {
-                    discount.setText("+" + String.valueOf(discountFist));
+                    discount.setText("+" + discountFist);
                 } else {
                     discount.setText( String.valueOf(discountFist));
                 }
@@ -256,7 +256,7 @@ public class MyBottomSheetGalleryFragment extends BottomSheetDialogFragment {
                     discountFist = MAX_VALUE;
                 }
                 if(discountFist > 0) {
-                    discount.setText("+" + String.valueOf(discountFist));
+                    discount.setText("+" + discountFist);
                 } else {
                     discount.setText( String.valueOf(discountFist));
                 }

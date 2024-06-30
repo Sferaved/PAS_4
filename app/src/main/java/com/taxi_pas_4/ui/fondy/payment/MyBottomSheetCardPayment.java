@@ -83,7 +83,7 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
     private static String comment;
     private static String MERCHANT_ID;
     private static String merchantPassword;
-    private Context context;
+    private final Context context;
     private static final int TIMEOUT_SECONDS = 60;
     private CountDownTimer paymentTimer;
     private FragmentManager fragmentManager;
@@ -123,8 +123,8 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
         messageCarFoundRequiredTime = context.getString(R.string.ex_st_5);
         def_status = context.getString(R.string.def_status);
         application = context.getString(R.string.application);
-        comment = context.getString(R.string.fondy_revers_message) + context.getString(R.string.fondy_message);;
-        
+        comment = context.getString(R.string.fondy_revers_message) + context.getString(R.string.fondy_message);
+
         List<String> listCity = logCursor(MainActivity.CITY_INFO, requireActivity());
         city = listCity.get(1);
         api = listCity.get(2);
@@ -358,6 +358,8 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
                                 break;
                             default:
                                 MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
+                                FinishActivity.callOrderIdMemory(MainActivity.order_id, FinishActivity.uid, pay_method);
+
                                 MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", FinishActivity.messageFondy, amount, context);
                                 bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                                 dismiss();
@@ -366,12 +368,14 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
                     } else {
                         Log.d(TAG, "Response body is null");
                         MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
+                        FinishActivity.callOrderIdMemory(MainActivity.order_id, FinishActivity.uid, pay_method);
 
                         MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", FinishActivity.messageFondy, amount, context);
                         bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                     }
                 } else {
                     MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
+                    FinishActivity.callOrderIdMemory(MainActivity.order_id, FinishActivity.uid, pay_method);
 
                     MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", FinishActivity.messageFondy, amount, context);
                     bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
@@ -383,6 +387,7 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
             @Override
             public void onFailure(@NonNull Call<StatusResponse> call, @NonNull Throwable t) {
                 MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
+                FinishActivity.callOrderIdMemory(MainActivity.order_id, FinishActivity.uid, pay_method);
 
                 MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", FinishActivity.messageFondy, amount, context);
                 bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
@@ -471,7 +476,7 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
             @Override
             public void onFailure(@NonNull Call<CallbackResponseWfp> call, @NonNull Throwable t) {
                 // Обработка ошибки запроса
-                Log.d(TAG, "onResponse: failure " + t.toString());
+                Log.d(TAG, "onResponse: failure " + t);
                 MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(context.getString(R.string.verify_internet));
                 bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
             }

@@ -162,7 +162,7 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
                 spinner.setSelection(7);
                 break;
             default:
-                spinner.setSelection(0);;
+                spinner.setSelection(0);
         }
 
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -242,7 +242,7 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
                     discountFist = MIN_VALUE;
                 }
                 if(discountFist > 0) {
-                    discount.setText("+" + String.valueOf(discountFist));
+                    discount.setText("+" + discountFist);
                 } else {
                     discount.setText( String.valueOf(discountFist));
                 }
@@ -257,7 +257,7 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
                     discountFist = MAX_VALUE;
                 }
                 if(discountFist > 0) {
-                    discount.setText("+" + String.valueOf(discountFist));
+                    discount.setText("+" + discountFist);
                 } else {
                     discount.setText( String.valueOf(discountFist));
                 }

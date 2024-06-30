@@ -80,9 +80,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
     private WebView webView;
-    private String TAG = "MyBottomSheetCardVerification";
-    private String checkoutUrl;
-    private String amount;
+    private final String TAG = "MyBottomSheetCardVerification";
+    private final String checkoutUrl;
+    private final String amount;
     private AppCompatButton btnOk;
     String email;
     String pay_method;
@@ -318,7 +318,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                 MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(context.getString(R.string.verify_internet));
                 bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
 
-                Log.d(TAG, "onResponse: failure " + t.toString());
+                Log.d(TAG, "onResponse: failure " + t);
             }
         });
     }
@@ -408,7 +408,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
 
 
         StatusRequest statusRequest = new StatusRequest(requestBody);
-        Log.d("TAG1", "getUrlToPayment: " + statusRequest.toString());
+        Log.d("TAG1", "getUrlToPayment: " + statusRequest);
 
         Call<ApiResponse<SuccessfulResponseData>> call = apiService.checkOrderStatus(statusRequest);
 
@@ -430,7 +430,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                         if(orderStatus.equals("approved")){
                             getCardTokenFondy(MERCHANT_ID);
                             getReversFondy(MainActivity.order_id,context.getString(R.string.return_pay), amount);
-                        };
+                        }
                     }
                 } else {
                     // Обработка ошибки запроса
@@ -518,7 +518,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
             @Override
             public void onFailure(@NonNull Call<CallbackResponse> call, @NonNull Throwable t) {
                 // Обработка ошибки запроса
-                Log.d(TAG, "onResponse: failure " + t.toString());
+                Log.d(TAG, "onResponse: failure " + t);
             }
         });
     }
@@ -541,7 +541,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                 MERCHANT_ID,
                 merchantPassword
         );
-        Log.d("TAG1", "getRevers: " + reversRequestData.toString());
+        Log.d("TAG1", "getRevers: " + reversRequestData);
         ReversRequestSent reversRequestSent = new ReversRequestSent(reversRequestData);
 
 
@@ -559,7 +559,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                         Log.d("TAG1", "onResponse: " + responseData.toString());
                         if (responseData != null) {
                             // Обработка успешного ответа
-                            Log.d("TAG1", "onResponse: " + responseData.toString());
+                            Log.d("TAG1", "onResponse: " + responseData);
 //                            if (isAdded()) { // Проверяем, что фрагмент присоединен к активности
                                 if (response.isSuccessful()) {
                                     if(isAdded()) {
@@ -726,7 +726,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                 extRef,
                 amount
         );
-        Log.d("TAG1", "getRevers: " + paymentRequest.toString());
+        Log.d("TAG1", "getRevers: " + paymentRequest);
 
         String token = context.getString(R.string.mono_key_storage); // Получение токена из ресурсов
         Call<ResponseCancelMono> call = monoApi.invoiceCancel(token, paymentRequest);
@@ -740,7 +740,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                     Log.d("TAG2", "JSON Response: " + new Gson().toJson(apiResponse));
                     if (apiResponse != null) {
                         String responseData = apiResponse.getStatus();
-                        Log.d("TAG2", "onResponse: " + responseData.toString());
+                        Log.d("TAG2", "onResponse: " + responseData);
                         if (responseData != null) {
                             // Обработка успешного ответа
 
@@ -795,7 +795,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                 getReversFondy(MainActivity.order_id, context.getString(R.string.return_pay), amount);
                 break;
             case "wfp_payment":
-                getReversWfp(city);;
+                getReversWfp(city);
                 break;
         }
     }
