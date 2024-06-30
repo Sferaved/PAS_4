@@ -170,7 +170,7 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
                 positionFirst = 6;
                 phoneNumber = Kyiv_City_phone;
                 cityMenu = context.getString(R.string.foreign_countries);
-                getPublicIPAddress();
+//                getPublicIPAddress();
 //                new GetPublicIPAddressTask().execute();
         }
         Log.d(TAG, "onCreateView: city" + city);
@@ -232,7 +232,7 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
                 }
                 String cityCodeNew;
                     if (positionFirst == 6) {
-                        getPublicIPAddress();
+//                        getPublicIPAddress();
                         cityCodeNew = cityCode[0];
                     } else {
                         cityCodeNew = cityCode[positionFirst];
@@ -358,8 +358,8 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
                     switch (paymentCode) {
                         case "wfp":
                             pay_method = "wfp_payment";
-//                            cityMaxPay(cityCodeNew, getContext());
-//                            getCardTokenWfp(city);
+                            cityMaxPay(cityCodeNew, getContext());
+                            getCardTokenWfp(city);
                             break;
                         case "fondy":
                             pay_method = "fondy_payment";

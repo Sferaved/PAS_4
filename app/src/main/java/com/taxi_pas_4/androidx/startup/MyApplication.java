@@ -15,6 +15,7 @@ import com.github.anrwatchdog.ANRWatchDog;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.notify.MyNotificationListenerJobIntentService;
 import com.taxi_pas_4.utils.notify.MyNotificationListenerService;
 
 public class MyApplication extends Application {
@@ -26,8 +27,8 @@ public class MyApplication extends Application {
     public void onCreate() {
         super.onCreate();
 
-        Intent serviceIntent = new Intent(this, MyNotificationListenerService.class);
-        startService(serviceIntent);
+        Intent serviceIntent = new Intent(this, MyNotificationListenerJobIntentService.class);
+        MyNotificationListenerJobIntentService.enqueueWork(this, serviceIntent);
 
         initializeFirebaseAndCrashlytics();
         setupANRWatchDog();
