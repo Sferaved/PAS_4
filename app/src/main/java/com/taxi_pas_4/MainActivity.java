@@ -283,11 +283,11 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-//        databaseHelper = new DatabaseHelper(getApplicationContext());
-//        databaseHelper.clearTable();
-//
-//        databaseHelperUid = new DatabaseHelperUid(getApplicationContext());
-//        databaseHelperUid.clearTableUid();
+        databaseHelper = new DatabaseHelper(getApplicationContext());
+        databaseHelper.clearTable();
+
+        databaseHelperUid = new DatabaseHelperUid(getApplicationContext());
+        databaseHelperUid.clearTableUid();
 
         insertOrUpdatePushDate();
         Log.d(TAG, "onResume: isServiceRunning())  " );
@@ -574,42 +574,42 @@ public class MainActivity extends AppCompatActivity {
 
         database.close();
 
-//        if (NetworkUtils.isNetworkAvailable(this)) {
-//            // Действия при наличии интернета
-//            newUser();
-//        }
+        if (NetworkUtils.isNetworkAvailable(this)) {
+            // Действия при наличии интернета
+            newUser();
+        }
     }
 
-//    public void insertPushDate(Context context) {
-//        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-//        if (database != null) {
-//            try {
-//                // Получаем текущее время и дату
-//                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-//                String currentDateandTime = sdf.format(new Date());
-//                Log.d("InsertOrUpdate", "Current date and time: " + currentDateandTime);
-//
-//                // Создаем объект ContentValues для передачи данных в базу данных
-//                ContentValues values = new ContentValues();
-//                values.put("push_date", currentDateandTime);
-//
-//                // Пытаемся вставить новую запись. Если запись уже существует, выполняется обновление.
-//                long rowId = database.insertWithOnConflict(MainActivity.TABLE_LAST_PUSH, null, values, SQLiteDatabase.CONFLICT_REPLACE);
-//
-//                if (rowId != -1) {
-//                    Log.d("InsertOrUpdate", "Insert or update successful");
-//                } else {
-//                    Log.d("InsertOrUpdate", "Error inserting or updating");
-//                }
-//            } catch (Exception e) {
-//                FirebaseCrashlytics.getInstance().recordException(e);
-//            } finally {
-//                database.close();
-//            }
-//        }
-//        assert database != null;
-//        database.close();
-//    }
+    public void insertPushDate(Context context) {
+        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        if (database != null) {
+            try {
+                // Получаем текущее время и дату
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                String currentDateandTime = sdf.format(new Date());
+                Log.d("InsertOrUpdate", "Current date and time: " + currentDateandTime);
+
+                // Создаем объект ContentValues для передачи данных в базу данных
+                ContentValues values = new ContentValues();
+                values.put("push_date", currentDateandTime);
+
+                // Пытаемся вставить новую запись. Если запись уже существует, выполняется обновление.
+                long rowId = database.insertWithOnConflict(MainActivity.TABLE_LAST_PUSH, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+
+                if (rowId != -1) {
+                    Log.d("InsertOrUpdate", "Insert or update successful");
+                } else {
+                    Log.d("InsertOrUpdate", "Error inserting or updating");
+                }
+            } catch (Exception e) {
+                FirebaseCrashlytics.getInstance().recordException(e);
+            } finally {
+                database.close();
+            }
+        }
+        assert database != null;
+        database.close();
+    }
 //    public void updatePushDate(Context context) {
 //        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
 //        if (database != null) {
@@ -1262,17 +1262,18 @@ public class MainActivity extends AppCompatActivity {
         return list;
     }
 
-//    public void newUser() {
-//        String userEmail = logCursor(TABLE_USER_INFO).get(3);
-//        Log.d(TAG, "newUser: " + userEmail);
-//
-//        if(userEmail.equals("email")) {
-//            new Thread(() -> insertPushDate(getApplicationContext())).start();
-//
-//            Toast.makeText(this, R.string.checking, Toast.LENGTH_SHORT).show();
-//            startFireBase();
-//
-//        } else {
+    public void newUser() {
+        String userEmail = logCursor(TABLE_USER_INFO).get(3);
+        Log.d(TAG, "newUser: " + userEmail);
+
+        if(userEmail.equals("email")) {
+            new Thread(() -> insertPushDate(getApplicationContext())).start();
+
+            Toast.makeText(this, R.string.checking, Toast.LENGTH_SHORT).show();
+            startFireBase();
+
+        }
+//        else {
 //            new Thread(() -> fetchRoutes(userEmail)).start();
 //            new Thread(() -> updatePushDate(getApplicationContext())).start();
 //
@@ -1285,90 +1286,90 @@ public class MainActivity extends AppCompatActivity {
 //            // Проверка новой версии в маркете
 //            new Thread(this::versionFromMarket).start();
 //        }
-//    }
-//
-//    private void startFireBase() {
-//        Toast.makeText(this, R.string.account_verify, Toast.LENGTH_SHORT).show();
-//        startSignInInBackground();
-//    }
-//    private void startSignInInBackground() {
-//        Thread thread = new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                try {
-//                Log.d(TAG, "run: ");
-//                // Choose authentication providers
-//                List<AuthUI.IdpConfig> providers = Collections.singletonList(
-//                        new AuthUI.IdpConfig.GoogleBuilder().build());
-//
-//                // Create and launch sign-in intent
-//                Intent signInIntent = AuthUI.getInstance()
-//                        .createSignInIntentBuilder()
-//                        .setAvailableProviders(providers)
-//                        .build();
-//
-//                    runOnUiThread(() -> signInLauncher.launch(signInIntent));
-//                } catch (Exception e) {
-//                    Log.e(TAG, "Exception during sign-in launch", e);
-//                    FirebaseCrashlytics.getInstance().recordException(e);
-////                    Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
-//                    VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
-//                }
-//            }
-//        });
-//        thread.start();
-//    }
-//
-//    private final ActivityResultLauncher<Intent> signInLauncher = registerForActivityResult(
-//
-//            new FirebaseAuthUIActivityResultContract(),
-//            result -> {
-//                try {
-//                    onSignInResult(result, getSupportFragmentManager());
-//                } catch (MalformedURLException | JSONException | InterruptedException e) {
-//                    FirebaseCrashlytics.getInstance().recordException(e);
-//                    Log.d(TAG, "onCreate:" + new RuntimeException(e));
-//                }
-//            }
-//    );
-//
-//
-//    private void onSignInResult(FirebaseAuthUIAuthenticationResult result, FragmentManager fm) throws MalformedURLException, JSONException, InterruptedException {
-//        ContentValues cv = new ContentValues();
-//        Log.d(TAG, "onSignInResult: ");
-//        try {
-//            Log.d(TAG, "onSignInResult: result.getResultCode() " + result.getResultCode());
-//            if (result.getResultCode() == RESULT_OK) {
-//                // Successfully signed in
-//                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-//
-//                assert user != null;
-//                settingsNewUser(user.getEmail());
-//                Toast.makeText(this, R.string.city_search, Toast.LENGTH_SHORT).show();
-////                startGetPublicIPAddressTask(fm, getApplicationContext());
-//
+    }
+
+    private void startFireBase() {
+        Toast.makeText(this, R.string.account_verify, Toast.LENGTH_SHORT).show();
+        startSignInInBackground();
+    }
+    private void startSignInInBackground() {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                Log.d(TAG, "run: ");
+                // Choose authentication providers
+                List<AuthUI.IdpConfig> providers = Collections.singletonList(
+                        new AuthUI.IdpConfig.GoogleBuilder().build());
+
+                // Create and launch sign-in intent
+                Intent signInIntent = AuthUI.getInstance()
+                        .createSignInIntentBuilder()
+                        .setAvailableProviders(providers)
+                        .build();
+
+                    runOnUiThread(() -> signInLauncher.launch(signInIntent));
+                } catch (Exception e) {
+                    Log.e(TAG, "Exception during sign-in launch", e);
+                    FirebaseCrashlytics.getInstance().recordException(e);
+//                    Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
+                    VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
+                }
+            }
+        });
+        thread.start();
+    }
+
+    private final ActivityResultLauncher<Intent> signInLauncher = registerForActivityResult(
+
+            new FirebaseAuthUIActivityResultContract(),
+            result -> {
+                try {
+                    onSignInResult(result, getSupportFragmentManager());
+                } catch (MalformedURLException | JSONException | InterruptedException e) {
+                    FirebaseCrashlytics.getInstance().recordException(e);
+                    Log.d(TAG, "onCreate:" + new RuntimeException(e));
+                }
+            }
+    );
+
+
+    private void onSignInResult(FirebaseAuthUIAuthenticationResult result, FragmentManager fm) throws MalformedURLException, JSONException, InterruptedException {
+        ContentValues cv = new ContentValues();
+        Log.d(TAG, "onSignInResult: ");
+        try {
+            Log.d(TAG, "onSignInResult: result.getResultCode() " + result.getResultCode());
+            if (result.getResultCode() == RESULT_OK) {
+                // Successfully signed in
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+                assert user != null;
+                settingsNewUser(user.getEmail());
+                Toast.makeText(this, R.string.city_search, Toast.LENGTH_SHORT).show();
+//                startGetPublicIPAddressTask(fm, getApplicationContext());
+
 //                new Thread(() -> fetchRoutes(user.getEmail())).start();
-//            } else {
-//                Toast.makeText(this, getString(R.string.firebase_error), Toast.LENGTH_SHORT).show();
-//                VisicomFragment.progressBar.setVisibility(View.GONE);
-//                cv.put("verifyOrder", "0");
-//                SQLiteDatabase database = getApplicationContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-//                database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
-//                database.close();
-//                VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
-//            }
-//        } catch (Exception e) {
-//            FirebaseCrashlytics.getInstance().recordException(e);
-//            Toast.makeText(this, getString(R.string.firebase_error), Toast.LENGTH_SHORT).show();
-//            VisicomFragment.progressBar.setVisibility(View.GONE);
-//            cv.put("verifyOrder", "0");
-//            SQLiteDatabase database = getApplicationContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-//            database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
-//            database.close();
-//            VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
-//        }
-//    }
-//
+            } else {
+                Toast.makeText(this, getString(R.string.firebase_error), Toast.LENGTH_SHORT).show();
+                VisicomFragment.progressBar.setVisibility(View.GONE);
+                cv.put("verifyOrder", "0");
+                SQLiteDatabase database = getApplicationContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+                database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
+                database.close();
+                VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
+            }
+        } catch (Exception e) {
+            FirebaseCrashlytics.getInstance().recordException(e);
+            Toast.makeText(this, getString(R.string.firebase_error), Toast.LENGTH_SHORT).show();
+            VisicomFragment.progressBar.setVisibility(View.GONE);
+            cv.put("verifyOrder", "0");
+            SQLiteDatabase database = getApplicationContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+            database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
+            database.close();
+            VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
+        }
+    }
+
 //    private void fetchRoutes(String value) {
 //
 //        String url = baseUrl + "/android/UIDStatusShowEmail/" + value;
@@ -1405,7 +1406,7 @@ public class MainActivity extends AppCompatActivity {
 //            }
 //        });
 //    }
-//
+
 //    private void processRouteList() {
 //        // В этом методе вы можете использовать routeList для выполнения дополнительных действий с данными.
 //
@@ -1527,104 +1528,104 @@ public class MainActivity extends AppCompatActivity {
 //        array = databaseHelper.readRouteInfo();
 //        Log.d("TAG", "processRouteList: array 1211" + Arrays.toString(array));
 //    }
+
+    private void settingsNewUser (String emailUser) {
+        // Assuming this code is inside a method or a runnable block
+
+// Task 1: Update user info in a separate thread
+        Thread updateUserInfoThread = new Thread(() -> {
+            ContentValues cv = new ContentValues();
+            updateRecordsUserInfo("email", emailUser, getApplicationContext());
+            cv.put("verifyOrder", "1");
+
+            SQLiteDatabase database = getApplicationContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+            database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
+            database.close();
+        });
+        updateUserInfoThread.start();
+
+// Task 2: Add user with no name in a separate thread
+        Thread addUserNoNameThread = new Thread(() -> {
+            addUserNoName(emailUser, getApplicationContext());
+        });
+        addUserNoNameThread.start();
+
+// Task 3: Fetch user phone information from the server in a separate thread
+        Thread userPhoneThread = new Thread(() -> {
+            userPhoneFromServer(emailUser);
+        });
+        userPhoneThread.start();
+
+// Task 4: Get card token for "fondy" in a separate thread
+//        Thread fondyCardThread = new Thread(() -> {
+//            getCardToken("fondy", TABLE_FONDY_CARDS, emailUser);
 //
-//    private void settingsNewUser (String emailUser) {
-//        // Assuming this code is inside a method or a runnable block
-//
-//// Task 1: Update user info in a separate thread
-//        Thread updateUserInfoThread = new Thread(() -> {
-//            ContentValues cv = new ContentValues();
-//            updateRecordsUserInfo("email", emailUser, getApplicationContext());
-//            cv.put("verifyOrder", "1");
-//
-//            SQLiteDatabase database = getApplicationContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-//            database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
-//            database.close();
 //        });
-//        updateUserInfoThread.start();
+//        fondyCardThread.start();
+//        Thread wfpCardThread = new Thread(() -> {
+//            List<String> stringList = logCursor(MainActivity.CITY_INFO);
+//            String city = stringList.get(1);
+//            getCardTokenWfp("OdessaTest","wfp", emailUser);
 //
-//// Task 2: Add user with no name in a separate thread
-//        Thread addUserNoNameThread = new Thread(() -> {
-//            addUserNoName(emailUser, getApplicationContext());
 //        });
-//        addUserNoNameThread.start();
-//
-//// Task 3: Fetch user phone information from the server in a separate thread
-//        Thread userPhoneThread = new Thread(() -> {
-//            userPhoneFromServer(emailUser);
+//        wfpCardThread.start();
+
+// Task 5: Get card token for "mono" in a separate thread
+//        Thread monoCardThread = new Thread(() -> {
+//            getCardToken("mono", TABLE_MONO_CARDS, email);
 //        });
-//        userPhoneThread.start();
-//
-//// Task 4: Get card token for "fondy" in a separate thread
-////        Thread fondyCardThread = new Thread(() -> {
-////            getCardToken("fondy", TABLE_FONDY_CARDS, emailUser);
-////
-////        });
-////        fondyCardThread.start();
-////        Thread wfpCardThread = new Thread(() -> {
-////            List<String> stringList = logCursor(MainActivity.CITY_INFO);
-////            String city = stringList.get(1);
-////            getCardTokenWfp("OdessaTest","wfp", emailUser);
-////
-////        });
-////        wfpCardThread.start();
-//
-//// Task 5: Get card token for "mono" in a separate thread
-////        Thread monoCardThread = new Thread(() -> {
-////            getCardToken("mono", TABLE_MONO_CARDS, email);
-////        });
-////        monoCardThread.start();
-//
-//// Wait for all threads to finish (optional)
-//        try {
-//            updateUserInfoThread.join();
-//            addUserNoNameThread.join();
-//            userPhoneThread.join();
-////            fondyCardThread.join();
-////            monoCardThread.join();
-//        } catch (InterruptedException e) {
-//            FirebaseCrashlytics.getInstance().recordException(e);
-//        }
-//
-//    }
-//
-//
-//    public static void addUserNoName(String email, Context context) {
-//        // Создание объекта Retrofit
-//        Retrofit retrofit = new Retrofit.Builder()
-//                .baseUrl("https://m.easy-order-taxi.site/")
-//                .addConverterFactory(GsonConverterFactory.create())
-//                .build();
-//
-//        // Создание экземпляра ApiService
-//        ApiServiceUser apiService = retrofit.create(ApiServiceUser.class);
-//
-//        // Вызов метода addUserNoName
-//        Call<UserResponse> call = apiService.addUserNoName(email);
-//
-//        // Асинхронный вызов
-//        call.enqueue(new Callback<UserResponse>() {
-//            @Override
-//            public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
-//                if (response.isSuccessful()) {
-//                    UserResponse userResponse = response.body();
-//                    if (userResponse != null) {
-//                        updateRecordsUserInfo("username", userResponse.getUserName(), context);
-//
-//                    }
-//                } else {
-//                    updateRecordsUserInfo("username", "no_name", context);
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
-////                Toast.makeText(context, context.getString(verify_internet), Toast.LENGTH_SHORT).show();
-//                VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
-//
-//            }
-//        });
-//    }
+//        monoCardThread.start();
+
+// Wait for all threads to finish (optional)
+        try {
+            updateUserInfoThread.join();
+            addUserNoNameThread.join();
+            userPhoneThread.join();
+//            fondyCardThread.join();
+//            monoCardThread.join();
+        } catch (InterruptedException e) {
+            FirebaseCrashlytics.getInstance().recordException(e);
+        }
+
+    }
+
+
+    public static void addUserNoName(String email, Context context) {
+        // Создание объекта Retrofit
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://m.easy-order-taxi.site/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        // Создание экземпляра ApiService
+        ApiServiceUser apiService = retrofit.create(ApiServiceUser.class);
+
+        // Вызов метода addUserNoName
+        Call<UserResponse> call = apiService.addUserNoName(email);
+
+        // Асинхронный вызов
+        call.enqueue(new Callback<UserResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
+                if (response.isSuccessful()) {
+                    UserResponse userResponse = response.body();
+                    if (userResponse != null) {
+                        updateRecordsUserInfo("username", userResponse.getUserName(), context);
+
+                    }
+                } else {
+                    updateRecordsUserInfo("username", "no_name", context);
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
+//                Toast.makeText(context, context.getString(verify_internet), Toast.LENGTH_SHORT).show();
+                VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
+
+            }
+        });
+    }
     private static void updateRecordsUserInfo(String userInfo, String result, Context context) {
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
         ContentValues cv = new ContentValues();

@@ -2220,7 +2220,7 @@ public class VisicomFragment extends Fragment implements ApiCallback, ApiCallbac
                         btn_clear_from_text.setVisibility(View.GONE);
 
                     }
-                    newUser();
+                    userUpdate();
                     new Handler().postDelayed(new Runnable() {
                         @Override
                         public void run() {
@@ -2398,27 +2398,29 @@ public class VisicomFragment extends Fragment implements ApiCallback, ApiCallbac
         }
 
     }
-    public void newUser() {
-        SharedPreferences sharedPreferences = context.getPreferences(Context.MODE_PRIVATE);
-
-        // Проверяем, было ли уже запрошено разрешение
-        boolean isNotificationPermissionRequested = sharedPreferences.getBoolean("newUser", false);
-        // Если разрешение еще не запрашивалось
-        String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
-        Log.d(TAG, "newUser: " + userEmail);
-        if (!isNotificationPermissionRequested) {
-
-            if (userEmail.equals("email")) {
-                new Thread(() -> insertPushDate(context)).start();
-
-                Toast.makeText(context, R.string.checking, Toast.LENGTH_SHORT).show();
-                startFireBase();
-
-            }
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putBoolean("newUser", true);
-            editor.apply();
-        } else {
+    public void userUpdate() {
+//        SharedPreferences sharedPreferences = context.getPreferences(Context.MODE_PRIVATE);
+//
+//        // Проверяем, было ли уже запрошено разрешение
+//        boolean isNotificationPermissionRequested = sharedPreferences.getBoolean("newUser", false);
+//        // Если разрешение еще не запрашивалось
+//        String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
+//        Log.d(TAG, "newUser: " + userEmail);
+//        if (!isNotificationPermissionRequested) {
+//
+////            if (userEmail.equals("email")) {
+////                new Thread(() -> insertPushDate(context)).start();
+////
+//////                Toast.makeText(context, R.string.checking, Toast.LENGTH_SHORT).show();
+////                startFireBase();
+////
+////            }
+//            SharedPreferences.Editor editor = sharedPreferences.edit();
+//            editor.putBoolean("newUser", true);
+//            editor.apply();
+//        } else
+//        {
+            String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
             new Thread(() -> fetchRoutes(userEmail)).start();
             new Thread(() -> updatePushDate(context)).start();
 
@@ -2430,7 +2432,7 @@ public class VisicomFragment extends Fragment implements ApiCallback, ApiCallbac
 
             // Проверка новой версии в маркете
             new Thread(this::versionFromMarket).start();
-        }
+//        }
     }
 
     private void versionFromMarket()  {
@@ -2535,87 +2537,87 @@ public class VisicomFragment extends Fragment implements ApiCallback, ApiCallbac
         database.close();
     }
 
-    private void startFireBase() {
-//        Toast.makeText(context, R.string.account_verify, Toast.LENGTH_SHORT).show();
-        startSignInInBackground();
-    }
-    private void startSignInInBackground() {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Log.d(TAG, "run: ");
-                    // Choose authentication providers
-                    List<AuthUI.IdpConfig> providers = Collections.singletonList(
-                            new AuthUI.IdpConfig.GoogleBuilder().build());
+//    private void startFireBase() {
+////        Toast.makeText(context, R.string.account_verify, Toast.LENGTH_SHORT).show();
+//        startSignInInBackground();
+//    }
+//    private void startSignInInBackground() {
+//        Thread thread = new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                try {
+//                    Log.d(TAG, "run: ");
+//                    // Choose authentication providers
+//                    List<AuthUI.IdpConfig> providers = Collections.singletonList(
+//                            new AuthUI.IdpConfig.GoogleBuilder().build());
+//
+//                    // Create and launch sign-in intent
+//                    Intent signInIntent = AuthUI.getInstance()
+//                            .createSignInIntentBuilder()
+//                            .setAvailableProviders(providers)
+//                            .build();
+//
+//                    context.runOnUiThread(() -> signInLauncher.launch(signInIntent));
+//                } catch (Exception e) {
+//                    Log.e(TAG, "Exception during sign-in launch", e);
+//                    FirebaseCrashlytics.getInstance().recordException(e);
+////                    Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
+//                    VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
+//                }
+//            }
+//        });
+//        thread.start();
+//    }
 
-                    // Create and launch sign-in intent
-                    Intent signInIntent = AuthUI.getInstance()
-                            .createSignInIntentBuilder()
-                            .setAvailableProviders(providers)
-                            .build();
-
-                    context.runOnUiThread(() -> signInLauncher.launch(signInIntent));
-                } catch (Exception e) {
-                    Log.e(TAG, "Exception during sign-in launch", e);
-                    FirebaseCrashlytics.getInstance().recordException(e);
-//                    Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
-                    VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
-                }
-            }
-        });
-        thread.start();
-    }
-
-    private final ActivityResultLauncher<Intent> signInLauncher = registerForActivityResult(
-
-            new FirebaseAuthUIActivityResultContract(),
-            result -> {
-                try {
-                    onSignInResult(result, fragmentManager);
-                } catch (MalformedURLException | JSONException | InterruptedException e) {
-                    FirebaseCrashlytics.getInstance().recordException(e);
-                    Log.d(TAG, "onCreate:" + new RuntimeException(e));
-                }
-            }
-    );
+//    private final ActivityResultLauncher<Intent> signInLauncher = registerForActivityResult(
+//
+//            new FirebaseAuthUIActivityResultContract(),
+//            result -> {
+//                try {
+//                    onSignInResult(result, fragmentManager);
+//                } catch (MalformedURLException | JSONException | InterruptedException e) {
+//                    FirebaseCrashlytics.getInstance().recordException(e);
+//                    Log.d(TAG, "onCreate:" + new RuntimeException(e));
+//                }
+//            }
+//    );
 
 
-    private void onSignInResult(FirebaseAuthUIAuthenticationResult result, FragmentManager fm) throws MalformedURLException, JSONException, InterruptedException {
-        ContentValues cv = new ContentValues();
-        Log.d(TAG, "onSignInResult: ");
-        try {
-            Log.d(TAG, "onSignInResult: result.getResultCode() " + result.getResultCode());
-            if (result.getResultCode() == RESULT_OK) {
-                // Successfully signed in
-                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-
-                assert user != null;
-                settingsNewUser(user.getEmail());
-//                Toast.makeText(context, R.string.city_search, Toast.LENGTH_SHORT).show();
-//                startGetPublicIPAddressTask(fm, getApplicationContext());
-
-                new Thread(() -> fetchRoutes(user.getEmail())).start();
-            } else {
-                Toast.makeText(context, getString(R.string.firebase_error), Toast.LENGTH_SHORT).show();
-                VisicomFragment.progressBar.setVisibility(View.GONE);
-                cv.put("verifyOrder", "0");
-                SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-                database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
-                database.close();
-                VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
-            }
-        } catch (Exception e) {
-            FirebaseCrashlytics.getInstance().recordException(e);
-            Toast.makeText(context, getString(R.string.firebase_error), Toast.LENGTH_SHORT).show();
-            VisicomFragment.progressBar.setVisibility(View.GONE);
-            cv.put("verifyOrder", "0");
-            SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-            database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
-            database.close();
-            VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
-        }
-    }
+//    private void onSignInResult(FirebaseAuthUIAuthenticationResult result, FragmentManager fm) throws MalformedURLException, JSONException, InterruptedException {
+//        ContentValues cv = new ContentValues();
+//        Log.d(TAG, "onSignInResult: ");
+//        try {
+//            Log.d(TAG, "onSignInResult: result.getResultCode() " + result.getResultCode());
+//            if (result.getResultCode() == RESULT_OK) {
+//                // Successfully signed in
+//                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+//
+//                assert user != null;
+//                settingsNewUser(user.getEmail());
+////                Toast.makeText(context, R.string.city_search, Toast.LENGTH_SHORT).show();
+////                startGetPublicIPAddressTask(fm, getApplicationContext());
+//
+//                new Thread(() -> fetchRoutes(user.getEmail())).start();
+//            } else {
+//                Toast.makeText(context, getString(R.string.firebase_error), Toast.LENGTH_SHORT).show();
+//                VisicomFragment.progressBar.setVisibility(View.GONE);
+//                cv.put("verifyOrder", "0");
+//                SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+//                database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
+//                database.close();
+//                VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
+//            }
+//        } catch (Exception e) {
+//            FirebaseCrashlytics.getInstance().recordException(e);
+//            Toast.makeText(context, getString(R.string.firebase_error), Toast.LENGTH_SHORT).show();
+//            VisicomFragment.progressBar.setVisibility(View.GONE);
+//            cv.put("verifyOrder", "0");
+//            SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+//            database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
+//            database.close();
+//            VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
+//        }
+//    }
 
     private void fetchRoutes(String value) {
 
