@@ -1608,13 +1608,14 @@ public class VisicomFragment extends Fragment implements ApiCallback, ApiCallbac
                     } else {
                         Log.d(TAG, "onResume: 2");
 //                        try {
-////                            getPublicIPAddress();
+////
 //                        } catch (Exception e) {
 //
 //                        }
-                        MainActivity.countryState ="UA";
-                        MyBottomSheetCityFragment bottomSheetDialogFragment = new MyBottomSheetCityFragment("Kyiv City", context);
-                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                        getPublicIPAddress();
+//                        MainActivity.countryState ="UA";
+//                        MyBottomSheetCityFragment bottomSheetDialogFragment = new MyBottomSheetCityFragment("Kyiv City", context);
+//                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                         btnVisible(View.INVISIBLE);
                     }
                 } else {
@@ -2286,41 +2287,41 @@ public class VisicomFragment extends Fragment implements ApiCallback, ApiCallbac
 
             btn_clear_from.setVisibility(View.INVISIBLE);
             btn_clear_to.setVisibility(View.INVISIBLE);
-
-            IpifyService apiService = com.taxi_pas_4.utils.ip.ip_util_retrofit.RetrofitClient.getClient(BASE_URL).create(IpifyService.class);
-            Call<IpResponse> call = apiService.getPublicIPAddress();
-
-            call.enqueue(new Callback<IpResponse>() {
-                @Override
-                public void onResponse(@NonNull Call<IpResponse> call, @NonNull Response<IpResponse> response) {
-                    if (response.isSuccessful() && response.body() != null) {
-                        String ipAddress = response.body().getIp();
-                        Log.d(TAG, "onResponse: Local IP Address: " + ipAddress);
-                        getCountryByIP(ipAddress);
-                        getCityByIP(ipAddress);
-                    } else {
-                        Log.e(TAG, "Error in API response: " + response.errorBody());
-                        getCityByIP("31.202.139.47");
-                        MainActivity.countryState = "UA";
-                    }
-                    // Hide progress bar after response
-                    if (VisicomFragment.progressBar != null) {
-                        VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
-                    }
-                }
-
-                @Override
-                public void onFailure(@NonNull Call<IpResponse> call, @NonNull Throwable t) {
-                    Log.e(TAG, "Exception in getPublicIPAddress: " + t.getMessage());
-                    FirebaseCrashlytics.getInstance().recordException(t);
-                    MainActivity.countryState = "UA";
-                    getCityByIP("31.202.139.47");
-                    // Hide progress bar after failure
-                    if (VisicomFragment.progressBar != null) {
-                        VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
-                    }
-                }
-            });
+            getCityByIP("31.202.139.47");
+//            IpifyService apiService = com.taxi_pas_4.utils.ip.ip_util_retrofit.RetrofitClient.getClient(BASE_URL).create(IpifyService.class);
+//            Call<IpResponse> call = apiService.getPublicIPAddress();
+//
+//            call.enqueue(new Callback<IpResponse>() {
+//                @Override
+//                public void onResponse(@NonNull Call<IpResponse> call, @NonNull Response<IpResponse> response) {
+//                    if (response.isSuccessful() && response.body() != null) {
+//                        String ipAddress = response.body().getIp();
+//                        Log.d(TAG, "onResponse: Local IP Address: " + ipAddress);
+//                        getCountryByIP(ipAddress);
+//                        getCityByIP(ipAddress);
+//                    } else {
+//                        Log.e(TAG, "Error in API response: " + response.errorBody());
+//                        getCityByIP("31.202.139.47");
+//                        MainActivity.countryState = "UA";
+//                    }
+//                    // Hide progress bar after response
+//                    if (VisicomFragment.progressBar != null) {
+//                        VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
+//                    }
+//                }
+//
+//                @Override
+//                public void onFailure(@NonNull Call<IpResponse> call, @NonNull Throwable t) {
+//                    Log.e(TAG, "Exception in getPublicIPAddress: " + t.getMessage());
+//                    FirebaseCrashlytics.getInstance().recordException(t);
+//                    MainActivity.countryState = "UA";
+//                    getCityByIP("31.202.139.47");
+//                    // Hide progress bar after failure
+//                    if (VisicomFragment.progressBar != null) {
+//                        VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
+//                    }
+//                }
+//            });
             // Сохраняем информацию о том, что разрешение было запрошено
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putBoolean("getPublicIPAddress", true);
