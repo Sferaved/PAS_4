@@ -10,7 +10,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,6 +33,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
+import com.taxi_pas_4.utils.log.Logger;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -55,6 +55,7 @@ import retrofit2.Response;
 
 
 public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
+    private static final String TAG = "MyBottomSheetDialogFragment";
     ListView listView;
     public String[] arrayService;
     public static String[] arrayServiceCode;
@@ -231,7 +232,7 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
         discount.setText(logCursor(MainActivity.TABLE_SETTINGS_INFO, getContext()).get(3));
         String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, getContext()).get(3);
         discountFist =  Integer.parseInt(discountText);
-        Log.d("TAG", "discountFist" + discountFist);
+        Logger.d(getActivity(), TAG, "discountFist" + discountFist);
 
         btn_min = view.findViewById(R.id.btn_minus);
         btn_min.setOnClickListener(new View.OnClickListener() {
@@ -501,7 +502,7 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
     }
     private void updateAddCost(String addCost) {
         ContentValues cv = new ContentValues();
-        Log.d("TAG", "updateAddCost: addCost" + addCost);
+        Logger.d(getActivity(), TAG, "updateAddCost: addCost" + addCost);
         cv.put("addCost", addCost);
 
         // обновляем по id
@@ -580,7 +581,7 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
                 }
             }
             result = String.join("*", servicesChecked);
-            Log.d("TAG", "getTaxiUrlSearchGeo result:" + result + "/");
+            Logger.d(getActivity(), TAG, "getTaxiUrlSearchGeo result:" + result + "/");
         } else {
             result = "no_extra_charge_codes";
         }
@@ -592,7 +593,7 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
                 + parameters + "/" + result + "/" + city  + "/" + context.getString(R.string.application);
 
 
-        Log.d("TAG", "getTaxiUrlSearch: " + url);
+        Logger.d(getActivity(), TAG, "getTaxiUrlSearch: " + url);
 
 
         return url;

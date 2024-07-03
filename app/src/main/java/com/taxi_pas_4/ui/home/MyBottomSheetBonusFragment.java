@@ -40,6 +40,7 @@ import com.taxi_pas_4.ui.payment_system.PayApi;
 import com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
+import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.permissions.UserPermissions;
 
 import java.io.UnsupportedEncodingException;
@@ -99,7 +100,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
         try {
             database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
         } catch (Exception e) {
-            Log.e(TAG, "Инициализация базы данных не удалась", e);
+            Logger.d(context, TAG, "Инициализация базы данных не удалась" + e);
             FirebaseCrashlytics.getInstance().recordException(e);
             // Обработайте ошибку корректно, возможно, покажите сообщение пользователю
         }
@@ -242,13 +243,13 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
 
                     }
                 } else {
-                    Log.e("Request", "Failed. Error code: " + response.code());
+                    Logger.d(getActivity(), TAG, "Failed. Error code: " + response.code());
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<CityResponse> call, @NonNull Throwable t) {
-                Log.e("Request", "Failed. Error message: " + t.getMessage());
+                Logger.d(getActivity(), TAG, "Failed. Error message: " + t.getMessage());
             }
         });
     }
@@ -294,14 +295,14 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
                         }
                     }
                 } else {
-                    Log.e("Request", "Failed. Error code: " + response.code());
+                    Logger.d(getActivity(), TAG, "Failed. Error code: " + response.code());
                     adapter.setItemEnabled(2, false);
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<CityResponseMerchantFondy> call, @NonNull Throwable t) {
-                Log.e("Request", "Failed. Error message: " + t.getMessage());
+                Logger.d(getActivity(), TAG, "Failed. Error message: " + t.getMessage());
                 adapter.setItemEnabled(2, false);
             }
         });
@@ -472,7 +473,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
                 }
                 @Override
                 public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
-                    Log.e(TAG, " onFailure home", t);
+                    Logger.d(getActivity(), TAG, " onFailure home" + t);
                 }
             });
 
@@ -517,7 +518,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
 
                         @Override
                         public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
-                            Log.e(TAG, " onFailure visicom", t);
+                            Logger.d(getActivity(), TAG, " onFailure visicom" + t);
                         }
                     });
 
@@ -570,12 +571,12 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
 
                         @Override
                         public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
-                            Log.e(TAG, " onFailure marker", t);
+                            Logger.d(getActivity(), TAG, " onFailure marker" + t);
                         }
                     });
                 }
             } catch (MalformedURLException e) {
-                Log.e(TAG, "Ошибка при обработке платежа", e);
+                Logger.d(getActivity(), TAG, "Ошибка при обработке платежа" + e);
                 FirebaseCrashlytics.getInstance().recordException(e);
                 // Обработайте ошибку корректно
             }
@@ -764,7 +765,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
             cursor.close();
         } else {
             // Обработка случая, когда данных нет
-            Log.e(TAG, "No data found in ROUT_MARKER table");
+            Logger.d(getActivity(), TAG, "No data found in ROUT_MARKER table");
         }
 
 

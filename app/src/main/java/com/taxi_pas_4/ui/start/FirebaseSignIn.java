@@ -11,7 +11,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -34,6 +33,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
+import com.taxi_pas_4.utils.log.Logger;
 
 import org.json.JSONException;
 
@@ -56,6 +56,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 public class FirebaseSignIn extends AppCompatActivity {
 
+    private static final String TAG = "FirebaseSignIn";
     FloatingActionButton fab, btn_again;
     Button try_again_button;
 
@@ -166,7 +167,7 @@ public class FirebaseSignIn extends AppCompatActivity {
                     try {
                         onSignInResult(result);
                     } catch (MalformedURLException | JSONException | InterruptedException e) {
-                        Log.d("TAG", "onCreate:" + new RuntimeException(e));
+                        Logger.d(getApplication(), TAG, "onCreate:" + new RuntimeException(e));
                         FirebaseCrashlytics.getInstance().recordException(e);
                     }
                 }
@@ -268,14 +269,14 @@ public class FirebaseSignIn extends AppCompatActivity {
 
         Callable<Void> addUserCallable = () -> {
             URL url = new URL(urlString);
-            Log.d("TAG", "sendURL: " + urlString);
+            Logger.d(getApplication(), TAG, "sendURL: " + urlString);
 
             HttpsURLConnection urlConnection = null;
             try {
                 urlConnection = (HttpsURLConnection) url.openConnection();
                 urlConnection.setDoInput(true);
 //                urlConnection.getResponseCode();
-                Log.d("TAG", "addUser: urlConnection.getResponseCode(); " + urlConnection.getResponseCode());
+                Logger.d(getApplication(), TAG, "addUser: urlConnection.getResponseCode(); " + urlConnection.getResponseCode());
             } catch (IOException e) {
                 FirebaseCrashlytics.getInstance().recordException(e);
             } finally {

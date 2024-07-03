@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
+import com.taxi_pas_4.utils.log.Logger;
 
 import org.json.JSONException;
 import org.osmdroid.util.GeoPoint;
@@ -42,7 +43,7 @@ public class MarkerOverlayVisicom extends Overlay {
         mapView.invalidate();
 
         GeoPoint pointGeo = (GeoPoint) mapView.getProjection().fromPixels((int) event.getX(), (int) event.getY());
-        Log.d(TAG, "onSingleTapConfirmed: point " + point);
+        Logger.d(mapView.getContext(), TAG, "onSingleTapConfirmed: point " + point);
         switch (point) {
             case "startMarker":
                 OpenStreetMapVisicomActivity.startPoint = pointGeo;

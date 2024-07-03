@@ -13,8 +13,8 @@ android {
         applicationId "com.taxi_pas_4"
         minSdk 24
         targetSdk 34
-        versionCode 4092
-        versionName '4.092'
+        versionCode 4093
+        versionName '4.093'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += ['ru', 'uk', 'en']
@@ -58,8 +58,8 @@ dependencies {
 
 
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.8.2'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.2'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.8.3'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.3'
     implementation 'androidx.navigation:navigation-fragment:2.7.7'
     implementation 'androidx.navigation:navigation-ui:2.7.7'
     implementation 'com.google.android.gms:play-services-maps:19.0.0'

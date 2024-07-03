@@ -31,6 +31,7 @@ import com.taxi_pas_4.ui.fondy.token_pay.PaymentApiToken;
 import com.taxi_pas_4.ui.fondy.token_pay.RequestDataToken;
 import com.taxi_pas_4.ui.fondy.token_pay.StatusRequestToken;
 import com.taxi_pas_4.ui.fondy.token_pay.SuccessResponseDataToken;
+import com.taxi_pas_4.utils.log.Logger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -66,7 +67,7 @@ public class MyBottomSheetTokenFragment extends BottomSheetDialogFragment {
         listView = view.findViewById(R.id.listViewBonus);
 
         ArrayList<Map<String, String>> cardMaps = getCardMapsFromDatabase();
-        Log.d(TAG, "onResume: cardMaps" + cardMaps);
+        Logger.d(getActivity(), TAG, "onResume: cardMaps" + cardMaps);
         if (!cardMaps.isEmpty()) {
             CustomCardAdapterToken listAdapter = new CustomCardAdapterToken(requireActivity(), cardMaps);
             listView.setAdapter(listAdapter);
@@ -132,7 +133,7 @@ public class MyBottomSheetTokenFragment extends BottomSheetDialogFragment {
 
                         // Теперь у вас есть объект ResponseBodyRev для обработки
                         if (responseBody != null) {
-                            Log.d(TAG, "JSON Response: " + new Gson().toJson(apiResponse));
+                            Logger.d(getActivity(), TAG, "JSON Response: " + new Gson().toJson(apiResponse));
                             String orderStatus = responseBody.getOrderStatus();
                             if (!"approved".equals(orderStatus)) {
                                 // Обработка ответа об ошибке
@@ -215,22 +216,20 @@ public class MyBottomSheetTokenFragment extends BottomSheetDialogFragment {
         SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
 
         Cursor cursor = database.query(tableToken, null, null, null, null, null, null);
-        Log.d(TAG, "getCardMapsFromDatabase: tableToken card count: " + cursor.getCount());
+        Logger.d(getActivity(), TAG, "getCardMapsFromDatabase: tableToken card count: " + cursor.getCount());
 
-        if (cursor != null) {
-            if (cursor.moveToFirst()) {
-                do {
-                    Map<String, String> cardMap = new HashMap<>();
-                    cardMap.put("card_type", cursor.getString(cursor.getColumnIndex("card_type")));
-                    cardMap.put("bank_name", cursor.getString(cursor.getColumnIndex("bank_name")));
-                    cardMap.put("masked_card", cursor.getString(cursor.getColumnIndex("masked_card")));
-                    cardMap.put("rectoken", cursor.getString(cursor.getColumnIndex("rectoken")));
+        if (cursor.moveToFirst()) {
+            do {
+                Map<String, String> cardMap = new HashMap<>();
+                cardMap.put("card_type", cursor.getString(cursor.getColumnIndex("card_type")));
+                cardMap.put("bank_name", cursor.getString(cursor.getColumnIndex("bank_name")));
+                cardMap.put("masked_card", cursor.getString(cursor.getColumnIndex("masked_card")));
+                cardMap.put("rectoken", cursor.getString(cursor.getColumnIndex("rectoken")));
 
-                    cardMaps.add(cardMap);
-                } while (cursor.moveToNext());
-            }
-            cursor.close();
+                cardMaps.add(cardMap);
+            } while (cursor.moveToNext());
         }
+        cursor.close();
         database.close();
 
         return cardMaps;

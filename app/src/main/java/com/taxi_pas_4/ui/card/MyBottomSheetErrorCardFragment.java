@@ -21,6 +21,7 @@ import androidx.navigation.Navigation;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.connect.NetworkUtils;
 
 import java.util.ArrayList;
 import java.util.List;

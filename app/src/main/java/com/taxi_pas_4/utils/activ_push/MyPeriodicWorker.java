@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.work.PeriodicWorkRequest;
@@ -21,6 +20,7 @@ import androidx.work.WorkerParameters;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.androidx.startup.MyApplication;
+import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.R;
 
@@ -46,7 +46,7 @@ public class MyPeriodicWorker extends Worker {
         // Например, отправить уведомление или выполнить другое задание
         Context context = getApplicationContext();
         boolean isUserActive = checkUserActivity(context);
-        Log.d(TAG, "onReceive: isUserActive " + isUserActive);
+        Logger.d(context, TAG, "onReceive: isUserActive " + isUserActive);
 
         if (!isUserActive) {
 
@@ -71,13 +71,13 @@ public class MyPeriodicWorker extends Worker {
     private boolean checkUserActivity(Context context) {
         // Получение состояния приложения (в переднем плане или фоне)
         boolean isAppInForeground = ((MyApplication) context.getApplicationContext()).isAppInForeground();
-        Log.d(TAG, "checkUserActivity " + isAppInForeground);
+        Logger.d(context, TAG, "checkUserActivity " + isAppInForeground);
 
         long lastActivityTimestamp = getLastActivityTimestamp(context);
         long currentTime = System.currentTimeMillis();
 
-        Log.d(TAG, "lastActivity: " + timeFormatter(lastActivityTimestamp));
-        Log.d(TAG, "currentTime: " + timeFormatter(currentTime));
+        Logger.d(context, TAG, "lastActivity: " + timeFormatter(lastActivityTimestamp));
+        Logger.d(context, TAG, "currentTime: " + timeFormatter(currentTime));
 
         // Если приложение в переднем плане, считаем его активным
         if (isAppInForeground) {
@@ -86,7 +86,7 @@ public class MyPeriodicWorker extends Worker {
 
         // Проверка, прошло ли менее 60 секунд с последней активности
         boolean isActive = (currentTime - lastActivityTimestamp) <= (25L *  24 * 60 * 60 * 1000);
-        Log.d(TAG, "checkUserActivity: " + isActive);
+        Logger.d(context, TAG, "checkUserActivity: " + isActive);
         return isActive;
     }
 
@@ -116,7 +116,7 @@ public class MyPeriodicWorker extends Worker {
         // Обновление времени последней активности в SharedPreferences
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
-        Log.d(TAG, "updateLastActivityTimestamp: " + timeFormatter(System.currentTimeMillis()));
+        Logger.d(context, TAG, "updateLastActivityTimestamp: " + timeFormatter(System.currentTimeMillis()));
         editor.putLong(LAST_ACTIVITY_KEY, System.currentTimeMillis());
         editor.apply();
     }
@@ -128,7 +128,7 @@ public class MyPeriodicWorker extends Worker {
                 // Получаем текущее время и дату
                 @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 String currentDateandTime = sdf.format(new Date());
-                Log.d(TAG, "Current date and time: " + currentDateandTime);
+                Logger.d(context, TAG, "Current date and time: " + currentDateandTime);
 
                 // Создаем объект ContentValues для передачи данных в базу данных
                 ContentValues values = new ContentValues();
@@ -137,9 +137,9 @@ public class MyPeriodicWorker extends Worker {
                 // Пытаемся вставить новую запись. Если запись уже существует, выполняется обновление.
                 int rowsAffected = database.update(MainActivity.TABLE_LAST_PUSH, values, "ROWID=1", null);
                 if (rowsAffected > 0) {
-                    Log.d(TAG, "Update successful");
+                    Logger.d(context, TAG, "Update successful");
                 } else {
-                    Log.d(TAG, "Error updating");
+                    Logger.d(context, TAG, "Error updating");
                 }
 
 
@@ -173,7 +173,7 @@ public class MyPeriodicWorker extends Worker {
             }
             cursor.close();
         }
-        Log.d(TAG, "getLastActivityTimestamp: " + lastActivityTimestamp);
+        Logger.d(context, TAG, "getLastActivityTimestamp: " + lastActivityTimestamp);
         database.close();
         return lastActivityTimestamp;
     }

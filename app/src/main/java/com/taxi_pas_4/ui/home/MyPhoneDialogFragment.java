@@ -10,7 +10,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,6 +29,7 @@ import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.finish.FinishActivity;
 import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
+import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 
 import java.util.ArrayList;
@@ -86,8 +86,8 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
                 } else  {
                     MainActivity.verifyPhone = true;
                     updateRecordsUser(phoneNumber.getText().toString(), mContext);
-                    Log.d(TAG, "setOnClickListener " + phoneNumber.getText().toString());
-                    Log.d(TAG, "setOnClickListener " + page);
+                    Logger.d(getActivity(), TAG, "setOnClickListener " + phoneNumber.getText().toString());
+                    Logger.d(getActivity(), TAG, "setOnClickListener " + page);
                    switch (page) {
                         case "home" :
                             HomeFragment.btn_order.performClick();
@@ -165,7 +165,7 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
         int updCount = database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?",
                 new String[] { "1" });
-        Log.d(TAG, "updated rows count = " + updCount);
+        Logger.d(getActivity(), TAG, "updated rows count = " + updCount);
 
 
     }

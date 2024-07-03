@@ -10,7 +10,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,6 +33,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.gallery.GalleryFragment;
+import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 
 import java.net.MalformedURLException;
@@ -454,7 +454,7 @@ public class MyBottomSheetGalleryFragment extends BottomSheetDialogFragment {
         String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity()).get(3);
         ToJSONParserRetrofit parser = new ToJSONParserRetrofit();
 
-        Log.d(TAG, "orderFinished: "  + "https://m.easy-order-taxi.site"+ url);
+        Logger.d(getActivity(), TAG, "orderFinished: "  + "https://m.easy-order-taxi.site"+ url);
         parser.sendURL(url, new Callback<Map<String, String>>() {
             @Override
             public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
@@ -506,7 +506,7 @@ public class MyBottomSheetGalleryFragment extends BottomSheetDialogFragment {
     }
     private void updateAddCost(String addCost) {
         ContentValues cv = new ContentValues();
-        Log.d("TAG", "updateAddCost: addCost" + addCost);
+        Logger.d(getActivity(), TAG, "updateAddCost: addCost" + addCost);
         cv.put("addCost", addCost);
 
         // обновляем по id
@@ -576,7 +576,7 @@ public class MyBottomSheetGalleryFragment extends BottomSheetDialogFragment {
                 }
             }
             result = String.join("*", servicesChecked);
-            Log.d("TAG", "getTaxiUrlSearchGeo result:" + result + "/");
+            Logger.d(getActivity(), TAG, "getTaxiUrlSearchGeo result:" + result + "/");
         } else {
             result = "no_extra_charge_codes";
         }
@@ -586,7 +586,7 @@ public class MyBottomSheetGalleryFragment extends BottomSheetDialogFragment {
         String url = "/" + api + "/android/" + urlAPI + "/"
                 + parameters + "/" + result + "/" + city  + "/" + context.getString(R.string.application);
 
-        Log.d("TAG", "getTaxiUrlSearch: " + url);
+        Logger.d(getActivity(), TAG, "getTaxiUrlSearch: " + url);
         database.close();
 
 

@@ -1,7 +1,5 @@
 package com.taxi_pas_4.ui.fondy.gen_signatur;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 
 import retrofit2.Call;
@@ -13,6 +11,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class SignatureClient {
 
     private static final String BASE_URL = "https://m.easy-order-taxi.site/";
+    private static final String TAG = "SignatureClient";
 
     private final ApiService apiService;
 
@@ -27,8 +26,6 @@ public class SignatureClient {
 
     public void generateSignature(String params, final SignatureCallback callback) {
         Call<SignatureResponse> call = apiService.generateSignature(params);
-        String requestUrl = call.request().url().toString();
-        Log.d("RequestUrl", "Request URL: " + requestUrl);
 
         call.enqueue(new Callback<SignatureResponse>() {
             @Override

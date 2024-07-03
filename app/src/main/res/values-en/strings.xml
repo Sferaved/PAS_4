@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.092</string>
-    <string name="version">Version: 4.092</string>
+    <string name="version_code">4.093</string>
+    <string name="version">Version: 4.093</string>
 
     <string name="app_name">Taxi Duke Fellow</string>
     <string name="back4app_server_url">https://parseapi.back4app.com/</string>
@@ -377,4 +377,5 @@
     <string name="sent_cancel_message">Order cancellation request sent</string>
     <string name="aplay_card_message">Your card has been accepted and sent for verification. It won\'t be possible for you to pay a higher price.</string>
     <string name="status_checkout_message">Status update requested. Wait or check with the operator</string>
+    <string name="update_finish_mes">Update completed. The application will be restarted.</string>
 </resources>
