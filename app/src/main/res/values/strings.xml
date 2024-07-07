@@ -1,8 +1,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.093</string>
-    <string name="version">Версия: 4.093</string>
+    <string name="version_code">4.094</string>
+    <string name="version">Версия: 4.094</string>
 
     <string name="app_name">Такси Дюк Попутчик</string>
 
@@ -380,5 +380,4 @@
     <string name="aplay_card_message">Ваша карта принята и отправлена на проверку. Вскоре она станет доступной для оплаты поездок.</string>
     <string name="status_checkout_message">Запрошено обновление статуса. Ожидайте или уточните у оператора</string>
     <string name="update_finish_mes">Обновление завершено. Приложение будет перезапущено.</string>
-
 </resources>

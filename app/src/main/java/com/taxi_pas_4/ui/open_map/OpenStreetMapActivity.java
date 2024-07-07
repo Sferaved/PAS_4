@@ -44,6 +44,7 @@ import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.NetworkChangeReceiver;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
+import com.taxi_pas_4.ui.maps.CostJSONParser;
 import com.taxi_pas_4.ui.maps.FromJSONParser;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;

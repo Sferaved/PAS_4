@@ -29,10 +29,6 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
         tools:ignore="ProtectedPermissions" />
-    <meta-data
-        android:name="com.google.android.gms.safetynet.SafetyNetSplashConfig"
-        android:resource="@xml/splash_screen" />
-
 
     <application
         android:name=".androidx.startup.MyApplication"
@@ -48,29 +44,9 @@
         tools:targetApi="tiramisu"
         tools:ignore="UnusedAttribute">
 
-        <service android:name=".utils.notify.NotificationHelper$UpdateService" />
-
-        <service
-            android:name=".utils.activ_push.MyService"
-            android:exported="false" />
-
-        <receiver android:name=".utils.activ_push.BootReceiver"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-            </intent-filter>
-        </receiver>
-
-        <activity
-            android:name=".ui.payment.MonoBankActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".ui.finish.FinishActivity"
-            android:screenOrientation="portrait"
-            android:exported="false" />
-
+        <meta-data
+            android:name="com.google.android.gms.safetynet.SafetyNetSplashConfig"
+            android:resource="@xml/splash_screen" />
         <meta-data
             android:name="com.google.android.gms.wallet.api.enabled"
             android:value="true" />
@@ -96,50 +72,48 @@
             android:exported="true"
             android:screenOrientation="portrait"
             android:configChanges="orientation|screenSize|keyboardHidden"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.PAS_4.NoActionBar" >
+            android:theme="@style/Theme.PAS_4.NoActionBar"
+            tools:ignore="DiscouragedApi">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
-            android:name=".ui.start.FirebaseSignIn"
+            android:name=".ui.finish.FinishActivity"
             android:screenOrientation="portrait"
-            android:exported="true"
             android:theme="@style/Theme.PAS_4.NoActionBar" />
+
+
         <activity
             android:name=".ui.open_map.OpenStreetMapActivity"
-            android:screenOrientation="portrait"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.PAS_4.NoActionBar" />
-        <activity android:name=".ui.start.StopActivity"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".ui.start.UpdateActivity"
-            android:screenOrientation="portrait"/>
 
         <activity android:name=".ui.open_map.OpenStreetMapVisicomActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.PAS_4.NoActionBar"
-            tools:ignore="Instantiatable"
-            />
+            tools:ignore="Instantiatable" />
         <activity android:name=".ui.open_map.visicom.ActivityVisicomOnePage"
             android:exported="true"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.PAS_4.NoActionBar" />
+            android:theme="@style/Theme.PAS_4.NoActionBar"
+            tools:ignore="Instantiatable" />
 
         <receiver android:name=".NetworkChangeReceiver" />
-        <meta-data
-            android:name="com.google.android.gms.wallet.api.enabled"
-            android:value="true" />
+
+
         <provider
             android:name=".androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.InitializationProvider"
             android:exported="false"
             android:enabled="true">
         </provider>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -150,16 +124,6 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <service android:name=".utils.notify.MyNotificationListenerService"
-            android:exported="true"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
-            <intent-filter>
-                <action android:name="android.service.notification.NotificationListenerService" />
-            </intent-filter>
-        </service>
-        <service
-            android:name=".utils.notify.MyNotificationListenerJobIntentService"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
     </application>
 
 </manifest>
