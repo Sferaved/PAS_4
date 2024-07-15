@@ -275,19 +275,19 @@ public class UIDFragment extends Fragment {
                     bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
 
                 }
-                upd_but.setText(getString(R.string.order));
-                progressBar.setVisibility(View.GONE);
             }
 
-            @Override
-            public void onFailure(Call<List<RouteResponse>> call, Throwable t) {
+            public void onFailure(@NonNull Call<List<RouteResponse>> call, @NonNull Throwable t) {
                 // Обработка ошибок сети или других ошибок
-                String errorMessage = t.getMessage();
                 FirebaseCrashlytics.getInstance().recordException(t);
-                upd_but.setText(requireActivity().getString(R.string.order));
-                progressBar.setVisibility(View.GONE);
             }
+
+
         });
+        if (isAdded()) {
+            upd_but.setText(requireActivity().getString(R.string.order));
+            progressBar.setVisibility(View.GONE);
+        }
     }
 
     private void processRouteList() {

@@ -5,6 +5,7 @@ import static com.taxi_pas_4.R.string.format_phone;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.ContentValues;
@@ -49,6 +50,8 @@ import androidx.navigation.ui.NavigationUI;
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.play.core.appupdate.AppUpdateInfo;
@@ -56,8 +59,6 @@ import com.google.android.play.core.appupdate.AppUpdateManager;
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
 import com.google.android.play.core.install.model.AppUpdateType;
 import com.google.android.play.core.install.model.UpdateAvailability;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
@@ -78,16 +79,14 @@ import com.taxi_pas_4.ui.home.MyBottomSheetMessageFragment;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
-
+import com.taxi_pas_4.utils.LocaleHelper;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.db.DatabaseHelper;
 import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.download.AppUpdater;
-import com.taxi_pas_4.utils.fcm.MyFirebaseMessagingService;
 import com.taxi_pas_4.utils.fcm.token_send.ApiServiceToken;
 import com.taxi_pas_4.utils.fcm.token_send.RetrofitClientToken;
 import com.taxi_pas_4.utils.log.Logger;
-import com.taxi_pas_4.utils.messages.UsersMessages;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.utils.permissions.UserPermissions;
 import com.taxi_pas_4.utils.phone.ApiClientPhone;
@@ -166,7 +165,6 @@ public class MainActivity extends AppCompatActivity {
 
     private static String verifyInternet;
     public static final long MAX_TASK_EXECUTION_TIME_SECONDS = 3;
-    public static String versionServer;
 
     DatabaseHelper databaseHelper;
     DatabaseHelperUid databaseHelperUid;
@@ -180,6 +178,13 @@ public class MainActivity extends AppCompatActivity {
     public static final String PERMISSIONS_PREF_NAME = "Permissions";
     public static final String PERMISSION_REQUEST_COUNT_KEY = "PermissionRequestCount";
     public static boolean location_update;
+
+    private static final String PREFS_NAME_VERSION = "MyPrefsFileNew";
+    private static final String LAST_NOTIFICATION_TIME_KEY = "lastNotificationTimeNew";
+    //    private static final long ONE_DAY_IN_MILLISECONDS = 0; // 24 часа в миллисекундах
+//    private static final long ONE_DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000; // 24 часа в миллисекундах
+    private static final long ONE_DAY_IN_MILLISECONDS = 60 * 1000; // 1 минута в миллисекундах
+
    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -219,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
         } else MainActivity.location_update = ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
                 || ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
        // Проверка обновления
-       new Thread(this::verifyUpdate).start();
+
 
         try {
             initDB();
@@ -555,6 +560,7 @@ public class MainActivity extends AppCompatActivity {
             // Действия при наличии интернета
             newUser();
         }
+
     }
 
     public void insertPushDate(Context context) {
@@ -912,67 +918,49 @@ public class MainActivity extends AppCompatActivity {
         appUpdater.registerListener();
 
         // Проверка наличия обновлений
-        checkForUpdate();
+        checkForUpdate(MainActivity.this);
     }
 
     private static final int MY_REQUEST_CODE = 1234; // Уникальный код запроса для обновления
 
-    private void checkForUpdate() {
-        AppUpdateManager appUpdateManager = AppUpdateManagerFactory.create(this);
+     private void checkForUpdate(Context context) {
+        AppUpdateManager appUpdateManager = AppUpdateManagerFactory.create(context);
         Task<AppUpdateInfo> appUpdateInfoTask = appUpdateManager.getAppUpdateInfo();
 
         appUpdateInfoTask.addOnSuccessListener(appUpdateInfo -> {
-            Logger.d(getApplicationContext(), TAG, "Update availability: " + appUpdateInfo.updateAvailability());
-            Logger.d(getApplicationContext(), TAG, "Update priority: " + appUpdateInfo.updatePriority());
-            Logger.d(getApplicationContext(), TAG, "Client version staleness days: " + appUpdateInfo.clientVersionStalenessDays());
+            Logger.d(context, TAG, "Update availability: " + appUpdateInfo.updateAvailability());
+            Logger.d(context, TAG, "Update priority: " + appUpdateInfo.updatePriority());
+            Logger.d(context, TAG, "Client version staleness days: " + appUpdateInfo.clientVersionStalenessDays());
 
             if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) {
                 // Доступны обновления
-                Logger.d(this, TAG, "Available updates found");
+                Logger.d(context, TAG, "Available updates found");
 
                 // Запускаем процесс обновления
                 try {
                     appUpdateManager.startUpdateFlowForResult(
                             appUpdateInfo,
                             AppUpdateType.IMMEDIATE, // или AppUpdateType.FLEXIBLE
-                            MainActivity.this, // Используем ссылку на активность
+                            (Activity) context, // Используем ссылку на активность
                             MY_REQUEST_CODE); // Код запроса для обновления
                 } catch (IntentSender.SendIntentException e) {
-                    Logger.e(this, TAG, "Failed to start update flow: " + e.getMessage());
+                    Logger.e(context, TAG, "Failed to start update flow: " + e.getMessage());
                     FirebaseCrashlytics.getInstance().recordException(e);
                 }
-            } else {
+            }  else {
                 Logger.d(this, TAG, "No updates available");
                 String message = getString(R.string.update_ok);
                 MyBottomSheetMessageFragment bottomSheetDialogFragment = new MyBottomSheetMessageFragment(message);
                 bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
             }
         }).addOnFailureListener(e -> {
-            Logger.e(this, TAG, "Failed to check for updates: " + e.getMessage());
+            Logger.e(context, TAG, "Failed to check for updates: " + e.getMessage());
             FirebaseCrashlytics.getInstance().recordException(e);
         });
     }
 
-    private void verifyUpdate() {
-        AppUpdateManager appUpdateManager = AppUpdateManagerFactory.create(this);
-        Task<AppUpdateInfo> appUpdateInfoTask = appUpdateManager.getAppUpdateInfo();
 
-        appUpdateInfoTask.addOnSuccessListener(appUpdateInfo -> {
-            Logger.d(getApplicationContext(), TAG, "Update availability: " + appUpdateInfo.updateAvailability());
-            Logger.d(getApplicationContext(), TAG, "Update priority: " + appUpdateInfo.updatePriority());
-            Logger.d(getApplicationContext(), TAG, "Client version staleness days: " + appUpdateInfo.clientVersionStalenessDays());
 
-            if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) {
-                // Доступны обновления
-                Logger.d(this, TAG, "Available updates found");
-
-                NotificationHelper.showNotificationUpdate(this);
-            }
-        }).addOnFailureListener(e -> {
-            Logger.e(this, TAG, "Failed to check for updates: " + e.getMessage());
-            FirebaseCrashlytics.getInstance().recordException(e);
-        });
-    }
 
     // Обработка результата обновления
     @Override
@@ -986,44 +974,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void checkForUpdateForPush(
-            SharedPreferences SharedPreferences,
-            long currentTime
-    ) {
-        // Обновляем время последней отправки уведомления
-        SharedPreferences.Editor editor = SharedPreferences.edit();
-        editor.putLong(LAST_NOTIFICATION_TIME_KEY, currentTime);
-        editor.apply();
-
-        AppUpdateManager appUpdateManager = AppUpdateManagerFactory.create(this);
-        Task<AppUpdateInfo> appUpdateInfoTask = appUpdateManager.getAppUpdateInfo();
-        appUpdateInfoTask.addOnSuccessListener(new OnSuccessListener<AppUpdateInfo>() {
-            @Override
-            public void onSuccess(AppUpdateInfo appUpdateInfo) {
-                if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) {
-                    // Доступны обновления
-                    Logger.d(getApplicationContext(), TAG, "Available updates found");
-                    String title = getString(R.string.new_version);
-                    String messageNotif = getString(R.string.news_of_version);
-
-                    String urlStr = "https://play.google.com/store/apps/details?id=com.taxi_pas_4";
-                    NotificationHelper.showNotification(MainActivity.this, title, messageNotif, urlStr);
-                }
-            }
-        });
-    }
-
-
-
-
-
 
     private void restartApplication() {
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
-        finish();
-
     }
 
     @Override
@@ -1285,18 +1240,11 @@ public class MainActivity extends AppCompatActivity {
 
         } else {
 
-
+            new Thread(this::versionFromMarket).start();
             new Thread(() -> fetchRoutes(userEmail)).start();
             new Thread(() -> updatePushDate(getApplicationContext())).start();
-
-            String application =  getString(R.string.application);
             new VerifyUserTask(this).execute();
-
             UserPermissions.getPermissions(userEmail, getApplicationContext());
-//            new UsersMessages(userEmail, getApplicationContext());
-
-            // Проверка новой версии в маркете
-            new Thread(this::versionFromMarket).start();
 
             Thread wfpCardThread = new Thread(() -> {
                 List<String> stringList = logCursor(MainActivity.CITY_INFO);
@@ -1933,24 +1881,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private static final String PREFS_NAME_VERSION = "MyPrefsFileNew";
-    private static final String LAST_NOTIFICATION_TIME_KEY = "lastNotificationTimeNew";
-//    private static final long ONE_DAY_IN_MILLISECONDS = 0; // 24 часа в миллисекундах
-    private static final long ONE_DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000; // 24 часа в миллисекундах
-
-     private void versionFromMarket()  {
-        // Получаем SharedPreferences
-        SharedPreferences SharedPreferences = getSharedPreferences(PREFS_NAME_VERSION, Context.MODE_PRIVATE);
-        // Получаем время последней отправки уведомления
-        long lastNotificationTime = SharedPreferences.getLong(LAST_NOTIFICATION_TIME_KEY, 0);
-        // Получаем текущее время
-        long currentTime = System.currentTimeMillis();
-        // Проверяем, прошло ли уже 24 часа с момента последней отправки
-        if (currentTime - lastNotificationTime >= ONE_DAY_IN_MILLISECONDS) {
-            checkForUpdateForPush(SharedPreferences, currentTime);
-        }
-    }
-
     private void cityMaxPay(String city) {
         CityService cityService = CityApiClient.getClient().create(CityService.class);
 
@@ -2090,7 +2020,7 @@ public class MainActivity extends AppCompatActivity {
 
             String app = getApplicationContext().getString(R.string.application);
 
-            Call<Void> call = apiService.sendToken(email, app, token);
+            Call<Void> call = apiService.sendToken(email, app, token, LocaleHelper.getLocale());
 
             // Выполняем асинхронный запрос
             call.enqueue(new Callback<Void>() {
@@ -2109,5 +2039,45 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+
+    private void versionFromMarket()  {
+        // Получаем SharedPreferences
+        SharedPreferences SharedPreferences = getSharedPreferences(PREFS_NAME_VERSION, Context.MODE_PRIVATE);
+        // Получаем время последней отправки уведомления
+        long lastNotificationTime = SharedPreferences.getLong(LAST_NOTIFICATION_TIME_KEY, 0);
+        // Получаем текущее время
+        long currentTime = System.currentTimeMillis();
+        // Проверяем, прошло ли уже 24 часа с момента последней отправки
+        if (currentTime - lastNotificationTime >= ONE_DAY_IN_MILLISECONDS) {
+            checkForUpdateForPush(SharedPreferences, currentTime);
+        }
+    }
+    private void checkForUpdateForPush(
+            SharedPreferences SharedPreferences,
+            long currentTime
+    ) {
+        // Обновляем время последней отправки уведомления
+        SharedPreferences.Editor editor = SharedPreferences.edit();
+        editor.putLong(LAST_NOTIFICATION_TIME_KEY, currentTime);
+        editor.apply();
+
+        AppUpdateManager appUpdateManager = AppUpdateManagerFactory.create(this);
+        Task<AppUpdateInfo> appUpdateInfoTask = appUpdateManager.getAppUpdateInfo();
+        appUpdateInfoTask.addOnSuccessListener(new OnSuccessListener<AppUpdateInfo>() {
+            @Override
+            public void onSuccess(AppUpdateInfo appUpdateInfo) {
+                if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) {
+                    // Доступны обновления
+                    Logger.d(getApplicationContext(), TAG, "Available updates found");
+                    String title = getString(R.string.new_version);
+                    String messageNotif = getString(R.string.news_of_version);
+
+                    String urlStr = "https://play.google.com/store/apps/details?id=com.taxi_pas_4";
+                    NotificationHelper.showNotification(MainActivity.this, title, messageNotif, urlStr);
+                }
+            }
+        });
     }
 }
