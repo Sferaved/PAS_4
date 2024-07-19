@@ -87,7 +87,6 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.PAS_4.NoActionBar" />
 
-
         <activity
             android:name=".ui.open_map.OpenStreetMapActivity"
             android:exported="true"
@@ -107,7 +106,6 @@
 
         <receiver android:name=".NetworkChangeReceiver" />
 
-
         <provider
             android:name=".androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.InitializationProvider"
@@ -124,6 +122,7 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
         <service
             android:name=".utils.fcm.MyFirebaseMessagingService"
             android:exported="false"
@@ -132,6 +131,7 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
     </application>
 
 </manifest>

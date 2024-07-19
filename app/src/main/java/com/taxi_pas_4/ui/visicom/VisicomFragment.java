@@ -818,7 +818,7 @@ public class VisicomFragment extends Fragment implements ApiCallback, ApiCallbac
                                     break;
                                 default:
                                     progressBar.setVisibility(View.INVISIBLE);
-                                    message = getResources().getString(R.string.error_message);
+                                    message = context.getString(R.string.error_message);
                             }
 
                         }

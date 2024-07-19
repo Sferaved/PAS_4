@@ -67,7 +67,7 @@ public class NotificationHelper {
 
         // Отображение уведомления
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-        int notificationId = generateUniqueNotificationId(); // Generate a unique ID for each notification
+        int notificationId = 654321; // ID for each notification
 
         if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
 

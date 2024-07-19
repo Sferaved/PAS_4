@@ -51,7 +51,6 @@ import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.play.core.appupdate.AppUpdateInfo;
@@ -59,6 +58,7 @@ import com.google.android.play.core.appupdate.AppUpdateManager;
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
 import com.google.android.play.core.install.model.AppUpdateType;
 import com.google.android.play.core.install.model.UpdateAvailability;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
@@ -70,15 +70,18 @@ import com.taxi_pas_4.databinding.ActivityMainBinding;
 import com.taxi_pas_4.ui.card.CardInfo;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.RouteResponse;
+import com.taxi_pas_4.ui.finish.RouteResponseCancel;
 import com.taxi_pas_4.ui.fondy.callback.CallbackResponse;
 import com.taxi_pas_4.ui.fondy.callback.CallbackService;
 import com.taxi_pas_4.ui.home.HomeFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetCityFragment;
+import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetGPSFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetMessageFragment;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
+
 import com.taxi_pas_4.utils.LocaleHelper;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.db.DatabaseHelper;
@@ -182,9 +185,9 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREFS_NAME_VERSION = "MyPrefsFileNew";
     private static final String LAST_NOTIFICATION_TIME_KEY = "lastNotificationTimeNew";
     //    private static final long ONE_DAY_IN_MILLISECONDS = 0; // 24 часа в миллисекундах
-//    private static final long ONE_DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000; // 24 часа в миллисекундах
-    private static final long ONE_DAY_IN_MILLISECONDS = 60 * 1000; // 1 минута в миллисекундах
-
+    private static final long ONE_DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000; // 24 часа в миллисекундах
+//    private static final long ONE_DAY_IN_MILLISECONDS = 60 * 1000; // 1 минута в миллисекундах
+    private List<RouteResponseCancel> routeListCancel;
    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -200,7 +203,7 @@ public class MainActivity extends AppCompatActivity {
             // Passing each menu ID as a set of Ids because each
             // menu should be considered as top level destinations.
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-              R.id.nav_visicom, R.id.nav_home, R.id.nav_gallery, R.id.nav_about, R.id.nav_uid, R.id.nav_bonus, R.id.nav_card, R.id.nav_author)
+              R.id.nav_visicom, R.id.nav_home, R.id.nav_cancel, R.id.nav_gallery, R.id.nav_about, R.id.nav_uid, R.id.nav_bonus, R.id.nav_card, R.id.nav_author)
              .setOpenableLayout(drawer)
              .build();
         navMenu = navigationView.getMenu();
@@ -1242,6 +1245,7 @@ public class MainActivity extends AppCompatActivity {
 
             new Thread(this::versionFromMarket).start();
             new Thread(() -> fetchRoutes(userEmail)).start();
+            new Thread(() -> fetchRoutesCancel(userEmail)).start();
             new Thread(() -> updatePushDate(getApplicationContext())).start();
             new VerifyUserTask(this).execute();
             UserPermissions.getPermissions(userEmail, getApplicationContext());
@@ -1565,7 +1569,6 @@ public class MainActivity extends AppCompatActivity {
                         + createdAt + getString(R.string.close_resone_text) + closeReasonText;
             }
 
-//                array[i] = routeInfo;
             databaseHelper.addRouteInfo(routeInfo);
 
             List<String> settings = new ArrayList<>();
@@ -2079,5 +2082,172 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private void fetchRoutesCancel(String value) {
+        Logger.d(this, TAG, "fetchRoutesCancel: ");
+
+        routeListCancel = new ArrayList<>();
+
+        String url = baseUrl + "/android/UIDStatusShowEmailCancel/" + value;
+        Call<List<RouteResponseCancel>> call = ApiClient.getApiService().getRoutesCancel(url);
+        Logger.d(this, TAG, "fetchRoutesCancel: " + url);
+        call.enqueue(new Callback<List<RouteResponseCancel>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<RouteResponseCancel>> call, @NonNull Response<List<RouteResponseCancel>> response) {
+                if (response.isSuccessful()) {
+                    List<RouteResponseCancel> routes = response.body();
+                    assert routes != null;
+                    Logger.d(MainActivity.this, TAG, "onResponse: " + routes.toString());
+                    if (!routes.isEmpty()) {
+                        boolean hasRouteWithAsterisk = false;
+                        for (RouteResponseCancel route : routes) {
+                            if ("*".equals(route.getRouteFrom())) {
+                                // Найден объект с routefrom = "*"
+                                hasRouteWithAsterisk = true;
+                                break;  // Выход из цикла, так как условие уже выполнено
+                            }
+                        }
+                        if (!hasRouteWithAsterisk) {
+                            if (routeListCancel == null) {
+                                routeListCancel = new ArrayList<>();
+                            }
+                            routeListCancel.addAll(routes);
+                            processCancelList();
+                        }
+
+                    }
+                }
+            }
+
+            public void onFailure(@NonNull Call<List<RouteResponseCancel>> call, @NonNull Throwable t) {
+                // Обработка ошибок сети или других ошибок
+                FirebaseCrashlytics.getInstance().recordException(t);
+            }
+        });
+    }
+
+    private void processCancelList() {
+        if (routeListCancel == null || routeListCancel.isEmpty()) {
+            Logger.d(this, TAG, "routeListCancel is null or empty");
+            return;
+        }
+
+        // Создайте массив строк
+        array = new String[routeListCancel.size()];
+        databaseHelper.clearTableCancel();
+        databaseHelperUid.clearTableCancel();
+
+        String closeReasonText = getString(R.string.close_resone_def);
+
+        for (int i = 0; i < routeListCancel.size(); i++) {
+            RouteResponseCancel route = routeListCancel.get(i);
+            String uid = route.getUid();
+            String routeFrom = route.getRouteFrom();
+            String routefromnumber = route.getRouteFromNumber();
+            String routeTo = route.getRouteTo();
+            String routeTonumber = route.getRouteToNumber();
+            String webCost = route.getWebCost();
+            String createdAt = route.getCreatedAt();
+            String closeReason = route.getCloseReason();
+            String auto = route.getAuto();
+            String dispatchingOrderUidDouble = route.getDispatchingOrderUidDouble();
+            String pay_method = route.getPay_method();
+
+            switch (closeReason) {
+                case "-1":
+                    closeReasonText = getString(R.string.close_resone_in_work);
+                    break;
+                case "0":
+                    closeReasonText = getString(R.string.close_resone_0);
+                    break;
+                case "1":
+                    closeReasonText = getString(R.string.close_resone_1);
+                    break;
+                case "2":
+                    closeReasonText = getString(R.string.close_resone_2);
+                    break;
+                case "3":
+                    closeReasonText = getString(R.string.close_resone_3);
+                    break;
+                case "4":
+                    closeReasonText = getString(R.string.close_resone_4);
+                    break;
+                case "5":
+                    closeReasonText = getString(R.string.close_resone_5);
+                    break;
+                case "6":
+                    closeReasonText = getString(R.string.close_resone_6);
+                    break;
+                case "7":
+                    closeReasonText = getString(R.string.close_resone_7);
+                    break;
+                case "8":
+                    closeReasonText = getString(R.string.close_resone_8);
+                    break;
+                case "9":
+                    closeReasonText = getString(R.string.close_resone_9);
+                    break;
+            }
+
+            if (routeFrom.equals("Місце відправлення")) {
+                routeFrom = getString(R.string.start_point_text);
+            }
+
+            if (routeTo.equals("Точка на карте")) {
+                routeTo = getString(R.string.end_point_marker);
+            }
+            if (routeTo.contains("по городу")) {
+                routeTo = getString(R.string.on_city);
+            }
+            if (routeTo.contains("по місту")) {
+                routeTo = getString(R.string.on_city);
+            }
+            String routeInfo = "";
+
+            if (auto == null) {
+                auto = "??";
+            }
+
+            if (routeFrom.equals(routeTo)) {
+                routeInfo = getString(R.string.close_resone_from) + routeFrom + " " + routefromnumber
+                        + getString(R.string.close_resone_to)
+                        + getString(R.string.on_city)
+                        + getString(R.string.close_resone_cost) + webCost + " " + getString(R.string.UAH)
+                        + getString(R.string.auto_info) + " " + auto + " "
+                        + getString(R.string.close_resone_time)
+                        + createdAt + getString(R.string.close_resone_text) + closeReasonText;
+            } else {
+                routeInfo = getString(R.string.close_resone_from) + routeFrom + " " + routefromnumber
+                        + getString(R.string.close_resone_to) + routeTo + " " + routeTonumber
+                        + getString(R.string.close_resone_cost) + webCost + " " + getString(R.string.UAH)
+                        + getString(R.string.auto_info) + " " + auto + " "
+                        + getString(R.string.close_resone_time)
+                        + createdAt + getString(R.string.close_resone_text) + closeReasonText;
+            }
+
+            databaseHelper.addRouteCancel(uid, routeInfo);
+            List<String> settings = new ArrayList<>();
+
+            settings.add(uid);
+            settings.add(webCost);
+            settings.add(routeFrom);
+            settings.add(routefromnumber);
+            settings.add(routeTo);
+            settings.add(routeTonumber);
+            settings.add(dispatchingOrderUidDouble);
+            settings.add(pay_method);
+
+            Logger.d(this, TAG, settings.toString());
+            databaseHelperUid.addCancelInfoUid(settings);
+        }
+
+        array = databaseHelper.readRouteCancel();
+        Logger.d(this, TAG, "processRouteList: array " + Arrays.toString(array));
+        if (array != null) {
+            String message = getString(R.string.order_to_cancel_true);
+            MyBottomSheetErrorFragment myBottomSheetMessageFragment = new MyBottomSheetErrorFragment(message);
+            myBottomSheetMessageFragment.show(getSupportFragmentManager(), myBottomSheetMessageFragment.getTag());
+        }
     }
 }
