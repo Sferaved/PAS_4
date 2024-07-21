@@ -77,7 +77,7 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
 public class CardFragment extends Fragment {
 
     private FragmentCardBinding binding;
-    public static AppCompatButton btnCardLink;
+    public static AppCompatButton btnCardLink, btnOrder;
 
     private NetworkChangeReceiver networkChangeReceiver;
     private final String baseUrl = "https://m.easy-order-taxi.site";
@@ -112,7 +112,15 @@ public class CardFragment extends Fragment {
         }
         context.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
         btnCardLink  = binding.btnCardLink;
-
+        btnOrder = binding.btnOrder;
+        btnOrder.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Удаляем последний фрагмент из стека навигации и переходим к новому фрагменту
+                navController.popBackStack();
+                navController.navigate(R.id.nav_visicom);
+            }
+        });
         return root;
     }
     private void pay_system() {

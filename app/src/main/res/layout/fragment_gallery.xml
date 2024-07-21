@@ -1,11 +1,18 @@
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView  xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+
     android:background="@color/background_color_new"
     tools:context=".ui.gallery.GalleryFragment">
-
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
 
 
     <TextView
@@ -30,9 +37,9 @@
 
     <ListView
         android:id="@+id/listView"
-        android:layout_width="381dp"
-        android:layout_height="726dp"
-        android:layout_margin="8sp"
+        android:layout_width="wrap_content"
+        android:layout_height="300dp"
+        android:layout_margin="8dp"
         android:divider="@color/colorAccent"
         android:dividerHeight="1sp"
         android:fadeScrollbars="false"
@@ -54,28 +61,30 @@
             android:id="@+id/scrollButtonUp"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_margin="2dp"
-            android:visibility="invisible"
+            android:layout_margin="8dp"
+            android:visibility="gone"
             android:background="@drawable/round_button_background"
-            android:src="@drawable/up"
+            android:src="@drawable/up_arrow"
+            app:layout_constraintEnd_toStartOf="@+id/scrollButtonDown"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
             tools:ignore="ContentDescription" />
-
 
 
         <ImageButton
             android:id="@+id/scrollButtonDown"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_margin="2dp"
-            android:visibility="invisible"
+            android:layout_margin="8dp"
+            android:visibility="gone"
             android:background="@drawable/round_button_background"
-            android:src="@drawable/down"
+            android:src="@drawable/down_arrow"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/scrollButtonUp"
             tools:ignore="ContentDescription" />
 
     </LinearLayout>
-
-
-
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/del_but"
@@ -182,6 +191,19 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnAdd" />
 
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_call"
+            android:layout_width="52sp"
+            android:layout_height="139sp"
+
+            android:layout_gravity="bottom|end"
+            android:layout_marginBottom="16dp"
+            android:contentDescription="@string/call_admin"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.955"
+            app:layout_constraintStart_toStartOf="parent"
+            app:srcCompat="@android:drawable/stat_sys_phone_call_forward" />
     <ProgressBar
         android:id="@+id/progress_bar"
         android:layout_width="60sp"
@@ -193,5 +215,7 @@
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/del_but" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>

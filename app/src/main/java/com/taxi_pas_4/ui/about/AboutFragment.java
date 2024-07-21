@@ -10,6 +10,8 @@ import android.text.style.ClickableSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -23,6 +25,7 @@ import com.taxi_pas_4.databinding.FragmentAboutBinding;
 public class AboutFragment extends Fragment {
 
     private FragmentAboutBinding binding;
+    private int desiredHeight;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -82,6 +85,22 @@ public class AboutFragment extends Fragment {
         final TextView textViewEmail = binding.textEmail;
         aboutViewModel.getTextBuild().observe(getViewLifecycleOwner(), textViewBuild::setText);
         aboutViewModel.getTextEmail().observe(getViewLifecycleOwner(), textViewEmail::setText);
+        ScrollView scrollView = binding.layoutScroll;
+
+
+
+
+        scrollView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                // Теперь мы можем получить высоту фрагмента
+                desiredHeight = root.getHeight() - 350;
+                ViewGroup.LayoutParams layoutParams = scrollView.getLayoutParams();
+                layoutParams.height = desiredHeight;
+                scrollView.setLayoutParams(layoutParams);
+            }
+        });
 
         return root;
     }

@@ -209,6 +209,8 @@ public class MainActivity extends AppCompatActivity {
         navMenu = navigationView.getMenu();
         navVisicomMenuItem = navMenu.findItem(R.id.nav_visicom);
 
+        databaseHelper = new DatabaseHelper(this);
+        databaseHelperUid = new DatabaseHelperUid(this);
 
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
@@ -1407,7 +1409,7 @@ public class MainActivity extends AppCompatActivity {
                 settingsNewUser(user.getEmail());
                 Toast.makeText(this, R.string.city_search, Toast.LENGTH_SHORT).show();
 
-                new Thread(() -> fetchRoutes(user.getEmail())).start();
+
 
 
             } else {
@@ -1432,7 +1434,13 @@ public class MainActivity extends AppCompatActivity {
     }
     private void fetchRoutes(String value) {
 
-        String url = baseUrl + "/android/UIDStatusShowEmail/" + value;
+        databaseHelper.clearTable();
+        databaseHelperUid.clearTableUid();
+
+        List<String> stringList = logCursor(MainActivity.CITY_INFO);
+        String city = stringList.get(1);
+        String url = baseUrl + "/android/UIDStatusShowEmailCityApp/" + value + "/" + city + "/" + getString(R.string.application);
+
         Call<List<RouteResponse>> call = ApiClient.getApiService().getRoutes(url);
         routeList = new ArrayList<>();
         Logger.d(this, TAG, "fetchRoutes: " + url);
@@ -1601,9 +1609,6 @@ public class MainActivity extends AppCompatActivity {
             database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
             database.close();
             Logger.d(this, TAG, "settingsNewUser" + emailUser);
-
-//            Intent intent = new Intent(this, MyFirebaseMessagingService.class);
-//            startService(intent);
         });
         updateUserInfoThread.start();
 

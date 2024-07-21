@@ -21,6 +21,8 @@ import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -125,6 +127,8 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
     LocationManager locationManager;
     private final int LOCATION_PERMISSION_REQUEST_CODE = 123;
     private boolean location_update;
+    private ImageButton scrollButtonDown, scrollButtonUp;
+    private final int desiredHeight = 600;
 
     @SuppressLint({"MissingInflatedId", "UseCompatLoadingForDrawables"})
     @Override
@@ -412,7 +416,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), OpenStreetMapVisicomActivity.class);
-               
+
                 intent.putExtra("startMarker", start);
                 intent.putExtra("finishMarker", end);
 
@@ -561,7 +565,52 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
 
             }
         });
+        scrollButtonUp = findViewById(R.id.scrollButtonUp);
+        scrollButtonDown = findViewById(R.id.scrollButtonDown);
+        scrollButtonDown.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Определяем следующую позицию для прокрутки
+                int nextVisiblePosition = addressListView.getLastVisiblePosition() + 1;
 
+                // Проверяем, чтобы не прокручивать за пределы списка
+//                if (nextVisiblePosition < addressesList.length) {
+                    // Плавно прокручиваем к следующей позиции
+                    addressListView.smoothScrollToPosition(nextVisiblePosition);
+//                }
+            }
+        });
+
+        scrollButtonUp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int offset = -1; // или другое значение, чтобы указать направление прокрутки
+                addressListView.smoothScrollByOffset(offset);
+            }
+        });
+        ViewGroup.LayoutParams layoutParams = addressListView.getLayoutParams();
+        layoutParams.height = desiredHeight;
+        addressListView.setLayoutParams(layoutParams);
+        addressListView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                int totalItemHeight = 0;
+                for (int i = 0; i < addressListView.getChildCount(); i++) {
+                    totalItemHeight += addressListView.getChildAt(i).getHeight();
+                }
+
+                if (totalItemHeight > desiredHeight) {
+                    scrollButtonUp.setVisibility(View.VISIBLE);
+                    scrollButtonDown.setVisibility(View.VISIBLE);
+                } else {
+                    scrollButtonUp.setVisibility(View.GONE);
+                    scrollButtonDown.setVisibility(View.GONE);
+                }
+
+                // Убираем слушатель, чтобы он не срабатывал многократно
+//                    listView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+            }
+        });
 
     }
     private void firstLocation() {

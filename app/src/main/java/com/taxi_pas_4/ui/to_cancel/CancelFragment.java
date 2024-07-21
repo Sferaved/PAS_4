@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -15,6 +16,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
@@ -29,6 +31,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.NetworkChangeReceiver;
@@ -43,10 +46,8 @@ import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.db.DatabaseHelper;
 import com.taxi_pas_4.utils.db.DatabaseHelperUid;
-import com.taxi_pas_4.utils.db.RouteInfo;
 import com.taxi_pas_4.utils.db.RouteInfoCancel;
 import com.taxi_pas_4.utils.log.Logger;
-import com.taxi_pas_4.utils.to_json_parser.JsonResponse;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -82,6 +83,8 @@ public class CancelFragment extends Fragment {
     private String email;
     private FragmentManager fragmentManager;
     Context context;
+    private final int desiredHeight = 1200;
+
     public CancelFragment() {
     }
 
@@ -92,9 +95,9 @@ public class CancelFragment extends Fragment {
         binding = FragmentCancelBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
         context = requireActivity();
-        
+
         Logger.d(context, TAG, "onContextItemSelected: ");
-    
+
         fragmentManager = getParentFragmentManager();
         requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
 
@@ -105,11 +108,19 @@ public class CancelFragment extends Fragment {
         email = logCursor(MainActivity.TABLE_USER_INFO, Objects.requireNonNull(requireActivity())).get(3);
 
         databaseHelper = new DatabaseHelper(getContext());
-        array = databaseHelper.readRouteCancel();
-
-
         databaseHelperUid = new DatabaseHelperUid(getContext());
-
+        array = databaseHelper.readRouteCancel();
+        FloatingActionButton fab_call = binding.fabCall;
+        fab_call.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_DIAL);
+                List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
+                String phone = stringList.get(3);
+                intent.setData(Uri.parse(phone));
+                startActivity(intent);
+            }
+        });
         textUid  = binding.textUid;
         upd_but = binding.updBut;
         upd_but.setOnClickListener(new View.OnClickListener() {
@@ -147,6 +158,8 @@ public class CancelFragment extends Fragment {
                 listView.smoothScrollByOffset(offset);
             }
         });
+
+
         fetchRoutesCancel(email);
 
         return root;
@@ -170,7 +183,7 @@ public class CancelFragment extends Fragment {
 
             // Обработка действия "Edit"
 //            Toast.makeText(requireActivity(), "Edit: " + array[position], Toast.LENGTH_SHORT).show();
-//            Logger.d(context, TAG, "onContextItemSelected: " + position);
+            Logger.d(context, TAG, "onContextItemSelected: " + position);
             Logger.d(context, TAG, "onContextItemSelected: " + array[position]);
 
             routeInfo = databaseHelperUid.getCancelInfoById(position+1);
@@ -181,7 +194,7 @@ public class CancelFragment extends Fragment {
             }
 
             Map<String, String> costMap = getStringStringMap();
-
+            Logger.d(context, TAG, "onContextItemSelected costMap: " + costMap);
             startFinishPage(costMap);
 
             navController.navigate(R.id.nav_visicom);
@@ -275,7 +288,7 @@ public class CancelFragment extends Fragment {
         startActivity(intent);
     }
 
-  
+
     private void fetchRoutesCancel(String value) {
         listView.setVisibility(View.GONE);
         scrollButtonDown.setVisibility(View.GONE);
@@ -471,18 +484,44 @@ public class CancelFragment extends Fragment {
 
             listView.setAdapter(adapter);
 
-            int desiredHeight = 1200; // Ваше желаемое значение высоты в пикселях
+
             ViewGroup.LayoutParams layoutParams = listView.getLayoutParams();
             layoutParams.height = desiredHeight;
             listView.setLayoutParams(layoutParams);
             registerForContextMenu(listView);
+            listView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    int totalItemHeight = 0;
+                    for (int i = 0; i < listView.getChildCount(); i++) {
+                        totalItemHeight += listView.getChildAt(i).getHeight();
+                    }
+
+                    if (totalItemHeight > desiredHeight) {
+                        scrollButtonUp.setVisibility(View.VISIBLE);
+                        scrollButtonDown.setVisibility(View.VISIBLE);
+                    } else {
+                        scrollButtonUp.setVisibility(View.GONE);
+                        scrollButtonDown.setVisibility(View.GONE);
+                    }
+
+                    // Убираем слушатель, чтобы он не срабатывал многократно
+//                    listView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                }
+            });
+
+
         } else {
             listView.setVisibility(View.GONE);
             scrollButtonDown.setVisibility(View.GONE);
             scrollButtonUp.setVisibility(View.GONE);
         }
     }
+    @Override
+    public void onResume() {
+        super.onResume();
 
+    }
      @SuppressLint("Range")
     public List<String> logCursor(String table, Context context) {
         List<String> list = new ArrayList<>();

@@ -107,7 +107,6 @@ public class HomeFragment extends Fragment {
     public static AppCompatButton btn_minus;
     public static AppCompatButton btn_plus;
     public static AppCompatButton btnGeo;
-    public AppCompatButton on_map;
     public static AppCompatButton btn_clear;
 
     public static long addCost, cost, costFirst;
@@ -438,39 +437,6 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        on_map = binding.btnMap;
-        on_map.setVisibility(View.INVISIBLE);
-        on_map.setOnClickListener(v -> {
-            LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-            boolean gps_enabled = false;
-            boolean network_enabled = false;
-
-            try {
-                gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
-            } catch(Exception e) {
-                FirebaseCrashlytics.getInstance().recordException(e);
-            }
-
-            try {
-                network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-            } catch(Exception e) {
-                FirebaseCrashlytics.getInstance().recordException(e);
-            }
-
-            if(!gps_enabled || !network_enabled) {
-                MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment("");
-                bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-            }  else  {
-                // Разрешения уже предоставлены, выполнить ваш код
-                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                        || ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
-                    checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
-                }  else {
-                    startActivity(new Intent(requireContext(), OpenStreetMapActivity.class));
-                }
-            }
-        });
         fab_call = binding.fabCall;
         fab_call.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -820,6 +786,7 @@ public class HomeFragment extends Fragment {
     }
     static void btnVisible(int visible) {
         text_view_cost.setVisibility(visible);
+        btn_clear.setVisibility(visible);
         btn_minus.setVisibility(visible);
         btn_plus.setVisibility(visible);
         buttonAddServices.setVisibility(visible);

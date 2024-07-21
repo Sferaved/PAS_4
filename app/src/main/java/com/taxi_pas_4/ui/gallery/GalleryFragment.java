@@ -10,11 +10,13 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -31,6 +33,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
@@ -60,7 +63,7 @@ import retrofit2.Response;
 
 public class GalleryFragment extends Fragment {
 
-    private static final String TAG = "TAG_GEL";
+    private static final String TAG = "GalleryFragment";
     @SuppressLint("StaticFieldLeak")
     public static ProgressBar progressbar;
     private FragmentGalleryBinding binding;
@@ -86,25 +89,10 @@ public class GalleryFragment extends Fragment {
     private ImageButton scrollButtonDown, scrollButtonUp;
     private AlertDialog alertDialog;
     FragmentManager fragmentManager;
-    public static String[] arrayServiceCode() {
-        return new String[]{
-                "BAGGAGE",
-                "ANIMAL",
-                "CONDIT",
-                "MEET",
-                "COURIER",
-                "CHECK_OUT",
-                "BABY_SEAT",
-                "DRIVER",
-                "NO_SMOKE",
-                "ENGLISH",
-                "CABLE",
-                "FUEL",
-                "WIRES",
-                "SMOKE",
-        };
-    }
+
+    private int desiredHeight;
     NavController navController;
+
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
@@ -115,7 +103,7 @@ public class GalleryFragment extends Fragment {
         binding = FragmentGalleryBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
 
         scrollButtonUp = binding.scrollButtonUp;
         scrollButtonDown = binding.scrollButtonDown;
@@ -130,6 +118,17 @@ public class GalleryFragment extends Fragment {
 
         listView = binding.listView;
 
+        FloatingActionButton fab_call = binding.fabCall;
+        fab_call.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_DIAL);
+                List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
+                String phone = stringList.get(3);
+                intent.setData(Uri.parse(phone));
+                startActivity(intent);
+            }
+        });
         del_but = binding.delBut;
         del_but.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -209,17 +208,56 @@ public class GalleryFragment extends Fragment {
             listView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 
             registerForContextMenu(listView);
+
+
+            listView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+
+                    // Теперь мы можем получить высоту фрагмента
+                    desiredHeight = root.getHeight() - 100;
+                    ViewGroup.LayoutParams layoutParams = listView.getLayoutParams();
+                    layoutParams.height = desiredHeight;
+                    listView.setLayoutParams(layoutParams);
+
+                    int totalItemHeight = 0;
+                    for (int i = 0; i < listView.getChildCount(); i++) {
+                        totalItemHeight += listView.getChildAt(i).getHeight();
+                    }
+
+                    if (totalItemHeight > desiredHeight) {
+                        scrollButtonUp.setVisibility(View.VISIBLE);
+                        scrollButtonDown.setVisibility(View.VISIBLE);
+                    } else {
+                        scrollButtonUp.setVisibility(View.GONE);
+                        scrollButtonDown.setVisibility(View.GONE);
+                    }
+
+                    // Убираем слушатель, чтобы он не срабатывал многократно
+//                    listView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                }
+            });
+
             listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     progressbar.setVisibility(View.VISIBLE);
-                    int desiredHeight = 500; // Ваше желаемое значение высоты в пикселях
+                    desiredHeight = 500; // Ваше желаемое значение высоты в пикселях
                     ViewGroup.LayoutParams layoutParams = listView.getLayoutParams();
                     layoutParams.height = desiredHeight;
-                    listView.setLayoutParams(layoutParams);
-                    scrollButtonDown.setVisibility(View.VISIBLE);
-                    scrollButtonUp.setVisibility(View.VISIBLE);
+                    int totalItemHeight = 0;
+                    for (int i = 0; i < listView.getChildCount(); i++) {
+                        totalItemHeight += listView.getChildAt(i).getHeight();
+                    }
 
+                    if (totalItemHeight > desiredHeight) {
+                        scrollButtonUp.setVisibility(View.VISIBLE);
+                        scrollButtonDown.setVisibility(View.VISIBLE);
+                    } else {
+                        scrollButtonUp.setVisibility(View.GONE);
+                        scrollButtonDown.setVisibility(View.GONE);
+                    }
                     del_but.setVisibility(View.VISIBLE);
                     btnRouts.setVisibility(View.VISIBLE);
                     text_view_cost.setVisibility(View.VISIBLE);

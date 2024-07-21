@@ -72,34 +72,30 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
 
         phoneFull(mContext);
 
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String PHONE_PATTERN = "((\\+?380)(\\d{9}))$";
-                boolean val = Pattern.compile(PHONE_PATTERN).matcher(phoneNumber.getText().toString()).matches();
-
-                if (!val) {
-                    String message = mContext.getString(R.string.format_phone);
-                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
-                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-                } else  {
-                    MainActivity.verifyPhone = true;
-                    updateRecordsUser(phoneNumber.getText().toString(), mContext);
-                    Logger.d(getActivity(), TAG, "setOnClickListener " + phoneNumber.getText().toString());
-                    Logger.d(getActivity(), TAG, "setOnClickListener " + page);
-                    switch (page) {
-                        case "home" :
-                            HomeFragment.btn_order.performClick();
-                            dismiss();
-                            break;
-                        case "visicom" :
-                            VisicomFragment.btnOrder.performClick();
-                            dismiss();
-                            break;
-                    }
-              }
+        button.setOnClickListener(v -> {
+            String PHONE_PATTERN = "((\\+?380)(\\d{9}))$";
+            boolean val = Pattern.compile(PHONE_PATTERN).matcher(phoneNumber.getText().toString()).matches();
+            if (val) {
+                MainActivity.verifyPhone = true;
+                updateRecordsUser(phoneNumber.getText().toString(), mContext);
+                Logger.d(getActivity(), TAG, "setOnClickListener " + phoneNumber.getText().toString());
+                Logger.d(getActivity(), TAG, "setOnClickListener " + page);
+                switch (page) {
+                    case "home":
+                        HomeFragment.btn_order.performClick();
+                        dismiss();
+                        break;
+                    case "visicom":
+                        VisicomFragment.btnOrder.performClick();
+                        dismiss();
+                        break;
+                }
+            } else {
+                Toast.makeText(mContext, mContext.getString(R.string.format_phone), Toast.LENGTH_SHORT).show();
             }
         });
+
+
         return view;
     }
 
@@ -134,18 +130,16 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
         if (imm != null && requireActivity().getCurrentFocus() != null) {
             imm.hideSoftInputFromWindow(Objects.requireNonNull(requireActivity().getCurrentFocus()).getWindowToken(), 0);
         }
-        if(!checkBox.isChecked()) {
-            switch (page) {
-                case "visicom":
-                    VisicomFragment.btnVisible(View.VISIBLE);
-                    break;
-                case "home":
-                    HomeFragment.btnVisible(View.VISIBLE);
-                    break;
-            }
-            phoneNumber.setVisibility(View.VISIBLE);
-            button.setVisibility(View.VISIBLE);
+        switch (page) {
+            case "visicom":
+                VisicomFragment.btnVisible(View.VISIBLE);
+                break;
+            case "home":
+                HomeFragment.btnVisible(View.VISIBLE);
+                break;
         }
+        phoneNumber.setVisibility(View.VISIBLE);
+        button.setVisibility(View.VISIBLE);
     }
 
     @Override

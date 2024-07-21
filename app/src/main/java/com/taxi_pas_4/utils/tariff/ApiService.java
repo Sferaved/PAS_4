@@ -1,7 +1,6 @@
 package com.taxi_pas_4.utils.tariff;
 
 import java.util.List;
-
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Path;

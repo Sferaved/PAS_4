@@ -40,6 +40,8 @@ import com.taxi_pas_4.cities.api.CityResponse;
 import com.taxi_pas_4.cities.api.CityResponseMerchantFondy;
 import com.taxi_pas_4.cities.api.CityService;
 import com.taxi_pas_4.ui.card.CardInfo;
+import com.taxi_pas_4.ui.finish.ApiClient;
+import com.taxi_pas_4.ui.finish.RouteResponse;
 import com.taxi_pas_4.ui.fondy.callback.CallbackResponse;
 import com.taxi_pas_4.ui.fondy.callback.CallbackService;
 import com.taxi_pas_4.ui.payment_system.PayApi;
@@ -47,6 +49,8 @@ import com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
+import com.taxi_pas_4.utils.db.DatabaseHelper;
+import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.ip.ApiServiceCountry;
 import com.taxi_pas_4.utils.ip.CountryResponse;
 import com.taxi_pas_4.utils.ip.RetrofitClient;
@@ -55,6 +59,7 @@ import com.taxi_pas_4.utils.ip.ip_util_retrofit.IpifyService;
 import com.taxi_pas_4.utils.log.Logger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import okhttp3.OkHttpClient;
@@ -77,6 +82,12 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
     private String message;
     String pay_method;
     FragmentManager fragmentManager;
+
+    private List<RouteResponse> routeList;
+    String[] array;
+    DatabaseHelper databaseHelper;
+    DatabaseHelperUid databaseHelperUid;
+
     public MyBottomSheetCityFragment() {
         // Пустой конструктор без аргументов
     }
@@ -134,6 +145,9 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
                 context.getString(R.string.test_city),
                 context.getString(R.string.foreign_countries),
         };
+
+        databaseHelper = new DatabaseHelper(getContext());
+        databaseHelperUid = new DatabaseHelperUid(getContext());
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(requireActivity(), R.layout.services_adapter_layout, cityList);
         listView.setAdapter(adapter);
@@ -262,7 +276,8 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
                 dismiss();
             }
         });
-
+        databaseHelper = new DatabaseHelper(getContext());
+        databaseHelperUid = new DatabaseHelperUid(getContext());
         return view;
     }
 
@@ -528,11 +543,183 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
         settings.add(Double.toString(startLan));
         settings.add(position);
         settings.add(position);
-//        settings.add(context.getString(R.string.on_city_tv));
+
         updateRoutMarker(settings);
 
+        String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
+        Logger.d(context, TAG, "newUser: " + userEmail);
+
+        new Thread(() -> fetchRoutes(userEmail)).start();
+    }
+    private void fetchRoutes(String value) {
+
+        databaseHelper.clearTable();
+        databaseHelperUid.clearTableUid();
+
+        List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
+        String city = stringList.get(1);
+        String url = baseUrl + "/android/UIDStatusShowEmailCityApp/" + value + "/" + city + "/" + context.getString(R.string.application);
+
+        Call<List<RouteResponse>> call = ApiClient.getApiService().getRoutes(url);
+        routeList = new ArrayList<>();
+        Logger.d(context, TAG, "fetchRoutes: " + url);
+        call.enqueue(new Callback<List<RouteResponse>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<RouteResponse>> call, @NonNull Response<List<RouteResponse>> response) {
+                if (response.isSuccessful()) {
+                    List<RouteResponse> routes = response.body();
+                    Logger.d (context, TAG, "onResponse: " + routes);
+                    if (routes != null && !routes.isEmpty()) {
+                        boolean hasRouteWithAsterisk = false;
+                        for (RouteResponse route : routes) {
+                            if ("*".equals(route.getRouteFrom())) {
+                                // Найден объект с routefrom = "*"
+                                hasRouteWithAsterisk = true;
+                                break;  // Выход из цикла, так как условие уже выполнено
+                            }
+                        }
+                        if (!hasRouteWithAsterisk) {
+                            routeList.addAll(routes);
+                            processRouteList();
+                        }
+
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<List<RouteResponse>> call, @NonNull Throwable t) {
+
+            }
+        });
     }
 
+
+    private void processRouteList() {
+        // В этом методе вы можете использовать routeList для выполнения дополнительных действий с данными.
+
+        // Создайте массив строк
+        databaseHelper = new DatabaseHelper(context);
+        databaseHelper.clearTable();
+
+        databaseHelperUid = new DatabaseHelperUid(context);
+        databaseHelperUid.clearTableUid();
+
+        array = new String[routeList.size()];
+
+
+        String closeReasonText = context.getString(R.string.close_resone_def);
+
+        for (int i = 0; i < routeList.size(); i++) {
+            RouteResponse route = routeList.get(i);
+
+            String routeFrom = route.getRouteFrom();
+            String routefromnumber = route.getRouteFromNumber();
+            String startLat = route.getStartLat();
+            String startLan = route.getStartLan();
+
+            String routeTo = route.getRouteTo();
+            String routeTonumber = route.getRouteToNumber();
+            String to_lat = route.getTo_lat();
+            String to_lng = route.getTo_lng();
+
+            String webCost = route.getWebCost();
+            String createdAt = route.getCreatedAt();
+            String closeReason = route.getCloseReason();
+            String auto = route.getAuto();
+
+            switch (closeReason){
+                case "-1":
+                    closeReasonText =context.getString(R.string.close_resone_in_work);
+                    break;
+                case "0":
+                    closeReasonText =context.getString(R.string.close_resone_0);
+                    break;
+                case "1":
+                    closeReasonText =context.getString(R.string.close_resone_1);
+                    break;
+                case "2":
+                    closeReasonText =context.getString(R.string.close_resone_2);
+                    break;
+                case "3":
+                    closeReasonText =context.getString(R.string.close_resone_3);
+                    break;
+                case "4":
+                    closeReasonText =context.getString(R.string.close_resone_4);
+                    break;
+                case "5":
+                    closeReasonText =context.getString(R.string.close_resone_5);
+                    break;
+                case "6":
+                    closeReasonText =context.getString(R.string.close_resone_6);
+                    break;
+                case "7":
+                    closeReasonText =context.getString(R.string.close_resone_7);
+                    break;
+                case "8":
+                    closeReasonText =context.getString(R.string.close_resone_8);
+                    break;
+                case "9":
+                    closeReasonText =context.getString(R.string.close_resone_9);
+                    break;
+
+            }
+
+            if(routeFrom.equals("Місце відправлення")) {
+                routeFrom =context.getString(R.string.start_point_text);
+            }
+
+
+            if(routeTo.equals("Точка на карте")) {
+                routeTo =context.getString(R.string.end_point_marker);
+            }
+            if(routeTo.contains("по городу")) {
+                routeTo =context.getString(R.string.on_city);
+            }
+            if(routeTo.contains("по місту")) {
+                routeTo =context.getString(R.string.on_city);
+            }
+            String routeInfo = "";
+
+            if(auto == null) {
+                auto = "??";
+            }
+
+            if(routeFrom.equals(routeTo)) {
+                routeInfo =context.getString(R.string.close_resone_from) + routeFrom + " " + routefromnumber
+                        +context.getString(R.string.close_resone_to)
+                        +context.getString(R.string.on_city)
+                        +context.getString(R.string.close_resone_cost) + webCost + " " +context.getString(R.string.UAH)
+                        +context.getString(R.string.auto_info) + " " + auto + " "
+                        +context.getString(R.string.close_resone_time)
+                        + createdAt +context.getString(R.string.close_resone_text) + closeReasonText;
+            } else {
+                routeInfo =context.getString(R.string.close_resone_from) + routeFrom + " " + routefromnumber
+                        +context.getString(R.string.close_resone_to) + routeTo + " " + routeTonumber
+                        +context.getString(R.string.close_resone_cost) + webCost + " " +context.getString(R.string.UAH)
+                        +context.getString(R.string.auto_info) + " " + auto + " "
+                        +context.getString(R.string.close_resone_time)
+                        + createdAt +context.getString(R.string.close_resone_text) + closeReasonText;
+            }
+
+            databaseHelper.addRouteInfo(routeInfo);
+
+            List<String> settings = new ArrayList<>();
+
+            settings.add(startLat);
+            settings.add(startLan);
+            settings.add(to_lat);
+            settings.add(to_lng);
+            settings.add(routeFrom + " " + routefromnumber);
+            settings.add(routeTo + " " + routeTonumber);
+            Logger.d(context, TAG, settings.toString());
+            databaseHelperUid.addRouteInfoUid(settings);
+
+
+        }
+        array = databaseHelper.readRouteInfo();
+        Logger.d(context, TAG, "processRouteList: array 1211" + Arrays.toString(array));
+    }
     private void updateRoutMarker(List<String> settings) {
         Logger.d(context, TAG, "updateRoutMarker: " + settings.toString());
         ContentValues cv = new ContentValues();
