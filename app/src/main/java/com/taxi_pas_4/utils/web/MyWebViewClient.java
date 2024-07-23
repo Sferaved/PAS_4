@@ -10,8 +10,8 @@ import android.widget.Toast;
 
 import androidx.navigation.NavController;
 
-import com.taxi_pas_4.R;
-import com.taxi_pas_4.utils.log.Logger;
+import  com.taxi_pas_4.R;
+import  com.taxi_pas_4.utils.log.Logger;
 
 public class MyWebViewClient extends WebViewClient {
     private final String TAG = "MyWebViewClient";

@@ -10,10 +10,10 @@ import android.database.sqlite.SQLiteDatabase;
 
 import androidx.annotation.NonNull;
 
-import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.R;
-import com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
-import com.taxi_pas_4.utils.log.Logger;
+import  com.taxi_pas_4.MainActivity;
+import  com.taxi_pas_4.R;
+import  com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
+import  com.taxi_pas_4.utils.log.Logger;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;

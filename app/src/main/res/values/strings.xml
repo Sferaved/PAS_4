@@ -1,8 +1,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.098</string>
-    <string name="version">Версия: 4.098</string>
+    <string name="version_code">4.099</string>
+    <string name="version">Версия: 4.099</string>
 
     <string name="app_name">Такси Дюк Попутчик</string>
 
@@ -77,7 +77,7 @@
     <string name="from_edit">Откуда</string>
     <string name="sms_code">Код проверки со смс-сообщения</string>
     <string name="android">Андроид-приложение для скорых и дешевых поездок при заказе онлайн.</string>
-    <string name="good_day">Мои приветствия. Нашел великолепное приложение для поездок на такси. \n \n Советую попробовать по ссылке в официальном магазине Google: \n\n https://play.google.com/store/apps/details?id=com.taxi_pas_4 \n\n Хорошего дня. \n Еще увидимся.</string>
+    <string name="good_day">Мои приветствия. Нашел великолепное приложение для поездок на такси. \n \n Советую попробовать по ссылке в официальном магазине Google: \n\n https://play.google.com/store/apps/details?id= com.taxi_pas_4 \n\n Хорошего дня. \n Еще увидимся.</string>
     <string name="share">Посоветовать другу приложение...</string>
     <string name="no_email_agent">Почтовый клиент не установлен.</string>
     <string name="check_position">Подождите, происходит определение Вашего местоположения...</string>
@@ -85,7 +85,8 @@
     <string name="make_order_message">Совершите хотя бы одну поездку</string>
     <string name="to_adress_message">Куда едем?</string>
     <string name="coastMarkersMessage">"Стоимость путешествия по маршруту"</string>
-    <string name="please_phone_message">Приложение передает номер вашего мобильного телефона для включения функции заказа такси. Нажав кнопку Сохранить Вы подтверждаете согласие на передачу телефонного номера диспетчеру для поиска автомобиля и сохранения его для следующих заказов.</string><string name="check_message">Ждите, идет подключение.</string>
+    <string name="please_phone_message">Без ввода номера телефона заказ невозможен. Приложение передает номер вашего мобильного телефона для включения функции заказа такси. Нажав кнопку Сохранить Вы подтверждаете согласие на передачу телефонного номера диспетчеру для поиска автомобиля и сохранения его для следующих заказов.</string>
+    <string name="check_message">Ждите, идет подключение.</string>
     <string name="find_of_map">Попробуйте найти на карте</string>
     <string name="end_point_marker">Место назначения</string>
     <string name="error_firebase_start">Ошибка проверки. Наберите оператора через "ПОМОЩЬ"</string>
@@ -295,7 +296,7 @@
     <string name="city_cherkasy"> г.Черкассы</string>
     <string name="tail1">Карты для города \'</string>
     <string name="tail2">\' успешно загружены</string>
-    <string name="rout_fin">Выбирите из списка номер дома</string>
+    <string name="rout_fin">Выберите из списка номер дома</string>
     <string name="hi_mes">Вас приветствует</string>
     <string name="change_mes">Отсуствуют результаты. Попробуйте изменить параметры поиска</string>
     <string name="two_point_mes">Укажите на карте место высадки</string>
@@ -386,4 +387,5 @@
     <string name="order_to_cancel_review">Перейти к просмотру</string>
     <string name="order_to_cancel_true">У Вас есть запланированные поездки</string>
     <string name="no_house_vis_mes">Запрошенный адрес не найден. Попробуйте дргуой или нажмите зеленую кнопку со стрелкой "назад"</string>
+    <string name="no_adrees_mes">Уточните адрес или наберите операторов</string>
 </resources>

@@ -19,8 +19,8 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import com.taxi_pas_4.R;
-import com.taxi_pas_4.databinding.FragmentAboutBinding;
+import  com.taxi_pas_4.R;
+import  com.taxi_pas_4.databinding.FragmentAboutBinding;
 
 public class AboutFragment extends Fragment {
 
@@ -38,7 +38,7 @@ public class AboutFragment extends Fragment {
         // Текст, который вы хотите отображать
         TextView textSite = binding.textView1;
         // Текст, который вы хотите отображать
-        String displayText = getString(R.string.gdpr0);
+        String displayText = requireActivity().getString(R.string.gdpr0);
 
         final String url = "https://m.easy-order-taxi.site/taxi-gdbr";
 

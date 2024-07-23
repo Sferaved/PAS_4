@@ -1,6 +1,6 @@
 package com.taxi_pas_4.ui.wfp.token;
 
-import com.taxi_pas_4.ui.card.CardInfo;
+import  com.taxi_pas_4.ui.card.CardInfo;
 
 import java.util.List;
 

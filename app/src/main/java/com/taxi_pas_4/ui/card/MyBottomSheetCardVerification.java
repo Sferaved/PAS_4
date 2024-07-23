@@ -24,42 +24,40 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.gson.Gson;
-import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.R;
-import com.taxi_pas_4.ui.fondy.callback.CallbackResponse;
-import com.taxi_pas_4.ui.fondy.callback.CallbackService;
-import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureClient;
-import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureResponse;
-import com.taxi_pas_4.ui.fondy.revers.ApiResponseRev;
-import com.taxi_pas_4.ui.fondy.revers.ReversApi;
-import com.taxi_pas_4.ui.fondy.revers.ReversRequestData;
-import com.taxi_pas_4.ui.fondy.revers.ReversRequestSent;
-import com.taxi_pas_4.ui.fondy.revers.SuccessResponseDataRevers;
-import com.taxi_pas_4.ui.fondy.status.ApiResponse;
-import com.taxi_pas_4.ui.fondy.status.FondyApiService;
-import com.taxi_pas_4.ui.fondy.status.StatusRequest;
-import com.taxi_pas_4.ui.fondy.status.StatusRequestBody;
-import com.taxi_pas_4.ui.fondy.status.SuccessfulResponseData;
-import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
-import com.taxi_pas_4.ui.mono.MonoApi;
-import com.taxi_pas_4.ui.mono.cancel.RequestCancelMono;
-import com.taxi_pas_4.ui.mono.cancel.ResponseCancelMono;
-import com.taxi_pas_4.ui.mono.status.ResponseStatusMono;
-import com.taxi_pas_4.ui.payment_system.PayApi;
-import com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
-import com.taxi_pas_4.ui.wfp.checkStatus.StatusResponse;
-import com.taxi_pas_4.ui.wfp.checkStatus.StatusService;
-import com.taxi_pas_4.ui.wfp.revers.ReversResponse;
-import com.taxi_pas_4.ui.wfp.revers.ReversService;
-import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
-import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
-import com.taxi_pas_4.utils.log.Logger;
+import  com.taxi_pas_4.MainActivity;
+import  com.taxi_pas_4.R;
+import  com.taxi_pas_4.ui.fondy.callback.CallbackResponse;
+import  com.taxi_pas_4.ui.fondy.callback.CallbackService;
+import  com.taxi_pas_4.ui.fondy.gen_signatur.SignatureClient;
+import  com.taxi_pas_4.ui.fondy.gen_signatur.SignatureResponse;
+import  com.taxi_pas_4.ui.fondy.revers.ApiResponseRev;
+import  com.taxi_pas_4.ui.fondy.revers.ReversApi;
+import  com.taxi_pas_4.ui.fondy.revers.ReversRequestData;
+import  com.taxi_pas_4.ui.fondy.revers.ReversRequestSent;
+import  com.taxi_pas_4.ui.fondy.revers.SuccessResponseDataRevers;
+import  com.taxi_pas_4.ui.fondy.status.ApiResponse;
+import  com.taxi_pas_4.ui.fondy.status.FondyApiService;
+import  com.taxi_pas_4.ui.fondy.status.StatusRequest;
+import  com.taxi_pas_4.ui.fondy.status.StatusRequestBody;
+import  com.taxi_pas_4.ui.fondy.status.SuccessfulResponseData;
+import  com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
+import  com.taxi_pas_4.ui.mono.MonoApi;
+import  com.taxi_pas_4.ui.mono.cancel.RequestCancelMono;
+import  com.taxi_pas_4.ui.mono.cancel.ResponseCancelMono;
+import  com.taxi_pas_4.ui.mono.status.ResponseStatusMono;
+import  com.taxi_pas_4.ui.payment_system.PayApi;
+import  com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
+import  com.taxi_pas_4.ui.wfp.checkStatus.StatusResponse;
+import  com.taxi_pas_4.ui.wfp.checkStatus.StatusService;
+import  com.taxi_pas_4.ui.wfp.revers.ReversResponse;
+import  com.taxi_pas_4.ui.wfp.revers.ReversService;
+import  com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
+import  com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
+import  com.taxi_pas_4.utils.log.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -89,7 +87,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
     static SQLiteDatabase database;
     private final String baseUrl = "https://m.easy-order-taxi.site";
     Activity context;
-    private NavController navController;
+
     String city;
     FragmentManager fragmentManager;
     public MyBottomSheetCardVerification(String checkoutUrl, String amount) {
@@ -102,7 +100,6 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.activity_fondy_payment, container, false);
-        navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
         fragmentManager = getParentFragmentManager();
         webView = view.findViewById(R.id.webView);
         email = logCursor(MainActivity.TABLE_USER_INFO).get(3);
@@ -299,7 +296,8 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                             database.close();
                         }
                     }
-                    navController.navigate(R.id.nav_card);
+                    MainActivity.navController.popBackStack();
+                    MainActivity.navController.navigate(R.id.nav_card);
                 } else {
                     if (isAdded()) {
                         MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(context.getString(R.string.verify_internet));
@@ -367,8 +365,8 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                     }
 
                 }
-                navController.popBackStack();
-                navController.navigate(R.id.nav_bonus);
+                MainActivity.navController.popBackStack();
+                MainActivity.navController.navigate(R.id.nav_bonus);
             }
 
             @Override

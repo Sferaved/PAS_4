@@ -6,7 +6,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import com.taxi_pas_4.utils.log.Logger;
+import  com.taxi_pas_4.utils.log.Logger;
 
 import org.json.JSONException;
 import org.osmdroid.util.GeoPoint;

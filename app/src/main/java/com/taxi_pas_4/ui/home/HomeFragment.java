@@ -3,7 +3,7 @@ package com.taxi_pas_4.ui.home;
 
 import static android.content.Context.MODE_PRIVATE;
 import static android.graphics.Color.RED;
-import static com.taxi_pas_4.R.string.address_error_message;
+import static  com.taxi_pas_4.R.string.address_error_message;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -49,32 +49,30 @@ import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
 import androidx.room.Room;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.R;
-import com.taxi_pas_4.cities.Cherkasy.Cherkasy;
-import com.taxi_pas_4.cities.Dnipro.DniproCity;
-import com.taxi_pas_4.cities.Kyiv.KyivCity;
-import com.taxi_pas_4.cities.Odessa.Odessa;
-import com.taxi_pas_4.cities.Odessa.OdessaTest;
-import com.taxi_pas_4.cities.Zaporizhzhia.Zaporizhzhia;
-import com.taxi_pas_4.databinding.FragmentHomeBinding;
-import com.taxi_pas_4.ui.finish.FinishActivity;
-import com.taxi_pas_4.ui.home.room.AppDatabase;
-import com.taxi_pas_4.ui.home.room.RouteCost;
-import com.taxi_pas_4.ui.home.room.RouteCostDao;
-import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
-import com.taxi_pas_4.ui.start.ResultSONParser;
-import com.taxi_pas_4.utils.connect.NetworkUtils;
-import com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
-import com.taxi_pas_4.utils.log.Logger;
-import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
-import com.taxi_pas_4.utils.user_verify.VerifyUserTask;
+import  com.taxi_pas_4.MainActivity;
+import  com.taxi_pas_4.R;
+import  com.taxi_pas_4.cities.Cherkasy.Cherkasy;
+import  com.taxi_pas_4.cities.Dnipro.DniproCity;
+import  com.taxi_pas_4.cities.Kyiv.KyivCity;
+import  com.taxi_pas_4.cities.Odessa.Odessa;
+import  com.taxi_pas_4.cities.Odessa.OdessaTest;
+import  com.taxi_pas_4.cities.Zaporizhzhia.Zaporizhzhia;
+import  com.taxi_pas_4.databinding.FragmentHomeBinding;
+import  com.taxi_pas_4.ui.finish.FinishActivity;
+import  com.taxi_pas_4.ui.home.room.AppDatabase;
+import  com.taxi_pas_4.ui.home.room.RouteCost;
+import  com.taxi_pas_4.ui.home.room.RouteCostDao;
+import  com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
+import  com.taxi_pas_4.ui.start.ResultSONParser;
+import  com.taxi_pas_4.utils.connect.NetworkUtils;
+import  com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
+import  com.taxi_pas_4.utils.log.Logger;
+import  com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
+import  com.taxi_pas_4.utils.user_verify.VerifyUserTask;
 
 import org.json.JSONException;
 
@@ -148,7 +146,7 @@ public class HomeFragment extends Fragment {
     long MIN_COST_VALUE;
     AutoCompleteTextView textViewFrom, textViewTo;
     ArrayAdapter<String> adapter;
-    NavController navController;
+
     String city;
     LocationManager locationManager;
     Activity context;
@@ -157,14 +155,13 @@ public class HomeFragment extends Fragment {
                              ViewGroup container, Bundle savedInstanceState) {
         context = requireActivity();
         fragmentManager = getParentFragmentManager();
-        navController = Navigation.findNavController(context, R.id.nav_host_fragment_content_main);
-
 
         List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
 
         city = stringList.get(1);
         if (!NetworkUtils.isNetworkAvailable(requireContext()) || city.equals("foreign countries")) {
-            navController.navigate(R.id.nav_visicom);
+            MainActivity.navController.popBackStack();
+            MainActivity.navController.navigate(R.id.nav_visicom);
         }
 
         binding = FragmentHomeBinding.inflate(inflater, container, false);
@@ -481,12 +478,9 @@ public class HomeFragment extends Fragment {
     private void orderFinished() {
 
         if (!MainActivity.verifyPhone){
-            String message = getString(R.string.phone_input_error);
-            Toast.makeText(context, message, Toast.LENGTH_LONG).show();
-
             MyPhoneDialogFragment bottomSheetDialogFragment = new MyPhoneDialogFragment(context, "home");
             bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-            progressBar.setVisibility(View.INVISIBLE);
+            progressBar.setVisibility(View.GONE);
         } else {
             Toast.makeText(context, R.string.check_order_mes, Toast.LENGTH_SHORT).show();
             ToJSONParserRetrofit parser = new ToJSONParserRetrofit();
@@ -562,7 +556,7 @@ public class HomeFragment extends Fragment {
                         intent.putExtra("sendUrlMap", new HashMap<>(sendUrlMap));
                         intent.putExtra("UID_key", String.valueOf(sendUrlMap.get("dispatching_order_uid")));
                         startActivity(intent);
-                        progressBar.setVisibility(View.INVISIBLE);
+                        progressBar.setVisibility(View.GONE);
 
                     } else {
                         btnVisible(View.INVISIBLE);
@@ -650,11 +644,11 @@ public class HomeFragment extends Fragment {
         if(!verifyOrder(requireContext())) {
             MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.black_list_message));
             bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-            progressBar.setVisibility(View.INVISIBLE);
+            progressBar.setVisibility(View.GONE);
             return false;
         } else {
             List<String> stringListRoutHome = logCursor(MainActivity.ROUT_HOME, context);
-            progressBar.setVisibility(View.INVISIBLE);
+            progressBar.setVisibility(View.GONE);
             if (stringListRoutHome.get(1).equals(" ") && !textViewTo.getText().equals("")) {
                 boolean stop = false;
                 if (numberFlagFrom.equals("1") && from_number.getText().toString().equals(" ")) {
@@ -797,7 +791,7 @@ public class HomeFragment extends Fragment {
         if (visible == View.INVISIBLE) {
             progressBar.setVisibility(View.VISIBLE);
         } else {
-            progressBar.setVisibility(View.INVISIBLE);
+            progressBar.setVisibility(View.GONE);
         }
     }
 
@@ -846,7 +840,7 @@ public class HomeFragment extends Fragment {
         String application =  getString(R.string.application);
         new VerifyUserTask(context).execute();
 
-        progressBar.setVisibility(View.INVISIBLE);
+        progressBar.setVisibility(View.GONE);
         pay_method =  logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(4);
 
         if(bottomSheetDialogFragment != null) {
@@ -880,7 +874,8 @@ public class HomeFragment extends Fragment {
                     if (hasFocus) {
                         // Фокус установлен на TextView, очищаем его
                         resetRoutHome();
-                        navController.navigate(R.id.nav_home);
+                        MainActivity.navController.popBackStack();
+                        MainActivity.navController.navigate(R.id.nav_home);
                     }
                 }
             });
@@ -895,7 +890,8 @@ public class HomeFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 resetRoutHome();
-                navController.navigate(R.id.nav_home);
+                MainActivity.navController.popBackStack();
+                MainActivity.navController.navigate(R.id.nav_home);
 
             }
         });
@@ -969,10 +965,10 @@ public class HomeFragment extends Fragment {
                         default:
                             Logger.d(getActivity(), TAG, "onItemClick: " + new IllegalStateException("Unexpected value: " + Objects.requireNonNull(orderCost)));
                     }
-                    progressBar.setVisibility(View.INVISIBLE);
+                    progressBar.setVisibility(View.GONE);
 
                 } else {
-                    progressBar.setVisibility(View.INVISIBLE);
+                    progressBar.setVisibility(View.GONE);
                     MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
                     bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                 }
@@ -1301,7 +1297,7 @@ public class HomeFragment extends Fragment {
             @SuppressLint("StaticFieldLeak")
             @Override
             protected void onPostExecute(RouteCost retrievedRouteCost) {
-                progressBar.setVisibility(View.INVISIBLE);
+                progressBar.setVisibility(View.GONE);
                 if (retrievedRouteCost != null) {
                     // Данные с указанным routeId существуют в базе данных
                     textViewFrom.setText(retrievedRouteCost.from);
@@ -1801,7 +1797,7 @@ public class HomeFragment extends Fragment {
         cancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                HomeFragment.progressBar.setVisibility(View.INVISIBLE);
+                HomeFragment.progressBar.setVisibility(View.GONE);
                 progressBar.setVisibility(View.GONE);
                 alertDialog.dismiss();
             }

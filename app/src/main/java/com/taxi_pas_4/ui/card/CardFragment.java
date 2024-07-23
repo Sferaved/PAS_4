@@ -24,37 +24,35 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.NetworkChangeReceiver;
-import com.taxi_pas_4.R;
-import com.taxi_pas_4.databinding.FragmentCardBinding;
-import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureClient;
-import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureResponse;
-import com.taxi_pas_4.ui.fondy.payment.ApiResponsePay;
-import com.taxi_pas_4.ui.fondy.payment.PaymentApi;
-import com.taxi_pas_4.ui.fondy.payment.RequestData;
-import com.taxi_pas_4.ui.fondy.payment.StatusRequestPay;
-import com.taxi_pas_4.ui.fondy.payment.SuccessResponseDataPay;
-import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
-import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
-import com.taxi_pas_4.ui.mono.MonoApi;
-import com.taxi_pas_4.ui.mono.cancel.RequestCancelMono;
-import com.taxi_pas_4.ui.mono.cancel.ResponseCancelMono;
-import com.taxi_pas_4.ui.payment_system.PayApi;
-import com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
-import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
-import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
-import com.taxi_pas_4.ui.wfp.verify.VerifyService;
-import com.taxi_pas_4.utils.LocaleHelper;
-import com.taxi_pas_4.utils.connect.NetworkUtils;
-import com.taxi_pas_4.utils.log.Logger;
-import com.taxi_pas_4.utils.web.MyWebViewClient;
+import  com.taxi_pas_4.MainActivity;
+import  com.taxi_pas_4.NetworkChangeReceiver;
+import  com.taxi_pas_4.R;
+import  com.taxi_pas_4.databinding.FragmentCardBinding;
+import  com.taxi_pas_4.ui.fondy.gen_signatur.SignatureClient;
+import  com.taxi_pas_4.ui.fondy.gen_signatur.SignatureResponse;
+import  com.taxi_pas_4.ui.fondy.payment.ApiResponsePay;
+import  com.taxi_pas_4.ui.fondy.payment.PaymentApi;
+import  com.taxi_pas_4.ui.fondy.payment.RequestData;
+import  com.taxi_pas_4.ui.fondy.payment.StatusRequestPay;
+import  com.taxi_pas_4.ui.fondy.payment.SuccessResponseDataPay;
+import  com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
+import  com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
+import  com.taxi_pas_4.ui.mono.MonoApi;
+import  com.taxi_pas_4.ui.mono.cancel.RequestCancelMono;
+import  com.taxi_pas_4.ui.mono.cancel.ResponseCancelMono;
+import  com.taxi_pas_4.ui.payment_system.PayApi;
+import  com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
+import  com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
+import  com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
+import  com.taxi_pas_4.ui.wfp.verify.VerifyService;
+import  com.taxi_pas_4.utils.LocaleHelper;
+import  com.taxi_pas_4.utils.connect.NetworkUtils;
+import  com.taxi_pas_4.utils.log.Logger;
+import  com.taxi_pas_4.utils.web.MyWebViewClient;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -94,7 +92,7 @@ public class CardFragment extends Fragment {
     public static ListView listView;
     public static String table;
     String pay_method;
-    NavController navController;
+
     private boolean show_cards;
     Activity context;
     WebView webView;
@@ -106,9 +104,10 @@ public class CardFragment extends Fragment {
         fragmentManager = getParentFragmentManager();
         webView = binding.webView;
         context = requireActivity();
-        navController = Navigation.findNavController(context, R.id.nav_host_fragment_content_main);
+       
         if (!NetworkUtils.isNetworkAvailable(requireContext())) {
-            navController.navigate(R.id.nav_visicom);
+            MainActivity.navController.popBackStack();
+            MainActivity.navController.navigate(R.id.nav_visicom);
         }
         context.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
         btnCardLink  = binding.btnCardLink;
@@ -117,8 +116,8 @@ public class CardFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 // Удаляем последний фрагмент из стека навигации и переходим к новому фрагменту
-                navController.popBackStack();
-                navController.navigate(R.id.nav_visicom);
+                MainActivity.navController.popBackStack();
+                MainActivity.navController.navigate(R.id.nav_visicom);
             }
         });
         return root;
@@ -186,9 +185,9 @@ public class CardFragment extends Fragment {
                             progressBar.setVisibility(View.VISIBLE);
 
                                 Logger.d(context, TAG, "onClick: " + pay_method);
-                                NavController navController = Navigation.findNavController(context, R.id.nav_host_fragment_content_main);
                                 if (!NetworkUtils.isNetworkAvailable(requireContext())) {
-                                    navController.navigate(R.id.nav_visicom);
+                                    MainActivity.navController.popBackStack();
+                                    MainActivity.navController.navigate(R.id.nav_visicom);
                                 } else {
                                     MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(getActivity());
 
@@ -609,7 +608,7 @@ public class CardFragment extends Fragment {
         webView.setVisibility(View.VISIBLE);
 
         // Присваиваем WebViewClient для отслеживания URL
-        webView.setWebViewClient(new MyWebViewClient(context, navController));
+        webView.setWebViewClient(new MyWebViewClient(context, MainActivity.navController));
 
         // Загружаем HTML-контент в WebView
         webView.loadDataWithBaseURL(baseUrl, htmlContent, "text/html", "UTF-8", null);
@@ -722,9 +721,7 @@ public class CardFragment extends Fragment {
                             Logger.d(context, TAG, "onFailure: " + response.code());
                         }
                         progressBar.setVisibility(View.GONE);
-//                navController.navigate(R.id.nav_visicom);
-
-                    }
+                     }
 
                     @Override
                     public void onFailure(@NonNull Call<ApiResponsePay<SuccessResponseDataPay>> call, @NonNull Throwable t) {

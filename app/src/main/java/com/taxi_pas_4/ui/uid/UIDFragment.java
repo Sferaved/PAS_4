@@ -30,28 +30,25 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.NetworkChangeReceiver;
-import com.taxi_pas_4.R;
-import com.taxi_pas_4.databinding.FragmentUidBinding;
-import com.taxi_pas_4.ui.finish.ApiClient;
-import com.taxi_pas_4.ui.finish.RouteResponse;
-import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
-import com.taxi_pas_4.utils.connect.NetworkUtils;
-import com.taxi_pas_4.utils.db.DatabaseHelper;
-import com.taxi_pas_4.utils.db.DatabaseHelperUid;
-import com.taxi_pas_4.utils.db.RouteInfo;
-import com.taxi_pas_4.utils.log.Logger;
+import  com.taxi_pas_4.MainActivity;
+import  com.taxi_pas_4.NetworkChangeReceiver;
+import  com.taxi_pas_4.R;
+import  com.taxi_pas_4.databinding.FragmentUidBinding;
+import  com.taxi_pas_4.ui.finish.ApiClient;
+import  com.taxi_pas_4.ui.finish.RouteResponse;
+import  com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
+import  com.taxi_pas_4.utils.connect.NetworkUtils;
+import  com.taxi_pas_4.utils.db.DatabaseHelper;
+import  com.taxi_pas_4.utils.db.DatabaseHelperUid;
+import  com.taxi_pas_4.utils.db.RouteInfo;
+import  com.taxi_pas_4.utils.log.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -68,7 +65,6 @@ public class UIDFragment extends Fragment {
     private static TextView textView;
     private NetworkChangeReceiver networkChangeReceiver;
     ProgressBar progressBar;
-    NavController navController;
     DatabaseHelper databaseHelper;
     DatabaseHelperUid databaseHelperUid;
     String baseUrl = "https://m.easy-order-taxi.site";
@@ -80,27 +76,24 @@ public class UIDFragment extends Fragment {
     private String email;
     private FragmentManager fragmentManager;
     private int desiredHeight;
-
+    Context context;
+    
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
-
         binding = FragmentUidBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
         fragmentManager = getParentFragmentManager();
         requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
-
+        context = requireActivity();
         listView = binding.listView;
         progressBar = binding.progressBar;
         networkChangeReceiver = new NetworkChangeReceiver();
 
-        email = logCursor(MainActivity.TABLE_USER_INFO, Objects.requireNonNull(requireActivity())).get(3);
-        routeList = new ArrayList<>();
-        databaseHelper = new DatabaseHelper(getContext());
-        array = databaseHelper.readRouteInfo();
+        databaseHelper = new DatabaseHelper(context);
+        databaseHelperUid = new DatabaseHelperUid(context);
 
-        databaseHelperUid = new DatabaseHelperUid(getContext());
+        array = databaseHelper.readRouteInfo();
 
         textUid  = binding.textUid;
         upd_but = binding.updBut;
@@ -108,7 +101,8 @@ public class UIDFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if (!NetworkUtils.isNetworkAvailable(requireContext())) {
-                    navController.navigate(R.id.nav_visicom);
+                    MainActivity.navController.popBackStack();
+                    MainActivity.navController.navigate(R.id.nav_visicom);
                 }
 
             }
@@ -117,15 +111,12 @@ public class UIDFragment extends Fragment {
         scrollButtonDown = binding.scrollButtonDown;
 
         FloatingActionButton fab_call = binding.fabCall;
-        fab_call.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_DIAL);
-                List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
-                String phone = stringList.get(3);
-                intent.setData(Uri.parse(phone));
-                startActivity(intent);
-            }
+        fab_call.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_DIAL);
+            List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
+            String phone = stringList.get(3);
+            intent.setData(Uri.parse(phone));
+            startActivity(intent);
         });
 
         progressBar.setVisibility(View.VISIBLE);
@@ -152,28 +143,9 @@ public class UIDFragment extends Fragment {
                 listView.smoothScrollToPosition(nextVisiblePosition);
             }
         });
-        if (array == null || array.length == 0) {
-            // Вызов метода fetchRoutes(email) только если массив пуст
-            progressBar.setVisibility(View.VISIBLE);
-            fetchRoutes(email);
-        }
-        else {
-            ViewGroup.LayoutParams layoutParams = listView.getLayoutParams();
-            layoutParams.height = desiredHeight;
-            listView.setLayoutParams(layoutParams);
-            registerForContextMenu(listView);
-
-            scrollButtonDown.setVisibility(View.VISIBLE);
-            scrollButtonUp.setVisibility(View.VISIBLE);
 
 
-            progressBar.setVisibility(View.GONE);
-            upd_but.setVisibility(View.VISIBLE);
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireActivity(), R.layout.drop_down_layout, array);
-            listView.setAdapter(adapter);
-            scrollButtonDown.setVisibility(View.VISIBLE);
-            scrollButtonUp.setVisibility(View.VISIBLE);
-        }
+        fetchRoutes();
         registerForContextMenu(listView);
         listView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
@@ -239,8 +211,8 @@ public class UIDFragment extends Fragment {
             settings.add(routeInfo.getFinish());
 
             updateRoutMarker(settings);
-
-            navController.navigate(R.id.nav_visicom);
+            MainActivity.navController.popBackStack();
+            MainActivity.navController.navigate(R.id.nav_visicom);
             MainActivity.gps_upd = false;
             return true;
         } else if (item.getItemId() == R.id.action_exit) {
@@ -271,7 +243,11 @@ public class UIDFragment extends Fragment {
         }
     }
 
-    private void fetchRoutes(String value) {
+    private void fetchRoutes() {
+
+        String email = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
+
+        routeList = new ArrayList<>();
 
         databaseHelper.clearTable();
         databaseHelperUid.clearTableUid();
@@ -279,16 +255,17 @@ public class UIDFragment extends Fragment {
         progressBar.setVisibility(View.VISIBLE);
 
         listView.setVisibility(View.GONE);
-
+        routeList = new ArrayList<>();
         upd_but.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                navController.navigate(R.id.nav_visicom);
+                MainActivity.navController.popBackStack();
+                MainActivity.navController.navigate(R.id.nav_visicom);
             }
         });
         List<String> stringList = logCursor(MainActivity.CITY_INFO,requireActivity());
         String city = stringList.get(1);
-        String url = baseUrl + "/android/UIDStatusShowEmailCityApp/" + value + "/" + city + "/" + requireContext().getString(R.string.application);
+        String url = baseUrl + "/android/UIDStatusShowEmailCityApp/" + email + "/" + city + "/" +  context.getString(R.string.application);
         Call<List<RouteResponse>> call = ApiClient.getApiService().getRoutes(url);
         Logger.d (getActivity(), TAG, "fetchRoutes: " + url);
 
@@ -321,8 +298,10 @@ public class UIDFragment extends Fragment {
                         textUid.setText(R.string.no_routs);
                     }
                 } else {
-                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
-                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                    if (isAdded()) {
+                        MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
+                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                    }
 
                 }
             }
@@ -345,7 +324,7 @@ public class UIDFragment extends Fragment {
         // Создайте массив строк
         array = new String[routeList.size()];
 
-        String closeReasonText = getString(R.string.close_resone_def);
+        String closeReasonText = context.getString(R.string.close_resone_def);
 
         for (int i = 0; i < routeList.size(); i++) {
             RouteResponse route = routeList.get(i);
@@ -364,54 +343,54 @@ public class UIDFragment extends Fragment {
 
             switch (closeReason){
                 case "-1":
-                    closeReasonText = getString(R.string.close_resone_in_work);
+                    closeReasonText = context.getString(R.string.close_resone_in_work);
                     break;
                 case "0":
-                    closeReasonText = getString(R.string.close_resone_0);
+                    closeReasonText = context.getString(R.string.close_resone_0);
                     break;
                 case "1":
-                    closeReasonText = getString(R.string.close_resone_1);
+                    closeReasonText = context.getString(R.string.close_resone_1);
                     break;
                 case "2":
-                    closeReasonText = getString(R.string.close_resone_2);
+                    closeReasonText = context.getString(R.string.close_resone_2);
                     break;
                 case "3":
-                    closeReasonText = getString(R.string.close_resone_3);
+                    closeReasonText = context.getString(R.string.close_resone_3);
                     break;
                 case "4":
-                    closeReasonText = getString(R.string.close_resone_4);
+                    closeReasonText = context.getString(R.string.close_resone_4);
                     break;
                 case "5":
-                    closeReasonText = getString(R.string.close_resone_5);
+                    closeReasonText = context.getString(R.string.close_resone_5);
                     break;
                 case "6":
-                    closeReasonText = getString(R.string.close_resone_6);
+                    closeReasonText = context.getString(R.string.close_resone_6);
                     break;
                 case "7":
-                    closeReasonText = getString(R.string.close_resone_7);
+                    closeReasonText = context.getString(R.string.close_resone_7);
                     break;
                 case "8":
-                    closeReasonText = getString(R.string.close_resone_8);
+                    closeReasonText = context.getString(R.string.close_resone_8);
                     break;
                 case "9":
-                    closeReasonText = getString(R.string.close_resone_9);
+                    closeReasonText = context.getString(R.string.close_resone_9);
                     break;
 
             }
 
             if(routeFrom.equals("Місце відправлення")) {
-                routeFrom = getString(R.string.start_point_text);
+                routeFrom = context.getString(R.string.start_point_text);
             }
 
 
             if(routeTo.equals("Точка на карте")) {
-                routeTo = getString(R.string.end_point_marker);
+                routeTo = context.getString(R.string.end_point_marker);
             }
             if(routeTo.contains("по городу")) {
-                routeTo = getString(R.string.on_city);
+                routeTo = context.getString(R.string.on_city);
             }
             if(routeTo.contains("по місту")) {
-                routeTo = getString(R.string.on_city);
+                routeTo = context.getString(R.string.on_city);
             }
             String routeInfo = "";
 
@@ -420,20 +399,20 @@ public class UIDFragment extends Fragment {
             }
 
             if(routeFrom.equals(routeTo)) {
-                routeInfo = getString(R.string.close_resone_from) + routeFrom + " " + routefromnumber
-                        + getString(R.string.close_resone_to)
-                        + getString(R.string.on_city)
-                        + getString(R.string.close_resone_cost) + webCost + " " + getString(R.string.UAH)
-                        + getString(R.string.auto_info) + " " + auto + " "
-                        + getString(R.string.close_resone_time)
-                        + createdAt + getString(R.string.close_resone_text) + closeReasonText;
+                routeInfo = context.getString(R.string.close_resone_from) + routeFrom + " " + routefromnumber
+                        + context.getString(R.string.close_resone_to)
+                        + context.getString(R.string.on_city)
+                        + context.getString(R.string.close_resone_cost) + webCost + " " + context.getString(R.string.UAH)
+                        + context.getString(R.string.auto_info) + " " + auto + " "
+                        + context.getString(R.string.close_resone_time)
+                        + createdAt + context.getString(R.string.close_resone_text) + closeReasonText;
             } else {
-                routeInfo = getString(R.string.close_resone_from) + routeFrom + " " + routefromnumber
-                        + getString(R.string.close_resone_to) + routeTo + " " + routeTonumber
-                        + getString(R.string.close_resone_cost) + webCost + " " + getString(R.string.UAH)
-                        + getString(R.string.auto_info) + " " + auto + " "
-                        + getString(R.string.close_resone_time)
-                        + createdAt + getString(R.string.close_resone_text) + closeReasonText;
+                routeInfo = context.getString(R.string.close_resone_from) + routeFrom + " " + routefromnumber
+                        + context.getString(R.string.close_resone_to) + routeTo + " " + routeTonumber
+                        + context.getString(R.string.close_resone_cost) + webCost + " " + context.getString(R.string.UAH)
+                        + context.getString(R.string.auto_info) + " " + auto + " "
+                        + context.getString(R.string.close_resone_time)
+                        + createdAt + context.getString(R.string.close_resone_text) + closeReasonText;
             }
 
 //                array[i] = routeInfo;
@@ -456,8 +435,6 @@ public class UIDFragment extends Fragment {
             ArrayAdapter<String> adapter = new ArrayAdapter<>(requireActivity(), R.layout.drop_down_layout, array);
             listView.setAdapter(adapter);
             listView.setVisibility(View.VISIBLE);
-            scrollButtonDown.setVisibility(View.VISIBLE);
-            scrollButtonUp.setVisibility(View.VISIBLE);
             progressBar.setVisibility(View.GONE);
             upd_but.setVisibility(View.VISIBLE);
 
@@ -469,8 +446,6 @@ public class UIDFragment extends Fragment {
             listView.setLayoutParams(layoutParams);
             registerForContextMenu(listView);
 
-            scrollButtonDown.setVisibility(View.VISIBLE);
-            scrollButtonUp.setVisibility(View.VISIBLE);
             scrollButtonDown.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

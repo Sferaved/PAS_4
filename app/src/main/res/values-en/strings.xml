@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.098</string>
-    <string name="version">Version: 4.098</string>
+    <string name="version_code">4.099</string>
+    <string name="version">Version: 4.099</string>
 
     <string name="app_name">Taxi Duke Fellow</string>
 
@@ -78,7 +78,7 @@
     <string name="from_edit">From</string>
     <string name="sms_code">Verification code from SMS message</string>
     <string name="android">Android application for fast and cheap trips when ordering online.</string>
-    <string name="good_day">My greetings. \n \n Found a great app for taxi rides. \n \n I advise you to try the link in the official Google store: \n\n https://play.google.com/store/apps/details?id=com.taxi_pas_4 \n\n Have a nice day. \n See you later.</string>
+    <string name="good_day">My greetings. \n \n Found a great app for taxi rides. \n \n I advise you to try the link in the official Google store: \n\n https://play.google.com/store/apps/details?id= com.taxi_pas_4 \n\n Have a nice day. \n See you later.</string>
     <string name="share">Recommend the app to a friend...</string>
     <string name="no_email_agent">Email client is not installed.</string>
     <string name="check_position">Wait, your location is being determined...</string>
@@ -86,7 +86,8 @@
     <string name="make_order_message">Make at least one trip</string>
     <string name="to_adress_message">Where are we going?</string>
     <string name="coastMarkersMessage">"Cost of traveling along the route "</string>
-    <string name="please_phone_message">The application transmits your mobile phone number to enable the taxi ordering function. By clicking the Save button, you confirm your consent to transfer the phone number to the dispatcher to search for the car and save it for future orders.</string><string name="check_message">Wait, the connection is in progress.</string>
+    <string name="please_phone_message">Ordering is not possible without entering your phone number. The application transmits your mobile phone number to enable the taxi ordering function. By clicking the Save button you confirm your consent to transfer the phone number to the dispatcher to search for the car and save it for future orders.</string>
+    <string name="check_message">Please wait, connecting.</string>
     <string name="find_of_map">Try to find on the map</string>
     <string name="end_point_marker">Destination</string>
     <string name="error_firebase_start">Validation error. Dial the operator via "HELP"</string>
@@ -383,4 +384,5 @@
     <string name="order_to_cancel_review">Go to review</string>
     <string name="order_to_cancel_true">You have scheduled trips</string>
     <string name="no_house_vis_mes">The requested address was not found. Try something else or click the green back arrow button</string>
+    <string name="no_adrees_mes">Check the address or dial operators</string>
 </resources>
