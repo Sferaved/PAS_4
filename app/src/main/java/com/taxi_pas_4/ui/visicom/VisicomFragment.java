@@ -51,38 +51,31 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import  com.taxi_pas_4.MainActivity;
-import  com.taxi_pas_4.NetworkChangeReceiver;
-import  com.taxi_pas_4.R;
-import  com.taxi_pas_4.databinding.FragmentVisicomBinding;
-import  com.taxi_pas_4.ui.finish.ApiService;
-import  com.taxi_pas_4.ui.finish.City;
-import  com.taxi_pas_4.ui.finish.FinishActivity;
-import  com.taxi_pas_4.ui.home.MyBottomSheetBonusFragment;
-import  com.taxi_pas_4.ui.home.MyBottomSheetCityFragment;
-import  com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
-import  com.taxi_pas_4.ui.home.MyBottomSheetGPSFragment;
-import  com.taxi_pas_4.ui.home.MyBottomSheetGeoFragment;
-import  com.taxi_pas_4.ui.home.MyPhoneDialogFragment;
-import  com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
-import  com.taxi_pas_4.ui.open_map.visicom.ActivityVisicomOnePage;
-import  com.taxi_pas_4.ui.open_map.visicom.key_mapbox.ApiCallbackMapbox;
-import  com.taxi_pas_4.ui.open_map.visicom.key_mapbox.ApiClientMapbox;
-import  com.taxi_pas_4.ui.open_map.visicom.key_mapbox.ApiResponseMapbox;
-import  com.taxi_pas_4.ui.open_map.visicom.key_visicom.ApiCallback;
-import  com.taxi_pas_4.ui.open_map.visicom.key_visicom.ApiClient;
-import  com.taxi_pas_4.ui.open_map.visicom.key_visicom.ApiResponse;
-import  com.taxi_pas_4.utils.connect.NetworkUtils;
-import  com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
-import  com.taxi_pas_4.utils.from_json_parser.FromJSONParserRetrofit;
-import  com.taxi_pas_4.utils.ip.ApiServiceCountry;
-import  com.taxi_pas_4.utils.ip.CountryResponse;
-import  com.taxi_pas_4.utils.ip.RetrofitClient;
-import  com.taxi_pas_4.utils.log.Logger;
-import  com.taxi_pas_4.utils.tariff.DatabaseHelperTariffs;
-import  com.taxi_pas_4.utils.tariff.Tariff;
-import  com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
-import  com.taxi_pas_4.utils.user_verify.VerifyUserTask;
+import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.R;
+import com.taxi_pas_4.databinding.FragmentVisicomBinding;
+import com.taxi_pas_4.ui.finish.ApiService;
+import com.taxi_pas_4.ui.finish.City;
+import com.taxi_pas_4.ui.finish.FinishActivity;
+import com.taxi_pas_4.ui.home.MyBottomSheetBonusFragment;
+import com.taxi_pas_4.ui.home.MyBottomSheetCityFragment;
+import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
+import com.taxi_pas_4.ui.home.MyBottomSheetGPSFragment;
+import com.taxi_pas_4.ui.home.MyBottomSheetGeoFragment;
+import com.taxi_pas_4.ui.home.MyPhoneDialogFragment;
+import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
+import com.taxi_pas_4.ui.open_map.visicom.ActivityVisicomOnePage;
+import com.taxi_pas_4.utils.connect.NetworkUtils;
+import com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
+import com.taxi_pas_4.utils.from_json_parser.FromJSONParserRetrofit;
+import com.taxi_pas_4.utils.ip.ApiServiceCountry;
+import com.taxi_pas_4.utils.ip.CountryResponse;
+import com.taxi_pas_4.utils.ip.RetrofitClient;
+import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.tariff.DatabaseHelperTariffs;
+import com.taxi_pas_4.utils.tariff.Tariff;
+import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
+import com.taxi_pas_4.utils.user_verify.VerifyUserTask;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -106,7 +99,7 @@ public class VisicomFragment extends Fragment{
     private static final int REQUEST_LOCATION_PERMISSION = 1;
     FloatingActionButton fab_call;
 
-    public static AppCompatButton btn_minus, btn_plus, btnOrder, buttonBonus, gpsbut;
+    public static AppCompatButton btn_minus, btn_plus, btnOrder, buttonBonus, gpsbut, btnCallAdmin;
     @SuppressLint("StaticFieldLeak")
     public static TextView geoText;
     static String api;
@@ -165,7 +158,14 @@ public class VisicomFragment extends Fragment{
 //        btn2 = binding.button2;
 //        btn3 = binding.button3;
 
-
+        btnCallAdmin = binding.btnCallAdmin;
+        btnCallAdmin.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_DIAL);
+            List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
+            String phone = stringList.get(3);
+            intent.setData(Uri.parse(phone));
+            startActivity(intent);
+        });
 
         return root;
     }
@@ -176,7 +176,7 @@ public class VisicomFragment extends Fragment{
          if (visible == View.INVISIBLE) {
              progressBar.setVisibility(View.VISIBLE);
          } else {
-             progressBar.setVisibility(View.GONE);;
+             progressBar.setVisibility(View.GONE);
          }
 
          btn_clear_from.setVisibility(View.INVISIBLE);
@@ -317,10 +317,13 @@ public class VisicomFragment extends Fragment{
         database.close();
     }
 
-     
+    private String cleanString(String input) {
+        if (input == null) return "";
+        return input.trim().replaceAll("\\s+", " ").replaceAll("\\s{2,}$", " ");
+    }
     private boolean newRout() {
         boolean result = false;
-
+        progressBar.setVisibility(View.VISIBLE);
         Logger.d(context, TAG, "newRout: ");
         String query = "SELECT * FROM " + MainActivity.ROUT_MARKER + " LIMIT 1";
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
@@ -782,9 +785,13 @@ public class VisicomFragment extends Fragment{
                                 sendUrlMap.get("routefrom") + " " + getString(R.string.to_message) +
                                 to_name_local + "." +
                                 getString(R.string.call_of_order) + orderWeb + getString(R.string.UAH) + " " + pay_method_message;
+                        messageResult = cleanString(messageResult);
+
                         String messageFondy = getString(R.string.fondy_message) + " " +
                                 sendUrlMap.get("routefrom") + " " + getString(R.string.to_message) +
                                 to_name_local + ".";
+
+
                         Logger.d(context, TAG, "orderFinished: messageResult " + messageResult);
                         Logger.d(context, TAG, "orderFinished: to_name " + to_name);
                         Intent intent = new Intent(context, FinishActivity.class);
@@ -1024,8 +1031,6 @@ public class VisicomFragment extends Fragment{
         super.onResume();
         progressBar.setVisibility(View.VISIBLE);
 
-
-
         new VerifyUserTask(context).execute();
 
         List<String> listCity = logCursor(MainActivity.CITY_INFO, context);
@@ -1077,17 +1082,6 @@ public class VisicomFragment extends Fragment{
 
         List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
         api =  stringList.get(2);
-
-
-        fab_call = binding.fabCall;
-        fab_call.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_DIAL);
-            List<String> stringList1 = logCursor(MainActivity.CITY_INFO, context);
-            String phone = stringList1.get(3);
-            intent.setData(Uri.parse(phone));
-            startActivity(intent);
-        });
-
 
         buttonBonus = binding.btnBonus;
         textfrom = binding.textfrom;
@@ -2041,7 +2035,7 @@ public class VisicomFragment extends Fragment{
         boolean isNotificationPermissionRequested = sharedPreferences.getBoolean("getCityByIP", false);
         // Если разрешение еще не запрашивалось
         if (!isNotificationPermissionRequested) {
-            ApiService apiService =  com.taxi_pas_4.ui.finish.ApiClient.getApiService();
+            ApiService apiService = com.taxi_pas_4.ui.finish.ApiClient.getApiService();
 
             Call<City> call = apiService.cityByIp("ipAddress");
 

@@ -20,10 +20,10 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
-import  com.taxi_pas_4.R;
-import  com.taxi_pas_4.ui.home.HomeFragment;
-import  com.taxi_pas_4.ui.visicom.VisicomFragment;
-import  com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.R;
+import com.taxi_pas_4.ui.home.HomeFragment;
+import com.taxi_pas_4.ui.visicom.VisicomFragment;
+import com.taxi_pas_4.utils.log.Logger;
 
 public class MyBottomSheetPhoneStateFragment extends BottomSheetDialogFragment {
 

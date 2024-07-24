@@ -27,21 +27,21 @@ import androidx.appcompat.widget.AppCompatButton;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import  com.taxi_pas_4.MainActivity;
-import  com.taxi_pas_4.R;
-import  com.taxi_pas_4.cities.api.CityApiClient;
-import  com.taxi_pas_4.cities.api.CityResponse;
-import  com.taxi_pas_4.cities.api.CityResponseMerchantFondy;
-import  com.taxi_pas_4.cities.api.CityService;
-import  com.taxi_pas_4.ui.card.CardFragment;
-import  com.taxi_pas_4.ui.gallery.GalleryFragment;
-import  com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
-import  com.taxi_pas_4.ui.payment_system.PayApi;
-import  com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
-import  com.taxi_pas_4.ui.visicom.VisicomFragment;
-import  com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
-import  com.taxi_pas_4.utils.log.Logger;
-import  com.taxi_pas_4.utils.permissions.UserPermissions;
+import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.R;
+import com.taxi_pas_4.cities.api.CityApiClient;
+import com.taxi_pas_4.cities.api.CityResponse;
+import com.taxi_pas_4.cities.api.CityResponseMerchantFondy;
+import com.taxi_pas_4.cities.api.CityService;
+import com.taxi_pas_4.ui.card.CardFragment;
+import com.taxi_pas_4.ui.gallery.GalleryFragment;
+import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
+import com.taxi_pas_4.ui.payment_system.PayApi;
+import com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
+import com.taxi_pas_4.ui.visicom.VisicomFragment;
+import com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
+import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.permissions.UserPermissions;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -59,7 +59,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
 
-    private static final String TAG = "TAG_BON";
+    private static final String TAG = "MyBottomSheetBonusFragment";
     long cost;
     String rout;
     String api;

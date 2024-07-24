@@ -3,7 +3,7 @@ package com.taxi_pas_4.ui.home;
 
 import static android.content.Context.MODE_PRIVATE;
 import static android.graphics.Color.RED;
-import static  com.taxi_pas_4.R.string.address_error_message;
+import static com.taxi_pas_4.R.string.address_error_message;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -51,28 +51,27 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.room.Room;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import  com.taxi_pas_4.MainActivity;
-import  com.taxi_pas_4.R;
-import  com.taxi_pas_4.cities.Cherkasy.Cherkasy;
-import  com.taxi_pas_4.cities.Dnipro.DniproCity;
-import  com.taxi_pas_4.cities.Kyiv.KyivCity;
-import  com.taxi_pas_4.cities.Odessa.Odessa;
-import  com.taxi_pas_4.cities.Odessa.OdessaTest;
-import  com.taxi_pas_4.cities.Zaporizhzhia.Zaporizhzhia;
-import  com.taxi_pas_4.databinding.FragmentHomeBinding;
-import  com.taxi_pas_4.ui.finish.FinishActivity;
-import  com.taxi_pas_4.ui.home.room.AppDatabase;
-import  com.taxi_pas_4.ui.home.room.RouteCost;
-import  com.taxi_pas_4.ui.home.room.RouteCostDao;
-import  com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
-import  com.taxi_pas_4.ui.start.ResultSONParser;
-import  com.taxi_pas_4.utils.connect.NetworkUtils;
-import  com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
-import  com.taxi_pas_4.utils.log.Logger;
-import  com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
-import  com.taxi_pas_4.utils.user_verify.VerifyUserTask;
+import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.R;
+import com.taxi_pas_4.cities.Cherkasy.Cherkasy;
+import com.taxi_pas_4.cities.Dnipro.DniproCity;
+import com.taxi_pas_4.cities.Kyiv.KyivCity;
+import com.taxi_pas_4.cities.Odessa.Odessa;
+import com.taxi_pas_4.cities.Odessa.OdessaTest;
+import com.taxi_pas_4.cities.Zaporizhzhia.Zaporizhzhia;
+import com.taxi_pas_4.databinding.FragmentHomeBinding;
+import com.taxi_pas_4.ui.finish.FinishActivity;
+import com.taxi_pas_4.ui.home.room.AppDatabase;
+import com.taxi_pas_4.ui.home.room.RouteCost;
+import com.taxi_pas_4.ui.home.room.RouteCostDao;
+import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
+import com.taxi_pas_4.ui.start.ResultSONParser;
+import com.taxi_pas_4.utils.connect.NetworkUtils;
+import com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
+import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
+import com.taxi_pas_4.utils.user_verify.VerifyUserTask;
 
 import org.json.JSONException;
 
@@ -91,13 +90,13 @@ import retrofit2.Response;
 
 public class HomeFragment extends Fragment {
 
+    private static final String TAG = "HomeFragment";
+
     private FragmentHomeBinding binding;
     public static String from, to;
     public static EditText from_number, to_number;
     String messageResult;
 
-    FloatingActionButton fab_call;
-    private static final String TAG = "TAG_HOME";
     Button gpsbut;
     public static AppCompatButton btn_order;
     public static AppCompatButton buttonAddServices;
@@ -106,6 +105,7 @@ public class HomeFragment extends Fragment {
     public static AppCompatButton btn_plus;
     public static AppCompatButton btnGeo;
     public static AppCompatButton btn_clear;
+    public static AppCompatButton btnCallAdmin;
 
     public static long addCost, cost, costFirst;
     private static String[] arrayStreet;
@@ -434,19 +434,6 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        fab_call = binding.fabCall;
-        fab_call.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-//                getRevers("V_20240416093908005_L3KA", "повернення замовлення", "4000");
-
-                Intent intent = new Intent(Intent.ACTION_DIAL);
-                List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
-                String phone = stringList.get(3);
-                intent.setData(Uri.parse(phone));
-                startActivity(intent);
-            }
-        });
 
         buttonAddServices = binding.btnAdd;
         buttonAddServices.setOnClickListener(new View.OnClickListener() {
@@ -471,7 +458,13 @@ public class HomeFragment extends Fragment {
                 bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
             }
         });
-//        getLocalIpAddress();
+        btnCallAdmin = binding.btnCallAdmin;
+        btnCallAdmin.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_DIAL);
+            String phone = logCursor(MainActivity.CITY_INFO, requireActivity()).get(3);
+            intent.setData(Uri.parse(phone));
+            startActivity(intent);
+        });
         return root;
     }
 

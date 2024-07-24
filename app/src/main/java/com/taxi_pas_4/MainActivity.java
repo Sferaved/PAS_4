@@ -1,7 +1,7 @@
 package com.taxi_pas_4;
 
-import static  com.taxi_pas_4.R.string.cancel_button;
-import static  com.taxi_pas_4.R.string.format_phone;
+import static com.taxi_pas_4.R.string.cancel_button;
+import static com.taxi_pas_4.R.string.format_phone;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -61,41 +61,41 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import  com.taxi_pas_4.cities.api.CityApiClient;
-import  com.taxi_pas_4.cities.api.CityResponse;
-import  com.taxi_pas_4.cities.api.CityResponseMerchantFondy;
-import  com.taxi_pas_4.cities.api.CityService;
-import  com.taxi_pas_4.databinding.ActivityMainBinding;
-import  com.taxi_pas_4.ui.card.CardInfo;
-import  com.taxi_pas_4.ui.finish.ApiClient;
-import  com.taxi_pas_4.ui.finish.RouteResponse;
-import  com.taxi_pas_4.ui.finish.RouteResponseCancel;
-import  com.taxi_pas_4.ui.home.HomeFragment;
-import  com.taxi_pas_4.ui.home.MyBottomSheetCityFragment;
-import  com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
-import  com.taxi_pas_4.ui.home.MyBottomSheetGPSFragment;
-import  com.taxi_pas_4.ui.home.MyBottomSheetMessageFragment;
-import  com.taxi_pas_4.ui.open_map.visicom.key_mapbox.ApiClientMapbox;
-import  com.taxi_pas_4.ui.open_map.visicom.key_mapbox.ApiResponseMapbox;
-import  com.taxi_pas_4.ui.open_map.visicom.key_visicom.ApiResponse;
-import  com.taxi_pas_4.ui.visicom.VisicomFragment;
-import  com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
-import  com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
+import com.taxi_pas_4.cities.api.CityApiClient;
+import com.taxi_pas_4.cities.api.CityResponse;
+import com.taxi_pas_4.cities.api.CityResponseMerchantFondy;
+import com.taxi_pas_4.cities.api.CityService;
+import com.taxi_pas_4.databinding.ActivityMainBinding;
+import com.taxi_pas_4.ui.card.CardInfo;
+import com.taxi_pas_4.ui.finish.ApiClient;
+import com.taxi_pas_4.ui.finish.RouteResponse;
+import com.taxi_pas_4.ui.finish.RouteResponseCancel;
+import com.taxi_pas_4.ui.home.HomeFragment;
+import com.taxi_pas_4.ui.home.MyBottomSheetCityFragment;
+import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
+import com.taxi_pas_4.ui.home.MyBottomSheetGPSFragment;
+import com.taxi_pas_4.ui.home.MyBottomSheetMessageFragment;
+import com.taxi_pas_4.ui.open_map.visicom.key_mapbox.ApiClientMapbox;
+import com.taxi_pas_4.ui.open_map.visicom.key_mapbox.ApiResponseMapbox;
+import com.taxi_pas_4.ui.open_map.visicom.key_visicom.ApiResponse;
+import com.taxi_pas_4.ui.visicom.VisicomFragment;
+import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
+import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
 
-import  com.taxi_pas_4.utils.LocaleHelper;
-import  com.taxi_pas_4.utils.connect.NetworkUtils;
-import  com.taxi_pas_4.utils.db.DatabaseHelper;
-import  com.taxi_pas_4.utils.db.DatabaseHelperUid;
-import  com.taxi_pas_4.utils.download.AppUpdater;
-import  com.taxi_pas_4.utils.fcm.token_send.ApiServiceToken;
-import  com.taxi_pas_4.utils.fcm.token_send.RetrofitClientToken;
-import  com.taxi_pas_4.utils.log.Logger;
-import  com.taxi_pas_4.utils.notify.NotificationHelper;
-import  com.taxi_pas_4.utils.permissions.UserPermissions;
-import  com.taxi_pas_4.utils.phone.ApiClientPhone;
-import  com.taxi_pas_4.utils.user.ApiServiceUser;
-import  com.taxi_pas_4.utils.user.UserResponse;
-import  com.taxi_pas_4.utils.user_verify.VerifyUserTask;
+import com.taxi_pas_4.utils.LocaleHelper;
+import com.taxi_pas_4.utils.connect.NetworkUtils;
+import com.taxi_pas_4.utils.db.DatabaseHelper;
+import com.taxi_pas_4.utils.db.DatabaseHelperUid;
+import com.taxi_pas_4.utils.download.AppUpdater;
+import com.taxi_pas_4.utils.fcm.token_send.ApiServiceToken;
+import com.taxi_pas_4.utils.fcm.token_send.RetrofitClientToken;
+import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.notify.NotificationHelper;
+import com.taxi_pas_4.utils.permissions.UserPermissions;
+import com.taxi_pas_4.utils.phone.ApiClientPhone;
+import com.taxi_pas_4.utils.user.ApiServiceUser;
+import com.taxi_pas_4.utils.user.UserResponse;
+import com.taxi_pas_4.utils.user_verify.VerifyUserTask;
 
 import org.json.JSONException;
 
@@ -836,7 +836,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (item.getItemId() == R.id.send_like) {
             if (NetworkUtils.isNetworkAvailable(this)) {
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id= com.taxi_pas_4"));
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.taxi_pas_4"));
                 startActivity(browserIntent);
             } else {
                 Toast.makeText(this, R.string.verify_internet, Toast.LENGTH_SHORT).show();
@@ -1771,7 +1771,7 @@ public class MainActivity extends AppCompatActivity {
                     String title = getString(R.string.new_version);
                     String messageNotif = getString(R.string.news_of_version);
 
-                    String urlStr = "https://play.google.com/store/apps/details?id= com.taxi_pas_4";
+                    String urlStr = "https://play.google.com/store/apps/details?id=com.taxi_pas_4";
                     NotificationHelper.showNotification(MainActivity.this, title, messageNotif, urlStr);
                 }
             }
@@ -1972,7 +1972,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void visicomKey() {
-         com.taxi_pas_4.ui.open_map.visicom.key_visicom.ApiClient.getVisicomKeyInfo(new Callback<ApiResponse>() {
+        com.taxi_pas_4.ui.open_map.visicom.key_visicom.ApiClient.getVisicomKeyInfo(new Callback<ApiResponse>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
                 if (response.isSuccessful()) {

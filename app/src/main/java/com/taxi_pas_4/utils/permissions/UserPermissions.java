@@ -11,7 +11,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import  com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.MainActivity;
 
 import java.util.Arrays;
 

@@ -32,13 +32,13 @@ import androidx.annotation.Nullable;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import  com.taxi_pas_4.MainActivity;
-import  com.taxi_pas_4.R;
-import  com.taxi_pas_4.androidx.startup.MyApplication;
-import  com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
-import  com.taxi_pas_4.ui.visicom.VisicomFragment;
-import  com.taxi_pas_4.utils.log.Logger;
-import  com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
+import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.R;
+import com.taxi_pas_4.androidx.startup.MyApplication;
+import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
+import com.taxi_pas_4.ui.visicom.VisicomFragment;
+import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 
 import java.net.MalformedURLException;
 import java.text.SimpleDateFormat;

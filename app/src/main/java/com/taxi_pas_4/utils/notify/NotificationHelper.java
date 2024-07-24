@@ -26,11 +26,11 @@ import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
 import com.google.android.play.core.install.model.AppUpdateType;
 import com.google.android.play.core.install.model.UpdateAvailability;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import  com.taxi_pas_4.MainActivity;
-import  com.taxi_pas_4.R;
-import  com.taxi_pas_4.ui.home.MyBottomSheetMessageFragment;
-import  com.taxi_pas_4.utils.download.AppUpdater;
-import  com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.R;
+import com.taxi_pas_4.ui.home.MyBottomSheetMessageFragment;
+import com.taxi_pas_4.utils.download.AppUpdater;
+import com.taxi_pas_4.utils.log.Logger;
 
 
 public class NotificationHelper {

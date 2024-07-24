@@ -31,20 +31,19 @@ import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import  com.taxi_pas_4.MainActivity;
-import  com.taxi_pas_4.NetworkChangeReceiver;
-import  com.taxi_pas_4.R;
-import  com.taxi_pas_4.databinding.FragmentUidBinding;
-import  com.taxi_pas_4.ui.finish.ApiClient;
-import  com.taxi_pas_4.ui.finish.RouteResponse;
-import  com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
-import  com.taxi_pas_4.utils.connect.NetworkUtils;
-import  com.taxi_pas_4.utils.db.DatabaseHelper;
-import  com.taxi_pas_4.utils.db.DatabaseHelperUid;
-import  com.taxi_pas_4.utils.db.RouteInfo;
-import  com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.NetworkChangeReceiver;
+import com.taxi_pas_4.R;
+import com.taxi_pas_4.databinding.FragmentUidBinding;
+import com.taxi_pas_4.ui.finish.ApiClient;
+import com.taxi_pas_4.ui.finish.RouteResponse;
+import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
+import com.taxi_pas_4.utils.connect.NetworkUtils;
+import com.taxi_pas_4.utils.db.DatabaseHelper;
+import com.taxi_pas_4.utils.db.DatabaseHelperUid;
+import com.taxi_pas_4.utils.db.RouteInfo;
+import com.taxi_pas_4.utils.log.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -71,6 +70,7 @@ public class UIDFragment extends Fragment {
     private List<RouteResponse> routeList;
 
     AppCompatButton upd_but;
+    private AppCompatButton btnCallAdmin;
     private ImageButton scrollButtonDown, scrollButtonUp;
     private TextView textUid;
     private String email;
@@ -110,14 +110,6 @@ public class UIDFragment extends Fragment {
         scrollButtonUp = binding.scrollButtonUp;
         scrollButtonDown = binding.scrollButtonDown;
 
-        FloatingActionButton fab_call = binding.fabCall;
-        fab_call.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_DIAL);
-            List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
-            String phone = stringList.get(3);
-            intent.setData(Uri.parse(phone));
-            startActivity(intent);
-        });
 
         progressBar.setVisibility(View.VISIBLE);
         scrollButtonDown.setVisibility(View.GONE);
@@ -171,6 +163,14 @@ public class UIDFragment extends Fragment {
                 }
             }
         });
+        btnCallAdmin = binding.btnCallAdmin;
+        btnCallAdmin.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_DIAL);
+            String phone = logCursor(MainActivity.CITY_INFO, requireActivity()).get(3);
+            intent.setData(Uri.parse(phone));
+            startActivity(intent);
+        });
+
         return root;
     }
 
@@ -300,7 +300,7 @@ public class UIDFragment extends Fragment {
                 } else {
                     if (isAdded()) {
                         MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
-                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                        bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
                     }
 
                 }

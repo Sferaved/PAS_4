@@ -10,7 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import  com.taxi_pas_4.databinding.FragmentSlideshowBinding;
+import com.taxi_pas_4.databinding.FragmentSlideshowBinding;
 
 
 public class SlideshowFragment extends Fragment {

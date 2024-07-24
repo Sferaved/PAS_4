@@ -6,9 +6,11 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,31 +30,31 @@ import androidx.fragment.app.FragmentManager;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import  com.taxi_pas_4.MainActivity;
-import  com.taxi_pas_4.NetworkChangeReceiver;
-import  com.taxi_pas_4.R;
-import  com.taxi_pas_4.databinding.FragmentCardBinding;
-import  com.taxi_pas_4.ui.fondy.gen_signatur.SignatureClient;
-import  com.taxi_pas_4.ui.fondy.gen_signatur.SignatureResponse;
-import  com.taxi_pas_4.ui.fondy.payment.ApiResponsePay;
-import  com.taxi_pas_4.ui.fondy.payment.PaymentApi;
-import  com.taxi_pas_4.ui.fondy.payment.RequestData;
-import  com.taxi_pas_4.ui.fondy.payment.StatusRequestPay;
-import  com.taxi_pas_4.ui.fondy.payment.SuccessResponseDataPay;
-import  com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
-import  com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
-import  com.taxi_pas_4.ui.mono.MonoApi;
-import  com.taxi_pas_4.ui.mono.cancel.RequestCancelMono;
-import  com.taxi_pas_4.ui.mono.cancel.ResponseCancelMono;
-import  com.taxi_pas_4.ui.payment_system.PayApi;
-import  com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
-import  com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
-import  com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
-import  com.taxi_pas_4.ui.wfp.verify.VerifyService;
-import  com.taxi_pas_4.utils.LocaleHelper;
-import  com.taxi_pas_4.utils.connect.NetworkUtils;
-import  com.taxi_pas_4.utils.log.Logger;
-import  com.taxi_pas_4.utils.web.MyWebViewClient;
+import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.NetworkChangeReceiver;
+import com.taxi_pas_4.R;
+import com.taxi_pas_4.databinding.FragmentCardBinding;
+import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureClient;
+import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureResponse;
+import com.taxi_pas_4.ui.fondy.payment.ApiResponsePay;
+import com.taxi_pas_4.ui.fondy.payment.PaymentApi;
+import com.taxi_pas_4.ui.fondy.payment.RequestData;
+import com.taxi_pas_4.ui.fondy.payment.StatusRequestPay;
+import com.taxi_pas_4.ui.fondy.payment.SuccessResponseDataPay;
+import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
+import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
+import com.taxi_pas_4.ui.mono.MonoApi;
+import com.taxi_pas_4.ui.mono.cancel.RequestCancelMono;
+import com.taxi_pas_4.ui.mono.cancel.ResponseCancelMono;
+import com.taxi_pas_4.ui.payment_system.PayApi;
+import com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
+import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
+import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
+import com.taxi_pas_4.ui.wfp.verify.VerifyService;
+import com.taxi_pas_4.utils.LocaleHelper;
+import com.taxi_pas_4.utils.connect.NetworkUtils;
+import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.web.MyWebViewClient;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -97,6 +99,8 @@ public class CardFragment extends Fragment {
     Activity context;
     WebView webView;
     FragmentManager fragmentManager;
+    private AppCompatButton btnCallAdmin;
+
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentCardBinding.inflate(inflater, container, false);
@@ -119,6 +123,14 @@ public class CardFragment extends Fragment {
                 MainActivity.navController.popBackStack();
                 MainActivity.navController.navigate(R.id.nav_visicom);
             }
+        });
+
+        btnCallAdmin = binding.btnCallAdmin;
+        btnCallAdmin.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_DIAL);
+            String phone = logCursor(MainActivity.CITY_INFO, requireActivity()).get(3);
+            intent.setData(Uri.parse(phone));
+            startActivity(intent);
         });
         return root;
     }

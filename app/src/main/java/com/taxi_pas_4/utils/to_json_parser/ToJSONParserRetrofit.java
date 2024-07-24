@@ -1,16 +1,14 @@
 package com.taxi_pas_4.utils.to_json_parser;
 
-import static  com.taxi_pas_4.ui.finish.FinishActivity.baseUrl;
+import static com.taxi_pas_4.ui.finish.FinishActivity.baseUrl;
 
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
 import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import retrofit2.Callback;

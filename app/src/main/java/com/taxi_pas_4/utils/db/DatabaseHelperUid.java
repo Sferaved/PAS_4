@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import  com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.log.Logger;
 
 import java.util.List;
 

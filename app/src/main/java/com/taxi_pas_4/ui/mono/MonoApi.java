@@ -1,10 +1,10 @@
 package com.taxi_pas_4.ui.mono;
 
-import  com.taxi_pas_4.ui.mono.cancel.RequestCancelMono;
-import  com.taxi_pas_4.ui.mono.cancel.ResponseCancelMono;
-import  com.taxi_pas_4.ui.mono.payment.RequestPayMono;
-import  com.taxi_pas_4.ui.mono.payment.ResponsePayMono;
-import  com.taxi_pas_4.ui.mono.status.ResponseStatusMono;
+import com.taxi_pas_4.ui.mono.cancel.RequestCancelMono;
+import com.taxi_pas_4.ui.mono.cancel.ResponseCancelMono;
+import com.taxi_pas_4.ui.mono.payment.RequestPayMono;
+import com.taxi_pas_4.ui.mono.payment.ResponsePayMono;
+import com.taxi_pas_4.ui.mono.status.ResponseStatusMono;
 
 import retrofit2.Call;
 import retrofit2.http.Body;

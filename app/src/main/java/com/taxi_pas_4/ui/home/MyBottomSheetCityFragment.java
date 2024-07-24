@@ -30,31 +30,31 @@ import androidx.fragment.app.FragmentManager;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import  com.taxi_pas_4.MainActivity;
-import  com.taxi_pas_4.R;
-import  com.taxi_pas_4.androidx.startup.MyApplication;
-import  com.taxi_pas_4.cities.api.CityApiClient;
-import  com.taxi_pas_4.cities.api.CityResponse;
-import  com.taxi_pas_4.cities.api.CityResponseMerchantFondy;
-import  com.taxi_pas_4.cities.api.CityService;
-import  com.taxi_pas_4.ui.card.CardInfo;
-import  com.taxi_pas_4.ui.finish.ApiClient;
-import  com.taxi_pas_4.ui.finish.RouteResponse;
-import  com.taxi_pas_4.ui.fondy.callback.CallbackResponse;
-import  com.taxi_pas_4.ui.fondy.callback.CallbackService;
-import  com.taxi_pas_4.ui.payment_system.PayApi;
-import  com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
-import  com.taxi_pas_4.ui.visicom.VisicomFragment;
-import  com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
-import  com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
-import  com.taxi_pas_4.utils.db.DatabaseHelper;
-import  com.taxi_pas_4.utils.db.DatabaseHelperUid;
-import  com.taxi_pas_4.utils.ip.ApiServiceCountry;
-import  com.taxi_pas_4.utils.ip.CountryResponse;
-import  com.taxi_pas_4.utils.ip.RetrofitClient;
-import  com.taxi_pas_4.utils.ip.ip_util_retrofit.IpResponse;
-import  com.taxi_pas_4.utils.ip.ip_util_retrofit.IpifyService;
-import  com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.R;
+import com.taxi_pas_4.androidx.startup.MyApplication;
+import com.taxi_pas_4.cities.api.CityApiClient;
+import com.taxi_pas_4.cities.api.CityResponse;
+import com.taxi_pas_4.cities.api.CityResponseMerchantFondy;
+import com.taxi_pas_4.cities.api.CityService;
+import com.taxi_pas_4.ui.card.CardInfo;
+import com.taxi_pas_4.ui.finish.ApiClient;
+import com.taxi_pas_4.ui.finish.RouteResponse;
+import com.taxi_pas_4.ui.fondy.callback.CallbackResponse;
+import com.taxi_pas_4.ui.fondy.callback.CallbackService;
+import com.taxi_pas_4.ui.payment_system.PayApi;
+import com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
+import com.taxi_pas_4.ui.visicom.VisicomFragment;
+import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
+import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
+import com.taxi_pas_4.utils.db.DatabaseHelper;
+import com.taxi_pas_4.utils.db.DatabaseHelperUid;
+import com.taxi_pas_4.utils.ip.ApiServiceCountry;
+import com.taxi_pas_4.utils.ip.CountryResponse;
+import com.taxi_pas_4.utils.ip.RetrofitClient;
+import com.taxi_pas_4.utils.ip.ip_util_retrofit.IpResponse;
+import com.taxi_pas_4.utils.ip.ip_util_retrofit.IpifyService;
+import com.taxi_pas_4.utils.log.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1040,7 +1040,7 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
 
         getCountryByIP("ipAddress");
 
-        IpifyService apiService =  com.taxi_pas_4.utils.ip.ip_util_retrofit.RetrofitClient.getClient(BASE_URL).create(IpifyService.class);
+        IpifyService apiService = com.taxi_pas_4.utils.ip.ip_util_retrofit.RetrofitClient.getClient(BASE_URL).create(IpifyService.class);
         Call<IpResponse> call = apiService.getPublicIPAddress();
 
         call.enqueue(new Callback<IpResponse>() {

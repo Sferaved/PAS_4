@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.099</string>
-    <string name="version">Version: 4.099</string>
+    <string name="version_code">4.100</string>
+    <string name="version">Version: 4.100</string>
 
     <string name="app_name">Taxi Duke Fellow</string>
 
@@ -78,7 +78,7 @@
     <string name="from_edit">From</string>
     <string name="sms_code">Verification code from SMS message</string>
     <string name="android">Android application for fast and cheap trips when ordering online.</string>
-    <string name="good_day">My greetings. \n \n Found a great app for taxi rides. \n \n I advise you to try the link in the official Google store: \n\n https://play.google.com/store/apps/details?id= com.taxi_pas_4 \n\n Have a nice day. \n See you later.</string>
+    <string name="good_day">My greetings. \n \n Found a great app for taxi rides. \n \n I advise you to try the link in the official Google store: \n\n https://play.google.com/store/apps/details?id=com.taxi_pas_4 \n\n Have a nice day. \n See you later.</string>
     <string name="share">Recommend the app to a friend...</string>
     <string name="no_email_agent">Email client is not installed.</string>
     <string name="check_position">Wait, your location is being determined...</string>

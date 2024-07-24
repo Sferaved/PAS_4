@@ -13,6 +13,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -44,26 +45,26 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import  com.taxi_pas_4.MainActivity;
-import  com.taxi_pas_4.NetworkChangeReceiver;
-import  com.taxi_pas_4.R;
-import  com.taxi_pas_4.cities.Kyiv.KyivRegion;
-import  com.taxi_pas_4.cities.Kyiv.KyivRegionRu;
-import  com.taxi_pas_4.ui.home.MyBottomSheetGPSFragment;
-import  com.taxi_pas_4.ui.maps.FromJSONParser;
-import  com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
-import  com.taxi_pas_4.ui.open_map.OpenStreetMapVisicomActivity;
-import  com.taxi_pas_4.ui.open_map.mapbox.Feature;
-import  com.taxi_pas_4.ui.open_map.mapbox.Geometry;
-import  com.taxi_pas_4.ui.open_map.mapbox.MapboxApiClient;
-import  com.taxi_pas_4.ui.open_map.mapbox.MapboxResponse;
-import  com.taxi_pas_4.ui.open_map.mapbox.MapboxService;
-import  com.taxi_pas_4.ui.visicom.VisicomFragment;
-import  com.taxi_pas_4.utils.KeyboardUtils;
-import  com.taxi_pas_4.utils.LocaleHelper;
-import  com.taxi_pas_4.utils.connect.ConnectionSpeedTester;
-import  com.taxi_pas_4.utils.connect.NetworkUtils;
-import  com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.NetworkChangeReceiver;
+import com.taxi_pas_4.R;
+import com.taxi_pas_4.cities.Kyiv.KyivRegion;
+import com.taxi_pas_4.cities.Kyiv.KyivRegionRu;
+import com.taxi_pas_4.ui.home.MyBottomSheetGPSFragment;
+import com.taxi_pas_4.ui.maps.FromJSONParser;
+import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
+import com.taxi_pas_4.ui.open_map.OpenStreetMapVisicomActivity;
+import com.taxi_pas_4.ui.open_map.mapbox.Feature;
+import com.taxi_pas_4.ui.open_map.mapbox.Geometry;
+import com.taxi_pas_4.ui.open_map.mapbox.MapboxApiClient;
+import com.taxi_pas_4.ui.open_map.mapbox.MapboxResponse;
+import com.taxi_pas_4.ui.open_map.mapbox.MapboxService;
+import com.taxi_pas_4.ui.visicom.VisicomFragment;
+import com.taxi_pas_4.utils.KeyboardUtils;
+import com.taxi_pas_4.utils.LocaleHelper;
+import com.taxi_pas_4.utils.connect.ConnectionSpeedTester;
+import com.taxi_pas_4.utils.connect.NetworkUtils;
+import com.taxi_pas_4.utils.log.Logger;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -131,7 +132,9 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
     private final int desiredHeight = 600;
     private final int max_length_string_size = 4;
     List<String> addressesList;
-    
+    AppCompatButton btnCallAdmin;
+    ViewGroup.LayoutParams layoutParams;
+
     @SuppressLint({"MissingInflatedId", "UseCompatLoadingForDrawables"})
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -232,12 +235,8 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
                     btn_clear_from.setVisibility(View.INVISIBLE);
                     btn_clear_to.setVisibility(View.INVISIBLE);
                 }
-                                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        finish();
-                    }
-                }, timeout);
+                VisicomFragment.btnVisible(View.INVISIBLE);
+                new Handler().postDelayed(() -> finish(), timeout);
 
             }
         });
@@ -586,28 +585,21 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
             addressListView.smoothScrollByOffset(offset);
         });
 
-        ViewGroup.LayoutParams layoutParams = addressListView.getLayoutParams();
+        layoutParams = addressListView.getLayoutParams();
         layoutParams.height = desiredHeight;
         addressListView.setLayoutParams(layoutParams);
-//        scrollSetVisibility ();
-//        addressListView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-//            int totalItemHeight = 0;
-//            for (int i = 0; i < addressListView.getChildCount(); i++) {
-//                totalItemHeight += addressListView.getChildAt(i).getHeight();
-//            }
-//
-//            if (totalItemHeight > desiredHeight) {
-//                scrollButtonUp.setVisibility(View.VISIBLE);
-//                scrollButtonDown.setVisibility(View.VISIBLE);
-//            } else {
-//                scrollButtonUp.setVisibility(View.GONE);
-//                scrollButtonDown.setVisibility(View.GONE);
-//            }
-//
-//            // Убираем слушатель, чтобы он не срабатывал многократно
-////                    listView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-//        });
 
+        btnCallAdmin = findViewById(R.id.btnCallAdmin);
+        btnCallAdmin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(Intent.ACTION_DIAL);
+                List<String> stringList = logCursor(MainActivity.CITY_INFO);
+                String phone = stringList.get(3);
+                intent.setData(Uri.parse(phone));
+                startActivity(intent);
+            }
+        });
     }
 
     private void scrollSetVisibility() {
@@ -971,6 +963,10 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
 
+                layoutParams.height = desiredHeight;
+                addressListView.setLayoutParams(layoutParams);
+                btnCallAdmin.setVisibility(View.GONE);
+
                 String inputString = charSequence.toString();
                 int charCount = inputString.length();
                 Logger.d(getApplicationContext(), TAG, "onTextChanged: " + inputString);
@@ -1014,6 +1010,9 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
             }
             @Override
             public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
+                layoutParams.height = desiredHeight;
+                addressListView.setLayoutParams(layoutParams);
+                btnCallAdmin.setVisibility(View.GONE);
 
                 // Вызывается при изменении текста
                 String inputString = charSequence.toString();
@@ -1693,6 +1692,8 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
 
 
                 if(addressesList.size() == 1) {
+                    scrollButtonDown.setVisibility(View.GONE);
+                    scrollButtonUp.setVisibility(View.GONE);
                     if (start.equals("ok")) {
                         String textEdit = fromEditAddress.getText().toString();
                         Logger.d(this, TAG, "textEdit" + textEdit);
@@ -1700,10 +1701,22 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
                             if (textEdit.contains("\f")) {
                                 textGeoError.setVisibility(View.VISIBLE);
                                 textGeoError.setText(R.string.no_house_vis_mes);
+                                layoutParams.height = desiredHeight/3;
+                                addressListView.setLayoutParams(layoutParams);
+                                scrollButtonDown.setVisibility(View.GONE);
+                                scrollButtonUp.setVisibility(View.GONE);
+
+                                btnCallAdmin.setVisibility(View.VISIBLE);
                             } else {
                                 textGeoError.setVisibility(View.VISIBLE);
                                 textGeoError.setText(R.string.no_adrees_mes);
+                                scrollButtonDown.setVisibility(View.GONE);
+                                scrollButtonUp.setVisibility(View.GONE);
+                                layoutParams.height = desiredHeight/3;
+                                addressListView.setLayoutParams(layoutParams);
+                                btnCallAdmin.setVisibility(View.VISIBLE);
                             }
+
 
                        }
                     } else {
@@ -1712,9 +1725,21 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
                             if (textEdit.contains("\f")) {
                                 text_toError.setVisibility(View.VISIBLE);
                                 text_toError.setText(R.string.no_house_vis_mes);
+                                layoutParams.height = desiredHeight/3;
+                                addressListView.setLayoutParams(layoutParams);
+                                scrollButtonDown.setVisibility(View.GONE);
+                                scrollButtonUp.setVisibility(View.GONE);
+
+                                btnCallAdmin.setVisibility(View.VISIBLE);
                             } else {
+
+                                scrollButtonDown.setVisibility(View.GONE);
+                                scrollButtonUp.setVisibility(View.GONE);
                                 text_toError.setVisibility(View.VISIBLE);
                                 text_toError.setText(R.string.no_adrees_mes);
+                                layoutParams.height = desiredHeight/3;
+                                addressListView.setLayoutParams(layoutParams);
+                                btnCallAdmin.setVisibility(View.VISIBLE);
                             }
                         }
                     }
@@ -1818,6 +1843,8 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
                             } else {
                                 textGeoError.setVisibility(View.VISIBLE);
                                 textGeoError.setText(R.string.house_vis_mes);
+                                scrollButtonDown.setVisibility(View.GONE);
+                                scrollButtonUp.setVisibility(View.GONE);
                             }
 
                         }
@@ -1873,6 +1900,8 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
                             } else {
                                 text_toError.setVisibility(View.VISIBLE);
                                 text_toError.setText(R.string.house_vis_mes);
+                                scrollButtonDown.setVisibility(View.GONE);
+                                scrollButtonUp.setVisibility(View.GONE);
                             }
 
                         }

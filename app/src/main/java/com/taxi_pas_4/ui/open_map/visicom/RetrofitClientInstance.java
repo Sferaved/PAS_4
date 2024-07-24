@@ -2,7 +2,7 @@ package com.taxi_pas_4.ui.open_map.visicom;
 
 import android.util.Log;
 
-import  com.taxi_pas_4.utils.LocaleHelper;
+import com.taxi_pas_4.utils.LocaleHelper;
 
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
