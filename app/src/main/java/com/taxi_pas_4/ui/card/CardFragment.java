@@ -582,6 +582,11 @@ public class CardFragment extends Fragment {
                 LocaleHelper.getLocale()
         );
 
+        btnCardLink.setVisibility(View.GONE);
+        btnOrder.setVisibility(View.GONE);
+        btnCallAdmin.setVisibility(View.GONE);
+        textCard.setVisibility(View.GONE);
+
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true); // Включаем поддержку JavaScript
         webView.setWebViewClient(new WebViewClient() {
@@ -596,9 +601,7 @@ public class CardFragment extends Fragment {
             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     // Отобразить HTML в WebView
-                     btnCardLink.setVisibility(View.GONE);
-                     btnOrder.setVisibility(View.GONE);
-                     btnCallAdmin.setVisibility(View.GONE);
+
                      displayHtmlContent(response.body());
                 } else {
                     Logger.d(context, TAG, "Response was not successful or body was null");
