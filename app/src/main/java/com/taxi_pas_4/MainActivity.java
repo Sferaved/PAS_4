@@ -47,6 +47,7 @@ import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.play.core.appupdate.AppUpdateInfo;
@@ -54,7 +55,6 @@ import com.google.android.play.core.appupdate.AppUpdateManager;
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
 import com.google.android.play.core.install.model.AppUpdateType;
 import com.google.android.play.core.install.model.UpdateAvailability;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
@@ -74,11 +74,10 @@ import com.taxi_pas_4.ui.home.MyBottomSheetGPSFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetMessageFragment;
 import com.taxi_pas_4.ui.open_map.mapbox.key_mapbox.ApiClientMapbox;
 import com.taxi_pas_4.ui.open_map.mapbox.key_mapbox.ApiResponseMapbox;
-import com.taxi_pas_4.ui.visicom.visicom_search.key_visicom.ApiResponse;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
+import com.taxi_pas_4.ui.visicom.visicom_search.key_visicom.ApiResponse;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
-
 import com.taxi_pas_4.utils.LocaleHelper;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.db.DatabaseHelper;
@@ -90,8 +89,8 @@ import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.utils.permissions.UserPermissions;
 import com.taxi_pas_4.utils.phone.ApiClientPhone;
+import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 import com.taxi_pas_4.utils.user.save_firebase.FirebaseUserManager;
-import com.taxi_pas_4.utils.user.save_firebase.UserProfile;
 import com.taxi_pas_4.utils.user.save_server.ApiServiceUser;
 import com.taxi_pas_4.utils.user.save_server.UserResponse;
 import com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
@@ -162,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
     public static SQLiteDatabase database;
     public static Menu navMenu;
     public static MenuItem navVisicomMenuItem;
-    public static String countryState;
+
     public static String apiKeyMapBox;
     public static String apiKey;
 
@@ -188,6 +187,8 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("StaticFieldLeak")
     public static NavController navController;
     private FirebaseUserManager userManager;
+    private SharedPreferencesHelper sharedPreferencesHelper;
+
    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -197,6 +198,7 @@ public class MainActivity extends AppCompatActivity {
         Logger.writeLog(this, getString(R.string.version));
         Logger.writeLog(this, "MainActivity started");
         setSupportActionBar(binding.appBarMain.toolbar);
+        sharedPreferencesHelper = new SharedPreferencesHelper(this);
 
         DrawerLayout drawer = binding.drawerLayout;
         NavigationView navigationView = binding.navView;

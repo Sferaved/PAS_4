@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.102</string>
-    <string name="version">Version: 4.102</string>
+    <string name="version_code">4.103</string>
+    <string name="version">Version: 4.103</string>
 
     <string name="app_name">Taxi Duke Fellow</string>
 
