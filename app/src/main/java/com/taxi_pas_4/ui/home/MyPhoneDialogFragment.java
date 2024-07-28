@@ -30,11 +30,9 @@ import androidx.core.app.ActivityCompat;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
-import com.taxi_pas_4.ui.finish.FinishActivity;
-import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.log.Logger;
-import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
+import com.taxi_pas_4.utils.user.save_firebase.FirebaseUserManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,6 +52,9 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
     final String PHONE_PATTERN = "((\\+?380)(\\d{9}))$";
     private final String TAG = "MyPhoneDialogFragment";
     private Context mContext;
+    FirebaseUserManager userManager;
+
+
     public MyPhoneDialogFragment(Context context, String page) {
         this.mContext = context;
         this.page = page;
@@ -76,6 +77,10 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
                 updateRecordsUser(phoneNumber.getText().toString(), mContext);
                 Logger.d(getActivity(), TAG, "setOnClickListener " + phoneNumber.getText().toString());
                 Logger.d(getActivity(), TAG, "setOnClickListener " + page);
+
+                userManager = new FirebaseUserManager();
+                userManager.saveUserPhone(phoneNumber.getText().toString());
+
                 switch (page) {
                     case "home":
                         HomeFragment.btnVisible(View.INVISIBLE);
@@ -186,6 +191,8 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
 
         if(phone != null) {
             phoneNumber.setText(phone);
+            userManager = new FirebaseUserManager();
+            userManager.saveUserPhone(phone);
         }
 
     }

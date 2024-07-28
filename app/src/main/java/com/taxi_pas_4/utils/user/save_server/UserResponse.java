@@ -1,4 +1,4 @@
-package com.taxi_pas_4.utils.user;
+package com.taxi_pas_4.utils.user.save_server;
 
 import com.google.gson.annotations.SerializedName;
 

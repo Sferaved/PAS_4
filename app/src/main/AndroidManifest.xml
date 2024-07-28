@@ -2,7 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
     <!-- Разрешения -->
-    <!-- Разрешения -->
     <uses-feature
         android:name="android.hardware.telephony"
         android:required="false" />
@@ -97,7 +96,7 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.PAS_4.NoActionBar"
             tools:ignore="Instantiatable" />
-        <activity android:name=".ui.open_map.visicom.ActivityVisicomOnePage"
+        <activity android:name=".ui.visicom.visicom_search.ActivityVisicomOnePage"
             android:exported="true"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.PAS_4.NoActionBar"

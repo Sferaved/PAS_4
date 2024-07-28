@@ -24,6 +24,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -49,7 +50,6 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
@@ -64,7 +64,7 @@ import com.taxi_pas_4.ui.home.MyBottomSheetGPSFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetGeoFragment;
 import com.taxi_pas_4.ui.home.MyPhoneDialogFragment;
 import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
-import com.taxi_pas_4.ui.open_map.visicom.ActivityVisicomOnePage;
+import com.taxi_pas_4.ui.visicom.visicom_search.ActivityVisicomOnePage;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
 import com.taxi_pas_4.utils.from_json_parser.FromJSONParserRetrofit;
@@ -75,7 +75,7 @@ import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.tariff.DatabaseHelperTariffs;
 import com.taxi_pas_4.utils.tariff.Tariff;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
-import com.taxi_pas_4.utils.user_verify.VerifyUserTask;
+import com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -97,7 +97,7 @@ public class VisicomFragment extends Fragment{
     private FragmentVisicomBinding binding;
     private static final String TAG = "VisicomFragment";
     private static final int REQUEST_LOCATION_PERMISSION = 1;
-    FloatingActionButton fab_call;
+
 
     public static AppCompatButton btn_minus, btn_plus, btnOrder, buttonBonus, gpsbut, btnCallAdmin;
     @SuppressLint("StaticFieldLeak")
@@ -163,7 +163,7 @@ public class VisicomFragment extends Fragment{
             Intent intent = new Intent(Intent.ACTION_DIAL);
             List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
             String phone = stringList.get(3);
-            intent.setData(Uri.parse(phone));
+            intent.setData(Uri.parse(phone)); 
             startActivity(intent);
         });
 
@@ -182,7 +182,7 @@ public class VisicomFragment extends Fragment{
          btn_clear_from.setVisibility(View.INVISIBLE);
          btn_clear_to.setVisibility(View.INVISIBLE);
 
-         gpsbut.setVisibility(visible);
+//         gpsbut.setVisibility(visible);
          btnAdd.setVisibility(visible);
 
          buttonBonus.setVisibility(visible);
@@ -347,7 +347,12 @@ public class VisicomFragment extends Fragment{
             result = true;
 
         } else {
-            geoText.setText(start);
+            if(MainActivity.firstStart) {
+                result = true;
+            } else {
+                geoText.setText(start);
+            }
+
         }
         if(originLatitude == toLatitude) {
             textViewTo.setText(context.getString(R.string.on_city_tv));
@@ -427,14 +432,14 @@ public class VisicomFragment extends Fragment{
                 c.close();
             }
             parameters = str_origin + "/" + str_dest + "/" + tarif + "/" + phoneNumber + "/"
-                    + displayName + "*" + userEmail  + "*" + payment_type;
+            + displayName + " (" + context.getString(R.string.version_code) + ") " + "*" + userEmail  + "*" + payment_type;
         }
         if(urlAPI.equals("orderSearchMarkersVisicom")) {
             phoneNumber = logCursor(MainActivity.TABLE_USER_INFO, context).get(2);
 
 
             parameters = str_origin + "/" + str_dest + "/" + tarif + "/" + phoneNumber + "/"
-                    + displayName + "*" + userEmail  + "*" + payment_type + "/" + addCost + "/"
+                    + displayName + " (" + context.getString(R.string.version_code) + ") " + "*" + userEmail  + "*" + payment_type + "/" + addCost + "/"
                     + time + "/" + comment + "/" + date+ "/" + start + "/" + finish;
 
             ContentValues cv = new ContentValues();
@@ -824,7 +829,7 @@ public class VisicomFragment extends Fragment{
 
                         }
                         MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
-                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                        bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
                     }
                 }
 
@@ -1029,13 +1034,16 @@ public class VisicomFragment extends Fragment{
     @Override
     public void onResume() {
         super.onResume();
-        progressBar.setVisibility(View.VISIBLE);
+        if (MainActivity.countryState == null) {
+            getPublicIPAddress();
+        }
 
         new VerifyUserTask(context).execute();
 
         List<String> listCity = logCursor(MainActivity.CITY_INFO, context);
         String city = listCity.get(1);
         String cityMenu;
+
         switch (city){
             case "Kyiv City":
                 cityMenu = getString(R.string.city_kyiv);
@@ -1071,14 +1079,11 @@ public class VisicomFragment extends Fragment{
         }
 
 
-
-
-
         String newTitle =  getString(R.string.menu_city) + " " + cityMenu;
         // Изменяем текст элемента меню
         MainActivity.navVisicomMenuItem.setTitle(newTitle);
         AppCompatActivity activity = (AppCompatActivity) context;
-        activity.getSupportActionBar().setTitle(newTitle);
+        Objects.requireNonNull(activity.getSupportActionBar()).setTitle(newTitle);
 
         List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
         api =  stringList.get(2);
@@ -1316,8 +1321,6 @@ public class VisicomFragment extends Fragment{
         num2 = binding.num2;
 
         gpsbut = binding.gpsbut;
-
-
         LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         gpsbut.setOnClickListener(v -> {
 
@@ -1415,15 +1418,6 @@ public class VisicomFragment extends Fragment{
             gpsbut.setTextColor(Color.WHITE);
         }
 
-        if (MainActivity.countryState == null) {
-
-            btn_clear_from_text.setVisibility(View.INVISIBLE);
-
-            btn_clear_from.setVisibility(View.INVISIBLE);
-            btn_clear_to.setVisibility(View.INVISIBLE);
-
-            getPublicIPAddress();
-        }
 
 
         if (NetworkUtils.isNetworkAvailable(requireContext())) {
@@ -1445,21 +1439,15 @@ public class VisicomFragment extends Fragment{
                         || ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
                     if (!newRout()) {
+
                         Logger.d(context, TAG, "onResume: 1");
                         progressBar.setVisibility(View.VISIBLE);
-                        new Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    visicomCost();
-                                } catch (MalformedURLException e) {
-                                    FirebaseCrashlytics.getInstance().recordException(e);
-                                    throw new RuntimeException(e);
-                                }
-                            }
-                        }, 200);
-
-
+                        try {
+                            visicomCost();
+                        } catch (MalformedURLException e) {
+                            FirebaseCrashlytics.getInstance().recordException(e);
+                            throw new RuntimeException(e);
+                        }
                     } else {
                         Logger.d(context, TAG, "onResume: 2");
                         btnVisible(View.INVISIBLE);
@@ -1478,19 +1466,12 @@ public class VisicomFragment extends Fragment{
                         if (!newRout()) {
                             Logger.d(context, TAG, "onResume: 4");
                             progressBar.setVisibility(View.VISIBLE);
-                            new Handler().postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        visicomCost();
-                                    } catch (MalformedURLException e) {
-                                        FirebaseCrashlytics.getInstance().recordException(e);
-                                        throw new RuntimeException(e);
-                                    }
-                                }
-                            }, 200);
-
-
+                            try {
+                                visicomCost();
+                            } catch (MalformedURLException e) {
+                                FirebaseCrashlytics.getInstance().recordException(e);
+                                throw new RuntimeException(e);
+                            }
                         } else {
                             Logger.d(context, TAG, "onResume: 5");
                             btnVisible(View.VISIBLE);
@@ -1501,23 +1482,25 @@ public class VisicomFragment extends Fragment{
             } else {
                 if (!newRout()) {
                     Logger.d(context, TAG, "onResume: 6");
-
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                visicomCost();
-                            } catch (MalformedURLException e) {
-                                FirebaseCrashlytics.getInstance().recordException(e);
-                                throw new RuntimeException(e);
-                            }
-                        }
-                    }, 200);
-
-
+                    try {
+                        visicomCost();
+                    } catch (MalformedURLException e) {
+                        FirebaseCrashlytics.getInstance().recordException(e);
+                        throw new RuntimeException(e);
+                    }
                 } else {
                     Logger.d(context, TAG, "onResume: 7");
-                    btnVisible(View.VISIBLE);
+
+                    btn_clear_from_text.setVisibility(View.INVISIBLE);
+                    textfrom.setVisibility(View.VISIBLE);
+                    num1.setVisibility(View.VISIBLE);
+                    geoText.setVisibility(View.VISIBLE);
+
+                    binding.textwhere.setVisibility(View.VISIBLE);
+                    num2.setVisibility(View.VISIBLE);
+                    textViewTo.setVisibility(View.VISIBLE);
+
+                    btnVisible(View.INVISIBLE);
                 }
             }
 
@@ -1799,7 +1782,7 @@ public class VisicomFragment extends Fragment{
                                     }
                                 }
                             });
-//
+
                             try {
                                 visicomCost();
                             } catch (MalformedURLException e) {
@@ -1816,8 +1799,6 @@ public class VisicomFragment extends Fragment{
         };
 
         startLocationUpdates();
-
-
     }
     private void startLocationUpdates() {
         LocationRequest locationRequest = createLocationRequest();
@@ -1890,114 +1871,137 @@ public class VisicomFragment extends Fragment{
 
     private void visicomCost() throws MalformedURLException {
 
-        String query = "SELECT * FROM " + MainActivity.ROUT_MARKER + " LIMIT 1";
-        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-        @SuppressLint("Recycle") Cursor cursor = database.rawQuery(query, null);
+        btn_clear_from_text.setVisibility(View.INVISIBLE);
+        textfrom.setVisibility(View.VISIBLE);
 
-        cursor.moveToFirst();
+        num1.setVisibility(View.VISIBLE);
+        geoText.setVisibility(View.VISIBLE);
 
-        // Получите значения полей из первой записи
-        @SuppressLint("Range") double originLatitude = cursor.getDouble(cursor.getColumnIndex("startLat"));
-        @SuppressLint("Range") double toLatitude = cursor.getDouble(cursor.getColumnIndex("to_lat"));
+        binding.textwhere.setVisibility(View.VISIBLE);
+        num2.setVisibility(View.VISIBLE);
+        textViewTo.setVisibility(View.VISIBLE);
 
-        @SuppressLint("Range") String start = cursor.getString(cursor.getColumnIndex("start"));
-        @SuppressLint("Range") String finish = cursor.getString(cursor.getColumnIndex("finish"));
-
-        geoText.setText(start);
-        if(originLatitude == toLatitude) {
-            textViewTo.setText(context.getString(R.string.on_city_tv));
-        } else {
-            textViewTo.setText(finish);
-        }
-        String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(3);
-
-
-        String urlCost = null;
-
-        urlCost = getTaxiUrlSearchMarkers("costSearchMarkers", context);
-
-        Logger.d(context, TAG, "visicomCost: " + urlCost);
-
-        CostJSONParserRetrofit parser = new CostJSONParserRetrofit();
-        parser.sendURL(urlCost, new Callback<Map<String, String>>() {
+        Handler handler = new Handler(Looper.getMainLooper());
+        new Thread(new Runnable() {
             @Override
-            public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
-                Map<String, String> sendUrlMapCost = response.body();
-                assert sendUrlMapCost != null;
-                String orderCost = sendUrlMapCost.get("order_cost");
-                String orderMessage = sendUrlMapCost.get("Message");
-                Logger.d(context, TAG, "startCost: orderCost " + orderCost);
-                Logger.d(context, TAG, "startCost: orderMessage " + orderMessage);
+            public void run() {
+                // Выполнение тяжелой операции в фоновом потоке
+                String query = "SELECT * FROM " + MainActivity.ROUT_MARKER + " LIMIT 1";
+                SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+                @SuppressLint("Recycle") Cursor cursor = database.rawQuery(query, null);
 
-                assert orderCost != null;
-                if (orderCost.equals("0")) {
-                    progressBar.setVisibility(View.GONE);
-                    String message = context.getString(R.string.error_message);
-                    assert orderMessage != null;
-                    if (orderMessage.equals("ErrorMessage")) {
-                        message = context.getString(R.string.server_error_connected);
-                    }
+                cursor.moveToFirst();
 
-                    if (!isStateSaved() && isAdded()) {
-                        MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
-                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-                    } else {
-                        Toast.makeText(context, context.getString(R.string.server_error_connected), Toast.LENGTH_SHORT).show();
-                    }
-                    // Проверяем, что активность не в состоянии сохранения
+                @SuppressLint("Range") double originLatitude = cursor.getDouble(cursor.getColumnIndex("startLat"));
+                @SuppressLint("Range") double toLatitude = cursor.getDouble(cursor.getColumnIndex("to_lat"));
 
-                    btn_clear_from.setVisibility(View.INVISIBLE);
-                    btn_clear_to.setVisibility(View.INVISIBLE);
-                } else {
-                    Logger.d(context, TAG, "visicomCost: ++++");
+                @SuppressLint("Range") String start = cursor.getString(cursor.getColumnIndex("start"));
+                @SuppressLint("Range") String finish = cursor.getString(cursor.getColumnIndex("finish"));
 
-                    Logger.d(context, TAG, "visicomCost: " + discountText);
-                    if (discountText.matches("[+-]?\\d+") || discountText.equals("0")) {
-                        long discountInt = Integer.parseInt(discountText);
-                        long discount;
+                String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(3);
+                String urlCost = getTaxiUrlSearchMarkers("costSearchMarkers", context);
 
-                        firstCost = Long.parseLong(orderCost);
-                        discount = firstCost * discountInt / 100;
-                        firstCost = VisicomFragment.firstCost + discount;
-                        updateAddCost(String.valueOf(discount));
-                        text_view_cost.setText(String.valueOf(VisicomFragment.firstCost));
-                        MIN_COST_VALUE = (long) (VisicomFragment.firstCost * 0.6);
-                        firstCostForMin = VisicomFragment.firstCost;
+                Logger.d(context, TAG, "visicomCost: " + urlCost);
 
+                CostJSONParserRetrofit parser = new CostJSONParserRetrofit();
+                try {
+                    parser.sendURL(urlCost, new Callback<Map<String, String>>() {
+                        @Override
+                        public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    geoText.setText(start);
+                                    if (originLatitude == toLatitude) {
+                                        textViewTo.setText(context.getString(R.string.on_city_tv));
+                                    } else {
+                                        textViewTo.setText(finish);
+                                    }
 
-                        geoText.setVisibility(View.VISIBLE);
-                        progressBar.setVisibility(View.GONE);;
+                                    Map<String, String> sendUrlMapCost = response.body();
+                                    if (sendUrlMapCost == null) {
+                                        Toast.makeText(context, context.getString(R.string.server_error_connected), Toast.LENGTH_SHORT).show();
+                                        return;
+                                    }
 
-                        btn_clear_from.setVisibility(View.INVISIBLE);
-                        btn_clear_to.setVisibility(View.INVISIBLE);
+                                    String orderCost = sendUrlMapCost.get("order_cost");
+                                    String orderMessage = sendUrlMapCost.get("Message");
 
-                        textfrom.setVisibility(View.VISIBLE);
-                        num1.setVisibility(View.VISIBLE);
-                        textwhere.setVisibility(View.VISIBLE);
-                        num2.setVisibility(View.VISIBLE);
-                        textViewTo.setVisibility(View.VISIBLE);
+                                    if (orderCost.equals("0")) {
+                                        progressBar.setVisibility(View.GONE);
+                                        String message = context.getString(R.string.error_message);
+                                        if (orderMessage.equals("ErrorMessage")) {
+                                            message = context.getString(R.string.server_error_connected);
+                                        }
 
-                        btnAdd.setVisibility(View.VISIBLE);
+                                        if (!isStateSaved() && isAdded()) {
+                                            MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
+                                            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                                        } else {
+                                            Toast.makeText(context, context.getString(R.string.server_error_connected), Toast.LENGTH_SHORT).show();
+                                        }
 
-                        buttonBonus.setVisibility(View.VISIBLE);
-                        btn_minus.setVisibility(View.VISIBLE);
-                        text_view_cost.setVisibility(View.VISIBLE);
-                        btn_plus.setVisibility(View.VISIBLE);
-                        btnOrder.setVisibility(View.VISIBLE);
+                                        btn_clear_from.setVisibility(View.INVISIBLE);
+                                        btn_clear_to.setVisibility(View.INVISIBLE);
+                                    } else {
+                                        if (discountText.matches("[+-]?\\d+") || discountText.equals("0")) {
+                                            long discountInt = Integer.parseInt(discountText);
+                                            long discount;
 
-                        btn_clear_from_text.setVisibility(View.GONE);
+                                            firstCost = Long.parseLong(orderCost);
+                                            discount = firstCost * discountInt / 100;
+                                            firstCost = VisicomFragment.firstCost + discount;
+                                            updateAddCost(String.valueOf(discount));
+                                            text_view_cost.setText(String.valueOf(VisicomFragment.firstCost));
+                                            MIN_COST_VALUE = (long) (VisicomFragment.firstCost * 0.6);
+                                            firstCostForMin = VisicomFragment.firstCost;
 
-                    }
+                                            geoText.setVisibility(View.VISIBLE);
+                                            progressBar.setVisibility(View.GONE);
+
+                                            btn_clear_from.setVisibility(View.INVISIBLE);
+                                            btn_clear_to.setVisibility(View.INVISIBLE);
+
+                                            textfrom.setVisibility(View.VISIBLE);
+                                            num1.setVisibility(View.VISIBLE);
+                                            textwhere.setVisibility(View.VISIBLE);
+                                            num2.setVisibility(View.VISIBLE);
+                                            textViewTo.setVisibility(View.VISIBLE);
+
+                                            btnAdd.setVisibility(View.VISIBLE);
+
+                                            buttonBonus.setVisibility(View.VISIBLE);
+                                            btn_minus.setVisibility(View.VISIBLE);
+                                            text_view_cost.setVisibility(View.VISIBLE);
+                                            btn_plus.setVisibility(View.VISIBLE);
+                                            btnOrder.setVisibility(View.VISIBLE);
+
+                                            btn_clear_from_text.setVisibility(View.GONE);
+                                        }
+                                    }
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    FirebaseCrashlytics.getInstance().recordException(t);
+                                    Toast.makeText(context, context.getString(R.string.server_error_connected), Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+                    });
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
                 }
             }
-            @Override
-            public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
-                FirebaseCrashlytics.getInstance().recordException(t);
-            }
-        });
+        }).start();
+    }
 
 
-   }
 
     public void getPublicIPAddress() {
         getCountryByIP(context);

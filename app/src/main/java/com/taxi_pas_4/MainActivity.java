@@ -6,7 +6,6 @@ import static com.taxi_pas_4.R.string.format_phone;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -24,8 +23,6 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -75,9 +72,9 @@ import com.taxi_pas_4.ui.home.MyBottomSheetCityFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetGPSFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetMessageFragment;
-import com.taxi_pas_4.ui.open_map.visicom.key_mapbox.ApiClientMapbox;
-import com.taxi_pas_4.ui.open_map.visicom.key_mapbox.ApiResponseMapbox;
-import com.taxi_pas_4.ui.open_map.visicom.key_visicom.ApiResponse;
+import com.taxi_pas_4.ui.open_map.mapbox.key_mapbox.ApiClientMapbox;
+import com.taxi_pas_4.ui.open_map.mapbox.key_mapbox.ApiResponseMapbox;
+import com.taxi_pas_4.ui.visicom.visicom_search.key_visicom.ApiResponse;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
@@ -93,14 +90,15 @@ import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.utils.permissions.UserPermissions;
 import com.taxi_pas_4.utils.phone.ApiClientPhone;
-import com.taxi_pas_4.utils.user.ApiServiceUser;
-import com.taxi_pas_4.utils.user.UserResponse;
-import com.taxi_pas_4.utils.user_verify.VerifyUserTask;
+import com.taxi_pas_4.utils.user.save_firebase.FirebaseUserManager;
+import com.taxi_pas_4.utils.user.save_firebase.UserProfile;
+import com.taxi_pas_4.utils.user.save_server.ApiServiceUser;
+import com.taxi_pas_4.utils.user.save_server.UserResponse;
+import com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
 
 import org.json.JSONException;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -112,7 +110,6 @@ import java.util.Random;
 import java.util.regex.Pattern;
 
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -121,7 +118,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String TAG = "TAG_MAIN";
+    private static final String TAG = "MainActivity";
     public static String order_id;
     public static String invoiceId;
 
@@ -148,6 +145,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String TABLE_LAST_PUSH = "tableLastPush";
     public static Cursor cursorDb;
     public static boolean verifyPhone = false;
+    public static boolean firstStart;
     private AppBarConfiguration mAppBarConfiguration;
     private NetworkChangeReceiver networkChangeReceiver;
     /**
@@ -187,7 +185,9 @@ public class MainActivity extends AppCompatActivity {
     private static final long ONE_DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000; // 24 часа в миллисекундах
 //    private static final long ONE_DAY_IN_MILLISECONDS = 60 * 1000; // 1 минута в миллисекундах
     private List<RouteResponseCancel> routeListCancel;
+    @SuppressLint("StaticFieldLeak")
     public static NavController navController;
+    private FirebaseUserManager userManager;
    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -237,23 +237,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private boolean isNotificationServiceEnabled() {
-        String pkgName = getPackageName();
-        final String flat = Settings.Secure.getString(getContentResolver(),
-                "enabled_notification_listeners");
-        if (flat != null && !flat.isEmpty()) {
-            final String[] names = flat.split(":");
-            for (String name : names) {
-                final ComponentName componentName = ComponentName.unflattenFromString(name);
-                if (componentName != null) {
-                    if (TextUtils.equals(pkgName, componentName.getPackageName())) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -269,8 +252,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
-
 
         databaseHelper = new DatabaseHelper(getApplicationContext());
         databaseHelper.clearTable();
@@ -1086,12 +1067,17 @@ public class MainActivity extends AppCompatActivity {
                                 Logger.d(getApplicationContext(), TAG, "onClick:phoneNumber.getText().toString() " + phoneNumber.getText().toString());
 
                             } else {
-                               updateRecordsUser("phone_number", phoneNumber.getText().toString());
-                               String newName = userName.getText().toString();
-                               if (newName.trim().isEmpty()) {
+                                String phone = phoneNumber.getText().toString();
+
+                                updateRecordsUser("phone_number", phone);
+                                userManager = new FirebaseUserManager();
+                                userManager.saveUserPhone(phone);
+
+                                String newName = userName.getText().toString();
+                                if (newName.trim().isEmpty()) {
                                    newName = "No_name";
-                               }
-                               updateRecordsUser("username", newName);
+                                }
+                                updateRecordsUser("username", newName);
                             }
 //                        }
                     }
@@ -1109,6 +1095,9 @@ public class MainActivity extends AppCompatActivity {
         database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?",
                 new String[] { "1" });
         database.close();
+
+
+
     }
     private boolean connected() {
 
@@ -1184,17 +1173,22 @@ public class MainActivity extends AppCompatActivity {
         new Thread(this::mapboxKey).start();
         new Thread(this::visicomKey).start();
         if(userEmail.equals("email")) {
+            firstStart = true;
             new Thread(() -> insertPushDate(getApplicationContext())).start();
 
             Toast.makeText(this, R.string.checking, Toast.LENGTH_SHORT).show();
             startFireBase();
 
         } else {
+            firstStart = false;
 
             new Thread(this::versionFromMarket).start();
+            new Thread(this::userPhoneFromFb).start();
             new Thread(() -> fetchRoutesCancel(userEmail)).start();
             new Thread(() -> updatePushDate(getApplicationContext())).start();
+
             new VerifyUserTask(this).execute();
+
             UserPermissions.getPermissions(userEmail, getApplicationContext());
 
             Thread wfpCardThread = new Thread(() -> {
@@ -1286,13 +1280,15 @@ public class MainActivity extends AppCompatActivity {
 
                 } else {
                     // Обработка случаев, когда ответ не 200 OK
+                    Logger.d(getApplicationContext(), TAG, "onResponse: getCardTokenWfp error ");
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<CallbackResponseWfp> call, @NonNull Throwable t) {
                 // Обработка ошибки запроса
-                Logger.d(getApplicationContext(), TAG, "onResponse: failure " + t);
+                Logger.d(getApplicationContext(), TAG, "onResponse:getCardTokenWfp onFailure" + t);
+                FirebaseCrashlytics.getInstance().recordException(t);
             }
         });
     }
@@ -1402,10 +1398,8 @@ public class MainActivity extends AppCompatActivity {
         addUserNoNameThread.start();
 
 // Task 3: Fetch user phone information from the server in a separate thread
-        Thread userPhoneThread = new Thread(() -> {
-            userPhoneFromServer(emailUser);
-        });
-        userPhoneThread.start();
+        //            userPhoneFromServer(emailUser);
+        new Thread(this::userPhoneFromFb).start();
 
 // Task 4: Get card token for "fondy" in a separate thread
 //        Thread fondyCardThread = new Thread(() -> {
@@ -1431,7 +1425,6 @@ public class MainActivity extends AppCompatActivity {
         try {
             updateUserInfoThread.join();
             addUserNoNameThread.join();
-            userPhoneThread.join();
 //            fondyCardThread.join();
 //            monoCardThread.join();
         } catch (InterruptedException e) {
@@ -1669,6 +1662,36 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void userPhoneFromFb ()
+    {
+        userManager = new FirebaseUserManager();
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (currentUser != null) {
+            String userId = currentUser.getUid();
+            userManager.getUserPhoneById(userId, new FirebaseUserManager.UserPhoneCallback() {
+                @Override
+                public void onUserPhoneRetrieved(String phone) {
+                    if (phone != null) {
+                        // Используйте phone по своему усмотрению
+                        Logger.d(getApplicationContext(), TAG, "User phone: " + phone);
+                        String PHONE_PATTERN = "((\\+?380)(\\d{9}))$";
+                        boolean val = Pattern.compile(PHONE_PATTERN).matcher(phone).matches();
+
+                        if (val) {
+                            updateRecordsUser("phone_number", phone);
+                            MainActivity.verifyPhone = true;
+                        } else {
+                            // Handle case where phone doesn't match the pattern
+                            Logger.d(getApplicationContext(), TAG, "Phone does not match pattern");
+                        }
+                    } else {
+                        Logger.d(getApplicationContext(), TAG, "Phone is null");
+                    }
+                }
+            });
+        }
+    }
     private void userPhoneFromServer (String email) {
         ApiClientPhone apiClient = new ApiClientPhone();
         apiClient.getUserPhone(email, new ApiClientPhone.OnUserPhoneResponseListener() {
@@ -1684,6 +1707,7 @@ public class MainActivity extends AppCompatActivity {
 
                     if (val) {
                         updateRecordsUser("phone_number", phone);
+                        MainActivity.verifyPhone = true;
                     } else {
                         // Handle case where phone doesn't match the pattern
                         Logger.d(getApplicationContext(), TAG, "Phone does not match pattern");
@@ -1780,6 +1804,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void fetchRoutesCancel(String value) {
         Logger.d(this, TAG, "fetchRoutesCancel: ");
+
+
+
 
         routeListCancel = new ArrayList<>();
 
@@ -1972,7 +1999,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void visicomKey() {
-        com.taxi_pas_4.ui.open_map.visicom.key_visicom.ApiClient.getVisicomKeyInfo(new Callback<ApiResponse>() {
+        com.taxi_pas_4.ui.visicom.visicom_search.key_visicom.ApiClient.getVisicomKeyInfo(new Callback<ApiResponse>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
                 if (response.isSuccessful()) {
@@ -1981,41 +2008,6 @@ public class MainActivity extends AppCompatActivity {
                         String keyVisicom = apiResponse.getKeyVisicom();
                         Logger.d(getApplicationContext(),"ApiResponse", "keyVisicom: " + keyVisicom);
                         MainActivity.apiKey = keyVisicom;
-
-                        String apiUrl = "https://api.visicom.ua/data-api/5.0/";
-                        String url = apiUrl  + LocaleHelper.getLocale() + "/geocode.json";
-
-                        String modifiedText = "чер";
-                        Logger.d(getApplicationContext(), TAG, "performAddressSearch:modifiedText " + modifiedText);
-
-                        url = url
-                                + "?"
-                                + ",adr_street"
-                                + "&l=1"
-                                + "&text=" + modifiedText + "&key=" + MainActivity.apiKey;
-                        Request request = new Request.Builder()
-                                .url(url)
-                                .build();
-                        Logger.d(getApplicationContext(), TAG, "performAddressSearch: " + url);
-                        OkHttpClient client = new OkHttpClient();
-                        client.newCall(request).enqueue(new okhttp3.Callback() {
-                            @Override
-                            public void onResponse(@NonNull okhttp3.Call call, @NonNull okhttp3.Response response) {
-                                try {
-                                    assert response.body() != null;
-                                    String responseData = response.body().string();
-                                    Logger.d(getApplicationContext(), TAG, "onResponse: " + responseData);
-                                } catch (Exception e) {
-                                    FirebaseCrashlytics.getInstance().recordException(e);
-                                }
-                            }
-
-                            @Override
-                            public void onFailure(@NonNull okhttp3.Call call, @NonNull IOException e) {
-                            }
-                        });
-
-
                     }
                 } else {
                     // Обработка ошибки

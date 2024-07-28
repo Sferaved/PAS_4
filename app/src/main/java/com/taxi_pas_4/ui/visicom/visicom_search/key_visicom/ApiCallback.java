@@ -1,4 +1,4 @@
-package com.taxi_pas_4.ui.open_map.visicom.key_visicom;
+package com.taxi_pas_4.ui.visicom.visicom_search.key_visicom;
 
 public interface ApiCallback {
     void onVisicomKeyReceived(String key);

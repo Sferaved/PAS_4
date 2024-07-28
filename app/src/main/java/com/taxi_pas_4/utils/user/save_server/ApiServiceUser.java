@@ -1,4 +1,4 @@
-package com.taxi_pas_4.utils.user;
+package com.taxi_pas_4.utils.user.save_server;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
