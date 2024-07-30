@@ -47,7 +47,6 @@ import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.play.core.appupdate.AppUpdateInfo;
@@ -55,6 +54,7 @@ import com.google.android.play.core.appupdate.AppUpdateManager;
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
 import com.google.android.play.core.install.model.AppUpdateType;
 import com.google.android.play.core.install.model.UpdateAvailability;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
@@ -62,7 +62,9 @@ import com.taxi_pas_4.cities.api.CityApiClient;
 import com.taxi_pas_4.cities.api.CityResponse;
 import com.taxi_pas_4.cities.api.CityResponseMerchantFondy;
 import com.taxi_pas_4.cities.api.CityService;
+import com.taxi_pas_4.cities.check.CityCheckActivity;
 import com.taxi_pas_4.databinding.ActivityMainBinding;
+import com.taxi_pas_4.ui.account.ExitActivity;
 import com.taxi_pas_4.ui.card.CardInfo;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.RouteResponse;
@@ -72,12 +74,14 @@ import com.taxi_pas_4.ui.home.MyBottomSheetCityFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetGPSFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetMessageFragment;
+import com.taxi_pas_4.ui.keyboard.KeyboardUtils;
 import com.taxi_pas_4.ui.open_map.mapbox.key_mapbox.ApiClientMapbox;
 import com.taxi_pas_4.ui.open_map.mapbox.key_mapbox.ApiResponseMapbox;
-import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.ui.visicom.visicom_search.key_visicom.ApiResponse;
+import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
+
 import com.taxi_pas_4.utils.LocaleHelper;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.db.DatabaseHelper;
@@ -85,12 +89,17 @@ import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.download.AppUpdater;
 import com.taxi_pas_4.utils.fcm.token_send.ApiServiceToken;
 import com.taxi_pas_4.utils.fcm.token_send.RetrofitClientToken;
+import com.taxi_pas_4.utils.ip.ApiServiceCountry;
+import com.taxi_pas_4.utils.ip.CountryResponse;
+import com.taxi_pas_4.utils.ip.RetrofitClient;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.utils.permissions.UserPermissions;
 import com.taxi_pas_4.utils.phone.ApiClientPhone;
 import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
+import com.taxi_pas_4.utils.user.del_server.UserRepository;
 import com.taxi_pas_4.utils.user.save_firebase.FirebaseUserManager;
+import com.taxi_pas_4.utils.user.save_firebase.UserProfile;
 import com.taxi_pas_4.utils.user.save_server.ApiServiceUser;
 import com.taxi_pas_4.utils.user.save_server.UserResponse;
 import com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
@@ -121,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
     public static String order_id;
     public static String invoiceId;
 
-    public static final String DB_NAME = "data_11032024_0";
+    public static final String DB_NAME = "data_30072024_0";
 
     /**
      * Table section
@@ -143,7 +152,6 @@ public class MainActivity extends AppCompatActivity {
 
     public static final String TABLE_LAST_PUSH = "tableLastPush";
     public static Cursor cursorDb;
-    public static boolean verifyPhone = false;
     public static boolean firstStart;
     private AppBarConfiguration mAppBarConfiguration;
     private NetworkChangeReceiver networkChangeReceiver;
@@ -169,7 +177,7 @@ public class MainActivity extends AppCompatActivity {
     DatabaseHelperUid databaseHelperUid;
     String baseUrl = "https://m.easy-order-taxi.site";
     private List<RouteResponse> routeList;
-    String[] array;
+    private String[] array;
     public static boolean gps_upd;
     VisicomFragment visicomFragment;
     public static SharedPreferences sharedPreferences;
@@ -205,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
             // Passing each menu ID as a set of Ids because each
             // menu should be considered as top level destinations.
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-              R.id.nav_visicom, R.id.nav_home, R.id.nav_cancel, R.id.nav_gallery, R.id.nav_about, R.id.nav_uid, R.id.nav_bonus, R.id.nav_card, R.id.nav_author)
+              R.id.nav_visicom, R.id.nav_home, R.id.nav_cancel, R.id.nav_gallery, R.id.nav_about, R.id.nav_uid, R.id.nav_bonus, R.id.nav_card, R.id.nav_account, R.id.nav_author)
              .setOpenableLayout(drawer)
              .build();
         navMenu = navigationView.getMenu();
@@ -1174,40 +1182,41 @@ public class MainActivity extends AppCompatActivity {
         Logger.d(this, TAG, "newUser: " + userEmail);
         new Thread(this::mapboxKey).start();
         new Thread(this::visicomKey).start();
-        if(userEmail.equals("email")) {
-            firstStart = true;
-            new Thread(() -> insertPushDate(getApplicationContext())).start();
+        new Thread(() -> insertPushDate(getApplicationContext())).start();
+        if(sharedPreferencesHelper.getValue("CityCheckActivity", "**").equals("run")) {
+            if(userEmail.equals("email")) {
+                firstStart = true;
 
-            Toast.makeText(this, R.string.checking, Toast.LENGTH_SHORT).show();
-            startFireBase();
+                    VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
+                    Toast.makeText(this, R.string.checking, Toast.LENGTH_SHORT).show();
+                    startFireBase();
+            } else {
+                firstStart = false;
 
-        } else {
-            firstStart = false;
+                new Thread(this::versionFromMarket).start();
+                new Thread(this::userPhoneFromFb).start();
+                new Thread(() -> fetchRoutesCancel(userEmail)).start();
+                new Thread(() -> updatePushDate(getApplicationContext())).start();
 
-            new Thread(this::versionFromMarket).start();
-            new Thread(this::userPhoneFromFb).start();
-            new Thread(() -> fetchRoutesCancel(userEmail)).start();
-            new Thread(() -> updatePushDate(getApplicationContext())).start();
+                new VerifyUserTask(this).execute();
 
-            new VerifyUserTask(this).execute();
+                UserPermissions.getPermissions(userEmail, getApplicationContext());
 
-            UserPermissions.getPermissions(userEmail, getApplicationContext());
+                Thread wfpCardThread = new Thread(() -> {
+                    List<String> stringList = logCursor(MainActivity.CITY_INFO);
+                    String city = stringList.get(1);
+                    if(city != null) {
+                        getCardTokenWfp(city,"wfp", userEmail);
+                    }
+                });
+                wfpCardThread.start();
 
-            Thread wfpCardThread = new Thread(() -> {
-                List<String> stringList = logCursor(MainActivity.CITY_INFO);
-                String city = stringList.get(1);
-                if(city != null) {
-                    getCardTokenWfp(city,"wfp", userEmail);
-                }
-            });
-            wfpCardThread.start();
-
-            Thread sendTokenThread = new Thread(() -> {
-                sendToken(userEmail);
-            });
-            sendTokenThread.start();
-        }
-
+                Thread sendTokenThread = new Thread(() -> {
+                    sendToken(userEmail);
+                });
+                sendTokenThread.start();
+            }
+            }
 
     }
 
@@ -1350,7 +1359,8 @@ public class MainActivity extends AppCompatActivity {
 
                 assert user != null;
                 settingsNewUser(user.getEmail());
-//                Toast.makeText(this, R.string.city_search, Toast.LENGTH_SHORT).show();
+
+
           } else {
                 Toast.makeText(this, getString(R.string.firebase_error), Toast.LENGTH_SHORT).show();
                 VisicomFragment.progressBar.setVisibility(View.GONE);
@@ -1658,7 +1668,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<CityResponseMerchantFondy> call, Throwable t) {
                 Logger.d(getApplicationContext(), TAG, "Failed. Error message: " + t.getMessage());
-//                Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
                 VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
             }
         });
@@ -1682,7 +1691,6 @@ public class MainActivity extends AppCompatActivity {
 
                         if (val) {
                             updateRecordsUser("phone_number", phone);
-                            MainActivity.verifyPhone = true;
                         } else {
                             // Handle case where phone doesn't match the pattern
                             Logger.d(getApplicationContext(), TAG, "Phone does not match pattern");
@@ -1694,40 +1702,7 @@ public class MainActivity extends AppCompatActivity {
             });
         }
     }
-    private void userPhoneFromServer (String email) {
-        ApiClientPhone apiClient = new ApiClientPhone();
-        apiClient.getUserPhone(email, new ApiClientPhone.OnUserPhoneResponseListener() {
-            @Override
-            public void onSuccess(String phone) {
-                // Обработка успешного ответа
-                Logger.d(getApplicationContext(), TAG, "Phone: " + phone);
 
-                // Check if phone is not null
-                if (phone != null) {
-                    String PHONE_PATTERN = "((\\+?380)(\\d{9}))$";
-                    boolean val = Pattern.compile(PHONE_PATTERN).matcher(phone).matches();
-
-                    if (val) {
-                        updateRecordsUser("phone_number", phone);
-                        MainActivity.verifyPhone = true;
-                    } else {
-                        // Handle case where phone doesn't match the pattern
-                        Logger.d(getApplicationContext(), TAG, "Phone does not match pattern");
-                    }
-                } else {
-                    // Handle case where phone is null
-                    Logger.d(getApplicationContext(), TAG, "Phone is null");
-                }
-            }
-
-
-            @Override
-            public void onError(String error) {
-                // Обработка ошибки
-                Logger.d(getApplicationContext(), TAG, "Error: " + error);
-            }
-        });
-    }
     private void sendToken (String email) {
         // Создаем экземпляр Retrofit
 
@@ -1807,9 +1782,6 @@ public class MainActivity extends AppCompatActivity {
     private void fetchRoutesCancel(String value) {
         Logger.d(this, TAG, "fetchRoutesCancel: ");
 
-
-
-
         routeListCancel = new ArrayList<>();
 
         String url = baseUrl + "/android/UIDStatusShowEmailCancel/" + value;
@@ -1822,6 +1794,17 @@ public class MainActivity extends AppCompatActivity {
                     List<RouteResponseCancel> routes = response.body();
                     assert routes != null;
                     Logger.d(MainActivity.this, TAG, "onResponse: " + routes.toString());
+                    if (routes.size() == 1) {
+                        RouteResponseCancel route = routes.get(0);
+                        if ("*".equals(route.getRouteFrom()) && "*".equals(route.getRouteFromNumber()) &&
+                                "*".equals(route.getRouteTo()) && "*".equals(route.getRouteToNumber()) &&
+                                "*".equals(route.getWebCost()) && "*".equals(route.getCloseReason()) &&
+                                "*".equals(route.getAuto()) && "*".equals(route.getCreatedAt())) {
+                            databaseHelper.clearTableCancel();
+                            databaseHelperUid.clearTableCancel();
+                            return;
+                        }
+                    }
                     if (!routes.isEmpty()) {
                         boolean hasRouteWithAsterisk = false;
                         for (RouteResponseCancel route : routes) {
@@ -1971,6 +1954,9 @@ public class MainActivity extends AppCompatActivity {
             String message = getString(R.string.order_to_cancel_true);
             MyBottomSheetErrorFragment myBottomSheetMessageFragment = new MyBottomSheetErrorFragment(message);
             myBottomSheetMessageFragment.show(getSupportFragmentManager(), myBottomSheetMessageFragment.getTag());
+        } else {
+            databaseHelper.clearTableCancel();
+            databaseHelperUid.clearTableCancel();
         }
     }
     private void mapboxKey() {

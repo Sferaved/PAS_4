@@ -65,7 +65,10 @@
         <meta-data
             android:name="androidx.room.RoomDatabase.VERSION"
             android:value="3" />
-
+        <activity
+            android:name=".ui.account.ExitActivity"
+            android:exported="false"
+            android:theme="@style/Theme.PAS_4.NoActionBar" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -101,7 +104,7 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.PAS_4.NoActionBar"
             tools:ignore="Instantiatable" />
-
+        <activity android:name=".cities.check.CityCheckActivity" />
         <receiver android:name=".NetworkChangeReceiver" />
 
         <provider

@@ -1,4 +1,4 @@
-package com.taxi_pas_4.utils;
+package com.taxi_pas_4.ui.keyboard;
 
 import android.content.Context;
 import android.view.View;
