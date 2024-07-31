@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.105</string>
-    <string name="version">Версія: 4.105</string>
+    <string name="version_code">4.107</string>
+    <string name="version">Версія: 4.107</string>
 
     <string name="app_name">Таксі Дюк Попутник</string>
 
@@ -31,7 +31,7 @@
     <string name="action_exit">Вихід</string>
     <string name="delete_record">видалити?</string>
     <string name="make_rout">Створити маршрут</string>
-    <string name="call_admin">Дзвонок оператору</string>
+    <string name="call_admin">Дзвінок оператору</string>
     <string name="email_friend">Розповісти другові</string>
 
     <string name="my_phone">Мій телефон</string>
