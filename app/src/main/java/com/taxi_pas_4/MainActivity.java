@@ -765,14 +765,14 @@ public class MainActivity extends AppCompatActivity {
                 FirebaseCrashlytics.getInstance().recordException(e);
         }
 
-            if (item.getItemId() == R.id.phone_settings) {
-                if (NetworkUtils.isNetworkAvailable(this)) {
-                    phoneNumberChange();
-                } else {
-                    Toast.makeText(this, R.string.verify_internet, Toast.LENGTH_SHORT).show();
-                }
-
-            }
+//            if (item.getItemId() == R.id.phone_settings) {
+//                if (NetworkUtils.isNetworkAvailable(this)) {
+//                    phoneNumberChange();
+//                } else {
+//                    Toast.makeText(this, R.string.verify_internet, Toast.LENGTH_SHORT).show();
+//                }
+//
+//            }
         }
         if (item.getItemId() == R.id.update) {
             Logger.d(this, TAG, "onOptionsItemSelected: " + getString(R.string.version));
@@ -791,13 +791,13 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, R.string.verify_internet, Toast.LENGTH_SHORT).show();
             }
         }
-        if (item.getItemId() == R.id.phone_settings) {
-            if (NetworkUtils.isNetworkAvailable(this)) {
-                phoneNumberChange();
-            } else {
-                Toast.makeText(this, R.string.verify_internet, Toast.LENGTH_SHORT).show();
-            }
-        }
+//        if (item.getItemId() == R.id.phone_settings) {
+//            if (NetworkUtils.isNetworkAvailable(this)) {
+//                phoneNumberChange();
+//            } else {
+//                Toast.makeText(this, R.string.verify_internet, Toast.LENGTH_SHORT).show();
+//            }
+//        }
         if (item.getItemId() == R.id.nav_city) {
             if (NetworkUtils.isNetworkAvailable(this)) {
                 List<String> listCity = logCursor(MainActivity.CITY_INFO);
