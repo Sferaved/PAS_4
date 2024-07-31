@@ -45,7 +45,7 @@
     <string name="gps_on_button">включить gps</string>
     <string name="wellcome">Сформуйте маршрут або виберіть улюблений.</string>
     <string name="verify_phone">Перевірка телефону</string>
-    <string name="format_phone">Формат вводу номера телефону: +380936665544</string>
+    <string name="format_phone">Формат вводу номера телефону: +38 093 666 55 44</string>
     <string name="sent_button">Відправити</string>
     <string name="verify_internet">Перевірте інтернет-з\'єднання, зателефонуйте оператору або перезавантажте програму.</string>
     <string name="save_button">Зберегти</string>
@@ -379,7 +379,7 @@
     <string name="checkout_status">Чекайте, йде перевірка статусу замовлення...</string>
     <string name="check_order_mes">Чекайте на реєстрацію замовлення...</string>
     <string name="sent_cancel_message">Запит на скасування замовлення надіслано</string>
-    <string name="aplay_card_message">Вашу картку прийн585858585858585858585858585858ято та відправлено на перевірку. Скоро вона стане доступною для оплати подорожей.</string>
+    <string name="aplay_card_message">Вашу картку прийнято та відправлено на перевірку. Скоро вона стане доступною для оплати подорожей.</string>
     <string name="status_checkout_message">Запитано оновлення статусу. Чекайте або уточніть оператора</string>
     <string name="update_finish_mes">Оновлення завершено. Програма буде перезапущена.</string>
     <string name="udate_cancel">Оновити список</string>
@@ -399,4 +399,5 @@
     <string name="del_info">Дані акаунта видалені з сервера</string>
     <string name="user_name">Ім\'я користувача</string>
     <string name="phone_number">Телефон</string>
+    <string name="uninstal">Видалити додаток</string>
 </resources>

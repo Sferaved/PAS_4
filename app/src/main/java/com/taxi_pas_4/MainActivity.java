@@ -8,7 +8,6 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentSender;
@@ -19,15 +18,12 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -47,7 +43,6 @@ import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.play.core.appupdate.AppUpdateInfo;
 import com.google.android.play.core.appupdate.AppUpdateManager;
@@ -62,10 +57,9 @@ import com.taxi_pas_4.cities.api.CityApiClient;
 import com.taxi_pas_4.cities.api.CityResponse;
 import com.taxi_pas_4.cities.api.CityResponseMerchantFondy;
 import com.taxi_pas_4.cities.api.CityService;
-import com.taxi_pas_4.cities.check.CityCheckActivity;
 import com.taxi_pas_4.databinding.ActivityMainBinding;
-import com.taxi_pas_4.ui.account.ExitActivity;
 import com.taxi_pas_4.ui.card.CardInfo;
+import com.taxi_pas_4.ui.clear.AppDataUtils;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.RouteResponse;
 import com.taxi_pas_4.ui.finish.RouteResponseCancel;
@@ -74,7 +68,6 @@ import com.taxi_pas_4.ui.home.MyBottomSheetCityFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetGPSFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetMessageFragment;
-import com.taxi_pas_4.ui.keyboard.KeyboardUtils;
 import com.taxi_pas_4.ui.open_map.mapbox.key_mapbox.ApiClientMapbox;
 import com.taxi_pas_4.ui.open_map.mapbox.key_mapbox.ApiResponseMapbox;
 import com.taxi_pas_4.ui.visicom.visicom_search.key_visicom.ApiResponse;
@@ -89,17 +82,11 @@ import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.download.AppUpdater;
 import com.taxi_pas_4.utils.fcm.token_send.ApiServiceToken;
 import com.taxi_pas_4.utils.fcm.token_send.RetrofitClientToken;
-import com.taxi_pas_4.utils.ip.ApiServiceCountry;
-import com.taxi_pas_4.utils.ip.CountryResponse;
-import com.taxi_pas_4.utils.ip.RetrofitClient;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.utils.permissions.UserPermissions;
-import com.taxi_pas_4.utils.phone.ApiClientPhone;
 import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
-import com.taxi_pas_4.utils.user.del_server.UserRepository;
 import com.taxi_pas_4.utils.user.save_firebase.FirebaseUserManager;
-import com.taxi_pas_4.utils.user.save_firebase.UserProfile;
 import com.taxi_pas_4.utils.user.save_server.ApiServiceUser;
 import com.taxi_pas_4.utils.user.save_server.UserResponse;
 import com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
@@ -750,16 +737,13 @@ public class MainActivity extends AppCompatActivity {
             finishAffinity();
         }
 
-//        if (item.getItemId() == R.id.action_state_phone) {
-//            checkPermission();
-//        }
-
         if (item.getItemId() == R.id.gps) {
             eventGps();
         }
 
         if (item.getItemId() == R.id.send_email_admin) {
             sendEmailAdmin();
+
         }
 
         if (item.getItemId() == R.id.send_email) {
@@ -832,6 +816,10 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(this, R.string.verify_internet, Toast.LENGTH_SHORT).show();
             }
+
+        }
+        if (item.getItemId() == R.id.uninstal_app) {
+            AppDataUtils.clearDataAndUninstall(this);
 
         }
         return false;
@@ -1042,58 +1030,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     public void phoneNumberChange() {
-
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme);
-
-        LayoutInflater inflater = this.getLayoutInflater();
-
-        View view = inflater.inflate(R.layout.phone_settings_layout, null);
-
-        builder.setView(view);
-
-        @SuppressLint({"MissingInflatedId", "LocalSuppress"})
-        EditText phoneNumber = view.findViewById(R.id.phoneNumber);
-        EditText userName = view.findViewById(R.id.userName);
-
-        List<String> stringList =  logCursor(MainActivity.TABLE_USER_INFO);
-
-        if(!stringList.isEmpty()) {
-            phoneNumber.setText(stringList.get(2));
-            userName.setText(stringList.get(4));
-
-
-//        String result = phoneNumber.getText().toString();
-        builder
-                .setPositiveButton(R.string.cheng, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-//                        if(connected()) {
-                            Logger.d(getApplicationContext(), TAG, "onClick befor validate: ");
-                            String PHONE_PATTERN = "((\\+?380)(\\d{9}))$";
-                            boolean val = Pattern.compile(PHONE_PATTERN).matcher(phoneNumber.getText().toString()).matches();
-                            Logger.d(getApplicationContext(), TAG, "onClick No validate: " + val);
-                            if (!val) {
-                                Toast.makeText(MainActivity.this, getString(format_phone) , Toast.LENGTH_SHORT).show();
-                                Logger.d(getApplicationContext(), TAG, "onClick:phoneNumber.getText().toString() " + phoneNumber.getText().toString());
-
-                            } else {
-                                String phone = phoneNumber.getText().toString();
-
-                                updateRecordsUser("phone_number", phone);
-                                userManager = new FirebaseUserManager();
-                                userManager.saveUserPhone(phone);
-
-                                String newName = userName.getText().toString();
-                                if (newName.trim().isEmpty()) {
-                                   newName = "No_name";
-                                }
-                                updateRecordsUser("username", newName);
-                            }
-//                        }
-                    }
-                }).setNegativeButton(cancel_button, null)
-                .show();
-        }
+        MainActivity.navController.popBackStack();
+        MainActivity.navController.navigate(R.id.nav_account);
     }
     private void updateRecordsUser(String field, String result) {
         ContentValues cv = new ContentValues();
@@ -1108,31 +1046,6 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    }
-    private boolean connected() {
-
-        boolean hasConnect = false;
-
-        ConnectivityManager cm = (ConnectivityManager) this.getSystemService(
-                CONNECTIVITY_SERVICE);
-        NetworkInfo wifiNetwork = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        if (wifiNetwork != null && wifiNetwork.isConnected()) {
-            hasConnect = true;
-        }
-        NetworkInfo mobileNetwork = cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
-        if (mobileNetwork != null && mobileNetwork.isConnected()) {
-            hasConnect = true;
-        }
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        if (activeNetwork != null && activeNetwork.isConnected()) {
-            hasConnect = true;
-        }
-
-//        if (!hasConnect) {
-//            Toast.makeText(this, verify_internet, Toast.LENGTH_LONG).show();
-//        }
-        Logger.d(this, TAG, "connected: " + hasConnect);
-        return hasConnect;
     }
 
 
