@@ -13,7 +13,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,7 +30,6 @@ import androidx.fragment.app.FragmentManager;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
-import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.cities.api.CityApiClient;
 import com.taxi_pas_4.cities.api.CityResponse;
 import com.taxi_pas_4.cities.api.CityResponseMerchantFondy;
@@ -51,8 +49,6 @@ import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.ip.ApiServiceCountry;
 import com.taxi_pas_4.utils.ip.CountryResponse;
 import com.taxi_pas_4.utils.ip.RetrofitClient;
-import com.taxi_pas_4.utils.ip.ip_util_retrofit.IpResponse;
-import com.taxi_pas_4.utils.ip.ip_util_retrofit.IpifyService;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 
@@ -145,8 +141,8 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
                 context.getString(R.string.foreign_countries),
         };
 
-        databaseHelper = new DatabaseHelper(getContext());
-        databaseHelperUid = new DatabaseHelperUid(getContext());
+        databaseHelper = new DatabaseHelper(context);
+        databaseHelperUid = new DatabaseHelperUid(context);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(requireActivity(), R.layout.services_adapter_layout, cityList);
         listView.setAdapter(adapter);
@@ -265,14 +261,14 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
                 resetRoutMarker();
                 updateMyPosition(cityCode[positionFirst]);
 
-                cityMaxPay(cityCodeNew, getContext());
+                cityMaxPay(cityCodeNew);
                 Logger.d(context, TAG, "1");
                 getCardTokenWfp(cityCode[positionFirst]);
                 dismiss();
             }
         });
-        databaseHelper = new DatabaseHelper(getContext());
-        databaseHelperUid = new DatabaseHelperUid(getContext());
+        databaseHelper = new DatabaseHelper(context);
+        databaseHelperUid = new DatabaseHelperUid(context);
         return view;
     }
 
@@ -354,12 +350,8 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
             @Override
             public void onFailure(@NonNull Call<CallbackResponseWfp> call, @NonNull Throwable t) {
                 // Обработка ошибки запроса
-                Context context = getActivity() != null ? getActivity().getApplicationContext() : MyApplication.getContext();
-                if (context != null) {
-                    Logger.d(context, TAG, "Failed. Error message: " + t.getMessage());
-                } else {
-                    Log.e(TAG, "Context is null, cannot write log.");
-                }
+                Logger.d(context, TAG, "Failed. Error message: " + t.getMessage());
+
             }
         });
     }
@@ -385,15 +377,15 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
                     switch (paymentCode) {
                         case "wfp":
                             pay_method = "wfp_payment";
-                            cityMaxPay(cityCodeNew, getContext());
+                            cityMaxPay(cityCodeNew);
                             Logger.d(context, TAG, "2");
                             getCardTokenWfp(city);
                             break;
                         case "fondy":
                             pay_method = "fondy_payment";
-                            cityMaxPay(cityCodeNew, getContext());
+                            cityMaxPay(cityCodeNew);
                             Logger.d(context, TAG, "3");
-                            merchantFondy(cityCodeNew, getContext());
+                            merchantFondy(cityCodeNew, context);
                             break;
                         case "mono":
                             pay_method = "mono_payment";
@@ -420,12 +412,9 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
 
             @Override
             public void onFailure(@NonNull Call<ResponsePaySystem> call, @NonNull Throwable t) {
-                Context context = getActivity() != null ? getActivity().getApplicationContext() : MyApplication.getContext();
-                if (context != null) {
+
                     Logger.d(context, TAG, "Failed. Error message: " + t.getMessage());
-                } else {
-                    Log.e(TAG, "Context is null, cannot write log.");
-                }
+
                 if (isAdded()) {
                     MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(context.getString(R.string.verify_internet));
                     bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
@@ -760,11 +749,11 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
         checkNotificationPermissionAndRequestIfNeeded();
     }
 
-    private void cityMaxPay(String city, Context context) {
+    private void cityMaxPay(String city) {
         CityService cityService = CityApiClient.getClient().create(CityService.class);
 
         // Замените "your_city" на фактическое название города
-        Call<CityResponse> call = cityService.getMaxPayValues(city);
+        Call<CityResponse> call = cityService.getMaxPayValues(city, context.getString(R.string.application));
 
         call.enqueue(new Callback<CityResponse>() {
             @Override
@@ -791,27 +780,13 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
                         // Добавьте здесь код для обработки полученных значений
                     }
                 } else {
-                    Context context = getActivity() != null ? getActivity().getApplicationContext() : MyApplication.getContext();
-                    if (context != null) {
-                        try {
-                            Logger.d(getActivity(), TAG, "Failed. Error code: " + response.code());
-                        } catch (NullPointerException e) {
-                            Log.e(TAG, "Failed. Error code: " + response.code());
-                        }
-                    } else {
-                        Log.e(TAG, "Failed. Error code: " + response.code());
-                    }
+                        Logger.d(context, TAG, "Failed. Error code: " + response.code());
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<CityResponse> call, @NonNull Throwable t) {
-                Context context = getActivity() != null ? getActivity().getApplicationContext() : MyApplication.getContext();
-                if (context != null) {
-                    Logger.d(context, TAG, "Failed. Error message: " + t.getMessage());
-                } else {
-                    Log.e(TAG, "Context is null, cannot write log.");
-                }
+                Logger.d(context, TAG, "Failed. Error message: " + t.getMessage());
             }
         });
     }
@@ -856,24 +831,13 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
                         // Добавьте здесь код для обработки полученных значений
                     }
                 } else {
-
-                    Context context = getActivity() != null ? getActivity().getApplicationContext() : MyApplication.getContext();
-                    if (context != null) {
-                        Logger.d(getActivity(), TAG, "Failed. Error code: " + response.code());
-                    } else {
-                        Log.e(TAG, "Failed. Error code: " + response.code());
-                    }
+                    Logger.d(context, TAG, "Failed. Error code: " + response.code());
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<CityResponseMerchantFondy> call, @NonNull Throwable t) {
-                Context context = getActivity() != null ? getActivity().getApplicationContext() : MyApplication.getContext();
-                if (context != null) {
-                    Logger.d(context, TAG, "Failed. Error message: " + t.getMessage());
-                } else {
-                    Log.e(TAG, "Context is null, cannot write log.");
-                }
+                 Logger.d(context, TAG, "Failed. Error message: " + t.getMessage());
             }
         });
     }
@@ -953,15 +917,7 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
 
                 @Override
                 public void onFailure(@NonNull Call<CallbackResponse> call, @NonNull Throwable t) {
-                    // Обработка ошибки запроса
-                    Context context = getActivity() != null ? getActivity().getApplicationContext() : MyApplication.getContext();
-                    if (context != null) {
-                        Logger.d(context, TAG, "Failed. Error message: " + t.getMessage());
-                    } else {
-                        Log.e(TAG, "Context is null, cannot write log.");
-                    }
-//                Toast.makeText(getApplicationContext(), getApplicationContext().getString(verify_internet), Toast.LENGTH_SHORT).show();
-                    VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
+                    Logger.d(context, TAG, "Failed. Error message: " + t.getMessage());
                 }
             });
 

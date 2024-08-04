@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.108</string>
-    <string name="version">Версія: 4.108</string>
+    <string name="version_code">4.109</string>
+    <string name="version">Версія: 4.109</string>
 
     <string name="app_name">Таксі Дюк Попутник</string>
 
@@ -31,7 +31,7 @@
     <string name="action_exit">Вихід</string>
     <string name="delete_record">видалити?</string>
     <string name="make_rout">Створити маршрут</string>
-    <string name="call_admin">Дзвінок оператору</string>
+    <string name="call_admin">Дзвонок оператору</string>
     <string name="email_friend">Розповісти другові</string>
 
     <string name="my_phone">Мій телефон</string>
@@ -340,7 +340,7 @@
     <string name="pos_c">вул.Байди Вишневецького, буд.36, місто Черкаси\t</string>
     <string name="cancel_gps">Скасувати</string>
     <string name="ok_error">Зрозуміло</string>
-    <string name="to_nal_payment">Оплата вибраним методом на даний момент неможлива. Замовити з оплатою готівкою?</string>
+    <string name="to_nal_payment">Ви маєте обмеження на суму замовлення за цим видом розрахунку. Для зміни зверніться до оператора. Зараз замовити за готівку?</string>
     <string name="to_nal_payment_count">Оплата вибраним методом на даний момент неможлива. Розрахувати поїздку з оплатою готівкою?</string>
     <string name="tarif">Тариф:</string>
     <string name="tar">Тариф</string>
@@ -379,7 +379,7 @@
     <string name="checkout_status">Чекайте, йде перевірка статусу замовлення...</string>
     <string name="check_order_mes">Чекайте на реєстрацію замовлення...</string>
     <string name="sent_cancel_message">Запит на скасування замовлення надіслано</string>
-    <string name="aplay_card_message">Вашу картку прийнято та відправлено на перевірку. Скоро вона стане доступною для оплати подорожей.</string>
+    <string name="aplay_card_message">Вашу картку прийн585858585858585858585858585858ято та відправлено на перевірку. Скоро вона стане доступною для оплати подорожей.</string>
     <string name="status_checkout_message">Запитано оновлення статусу. Чекайте або уточніть оператора</string>
     <string name="update_finish_mes">Оновлення завершено. Програма буде перезапущена.</string>
     <string name="udate_cancel">Оновити список</string>
@@ -390,7 +390,7 @@
     <string name="no_house_vis_mes">Запитану адресу не знайдено. Спробуйте інший або натисніть зелену кнопку зі стрілкою "назад"</string>
     <string name="no_adrees_mes">Уточніть адресу або наберіть операторів</string>
     <string name="pos_f">DW631 47, 00-514 Warszawa, Poland\t</string>
-    <string name="check_city">Select a taxi service in your city</string>
+    <string name="check_city">Виберіть службу таксі у вашому місті</string>
     <string name="upd_account">Зберегти зміни</string>
     <string name="del_account">Видалити обліковий запис</string>
     <string name="account_menu">Акаунт</string>
@@ -400,4 +400,5 @@
     <string name="user_name">Ім\'я користувача</string>
     <string name="phone_number">Телефон</string>
     <string name="uninstal">Видалити додаток</string>
+    <string name="your_order">Ваше замовлення</string>
 </resources>

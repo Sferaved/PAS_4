@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.108</string>
-    <string name="version">Version: 4.108</string>
+    <string name="version_code">4.109</string>
+    <string name="version">Version: 4.109</string>
 
     <string name="app_name">Taxi Duke Fellow</string>
 
@@ -336,7 +336,7 @@
     <string name="pos_c">Baidy Vyshnevetskoho str., building 36, Cherkasy city\t</string>
     <string name="cancel_gps">Cancel</string>
     <string name="ok_error">Understood</string>
-    <string name="to_nal_payment">Payment using the selected method is currently not possible. Order with cash payment?</string>
+    <string name="to_nal_payment">You have a limit on the order amount for this type of payment. To change, contact the operators. Order for cash now?</string>
     <string name="to_nal_payment_count">Payment using the selected method is currently not possible. Calculate your trip by paying in cash?</string>
     <string name="tarif">Tariff:</string>
     <string name="tar">Tariff</string>
@@ -396,4 +396,5 @@
     <string name="user_name">Username</string>
     <string name="phone_number">Phone</string>
     <string name="uninstal">Uninstall application</string>
+    <string name="your_order">Your order</string>
 </resources>

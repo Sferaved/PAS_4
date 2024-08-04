@@ -20,8 +20,6 @@ import android.database.sqlite.SQLiteStatement;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -58,6 +56,7 @@ import com.taxi_pas_4.R;
 import com.taxi_pas_4.cities.check.CityCheckActivity;
 import com.taxi_pas_4.databinding.FragmentVisicomBinding;
 import com.taxi_pas_4.ui.finish.FinishActivity;
+import com.taxi_pas_4.ui.finish.fragm.FinishFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetBonusFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.ui.home.MyBottomSheetGPSFragment;
@@ -575,26 +574,6 @@ public class VisicomFragment extends Fragment{
 
     }
 
-    private boolean connected() {
-
-        boolean hasConnect = false;
-
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(
-                Context.CONNECTIVITY_SERVICE);
-        NetworkInfo wifiNetwork = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        if (wifiNetwork != null && wifiNetwork.isConnected()) {
-            hasConnect = true;
-        }
-        NetworkInfo mobileNetwork = cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
-        if (mobileNetwork != null && mobileNetwork.isConnected()) {
-            hasConnect = true;
-        }
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        if (activeNetwork != null && activeNetwork.isConnected()) {
-            hasConnect = true;
-        }
-      return hasConnect;
-    }
     @SuppressLint("SetTextI18n")
     public static void readTariffInfo(Context context){
         // Создаем экземпляр класса для работы с базой данных
@@ -777,6 +756,7 @@ public class VisicomFragment extends Fragment{
                         }
                         Logger.d(context, TAG, "orderFinished: to_name 4" + to_name_local);
                         String pay_method_message = getString(R.string.pay_method_message_main);
+
                         switch (pay_method) {
                             case "bonus_payment":
                                 pay_method_message += " " + getString(R.string.pay_method_message_bonus);
@@ -803,20 +783,29 @@ public class VisicomFragment extends Fragment{
 
                         Logger.d(context, TAG, "orderFinished: messageResult " + messageResult);
                         Logger.d(context, TAG, "orderFinished: to_name " + to_name);
-                        Intent intent = new Intent(context, FinishActivity.class);
-                        intent.putExtra("messageResult_key", messageResult);
-                        intent.putExtra("messageFondy_key", messageFondy);
-                        intent.putExtra("messageCost_key", orderWeb);
-                        intent.putExtra("sendUrlMap", new HashMap<>(sendUrlMap));
-                        intent.putExtra("UID_key", Objects.requireNonNull(sendUrlMap.get("dispatching_order_uid")));
-                        startActivity(intent);
+
+// Создайте Bundle для передачи данных
+                        Bundle bundle = new Bundle();
+                        bundle.putString("messageResult_key", messageResult);
+                        bundle.putString("messageFondy_key", messageFondy);
+                        bundle.putString("messageCost_key", orderWeb);
+                        bundle.putSerializable("sendUrlMap", new HashMap<>(sendUrlMap));
+                        bundle.putString("UID_key", Objects.requireNonNull(sendUrlMap.get("dispatching_order_uid")));
+
+// Установите Bundle как аргументы фрагмента
+                        MainActivity.navController.navigate(R.id.nav_finish, bundle);
+
                     } else {
                         btnVisible(View.VISIBLE);
                         assert message != null;
                         if (message.contains("Дублирование")) {
                             message = getResources().getString(R.string.double_order_error);
+                            MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
+                            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
                         } else if (message.equals("ErrorMessage")) {
                             message = getResources().getString(R.string.server_error_connected);
+                            MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
+                            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
                         } else {
                             switch (pay_method) {
                                 case "bonus_payment":
@@ -824,16 +813,16 @@ public class VisicomFragment extends Fragment{
                                 case "fondy_payment":
                                 case "mono_payment":
                                 case "wfp_payment":
-                                    changePayMethodToNal();
+                                    changePayMethodToNal(getString(R.string.to_nal_payment));
                                     break;
                                 default:
-                                    progressBar.setVisibility(View.GONE);;
-                                    message = context.getString(R.string.error_message);
+                                    message = getResources().getString(R.string.error_message);
+                                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
+                                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                             }
-
                         }
-                        MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
-                        bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+
+                        btnVisible(View.VISIBLE);
                     }
                 }
 
@@ -948,48 +937,48 @@ public class VisicomFragment extends Fragment{
         messageTextView.setText(R.string.max_limit_message);
 
         Button okButton = dialogView.findViewById(R.id.dialog_ok_button);
-        okButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                progressBar.setVisibility(View.VISIBLE);
-                switch (paymentType) {
-                    case "bonus_payment":
-                        if (Long.parseLong(bonus_max_pay) <= Long.parseLong(textCost) * 100) {
-                            paymentType();
-                        }
-                        break;
-                    case "card_payment":
-                    case "fondy_payment":
-                    case "mono_payment":
-                    case "wfp_payment":
-                        if (Long.parseLong(card_max_pay) <= Long.parseLong(textCost)) {
-                            paymentType();
-                        }
-                        break;
-                }
-
-                try {
-                    if(orderRout()) {
-                        orderFinished();
+        okButton.setOnClickListener(v -> {
+            progressBar.setVisibility(View.VISIBLE);
+            switch (paymentType) {
+                case "bonus_payment":
+                    if (Long.parseLong(bonus_max_pay) <= Long.parseLong(textCost) * 100) {
+                        paymentType();
                     }
-                } catch (MalformedURLException e) {
-                    FirebaseCrashlytics.getInstance().recordException(e);
-                    throw new RuntimeException(e);
-                }
-                progressBar.setVisibility(View.GONE);
-                alertDialog.dismiss();
+                    break;
+                case "card_payment":
+                case "fondy_payment":
+                case "mono_payment":
+                case "wfp_payment":
+                    if (Long.parseLong(card_max_pay) <= Long.parseLong(textCost)) {
+                        paymentType();
+                    }
+                    break;
             }
+
+            try {
+                if(orderRout()) {
+                    orderFinished();
+                }
+            } catch (MalformedURLException e) {
+                FirebaseCrashlytics.getInstance().recordException(e);
+                throw new RuntimeException(e);
+            }
+            progressBar.setVisibility(View.GONE);
+            alertDialog.dismiss();
         });
 
         Button cancelButton = dialogView.findViewById(R.id.dialog_cancel_button);
         cancelButton.setOnClickListener(v -> {
-            progressBar.setVisibility(View.GONE);
+            btnVisible(View.VISIBLE);
             alertDialog.dismiss();
         });
 
         alertDialog.show();
     }
-    private void changePayMethodToNal() {
+
+
+
+    private void changePayMethodToNal(String message) {
         // Инфлейтим макет для кастомного диалога
         LayoutInflater inflater = LayoutInflater.from(context);
         View dialogView = inflater.inflate(R.layout.custom_dialog_layout, null);
@@ -1001,27 +990,23 @@ public class VisicomFragment extends Fragment{
 
 
         TextView messageTextView = dialogView.findViewById(R.id.dialog_message);
-        String messagePaymentType = getString(R.string.to_nal_payment);
-        messageTextView.setText(messagePaymentType);
+        messageTextView.setText(message);
 
         Button okButton = dialogView.findViewById(R.id.dialog_ok_button);
-        okButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                progressBar.setVisibility(View.VISIBLE);
-                paymentType();
+        okButton.setOnClickListener(v -> {
+            progressBar.setVisibility(View.VISIBLE);
+            paymentType();
 
-                try {
-                    if(orderRout()){
-                        orderFinished();
-                    }
-                } catch (MalformedURLException e) {
-                    FirebaseCrashlytics.getInstance().recordException(e);
-                    throw new RuntimeException(e);
+            try {
+                if(orderRout()){
+                    orderFinished();
                 }
-                progressBar.setVisibility(View.GONE);
-                alertDialog.dismiss();
+            } catch (MalformedURLException e) {
+                FirebaseCrashlytics.getInstance().recordException(e);
+                throw new RuntimeException(e);
             }
+            progressBar.setVisibility(View.GONE);
+            alertDialog.dismiss();
         });
 
         Button cancelButton = dialogView.findViewById(R.id.dialog_cancel_button);
@@ -1044,6 +1029,7 @@ public class VisicomFragment extends Fragment{
         database.update(MainActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
                 new String[] { "1" });
         database.close();
+        pay_method = "nal_payment";
     }
 
 
@@ -1936,6 +1922,7 @@ public class VisicomFragment extends Fragment{
                                 String orderCost = sendUrlMapCost.get("order_cost");
                                 String orderMessage = sendUrlMapCost.get("Message");
 
+                                assert orderCost != null;
                                 if (orderCost.equals("0")) {
                                     progressBar.setVisibility(View.GONE);
                                     String message = context.getString(R.string.error_message);
