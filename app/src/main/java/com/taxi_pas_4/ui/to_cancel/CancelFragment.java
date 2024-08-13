@@ -30,21 +30,18 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.NetworkChangeReceiver;
-import com.taxi_pas_4.R;
-import com.taxi_pas_4.databinding.FragmentCancelBinding;
-import com.taxi_pas_4.databinding.FragmentUidBinding;
-import com.taxi_pas_4.ui.finish.ApiClient;
-import com.taxi_pas_4.ui.finish.FinishActivity;
-import com.taxi_pas_4.ui.finish.RouteResponse;
-import com.taxi_pas_4.ui.finish.RouteResponseCancel;
-import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
-import com.taxi_pas_4.utils.connect.NetworkUtils;
-import com.taxi_pas_4.utils.db.DatabaseHelper;
-import com.taxi_pas_4.utils.db.DatabaseHelperUid;
-import com.taxi_pas_4.utils.db.RouteInfoCancel;
-import com.taxi_pas_4.utils.log.Logger;
+import  com.taxi_pas_4.MainActivity;
+import  com.taxi_pas_4.NetworkChangeReceiver;
+import  com.taxi_pas_4.R;
+import  com.taxi_pas_4.databinding.FragmentCancelBinding;
+import  com.taxi_pas_4.ui.finish.ApiClient;
+import  com.taxi_pas_4.ui.finish.RouteResponseCancel;
+import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
+import  com.taxi_pas_4.utils.connect.NetworkUtils;
+import  com.taxi_pas_4.utils.db.DatabaseHelper;
+import  com.taxi_pas_4.utils.db.DatabaseHelperUid;
+import  com.taxi_pas_4.utils.db.RouteInfoCancel;
+import  com.taxi_pas_4.utils.log.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -115,13 +112,10 @@ public class CancelFragment extends Fragment {
 
         textUid  = binding.textUid;
         upd_but = binding.updBut;
-        upd_but.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!NetworkUtils.isNetworkAvailable(context)) {
-                    MainActivity.navController.popBackStack();
-                    MainActivity.navController.navigate(R.id.nav_visicom);
-                }
+        upd_but.setOnClickListener(v -> {
+            if (!NetworkUtils.isNetworkAvailable(context)) {
+                MainActivity.navController.popBackStack();
+                MainActivity.navController.navigate(R.id.nav_visicom);
             }
         });
         scrollButtonUp = binding.scrollButtonUp;

@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.109</string>
-    <string name="version">Version: 4.109</string>
+    <string name="version_code">4.110</string>
+    <string name="version">Version: 4.110</string>
 
     <string name="app_name">Taxi Duke Fellow</string>
 
@@ -78,7 +78,7 @@
     <string name="from_edit">From</string>
     <string name="sms_code">Verification code from SMS message</string>
     <string name="android">Android application for fast and cheap trips when ordering online.</string>
-    <string name="good_day">My greetings. \n \n Found a great app for taxi rides. \n \n I advise you to try the link in the official Google store: \n\n https://play.google.com/store/apps/details?id=com.taxi_pas_4 \n\n Have a nice day. \n See you later.</string>
+    <string name="good_day">My greetings. \n \n Found a great app for taxi rides. \n \n I advise you to try the link in the official Google store: \n\n https://play.google.com/store/apps/details?id= com.taxi_pas_4 \n\n Have a nice day. \n See you later.</string>
     <string name="share">Recommend the app to a friend...</string>
     <string name="no_email_agent">Email client is not installed.</string>
     <string name="check_position">Wait, your location is being determined...</string>
@@ -132,7 +132,7 @@
     <string name="no_routs">No routes</string>
     <string name="cheng">Change</string>
     <string name="delete_routs">delete</string>
-    <string name="text_result">Your order</string>
+    <string name="text_result">Trip information</string>
     <string name="btn_again_text">Order again</string>
     <string name="textStatus">Order status</string>
     <string name="cancel_order">Cancel order</string>
@@ -397,4 +397,12 @@
     <string name="phone_number">Phone</string>
     <string name="uninstal">Uninstall application</string>
     <string name="your_order">Your order</string>
+    <string name="sedan">sedan</string>
+    <string name="universal">station wagon</string>
+    <string name="bus">minibus</string>
+    <string name="upd_app">Update app</string>
+    <string name="time_to_order">Time to submit</string>
+    <string name="data_order">Select date</string>
+    <string name="on_now">On now</string>
+    <string name="on">On</string>
 </resources>

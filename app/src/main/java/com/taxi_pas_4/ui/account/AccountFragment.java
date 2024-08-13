@@ -2,7 +2,7 @@ package com.taxi_pas_4.ui.account;
 
 import static android.content.Context.MODE_PRIVATE;
 
-import static com.taxi_pas_4.R.string.format_phone;
+import static  com.taxi_pas_4.R.string.format_phone;
 
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
@@ -28,18 +28,18 @@ import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.Fragment;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.R;
-import com.taxi_pas_4.databinding.FragmentAccountBinding;
-import com.taxi_pas_4.ui.finish.ApiClient;
-import com.taxi_pas_4.ui.finish.RouteResponseCancel;
-import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
-import com.taxi_pas_4.ui.keyboard.KeyboardUtils;
-import com.taxi_pas_4.utils.db.DatabaseHelper;
-import com.taxi_pas_4.utils.db.DatabaseHelperUid;
-import com.taxi_pas_4.utils.log.Logger;
-import com.taxi_pas_4.utils.user.del_server.UserRepository;
-import com.taxi_pas_4.utils.user.save_firebase.FirebaseUserManager;
+import  com.taxi_pas_4.MainActivity;
+import  com.taxi_pas_4.R;
+import  com.taxi_pas_4.databinding.FragmentAccountBinding;
+import  com.taxi_pas_4.ui.finish.ApiClient;
+import  com.taxi_pas_4.ui.finish.RouteResponseCancel;
+import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
+import  com.taxi_pas_4.ui.keyboard.KeyboardUtils;
+import  com.taxi_pas_4.utils.db.DatabaseHelper;
+import  com.taxi_pas_4.utils.db.DatabaseHelperUid;
+import  com.taxi_pas_4.utils.log.Logger;
+import  com.taxi_pas_4.utils.user.del_server.UserRepository;
+import  com.taxi_pas_4.utils.user.save_firebase.FirebaseUserManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -70,7 +70,6 @@ public class AccountFragment extends Fragment {
     DatabaseHelper dbH;
     DatabaseHelperUid dbHUid;
     private String[] array;
-    private List<RouteResponseCancel> routeListCancel;
     private Context context;
     private List<RouteResponseCancel> routeList;
     String baseUrl = "https://m.easy-order-taxi.site";

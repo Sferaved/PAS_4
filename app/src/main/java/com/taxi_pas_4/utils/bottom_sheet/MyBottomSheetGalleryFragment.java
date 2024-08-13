@@ -1,4 +1,4 @@
-package com.taxi_pas_4.ui.home;
+package com.taxi_pas_4.utils.bottom_sheet;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -30,12 +30,13 @@ import androidx.annotation.Nullable;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.R;
-import com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
-import com.taxi_pas_4.utils.log.Logger;
+import  com.taxi_pas_4.MainActivity;
+import  com.taxi_pas_4.R;
+import  com.taxi_pas_4.ui.gallery.GalleryFragment;
+import  com.taxi_pas_4.ui.home.CustomListAdapter;
+import  com.taxi_pas_4.utils.log.Logger;
+import  com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -54,8 +55,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 
-public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
-    private static final String TAG = "MyBottomSheetDialogFragment";
+public class MyBottomSheetGalleryFragment extends BottomSheetDialogFragment {
     ListView listView;
     public String[] arrayService;
     public static String[] arrayServiceCode;
@@ -67,6 +67,7 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
     final static long MIN_VALUE = -90;
     final static long MAX_VALUE = 200;
     TimeZone timeZone;
+    private final String TAG = "MyBottomSheetGalleryFragment";
     SQLiteDatabase database;
     @Nullable
     @Override
@@ -74,8 +75,7 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
         View view = inflater.inflate(R.layout.settings_layout, container, false);
         listView = view.findViewById(R.id.list);
         database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-        HomeFragment.text_view_cost.setText("");
-
+        GalleryFragment.text_view_cost.setText("");
         arrayService = new String[]{
                 getString(R.string.BAGGAGE),
                 getString(R.string.ANIMAL),
@@ -197,7 +197,6 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
                 }
                 ContentValues cv = new ContentValues();
                 cv.put("tarif", tariff_to_server);
-
                 // обновляем по id
                 SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
                 database.update(MainActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
@@ -232,7 +231,7 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
         discount.setText(logCursor(MainActivity.TABLE_SETTINGS_INFO, getContext()).get(3));
         String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, getContext()).get(3);
         discountFist =  Integer.parseInt(discountText);
-        Logger.d(getActivity(), TAG, "discountFist" + discountFist);
+
 
         btn_min = view.findViewById(R.id.btn_minus);
         btn_min.setOnClickListener(new View.OnClickListener() {
@@ -313,7 +312,7 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
         cv.put("date", formattedDate);
 
         // Обновляем по id
-        SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        SQLiteDatabase database = getContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
         database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?", new String[] { "1" });
         database.close();
     }
@@ -321,12 +320,12 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
     @Override
     public void onPause() {
         super.onPause();
-        List<String> services = logCursor(MainActivity.TABLE_SERVICE_INFO, requireActivity());
+        List<String> services = logCursor(MainActivity.TABLE_SERVICE_INFO, getContext());
 
-        for (int i = 0; i < Math.min(services.size(), arrayServiceCode.length); i++) {
+        for (int i = 0; i < services.size()-1; i++) {
             ContentValues cv = new ContentValues();
             cv.put(arrayServiceCode[i], "0");
-            SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+            SQLiteDatabase database = getContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
             database.update(MainActivity.TABLE_SERVICE_INFO, cv, "id = ?",
                     new String[] { "1" });
             database.close();
@@ -443,26 +442,30 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
         }
         try {
             changeCost();
-        } catch (MalformedURLException | UnsupportedEncodingException e) {
+        } catch (MalformedURLException e) {
             FirebaseCrashlytics.getInstance().recordException(e);
-            throw new RuntimeException(e);
         }
 
     }
-    private void changeCost() throws MalformedURLException, UnsupportedEncodingException {
-        String url = getTaxiUrlSearch("costSearch", requireActivity());
+    private void changeCost() throws MalformedURLException {
+
+        String url = getTaxiUrlSearchMarkers(GalleryFragment.from_lat, GalleryFragment.from_lng,
+                GalleryFragment.to_lat, GalleryFragment.to_lng, "costSearchMarkersTime", requireContext());
         String message = getString(R.string.change_tarrif);
         String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireActivity()).get(3);
-        CostJSONParserRetrofit parser = new CostJSONParserRetrofit();
+        ToJSONParserRetrofit parser = new ToJSONParserRetrofit();
+
+        Logger.d(getActivity(), TAG, "orderFinished: "  + "https://m.easy-order-taxi.site"+ url);
         parser.sendURL(url, new Callback<Map<String, String>>() {
             @Override
             public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
                 Map<String, String> sendUrl = response.body();
-                assert sendUrl != null;
 
+                assert sendUrl != null;
                 String orderC = sendUrl.get("order_cost");
 
                 assert orderC != null;
+
                 if (!orderC.equals("0")) {
 
                     long firstCost = Long.parseLong(orderC);
@@ -474,8 +477,9 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
                     updateAddCost(String.valueOf(discount));
 
                     String newCost = String.valueOf(firstCost + discount);
-                    HomeFragment.text_view_cost.setText(newCost);
+                    GalleryFragment.text_view_cost.setText(newCost);
                 } else  {
+                    Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
                     ContentValues cv = new ContentValues();
                     cv.put("tarif", " ");
 
@@ -484,15 +488,16 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
                     database.update(MainActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
                             new String[] { "1" });
                     database.close();
-                    Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
                     try {
                         changeCost();
-                    } catch (MalformedURLException | UnsupportedEncodingException e) {
+                    } catch (MalformedURLException e) {
                         FirebaseCrashlytics.getInstance().recordException(e);
                         throw new RuntimeException(e);
                     }
                 }
+
             }
+
             @Override
             public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
                 FirebaseCrashlytics.getInstance().recordException(t);
@@ -511,29 +516,24 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
                 new String[] { "1" });
         database.close();
     }
+    private String getTaxiUrlSearchMarkers(double originLatitude, double originLongitude,
+                                           double toLatitude, double toLongitude,
+                                           String urlAPI, Context context) {
+        //  Проверка даты и времени
 
-    private String getTaxiUrlSearch(String urlAPI, Context context) throws UnsupportedEncodingException {
-        List<String> stringListRout = logCursor(MainActivity.ROUT_HOME, context);
-
-        String originalString = stringListRout.get(1);
-        int indexOfSlash = originalString.indexOf("/");
-        String from = (indexOfSlash != -1) ? originalString.substring(0, indexOfSlash) : originalString;
-
-        String from_number = stringListRout.get(2);
-
-        originalString = stringListRout.get(3);
-        indexOfSlash = originalString.indexOf("/");
-        String to = (indexOfSlash != -1) ? originalString.substring(0, indexOfSlash) : originalString;
-
-        String to_number = stringListRout.get(4);
-        // Origin of route
-        String str_origin = from + "/" + from_number;
+               // Origin of route
+        String str_origin = originLatitude + "/" + originLongitude;
 
         // Destination of route
-        String str_dest = to + "/" + to_number;
+        String str_dest = toLatitude + "/" + toLongitude;
 
+//        Cursor cursorDb = MainActivity.database.query(MainActivity.TABLE_SETTINGS_INFO, null, null, null, null, null, null);
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
 
+        List<String> stringList = logCursor(MainActivity.TABLE_ADD_SERVICE_INFO, context);
+        String time = stringList.get(1);
+        String comment = stringList.get(2);
+        String date = stringList.get(3);
 
         List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, context);
         String tarif =  stringListInfo.get(2);
@@ -546,19 +546,21 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
         String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
         String displayName = logCursor(MainActivity.TABLE_USER_INFO, context).get(4);
 
-        if(urlAPI.equals("costSearch")) {
+
+        if(urlAPI.equals("costSearchMarkersTime")) {
             Cursor c = database.query(MainActivity.TABLE_USER_INFO, null, null, null, null, null, null);
+
             if (c.getCount() == 1) {
                 phoneNumber = logCursor(MainActivity.TABLE_USER_INFO, context).get(2);
                 c.close();
             }
             parameters = str_origin + "/" + str_dest + "/" + tarif + "/" + phoneNumber + "/"
-                    + displayName + " (" + context.getString(R.string.version_code) + ") " + "*" + userEmail  + "*" + payment_type;
+                    + displayName + " (" + context.getString(R.string.version_code) + ") " + "*" + userEmail  + "*" + payment_type + "/"
+                    + time + "/" + date ;
         }
 
 
         // Building the url to the web service
-// Building the url to the web service
         List<String> services = logCursor(MainActivity.TABLE_SERVICE_INFO, context);
         List<String> servicesChecked = new ArrayList<>();
         String result;
@@ -588,12 +590,11 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
         List<String> listCity = logCursor(MainActivity.CITY_INFO, requireActivity());
         String city = listCity.get(1);
         String api = listCity.get(2);
-
-        String url = "https://m.easy-order-taxi.site/" + api + "/android/" + urlAPI + "/"
+        String url = "/" + api + "/android/" + urlAPI + "/"
                 + parameters + "/" + result + "/" + city  + "/" + context.getString(R.string.application);
 
-
         Logger.d(getActivity(), TAG, "getTaxiUrlSearch: " + url);
+        database.close();
 
 
         return url;

@@ -32,17 +32,17 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.R;
-import com.taxi_pas_4.databinding.FragmentGalleryBinding;
-import com.taxi_pas_4.ui.home.MyBottomSheetBonusFragment;
-import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
-import com.taxi_pas_4.ui.home.MyBottomSheetGalleryFragment;
-import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
-import com.taxi_pas_4.utils.connect.NetworkUtils;
-import com.taxi_pas_4.utils.log.Logger;
-import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
-import com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
+import  com.taxi_pas_4.MainActivity;
+import  com.taxi_pas_4.R;
+import  com.taxi_pas_4.databinding.FragmentGalleryBinding;
+import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetBonusFragment;
+import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
+import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGalleryFragment;
+import  com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
+import  com.taxi_pas_4.utils.connect.NetworkUtils;
+import  com.taxi_pas_4.utils.log.Logger;
+import  com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
+import  com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
 
 import org.json.JSONException;
 
@@ -620,7 +620,7 @@ public class GalleryFragment extends Fragment {
             settings.add(ToAddressString);
 
             updateRoutMarker(settings);
-            String urlCost = getTaxiUrlSearchMarkers("costSearchMarkers", requireActivity());
+            String urlCost = getTaxiUrlSearchMarkers("costSearchMarkersTime", requireActivity());
 
             ToJSONParserRetrofit parser = new ToJSONParserRetrofit();
 
@@ -737,7 +737,7 @@ public class GalleryFragment extends Fragment {
         String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
         String displayName = logCursor(MainActivity.TABLE_USER_INFO, context).get(4);
 
-        if(urlAPI.equals("costSearchMarkers")) {
+        if(urlAPI.equals("costSearchMarkersTime")) {
             Cursor c = database.query(MainActivity.TABLE_USER_INFO, null, null, null, null, null, null);
 
             if (c.getCount() == 1) {
@@ -745,7 +745,8 @@ public class GalleryFragment extends Fragment {
                 c.close();
             }
             parameters = str_origin + "/" + str_dest + "/" + tarif + "/" + phoneNumber + "/"
-                    + displayName + " (" + context.getString(R.string.version_code) + ") " + "*" + userEmail  + "*" + payment_type;
+                    + displayName + " (" + context.getString(R.string.version_code) + ") " + "*" + userEmail  + "*" + payment_type+ "/"
+                    + time + "/" + date ;
         }
         if(urlAPI.equals("orderSearchMarkersVisicom")) {
             phoneNumber = logCursor(MainActivity.TABLE_USER_INFO, context).get(2);

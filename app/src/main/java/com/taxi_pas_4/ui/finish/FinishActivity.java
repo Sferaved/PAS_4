@@ -24,39 +24,38 @@ import androidx.fragment.app.FragmentManager;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.R;
-import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureClient;
-import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureResponse;
-import com.taxi_pas_4.ui.fondy.payment.ApiResponsePay;
-import com.taxi_pas_4.ui.fondy.payment.MyBottomSheetCardPayment;
-import com.taxi_pas_4.ui.fondy.payment.PaymentApi;
-import com.taxi_pas_4.ui.fondy.payment.RequestData;
-import com.taxi_pas_4.ui.fondy.payment.StatusRequestPay;
-import com.taxi_pas_4.ui.fondy.payment.SuccessResponseDataPay;
-import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
-import com.taxi_pas_4.ui.fondy.token_pay.ApiResponseToken;
-import com.taxi_pas_4.ui.fondy.token_pay.PaymentApiToken;
-import com.taxi_pas_4.ui.fondy.token_pay.RequestDataToken;
-import com.taxi_pas_4.ui.fondy.token_pay.StatusRequestToken;
-import com.taxi_pas_4.ui.fondy.token_pay.SuccessResponseDataToken;
-import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
-import com.taxi_pas_4.ui.home.MyBottomSheetErrorPaymentFragment;
-import com.taxi_pas_4.ui.home.MyBottomSheetMessageFragment;
-import com.taxi_pas_4.ui.maps.CostJSONParser;
-import com.taxi_pas_4.ui.mono.MonoApi;
-import com.taxi_pas_4.ui.mono.payment.RequestPayMono;
-import com.taxi_pas_4.ui.mono.payment.ResponsePayMono;
-import com.taxi_pas_4.ui.wfp.checkStatus.StatusResponse;
-import com.taxi_pas_4.ui.wfp.checkStatus.StatusService;
-import com.taxi_pas_4.ui.wfp.invoice.InvoiceResponse;
-import com.taxi_pas_4.ui.wfp.invoice.InvoiceService;
-import com.taxi_pas_4.ui.wfp.purchase.PurchaseResponse;
-import com.taxi_pas_4.ui.wfp.purchase.PurchaseService;
-import com.taxi_pas_4.ui.wfp.revers.ReversResponse;
-import com.taxi_pas_4.ui.wfp.revers.ReversService;
-import com.taxi_pas_4.utils.LocaleHelper;
-import com.taxi_pas_4.utils.log.Logger;
+import  com.taxi_pas_4.MainActivity;
+import  com.taxi_pas_4.R;
+import  com.taxi_pas_4.ui.fondy.gen_signatur.SignatureClient;
+import  com.taxi_pas_4.ui.fondy.gen_signatur.SignatureResponse;
+import  com.taxi_pas_4.ui.fondy.payment.ApiResponsePay;
+import  com.taxi_pas_4.ui.fondy.payment.MyBottomSheetCardPayment;
+import  com.taxi_pas_4.ui.fondy.payment.PaymentApi;
+import  com.taxi_pas_4.ui.fondy.payment.RequestData;
+import  com.taxi_pas_4.ui.fondy.payment.StatusRequestPay;
+import  com.taxi_pas_4.ui.fondy.payment.SuccessResponseDataPay;
+import  com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
+import  com.taxi_pas_4.ui.fondy.token_pay.ApiResponseToken;
+import  com.taxi_pas_4.ui.fondy.token_pay.PaymentApiToken;
+import  com.taxi_pas_4.ui.fondy.token_pay.RequestDataToken;
+import  com.taxi_pas_4.ui.fondy.token_pay.StatusRequestToken;
+import  com.taxi_pas_4.ui.fondy.token_pay.SuccessResponseDataToken;
+import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
+import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorPaymentFragment;
+import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetMessageFragment;
+import  com.taxi_pas_4.ui.mono.MonoApi;
+import  com.taxi_pas_4.ui.mono.payment.RequestPayMono;
+import  com.taxi_pas_4.ui.mono.payment.ResponsePayMono;
+import  com.taxi_pas_4.ui.wfp.checkStatus.StatusResponse;
+import  com.taxi_pas_4.ui.wfp.checkStatus.StatusService;
+import  com.taxi_pas_4.ui.wfp.invoice.InvoiceResponse;
+import  com.taxi_pas_4.ui.wfp.invoice.InvoiceService;
+import  com.taxi_pas_4.ui.wfp.purchase.PurchaseResponse;
+import  com.taxi_pas_4.ui.wfp.purchase.PurchaseService;
+import  com.taxi_pas_4.ui.wfp.revers.ReversResponse;
+import  com.taxi_pas_4.ui.wfp.revers.ReversService;
+import  com.taxi_pas_4.utils.LocaleHelper;
+import  com.taxi_pas_4.utils.log.Logger;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -206,7 +205,7 @@ public class FinishActivity extends AppCompatActivity {
 
                     btn_reset_status.setVisibility(View.GONE);
                     btn_again.setVisibility(View.VISIBLE);
-                    btn_cancel.setVisibility(View.VISIBLE);
+                    
                     btn_reset_status.setVisibility(View.GONE);
                     btn_cancel_order.setVisibility(View.GONE);
                     progressBar.setVisibility(View.GONE);
@@ -220,7 +219,7 @@ public class FinishActivity extends AppCompatActivity {
                 });
                 btn_cancel_order.setText(getString(R.string.help_button));
                 btn_again.setVisibility(View.VISIBLE);
-                btn_cancel.setVisibility(View.VISIBLE);
+                
                 btn_reset_status.setVisibility(View.GONE);
                 btn_cancel_order.setVisibility(View.GONE);
                 progressBar.setVisibility(View.GONE);
@@ -265,7 +264,7 @@ public class FinishActivity extends AppCompatActivity {
                 btn_reset_status.setVisibility(View.GONE);
                 btn_cancel_order.setText(getString(R.string.help_button));
                 btn_again.setVisibility(View.VISIBLE);
-                btn_cancel.setVisibility(View.VISIBLE);
+                
                 btn_reset_status.setVisibility(View.GONE);
                 btn_cancel_order.setVisibility(View.VISIBLE);
                 progressBar.setVisibility(View.GONE);
@@ -274,7 +273,7 @@ public class FinishActivity extends AppCompatActivity {
 
                     btn_reset_status.setVisibility(View.GONE);
                     btn_again.setVisibility(View.VISIBLE);
-                    btn_cancel.setVisibility(View.VISIBLE);
+                    
                     btn_reset_status.setVisibility(View.GONE);
                     btn_cancel_order.setVisibility(View.GONE);
                     progressBar.setVisibility(View.GONE);
@@ -312,7 +311,7 @@ public class FinishActivity extends AppCompatActivity {
 
             }
             btn_again.setVisibility(View.VISIBLE);
-            btn_cancel.setVisibility(View.VISIBLE);
+            
             btn_reset_status.setVisibility(View.GONE);
             btn_cancel_order.setVisibility(View.GONE);
 
@@ -1362,7 +1361,7 @@ public class FinishActivity extends AppCompatActivity {
             }
         });
         btn_again.setVisibility(View.VISIBLE);
-        btn_cancel.setVisibility(View.VISIBLE);
+        
         btn_reset_status.setVisibility(View.GONE);
         btn_cancel_order.setVisibility(View.GONE);
         progressBar.setVisibility(View.GONE);
@@ -1399,7 +1398,7 @@ public class FinishActivity extends AppCompatActivity {
             }
         });
         btn_again.setVisibility(View.VISIBLE);
-        btn_cancel.setVisibility(View.VISIBLE);
+        
         btn_reset_status.setVisibility(View.GONE);
         btn_cancel_order.setVisibility(View.GONE);
         progressBar.setVisibility(View.GONE);
@@ -1452,7 +1451,7 @@ public class FinishActivity extends AppCompatActivity {
                             } else {
                                 message = getString(R.string.checkout_status);
                                 btn_again.setVisibility(View.VISIBLE);
-                                btn_cancel.setVisibility(View.VISIBLE);
+                                
                                 btn_reset_status.setVisibility(View.GONE);
                                 btn_cancel_order.setVisibility(View.GONE);
                                 progressBar.setVisibility(View.GONE);
@@ -1471,7 +1470,7 @@ public class FinishActivity extends AppCompatActivity {
                             } else {
                                 message = getString(R.string.checkout_status);
                                 btn_again.setVisibility(View.VISIBLE);
-                                btn_cancel.setVisibility(View.VISIBLE);
+                                
                                 btn_reset_status.setVisibility(View.GONE);
                                 btn_cancel_order.setVisibility(View.GONE);
                                 progressBar.setVisibility(View.GONE);
@@ -1495,7 +1494,7 @@ public class FinishActivity extends AppCompatActivity {
                                 }
                             }
                             btn_again.setVisibility(View.VISIBLE);
-                            btn_cancel.setVisibility(View.VISIBLE);
+                            
                             btn_reset_status.setVisibility(View.GONE);
                             btn_cancel_order.setVisibility(View.GONE);
                             progressBar.setVisibility(View.GONE);
@@ -1539,7 +1538,7 @@ public class FinishActivity extends AppCompatActivity {
                             } else {
                                 message = getString(R.string.ex_st_canceled);
                                 btn_again.setVisibility(View.VISIBLE);
-                                btn_cancel.setVisibility(View.VISIBLE);
+                                
                                 btn_reset_status.setVisibility(View.GONE);
                                 btn_cancel_order.setVisibility(View.GONE);
                                 progressBar.setVisibility(View.GONE);

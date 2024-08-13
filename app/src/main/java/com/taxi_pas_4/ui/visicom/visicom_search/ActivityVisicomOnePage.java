@@ -45,28 +45,28 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.R;
-import com.taxi_pas_4.cities.Kyiv.KyivRegion;
-import com.taxi_pas_4.cities.Kyiv.KyivRegionRu;
-import com.taxi_pas_4.ui.home.MyBottomSheetGPSFragment;
-import com.taxi_pas_4.ui.maps.FromJSONParser;
-import com.taxi_pas_4.ui.open_map.OpenStreetMapVisicomActivity;
-import com.taxi_pas_4.ui.open_map.mapbox.Feature;
-import com.taxi_pas_4.ui.open_map.mapbox.Geometry;
-import com.taxi_pas_4.ui.open_map.mapbox.MapboxApiClient;
-import com.taxi_pas_4.ui.open_map.mapbox.MapboxResponse;
-import com.taxi_pas_4.ui.open_map.mapbox.MapboxService;
-import com.taxi_pas_4.ui.open_map.mapbox.key_mapbox.ApiClientMapbox;
-import com.taxi_pas_4.ui.open_map.mapbox.key_mapbox.ApiResponseMapbox;
-import com.taxi_pas_4.ui.visicom.VisicomFragment;
-import com.taxi_pas_4.ui.visicom.visicom_search.key_visicom.ApiResponse;
-import com.taxi_pas_4.ui.keyboard.KeyboardUtils;
-import com.taxi_pas_4.utils.LocaleHelper;
-import com.taxi_pas_4.utils.connect.ConnectionSpeedTester;
-import com.taxi_pas_4.utils.connect.NetworkUtils;
-import com.taxi_pas_4.utils.log.Logger;
-import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
+import  com.taxi_pas_4.MainActivity;
+import  com.taxi_pas_4.R;
+import  com.taxi_pas_4.cities.Kyiv.KyivRegion;
+import  com.taxi_pas_4.cities.Kyiv.KyivRegionRu;
+import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGPSFragment;
+import  com.taxi_pas_4.ui.maps.FromJSONParser;
+import  com.taxi_pas_4.ui.open_map.OpenStreetMapVisicomActivity;
+import  com.taxi_pas_4.ui.open_map.mapbox.Feature;
+import  com.taxi_pas_4.ui.open_map.mapbox.Geometry;
+import  com.taxi_pas_4.ui.open_map.mapbox.MapboxApiClient;
+import  com.taxi_pas_4.ui.open_map.mapbox.MapboxResponse;
+import  com.taxi_pas_4.ui.open_map.mapbox.MapboxService;
+import  com.taxi_pas_4.ui.open_map.mapbox.key_mapbox.ApiClientMapbox;
+import  com.taxi_pas_4.ui.open_map.mapbox.key_mapbox.ApiResponseMapbox;
+import  com.taxi_pas_4.ui.visicom.VisicomFragment;
+import  com.taxi_pas_4.ui.visicom.visicom_search.key_visicom.ApiResponse;
+import  com.taxi_pas_4.ui.keyboard.KeyboardUtils;
+import  com.taxi_pas_4.utils.LocaleHelper;
+import  com.taxi_pas_4.utils.connect.ConnectionSpeedTester;
+import  com.taxi_pas_4.utils.connect.NetworkUtils;
+import  com.taxi_pas_4.utils.log.Logger;
+import  com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -229,8 +229,6 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
             // Пытаемся скрыть клавиатуру
             immHide.hideSoftInputFromWindow(v.getWindowToken(), 0);
             if (!NetworkUtils.isNetworkAvailable(getApplicationContext())) {
-
-                VisicomFragment.btn_clear_from.setVisibility(View.INVISIBLE);
 
                 VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
                 VisicomFragment.btn_clear_from_text.setText(getString(R.string.try_again));
@@ -440,8 +438,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
             }
         });
         btn_ok.setOnClickListener(v -> {
-            VisicomFragment.btnVisible(View.INVISIBLE);
-            finish();
+            startActivity(new Intent(this, MainActivity.class));
         });
 
         scrollButtonDown.setOnClickListener(v -> {
@@ -1703,7 +1700,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
                             List<String> settings = new ArrayList<>();
 
                             VisicomFragment.textViewTo.setText(addressesList.get(position));
-                            VisicomFragment.btn_clear_to.setVisibility(View.INVISIBLE);
+
                             Logger.d(getApplicationContext(), TAG, "processAddressData: ");
 //                                            if (!toEditAddress.getText().toString().equals("")) {
                             String query = "SELECT * FROM " + MainActivity.ROUT_MARKER + " LIMIT 1";
@@ -1996,12 +1993,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
                         VisicomFragment.geoText.setText(startPoint);
                         Logger.d(getApplicationContext(), TAG, "processAddressData: startPoint 2" + startPoint);
                         if(startPoint.contains("\t")) {
-
-                                Intent intent = new Intent(getApplicationContext(), ActivityVisicomOnePage.class);
-                                intent.putExtra("start", "no");
-                                intent.putExtra("end", "ok");
-                                startActivity(intent);
-
+                            btn_ok.performClick();
                         }
                     }
                 } else if (point.equals("finish")) {
@@ -2015,7 +2007,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
 
                         VisicomFragment.textViewTo.setText(addressesList.get(position));
                         Logger.d(getApplicationContext(), TAG, "oldAddresses: " + addressesList.get(position));
-                        VisicomFragment.btn_clear_to.setVisibility(View.INVISIBLE);
+
                         Logger.d(getApplicationContext(), TAG, "oldAddresses:2222 "+ VisicomFragment.geoText.getText().toString());
                         if (!VisicomFragment.geoText.getText().toString().equals("")) {
                             String query = "SELECT * FROM " + MainActivity.ROUT_MARKER + " LIMIT 1";
@@ -2316,7 +2308,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
                             List<String> settings = new ArrayList<>();
 
                             VisicomFragment.textViewTo.setText(addressesList.get(position));
-                            VisicomFragment.btn_clear_to.setVisibility(View.INVISIBLE);
+
                             String query = "SELECT * FROM " + MainActivity.ROUT_MARKER + " LIMIT 1";
                             SQLiteDatabase database = openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
                             @SuppressLint("Recycle") Cursor cursor = database.rawQuery(query, null);
@@ -2364,7 +2356,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
     }
 
     private void visicomKey() {
-        com.taxi_pas_4.ui.visicom.visicom_search.key_visicom.ApiClient.getVisicomKeyInfo(new Callback<ApiResponse>() {
+         com.taxi_pas_4.ui.visicom.visicom_search.key_visicom.ApiClient.getVisicomKeyInfo(new Callback<ApiResponse>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
                 if (response.isSuccessful()) {

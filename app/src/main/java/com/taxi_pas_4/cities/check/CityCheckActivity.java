@@ -17,24 +17,24 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 
-import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.R;
-import com.taxi_pas_4.cities.api.CityApiClient;
-import com.taxi_pas_4.cities.api.CityResponse;
-import com.taxi_pas_4.cities.api.CityResponseMerchantFondy;
-import com.taxi_pas_4.cities.api.CityService;
-import com.taxi_pas_4.ui.card.CardInfo;
-import com.taxi_pas_4.ui.fondy.callback.CallbackResponse;
-import com.taxi_pas_4.ui.fondy.callback.CallbackService;
-import com.taxi_pas_4.ui.home.MyBottomSheetMessageFragment;
-import com.taxi_pas_4.ui.visicom.VisicomFragment;
-import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
-import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
-import com.taxi_pas_4.utils.ip.ApiServiceCountry;
-import com.taxi_pas_4.utils.ip.CountryResponse;
-import com.taxi_pas_4.utils.ip.RetrofitClient;
-import com.taxi_pas_4.utils.log.Logger;
-import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
+import  com.taxi_pas_4.MainActivity;
+import  com.taxi_pas_4.R;
+import  com.taxi_pas_4.cities.api.CityApiClient;
+import  com.taxi_pas_4.cities.api.CityResponse;
+import  com.taxi_pas_4.cities.api.CityResponseMerchantFondy;
+import  com.taxi_pas_4.cities.api.CityService;
+import  com.taxi_pas_4.ui.card.CardInfo;
+import  com.taxi_pas_4.ui.fondy.callback.CallbackResponse;
+import  com.taxi_pas_4.ui.fondy.callback.CallbackService;
+import  com.taxi_pas_4.ui.visicom.VisicomFragment;
+import  com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
+import  com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
+import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetMessageFragment;
+import  com.taxi_pas_4.utils.ip.ApiServiceCountry;
+import  com.taxi_pas_4.utils.ip.CountryResponse;
+import  com.taxi_pas_4.utils.ip.RetrofitClient;
+import  com.taxi_pas_4.utils.log.Logger;
+import  com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,8 +63,6 @@ public class CityCheckActivity extends AppCompatActivity {
     ListView listView;
     String city;
     private String cityMenu;
-    private String message;
-    String pay_method;
 
 
     /**
@@ -118,6 +116,8 @@ public class CityCheckActivity extends AppCompatActivity {
             city = "Kyiv City";
             phoneNumber = Kyiv_City_phone;
             cityMenu = getString(R.string.city_kyiv);
+            String newTitle =  getString(R.string.menu_city) + " " + cityMenu;
+            sharedPreferencesHelper.saveValue("newTitle", newTitle);
             updateMyPosition();
         });
         btn_city_2.setOnClickListener(view12 -> {
@@ -125,6 +125,8 @@ public class CityCheckActivity extends AppCompatActivity {
             city = "Dnipropetrovsk Oblast";
             phoneNumber = Dnipropetrovsk_Oblast_phone;
             cityMenu = getString(R.string.city_dnipro);
+            String newTitle =  getString(R.string.menu_city) + " " + cityMenu;
+            sharedPreferencesHelper.saveValue("newTitle", newTitle);
             updateMyPosition();
         });
         btn_city_3.setOnClickListener(view13 -> {
@@ -132,6 +134,8 @@ public class CityCheckActivity extends AppCompatActivity {
             city = "Odessa";
             phoneNumber = Odessa_phone;
             cityMenu = getString(R.string.city_odessa);
+            String newTitle =  getString(R.string.menu_city) + " " + cityMenu;
+            sharedPreferencesHelper.saveValue("newTitle", newTitle);
             updateMyPosition();
         });
         btn_city_4.setOnClickListener(view14 -> {
@@ -139,6 +143,8 @@ public class CityCheckActivity extends AppCompatActivity {
             city = "Zaporizhzhia";
             phoneNumber = Zaporizhzhia_phone;
             cityMenu = getString(R.string.city_zaporizhzhia);
+            String newTitle =  getString(R.string.menu_city) + " " + cityMenu;
+            sharedPreferencesHelper.saveValue("newTitle", newTitle);
             updateMyPosition();
         });
         btn_city_5.setOnClickListener(view -> {
@@ -146,6 +152,8 @@ public class CityCheckActivity extends AppCompatActivity {
             city = "Cherkasy Oblast";
             phoneNumber = Cherkasy_Oblast_phone;
             cityMenu = getString(R.string.city_cherkasy);
+            String newTitle =  getString(R.string.menu_city) + " " + cityMenu;
+            sharedPreferencesHelper.saveValue("newTitle", newTitle);
             updateMyPosition();
         });
         btn_city_6.setOnClickListener(view15 -> {
@@ -153,6 +161,8 @@ public class CityCheckActivity extends AppCompatActivity {
             city = "OdessaTest";
             phoneNumber = Kyiv_City_phone;
             cityMenu = "Test";
+            String newTitle =  getString(R.string.menu_city) + " " + cityMenu;
+            sharedPreferencesHelper.saveValue("newTitle", newTitle);
             updateMyPosition();
         });
         btn_city_7.setOnClickListener(view16 -> {
@@ -160,6 +170,8 @@ public class CityCheckActivity extends AppCompatActivity {
             city = "foreign countries";
             phoneNumber = Kyiv_City_phone;
             cityMenu = getString(R.string.foreign_countries);
+            String newTitle =  getString(R.string.menu_city) + " " + cityMenu;
+            sharedPreferencesHelper.saveValue("newTitle", newTitle);
             updateMyPosition();
         });
         btn_exit.setOnClickListener(view16 -> {
@@ -340,6 +352,10 @@ public class CityCheckActivity extends AppCompatActivity {
         settings.add(position);
 
         updateRoutMarker(settings);
+
+        String newTitle =  getString(R.string.menu_city) + " " + cityMenu;
+        sharedPreferencesHelper.saveValue("newTitle", newTitle);
+
     }
 
    

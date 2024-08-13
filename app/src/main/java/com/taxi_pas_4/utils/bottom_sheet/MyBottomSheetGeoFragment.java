@@ -1,15 +1,15 @@
-package com.taxi_pas_4.ui.home;
+package com.taxi_pas_4.utils.bottom_sheet;
 
 import static android.content.Context.MODE_PRIVATE;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.DatePickerDialog;
-import android.app.TimePickerDialog;
+import android.app.Dialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.SparseBooleanArray;
@@ -19,12 +19,11 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.NumberPicker;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.TimePicker;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -32,14 +31,17 @@ import androidx.annotation.Nullable;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.R;
-import com.taxi_pas_4.androidx.startup.MyApplication;
-import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
-import com.taxi_pas_4.ui.visicom.VisicomFragment;
-import com.taxi_pas_4.utils.log.Logger;
-import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
+import  com.taxi_pas_4.MainActivity;
+import  com.taxi_pas_4.R;
+import  com.taxi_pas_4.androidx.startup.MyApplication;
+import  com.taxi_pas_4.ui.home.CustomListAdapter;
+import  com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
+import  com.taxi_pas_4.ui.visicom.VisicomFragment;
+import  com.taxi_pas_4.utils.log.Logger;
+import  com.taxi_pas_4.utils.tariff.TariffInfo;
+import  com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 
+import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -74,6 +76,8 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
     TimeZone timeZone;
     SQLiteDatabase database;
     Activity context;
+    private int newCheck;
+
     public MyBottomSheetGeoFragment(TextView texViewCost) {
         this.texViewCost = texViewCost;
     }
@@ -238,10 +242,11 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
         // Добавим 10 минут к текущему времени
         calendar.add(Calendar.MINUTE, 10);
         timeZone = TimeZone.getDefault();
-//        updateSelectedTime();
+        updateSelectedTime();
         tvSelectedTime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 showTimePickerDialog();
             }
         });
@@ -306,21 +311,7 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
         tvSelectedDate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-
-                // Создание диалогового окна DatePicker
-                DatePickerDialog datePickerDialog = new DatePickerDialog(context,
-                        (DatePicker datePicker, int year, int monthOfYear, int dayOfMonth) -> {
-                            // Обработчик выбора даты
-                            calendar.set(year, monthOfYear, dayOfMonth);
-                            updateSelectedDate(calendar);
-                        },
-                        calendar.get(Calendar.YEAR),
-                        calendar.get(Calendar.MONTH),
-                        calendar.get(Calendar.DAY_OF_MONTH));
-
-                // Показать диалоговое окно DatePicker
-                datePickerDialog.show();
+                showDataPickerDialog();
             }
         });
 
@@ -330,6 +321,9 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
 
         return view;
     }
+
+
+
     // Метод для обновления отображаемой даты
     private void updateSelectedDate(Calendar calendar) {
         SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
@@ -347,6 +341,9 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
     @Override
     public void onPause() {
         super.onPause();
+
+
+
         List<String> services = logCursor(MainActivity.TABLE_SERVICE_INFO, context);
 
         for (int i = 0; i < services.size()-1; i++) {
@@ -403,6 +400,8 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
         String date = stringList.get(3);
         Logger.d(getActivity(), TAG, "onPause:time  " + time);
         Logger.d(getActivity(), TAG, "onPause:date  " + date);
+
+
         if(!time.equals("no_time")) {
             if(date.equals("no_date")) {
                 LocalDate currentDate = LocalDate.now();
@@ -433,13 +432,16 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
             LocalDateTime currentDateTimeInKyiv = LocalDateTime.now(ZoneId.of("Europe/Kiev"));
             Logger.d(getActivity(), TAG, "onPause:dateTimeFromString  " + dateTimeFromString);
             Logger.d(getActivity(), TAG, "onPause:currentDateTimeInKyiv  " + currentDateTimeInKyiv);
+
+
             // Сравнение дат и времени
+
             if (dateTimeFromString.isBefore(currentDateTimeInKyiv)) {
                 Toast.makeText(context, context.getString(R.string.resettimetoorder), Toast.LENGTH_SHORT).show();
                 ContentValues cv = new ContentValues();
 
                 LocalDate currentDate = LocalDate.now();
-
+                Logger.d(getActivity(), TAG, "onPause:currentDate " + currentDate);
                 // Получение завтрашней даты путем добавления одного дня к текущей дате
                 LocalDate tomorrowDate = currentDate.plusDays(1);
                 formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
@@ -455,6 +457,7 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
                 database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
                         new String[] { "1" });
                 database.close();
+                Logger.d(getActivity(), TAG, "onPause:date " + date);
             }
 
         } else {
@@ -469,6 +472,12 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
                     new String[] { "1" });
             database.close();
         }
+        if(time.equals("no_time")) {
+            VisicomFragment.schedule.setText(R.string.on_now);
+        } else {
+            String mes = getString(R.string.on) + " " +  time + " " + date;
+            VisicomFragment.schedule.setText(mes);
+        }
         try {
             changeCost();
         } catch (MalformedURLException e) {
@@ -479,7 +488,8 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
     }
     private void changeCost() throws MalformedURLException {
 
-        String  url = getTaxiUrlSearchMarkers("costSearchMarkers", context);
+
+        String  url = getTaxiUrlSearchMarkers("costSearchMarkersTime", context);
         String message = context.getString(R.string.change_tarrif);
         String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(3);
         ToJSONParserRetrofit parser = new ToJSONParserRetrofit();
@@ -488,6 +498,7 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
         if (context != null) {
             try {
                 Logger.d(context, TAG, "orderFinished: "  + "https://m.easy-order-taxi.site"+ url);
+                costSearchMarkersLocalTariffs(context);
             } catch (NullPointerException e) {
                 Log.e(TAG, "orderFinished: "  + "https://m.easy-order-taxi.site"+ url);
             }
@@ -540,6 +551,7 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
                     cv.put("tarif", " ");
 
                     // обновляем по id
+                    assert context != null;
                     SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
                     database.update(MainActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
                             new String[] { "1" });
@@ -560,22 +572,92 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
             }
         });
 
+        VisicomFragment.addCheck(context);
     }
 
-    private void updateRoutMarker(List<String> settings) {
-        ContentValues cv = new ContentValues();
+    @SuppressLint("Range")
+    public void costSearchMarkersLocalTariffs(Context context) {
 
-        cv.put("startLat",  Double.parseDouble(settings.get(0)));
-        cv.put("startLan", Double.parseDouble(settings.get(1)));
-        cv.put("to_lat", Double.parseDouble(settings.get(2)));
-        cv.put("to_lng", Double.parseDouble(settings.get(3)));
-
-        // обновляем по id
+        String query = "SELECT * FROM " + MainActivity.ROUT_MARKER + " LIMIT 1";
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-        database.update(MainActivity.ROUT_MARKER, cv, "id = ?",
-                new String[] { "1" });
+        Cursor cursor = database.rawQuery(query, null);
+
+        cursor.moveToFirst();
+
+        // Получите значения полей из первой записи
+
+        double originLatitude = cursor.getDouble(cursor.getColumnIndex("startLat"));
+        double originLongitude = cursor.getDouble(cursor.getColumnIndex("startLan"));
+        double toLatitude = cursor.getDouble(cursor.getColumnIndex("to_lat"));
+        double toLongitude = cursor.getDouble(cursor.getColumnIndex("to_lng"));
+
+
+        cursor.close();
+
+        List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, context);
+
+        String payment_type = stringListInfo.get(4);
+
+        String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
+        String displayName = logCursor(MainActivity.TABLE_USER_INFO, context).get(4);
+
+
+
+        // Building the url to the web service
+        List<String> services = logCursor(MainActivity.TABLE_SERVICE_INFO, context);
+        List<String> servicesChecked = new ArrayList<>();
+        String result;
+        boolean servicesVer = false;
+        for (int i = 1; i < services.size()-1 ; i++) {
+            if(services.get(i).equals("1")) {
+                servicesVer = true;
+                break;
+            }
+        }
+        if(servicesVer) {
+            for (int i = 0; i < OpenStreetMapActivity.arrayServiceCode().length; i++) {
+                if(services.get(i+1).equals("1")) {
+                    servicesChecked.add(OpenStreetMapActivity.arrayServiceCode()[i]);
+                }
+            }
+            for (int i = 0; i < servicesChecked.size(); i++) {
+                if(servicesChecked.get(i).equals("CHECK_OUT")) {
+                    servicesChecked.set(i, "CHECK");
+                }
+            }
+            result = String.join("*", servicesChecked);
+            Logger.d(context, TAG, "getTaxiUrlSearchGeo result:" + result + "/");
+        } else {
+            result = "no_extra_charge_codes";
+        }
+
+        List<String> listCity = logCursor(MainActivity.CITY_INFO, context);
+        String city = listCity.get(1);
+
+
+        String user = displayName + "*" + userEmail  + "*" + payment_type;
         database.close();
+
+        List<String> stringList = logCursor(MainActivity.TABLE_ADD_SERVICE_INFO, context);
+        String time = stringList.get(1);
+        String date = stringList.get(3);
+
+
+        TariffInfo tariffInfo = new TariffInfo(context);
+        tariffInfo.fetchOrderCostDetails(
+                originLatitude,
+                originLongitude,
+                toLatitude,
+                toLongitude,
+                user,
+                time,
+                date,
+                result,
+                city,
+                context.getString(R.string.application)
+        );
     }
+
 
     private void updateAddCost(String addCost) {
         ContentValues cv = new ContentValues();
@@ -655,7 +737,7 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
         String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
         String displayName = logCursor(MainActivity.TABLE_USER_INFO, context).get(4);
 
-        if(urlAPI.equals("costSearchMarkers")) {
+        if(urlAPI.equals("costSearchMarkersTime")) {
             Cursor c = database.query(MainActivity.TABLE_USER_INFO, null, null, null, null, null, null);
 
             if (c.getCount() == 1) {
@@ -663,7 +745,8 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
                 c.close();
             }
             parameters = str_origin + "/" + str_dest + "/" + tarif + "/" + phoneNumber + "/"
-                    + displayName + " (" + context.getString(R.string.version_code) + ") " + "*" + userEmail  + "*" + payment_type;
+                    + displayName + " (" + context.getString(R.string.version_code) + ") " + "*" + userEmail  + "*" + payment_type + "/"
+                    + time + "/" + date ;
         }
         if(urlAPI.equals("orderSearchMarkersVisicom")) {
             phoneNumber = logCursor(MainActivity.TABLE_USER_INFO, context).get(2);
@@ -727,37 +810,158 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
 
         return url;
     }
+    private void showDataPickerDialog() {
+        Dialog dataPickerDialog = new Dialog(context);
+        dataPickerDialog.setContentView(R.layout.custom_date_picker);
+
+        NumberPicker npYear = dataPickerDialog.findViewById(R.id.npYear);
+        NumberPicker npMonth = dataPickerDialog.findViewById(R.id.npMonth);
+        NumberPicker npDay = dataPickerDialog.findViewById(R.id.npDay);
+
+        int color = getResources().getColor(R.color.white, null); // Get the white color
+
+        setNumberPickerTextColor(npYear, color);
+        setNumberPickerTextColor(npMonth, color);
+        setNumberPickerTextColor(npDay, color);
+
+        float textSize = 24f; // Размер текста в sp
+
+        setNumberPickerTextSize(npYear, textSize);
+        setNumberPickerTextSize(npMonth, textSize);
+        setNumberPickerTextSize(npDay, textSize);
+
+        // Установка значений для NumberPicker
+        npYear.setMinValue(2024);
+        npYear.setMaxValue(2100);
+        npYear.setValue(calendar.get(Calendar.YEAR));
+
+        npMonth.setMinValue(1);
+        npMonth.setMaxValue(12);
+        npMonth.setValue(calendar.get(Calendar.MONTH) + 1);
+
+        npDay.setMinValue(1);
+        npDay.setMaxValue(getMaxDayOfMonth(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH)));
+        npDay.setValue(calendar.get(Calendar.DAY_OF_MONTH));
+
+        npMonth.setOnValueChangedListener((picker, oldVal, newVal) -> {
+            npDay.setMaxValue(getMaxDayOfMonth(calendar.get(Calendar.YEAR), newVal - 1));
+        });
+
+        Button okButton = dataPickerDialog.findViewById(R.id.okButton);
+        okButton.setOnClickListener(v -> {
+            calendar.set(npYear.getValue(), npMonth.getValue() - 1, npDay.getValue());
+            updateSelectedDate(calendar);
+            dataPickerDialog.dismiss();
+        });
+
+        // Show the dialog
+        dataPickerDialog.show();
+    }
+
+    private int getMaxDayOfMonth(int year, int month) {
+        Calendar cal = Calendar.getInstance();
+        cal.set(year, month, 1);
+        return cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+    }
+
     private void showTimePickerDialog() {
-        int hour = calendar.get(Calendar.HOUR_OF_DAY);
-        int minute = calendar.get(Calendar.MINUTE);
-        TimePickerDialog timePickerDialog = new TimePickerDialog(context,
-                new TimePickerDialog.OnTimeSetListener() {
-                    @Override
-                    public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-                        calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
-                        calendar.set(Calendar.MINUTE, minute);
-                        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
-                        String formattedTime = sdf.format(calendar.getTime());
-                        tvSelectedTime.setText(formattedTime);
+        // Initialize the dialog
+        Dialog timePickerDialog = new Dialog(context);
+        timePickerDialog.setContentView(R.layout.dialog_time_picker);
+
+        // Initialize the NumberPickers
+        NumberPicker hourPicker = timePickerDialog.findViewById(R.id.hourPicker);
+        NumberPicker minutePicker = timePickerDialog.findViewById(R.id.minutePicker);
+        int color = getResources().getColor(R.color.white, null); // Get the white color
+
+        setNumberPickerTextColor(hourPicker, color);
+        setNumberPickerTextColor(minutePicker, color);
+
+        float textSize = 24f; // Размер текста в sp
+
+        setNumberPickerTextSize(hourPicker, textSize);
+        setNumberPickerTextSize(minutePicker, textSize);
+
+        // Set the range for the hour and minute pickers
+        hourPicker.setMinValue(0);
+        hourPicker.setMaxValue(23);
+        minutePicker.setMinValue(0);
+        minutePicker.setMaxValue(59);
+
+        // Set the current time
+        Calendar calendar = Calendar.getInstance();
+        hourPicker.setValue(calendar.get(Calendar.HOUR_OF_DAY));
+        Logger.d(context, TAG, "calendar.get(Calendar.HOUR_OF_DAY)" + calendar.get(Calendar.HOUR_OF_DAY));
+        minutePicker.setValue(calendar.get(Calendar.MINUTE) +10);
+
+        // Set the OK button click listener
+        Button okButton = timePickerDialog.findViewById(R.id.okButton);
+        okButton.setOnClickListener(v -> {
+            int hourOfDay = hourPicker.getValue();
+            int minute = minutePicker.getValue();
+
+            calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+            calendar.set(Calendar.MINUTE, minute);
+            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
+            String formattedTime = sdf.format(calendar.getTime());
+            Logger.d(context, TAG, "formattedTime: " + formattedTime);
+            tvSelectedTime.setText(formattedTime);
+
+            // Perform the required updates
 
 
-                            // Установленное время больше или равно текущему времени
-                            tvSelectedTime.setText(formattedTime);
-                            updateSelectedTime();
+            ContentValues cv = new ContentValues();
+            cv.put("time", formattedTime);
 
-                            ContentValues cv = new ContentValues();
-                            cv.put("time", formattedTime);
+            // Update the database by id
+            SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+            database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?", new String[]{"1"});
+            database.close();
 
-                            // Обновляем по id
-                            SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-                            database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?", new String[] { "1" });
-                            database.close();
+            timePickerDialog.dismiss();
+        });
 
-                    }
-                }, hour, minute, true);
-
+        // Show the dialog
         timePickerDialog.show();
     }
+    private void setNumberPickerTextColor(NumberPicker numberPicker, int color) {
+        try {
+            // Access the private mSelectorWheelPaint field of the NumberPicker class
+            @SuppressLint("SoonBlockedPrivateApi") Field selectorWheelPaintField = NumberPicker.class.getDeclaredField("mSelectorWheelPaint");
+            selectorWheelPaintField.setAccessible(true);
+
+            // Set the color on the Paint object used to draw the text
+            Paint paint = (Paint) selectorWheelPaintField.get(numberPicker);
+            assert paint != null;
+            paint.setColor(color);
+
+            // Apply the color to each EditText child of the NumberPicker
+            for (int i = 0; i < numberPicker.getChildCount(); i++) {
+                View child = numberPicker.getChildAt(i);
+                if (child instanceof EditText) {
+                    ((EditText) child).setTextColor(color);
+                    numberPicker.invalidate(); // Refresh the NumberPicker
+                }
+            }
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+    private void setNumberPickerTextSize(NumberPicker numberPicker, float textSize) {
+        try {
+            // Найти все EditText внутри NumberPicker
+            for (int i = 0; i < numberPicker.getChildCount(); i++) {
+                View child = numberPicker.getChildAt(i);
+                if (child instanceof EditText) {
+                    ((EditText) child).setTextSize(textSize);
+                    numberPicker.invalidate(); // Обновить NumberPicker
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private void updateSelectedTime() {
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());

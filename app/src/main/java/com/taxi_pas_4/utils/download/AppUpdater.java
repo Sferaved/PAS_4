@@ -16,12 +16,11 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 public class AppUpdater {
 
     private final AppUpdateManager appUpdateManager;
-    private final Activity activity;
+    private final Activity activity = new Activity();
     private static final int MY_REQUEST_CODE = 100;
     private OnUpdateListener onUpdateListener;
 
-    public AppUpdater(Activity activity) {
-        this.activity = activity;
+    public AppUpdater() {
         this.appUpdateManager = AppUpdateManagerFactory.create(activity);
     }
 

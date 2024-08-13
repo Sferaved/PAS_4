@@ -1,4 +1,4 @@
-package com.taxi_pas_4.ui.home;
+package com.taxi_pas_4.utils.bottom_sheet;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -28,11 +28,12 @@ import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.app.ActivityCompat;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
-import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.R;
-import com.taxi_pas_4.ui.visicom.VisicomFragment;
-import com.taxi_pas_4.utils.log.Logger;
-import com.taxi_pas_4.utils.user.save_firebase.FirebaseUserManager;
+import  com.taxi_pas_4.MainActivity;
+import  com.taxi_pas_4.R;
+import  com.taxi_pas_4.ui.home.HomeFragment;
+import  com.taxi_pas_4.ui.visicom.VisicomFragment;
+import  com.taxi_pas_4.utils.log.Logger;
+import  com.taxi_pas_4.utils.user.save_firebase.FirebaseUserManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +50,7 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
     AppCompatButton button;
     CheckBox checkBox;
     String page;
-    final String PHONE_PATTERN = "((\\+?380)(\\d{9}))$";
+    final String PHONE_PATTERN = "\\+38 \\d{3} \\d{3} \\d{2} \\d{2}";
     private final String TAG = "MyPhoneDialogFragment";
     private Context mContext;
     FirebaseUserManager userManager;
@@ -72,7 +73,9 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
         phoneFull(mContext);
 
         button.setOnClickListener(v -> {
-            if (Pattern.compile(PHONE_PATTERN).matcher(phoneNumber.getText().toString()).matches()) {
+            String phone = formatPhoneNumber(phoneNumber.getText().toString());
+            phoneNumber.setText(phone);
+            if (Pattern.compile(PHONE_PATTERN).matcher(phone).matches()) {
 
                 updateRecordsUser(phoneNumber.getText().toString(), mContext);
                 Logger.d(getActivity(), TAG, "setOnClickListener " + phoneNumber.getText().toString());
@@ -153,7 +156,7 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
         String phone = stringList.get(2);
 
         Logger.d(requireActivity(), TAG, "onClick befor validate: ");
-        String PHONE_PATTERN = "((\\+?380)(\\d{9}))$";
+        String PHONE_PATTERN = "\\+38 \\d{3} \\d{3} \\d{2} \\d{2}";
         boolean val = Pattern.compile(PHONE_PATTERN).matcher(phone).matches();
         Logger.d(requireActivity(), TAG, "onClick No validate: " + val);
         return val;
@@ -215,6 +218,23 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
         if (phone.equals("+380") || phone.isEmpty()) {
             getPhoneNumber(context);
         }
+    }
+
+    private String formatPhoneNumber(String phoneNumber) {
+        String input = phoneNumber.replaceAll("[^+\\d]", "");
+
+        StringBuilder formattedNumber = new StringBuilder();
+        if (input.length() == 13) {
+            formattedNumber.append(input.substring(0, 3)).append(" ");
+            formattedNumber.append(input.substring(3, 6)).append(" ");
+            formattedNumber.append(input.substring(6, 9)).append(" ");
+            formattedNumber.append(input.substring(9, 11)).append(" ");
+            formattedNumber.append(input.substring(11, 13));
+            return formattedNumber.toString();
+        } else {
+            return input;
+        }
+
     }
 }
 

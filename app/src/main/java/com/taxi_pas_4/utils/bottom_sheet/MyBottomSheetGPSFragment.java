@@ -1,4 +1,4 @@
-package com.taxi_pas_4.ui.home;
+package com.taxi_pas_4.utils.bottom_sheet;
 
 import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
@@ -17,9 +17,10 @@ import androidx.appcompat.widget.AppCompatButton;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import com.taxi_pas_4.R;
-import com.taxi_pas_4.ui.visicom.VisicomFragment;
-import com.taxi_pas_4.utils.log.Logger;
+import  com.taxi_pas_4.R;
+import  com.taxi_pas_4.ui.home.HomeFragment;
+import  com.taxi_pas_4.ui.visicom.VisicomFragment;
+import  com.taxi_pas_4.utils.log.Logger;
 
 
 public class MyBottomSheetGPSFragment extends BottomSheetDialogFragment {

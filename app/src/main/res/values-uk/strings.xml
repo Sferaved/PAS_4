@@ -78,7 +78,7 @@
     <string name="from_edit">Звідки</string>
     <string name="sms_code">Код перевіркі зі смс-повідомлення</string>
     <string name="android">Андроїд-додаток для швидких та дешевих поїздок при замовленні онлайн.</string>
-    <string name="good_day">Мої вітання. \n \n Знайшов чудовий додаток для поїздок на таксі. \n \n Раджу спробувати за посиланням в офіційному магазині Google: \n\n https://play.google.com/store/apps/details?id=com.taxi_pas_4 \n\n Гарного дня. \n Ще побачимось.</string>
+    <string name="good_day">Мої вітання. \n \n Знайшов чудовий додаток для поїздок на таксі. \n \n Раджу спробувати за посиланням в офіційному магазині Google: \n\n https://play.google.com/store/apps/details?id= com.taxi_pas_4 \n\n Гарного дня. \n Ще побачимось.</string>
     <string name="share">Порадити другові додаток...</string>
     <string name="no_email_agent">Поштовий клієнт не встановлено.</string>
     <string name="check_position">Зачекайте, відбувається визначення Вашого розташування...</string>
@@ -134,7 +134,7 @@
     <string name="no_routs">Немає маршрутів</string>
     <string name="cheng">Змінити</string>
     <string name="delete_routs">видалити</string>
-    <string name="text_result">Ваше замовлення</string>
+    <string name="text_result">Інформація про подорож</string>
     <string name="btn_again_text">Замовити ще</string>
     <string name="textStatus">Статус замовлення</string>
     <string name="cancel_order">Скасувати замовлення</string>
@@ -401,4 +401,12 @@
     <string name="phone_number">Телефон</string>
     <string name="uninstal">Видалити додаток</string>
     <string name="your_order">Ваше замовлення</string>
+    <string name="sedan">седан</string>
+    <string name="universal">універсал</string>
+    <string name="bus">мікроавтобус</string>
+    <string name="upd_app">Оновити додаток</string>
+    <string name="time_to_order">Час подачі</string>
+    <string name="data_order">Виберіть дату</string>
+    <string name="on_now">На даний момент</string>
+    <string name="on">На</string>
 </resources>

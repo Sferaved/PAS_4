@@ -1,6 +1,6 @@
 package com.taxi_pas_4.utils.to_json_parser;
 
-import static com.taxi_pas_4.ui.finish.FinishActivity.baseUrl;
+import static  com.taxi_pas_4.ui.finish.FinishActivity.baseUrl;
 
 import androidx.annotation.NonNull;
 

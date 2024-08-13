@@ -1,7 +1,7 @@
 package com.taxi_pas_4.ui.clear;
 
-import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.utils.log.Logger;
+import  com.taxi_pas_4.MainActivity;
+import  com.taxi_pas_4.utils.log.Logger;
 
 import android.content.Context;
 import android.content.Intent;

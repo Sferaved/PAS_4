@@ -3,7 +3,7 @@ package com.taxi_pas_4.ui.fondy.payment;
 import androidx.annotation.NonNull;
 
 import com.google.gson.annotations.SerializedName;
-import com.taxi_pas_4.ui.fondy.SignatureGenerator;
+import  com.taxi_pas_4.ui.fondy.SignatureGenerator;
 
 import java.util.Map;
 import java.util.TreeMap;

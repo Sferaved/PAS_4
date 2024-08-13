@@ -1,4 +1,4 @@
-package com.taxi_pas_4.ui.home;
+package com.taxi_pas_4.utils.bottom_sheet;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -28,29 +28,29 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.FragmentManager;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
-import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.R;
-import com.taxi_pas_4.cities.api.CityApiClient;
-import com.taxi_pas_4.cities.api.CityResponse;
-import com.taxi_pas_4.cities.api.CityResponseMerchantFondy;
-import com.taxi_pas_4.cities.api.CityService;
-import com.taxi_pas_4.ui.card.CardInfo;
-import com.taxi_pas_4.ui.finish.ApiClient;
-import com.taxi_pas_4.ui.finish.RouteResponse;
-import com.taxi_pas_4.ui.fondy.callback.CallbackResponse;
-import com.taxi_pas_4.ui.fondy.callback.CallbackService;
-import com.taxi_pas_4.ui.payment_system.PayApi;
-import com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
-import com.taxi_pas_4.ui.visicom.VisicomFragment;
-import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
-import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
-import com.taxi_pas_4.utils.db.DatabaseHelper;
-import com.taxi_pas_4.utils.db.DatabaseHelperUid;
-import com.taxi_pas_4.utils.ip.ApiServiceCountry;
-import com.taxi_pas_4.utils.ip.CountryResponse;
-import com.taxi_pas_4.utils.ip.RetrofitClient;
-import com.taxi_pas_4.utils.log.Logger;
-import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
+import  com.taxi_pas_4.MainActivity;
+import  com.taxi_pas_4.R;
+import  com.taxi_pas_4.cities.api.CityApiClient;
+import  com.taxi_pas_4.cities.api.CityResponse;
+import  com.taxi_pas_4.cities.api.CityResponseMerchantFondy;
+import  com.taxi_pas_4.cities.api.CityService;
+import  com.taxi_pas_4.ui.card.CardInfo;
+import  com.taxi_pas_4.ui.finish.ApiClient;
+import  com.taxi_pas_4.ui.finish.RouteResponse;
+import  com.taxi_pas_4.ui.fondy.callback.CallbackResponse;
+import  com.taxi_pas_4.ui.fondy.callback.CallbackService;
+import  com.taxi_pas_4.ui.payment_system.PayApi;
+import  com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
+import  com.taxi_pas_4.ui.visicom.VisicomFragment;
+import  com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
+import  com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
+import  com.taxi_pas_4.utils.db.DatabaseHelper;
+import  com.taxi_pas_4.utils.db.DatabaseHelperUid;
+import  com.taxi_pas_4.utils.ip.ApiServiceCountry;
+import  com.taxi_pas_4.utils.ip.CountryResponse;
+import  com.taxi_pas_4.utils.ip.RetrofitClient;
+import  com.taxi_pas_4.utils.log.Logger;
+import  com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,7 +67,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
 
-    private static final String TAG = "TAG_CITY";
+    private static final String TAG = "MyBottomSheetCityFragment";
     private static final String BASE_URL = "https://api64.ipify.org";
 
     ListView listView;
@@ -81,6 +81,7 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
     String[] array;
     DatabaseHelper databaseHelper;
     DatabaseHelperUid databaseHelperUid;
+    private SharedPreferencesHelper sharedPreferencesHelper;
 
     public MyBottomSheetCityFragment() {
         // Пустой конструктор без аргументов
@@ -114,8 +115,7 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
     private final String baseUrl = "https://m.easy-order-taxi.site";
     Context context;
     String countryState;
-    SharedPreferencesHelper sharedPreferencesHelper;
-
+    String newTitle;
 
     @SuppressLint("MissingInflatedId")
     @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
@@ -186,6 +186,8 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
                 phoneNumber = Kyiv_City_phone;
                 cityMenu = context.getString(R.string.foreign_countries);
         }
+        newTitle =  context.getString(R.string.menu_city) + " " + cityMenu;
+        sharedPreferencesHelper.saveValue("newTitle", newTitle);
 
         Logger.d(context, TAG, "onCreateView: city" + city);
         updateMyPosition(city);
@@ -244,8 +246,9 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
                         countryState = "UA";
                         break;
                 }
-
-                String cityCodeNew;
+                newTitle =  context.getString(R.string.menu_city) + " " + cityMenu;
+                sharedPreferencesHelper.saveValue("newTitle", newTitle);
+                 String cityCodeNew;
                     if (positionFirst == 6) {
                         getPublicIPAddress();
                         cityCodeNew = cityCode[0];
@@ -269,6 +272,8 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
         });
         databaseHelper = new DatabaseHelper(context);
         databaseHelperUid = new DatabaseHelperUid(context);
+
+
         return view;
     }
 
@@ -429,6 +434,8 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
         double startLan;
         String position;
         Logger.d(context, TAG, "updateMyPosition:city "+ city);
+//        ActionBarUtil.setupCustomActionBar(this, R.layout.custom_action_bar_title, R.id.action_bar_title, newTitle);
+
         switch (city){
             case "Dnipropetrovsk Oblast":
             case "Odessa":
@@ -726,8 +733,8 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
     public void onDismiss(@NonNull DialogInterface dialog) {
 
         super.onDismiss(dialog);
-        MainActivity.navController.popBackStack();
-        MainActivity.navController.navigate(R.id.nav_visicom);
+//        MainActivity.navController.popBackStack();
+//        MainActivity.navController.navigate(R.id.nav_visicom);
         MainActivity.firstStart = false;
         if (positionFirst != 6) {
             message = context.getString(R.string.change_message) + context.getString(R.string.hi_mes) + " " + context.getString(R.string.order_in) + cityMenu + ".";
@@ -736,7 +743,10 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
         }
         if (MainActivity.navVisicomMenuItem != null) {
             // Новый текст элемента меню
-            String newTitle =  context.getString(R.string.menu_city) + " " + cityMenu;
+            newTitle =  context.getString(R.string.menu_city) + " " + cityMenu;
+            sharedPreferencesHelper.saveValue("newTitle", newTitle);
+//            ActionBarUtil.setupCustomActionBar(this, R.layout.custom_action_bar_title, R.id.action_bar_title, newTitle);
+
             // Изменяем текст элемента меню
             MainActivity.navVisicomMenuItem.setTitle(newTitle);
 
@@ -747,6 +757,7 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
         }
 
         checkNotificationPermissionAndRequestIfNeeded();
+        startActivity(new Intent(context, MainActivity.class));
     }
 
     private void cityMaxPay(String city) {

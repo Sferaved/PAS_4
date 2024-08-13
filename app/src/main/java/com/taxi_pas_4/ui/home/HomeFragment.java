@@ -3,7 +3,7 @@ package com.taxi_pas_4.ui.home;
 
 import static android.content.Context.MODE_PRIVATE;
 import static android.graphics.Color.RED;
-import static com.taxi_pas_4.R.string.address_error_message;
+import static  com.taxi_pas_4.R.string.address_error_message;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -52,25 +52,30 @@ import androidx.fragment.app.FragmentManager;
 import androidx.room.Room;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.R;
-import com.taxi_pas_4.cities.Cherkasy.Cherkasy;
-import com.taxi_pas_4.cities.Dnipro.DniproCity;
-import com.taxi_pas_4.cities.Kyiv.KyivCity;
-import com.taxi_pas_4.cities.Odessa.Odessa;
-import com.taxi_pas_4.cities.Odessa.OdessaTest;
-import com.taxi_pas_4.cities.Zaporizhzhia.Zaporizhzhia;
-import com.taxi_pas_4.databinding.FragmentHomeBinding;
-import com.taxi_pas_4.ui.home.room.AppDatabase;
-import com.taxi_pas_4.ui.home.room.RouteCost;
-import com.taxi_pas_4.ui.home.room.RouteCostDao;
-import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
-import com.taxi_pas_4.ui.start.ResultSONParser;
-import com.taxi_pas_4.utils.connect.NetworkUtils;
-import com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
-import com.taxi_pas_4.utils.log.Logger;
-import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
-import com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
+import  com.taxi_pas_4.MainActivity;
+import  com.taxi_pas_4.R;
+import  com.taxi_pas_4.cities.Cherkasy.Cherkasy;
+import  com.taxi_pas_4.cities.Dnipro.DniproCity;
+import  com.taxi_pas_4.cities.Kyiv.KyivCity;
+import  com.taxi_pas_4.cities.Odessa.Odessa;
+import  com.taxi_pas_4.cities.Odessa.OdessaTest;
+import  com.taxi_pas_4.cities.Zaporizhzhia.Zaporizhzhia;
+import  com.taxi_pas_4.databinding.FragmentHomeBinding;
+import  com.taxi_pas_4.ui.home.room.AppDatabase;
+import  com.taxi_pas_4.ui.home.room.RouteCost;
+import  com.taxi_pas_4.ui.home.room.RouteCostDao;
+import  com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
+import  com.taxi_pas_4.ui.start.ResultSONParser;
+import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetBonusFragment;
+import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetDialogFragment;
+import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
+import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGPSFragment;
+import  com.taxi_pas_4.utils.bottom_sheet.MyPhoneDialogFragment;
+import  com.taxi_pas_4.utils.connect.NetworkUtils;
+import  com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
+import  com.taxi_pas_4.utils.log.Logger;
+import  com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
+import  com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
 
 import org.json.JSONException;
 
@@ -786,7 +791,7 @@ public class HomeFragment extends Fragment {
             }
         }
     }
-    static void btnVisible(int visible) {
+    public static void btnVisible(int visible) {
         text_view_cost.setVisibility(visible);
         btn_clear.setVisibility(visible);
         btn_minus.setVisibility(visible);
@@ -828,7 +833,7 @@ public class HomeFragment extends Fragment {
         String phone = stringList.get(2);
 
         Logger.d(requireActivity(), TAG, "onClick befor validate: ");
-        String PHONE_PATTERN = "((\\+?380)(\\d{9}))$";
+        String PHONE_PATTERN = "\\+38 \\d{3} \\d{3} \\d{2} \\d{2}";
         boolean val = Pattern.compile(PHONE_PATTERN).matcher(phone).matches();
         Logger.d(requireActivity(), TAG, "onClick No validate: " + val);
         return val;
@@ -1122,7 +1127,7 @@ public class HomeFragment extends Fragment {
             settings.add(toCost);
             settings.add(to_numberCost);
             updateRoutHome(settings);
-            urlCost = getTaxiUrlSearch("costSearch", context);
+            urlCost = getTaxiUrlSearch("costSearchTime", context);
 
             CostJSONParserRetrofit parser = new CostJSONParserRetrofit();
             parser.sendURL(urlCost, new Callback<Map<String, String>>() {
@@ -1387,7 +1392,7 @@ public class HomeFragment extends Fragment {
         String message;
         try {
 
-            urlCost = getTaxiUrlSearch("costSearch", context);
+            urlCost = getTaxiUrlSearch("costSearchTime", context);
             List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireContext());
             long addCost = Long.parseLong(stringListInfo.get(5));
             String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(3);
@@ -1640,6 +1645,7 @@ public class HomeFragment extends Fragment {
 
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
 
+
         List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, requireContext());
 
         String tarif =  stringListInfo.get(2);
@@ -1656,7 +1662,7 @@ public class HomeFragment extends Fragment {
         String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
         String displayName = logCursor(MainActivity.TABLE_USER_INFO, context).get(4);
 
-        if(urlAPI.equals("costSearch")) {
+        if(urlAPI.equals("costSearchTime")) {
             Cursor c = database.query(MainActivity.TABLE_USER_INFO, null, null, null, null, null, null);
             if (c.getCount() == 1) {
                 phoneNumber = logCursor(MainActivity.TABLE_USER_INFO, context).get(2);
@@ -1664,7 +1670,8 @@ public class HomeFragment extends Fragment {
             }
 
             parameters = str_origin + "/" + str_dest + "/" + tarif + "/" + phoneNumber + "/"
-                    + displayName + " (" + context.getString(R.string.version_code) + ") " + "*" + userEmail  + "*" + payment_type;
+                    + displayName + " (" + context.getString(R.string.version_code) + ") " + "*" + userEmail  + "*" + payment_type+ "/"
+                    + time + "/" + date ;
         }
 
 
@@ -1827,7 +1834,7 @@ public class HomeFragment extends Fragment {
         mPhoneNumber = tMgr.getLine1Number();
 //        mPhoneNumber = null;
         if(mPhoneNumber != null) {
-            String PHONE_PATTERN = "((\\+?380)(\\d{9}))$";
+            String PHONE_PATTERN = "\\+38 \\d{3} \\d{3} \\d{2} \\d{2}";
             boolean val = Pattern.compile(PHONE_PATTERN).matcher(mPhoneNumber).matches();
             Logger.d(getActivity(), TAG, "onClick No validate: " + val);
             if (!val) {

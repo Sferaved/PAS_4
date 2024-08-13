@@ -1,4 +1,4 @@
-package com.taxi_pas_4.ui.home;
+package com.taxi_pas_4.utils.bottom_sheet;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -19,27 +19,27 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatButton;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
-import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.R;
+import  com.taxi_pas_4.MainActivity;
+import  com.taxi_pas_4.R;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class MyBottomSheetBlackListFragment extends BottomSheetDialogFragment {
-    TextView textViewCost;
+public class MyBottomSheetMessageFragment extends BottomSheetDialogFragment {
+    TextView textViewInfo;
     AppCompatButton btn_help;
-    String cost;
+    String message;
 
-    public MyBottomSheetBlackListFragment(String cost) {
-        this.cost = cost;
+    public MyBottomSheetMessageFragment(String message) {
+        this.message = message;
     }
 
-
+     
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.black_list_layout, container, false);
+        View view = inflater.inflate(R.layout.message_list_layout, container, false);
 
         btn_help = view.findViewById(R.id.btn_help);
         btn_help.setOnClickListener(new View.OnClickListener() {
@@ -53,11 +53,14 @@ public class MyBottomSheetBlackListFragment extends BottomSheetDialogFragment {
                 startActivity(intent);
             }
         });
-        textViewCost = view.findViewById(R.id.textViewCost);
-        textViewCost.setText(getString(R.string.cost_of_road) + " " + this.cost + " " +getString(R.string.UAH));
-        if(this.cost.equals("orderCost")) {
-            textViewCost.setVisibility(View.INVISIBLE);
-        }
+        textViewInfo = view.findViewById(R.id.textViewInfo);
+        textViewInfo.setText(message);
+        textViewInfo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dismiss();
+            }
+        });
         return view;
     }
 

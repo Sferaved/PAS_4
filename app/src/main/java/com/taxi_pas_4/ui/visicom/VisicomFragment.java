@@ -3,7 +3,7 @@ package com.taxi_pas_4.ui.visicom;
 
 import static android.content.Context.MODE_PRIVATE;
 
-import static com.taxi_pas_4.R.string.format_phone;
+import static  com.taxi_pas_4.utils.notify.NotificationHelper.checkForUpdate;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -31,8 +31,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -40,6 +40,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -50,30 +51,35 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.Task;
+import com.google.android.play.core.appupdate.AppUpdateInfo;
+import com.google.android.play.core.appupdate.AppUpdateManager;
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
+import com.google.android.play.core.install.model.UpdateAvailability;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.R;
-import com.taxi_pas_4.cities.check.CityCheckActivity;
-import com.taxi_pas_4.databinding.FragmentVisicomBinding;
-import com.taxi_pas_4.ui.finish.FinishActivity;
-import com.taxi_pas_4.ui.finish.fragm.FinishFragment;
-import com.taxi_pas_4.ui.home.MyBottomSheetBonusFragment;
-import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
-import com.taxi_pas_4.ui.home.MyBottomSheetGPSFragment;
-import com.taxi_pas_4.ui.home.MyBottomSheetGeoFragment;
-import com.taxi_pas_4.ui.home.MyPhoneDialogFragment;
-import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
-import com.taxi_pas_4.ui.visicom.visicom_search.ActivityVisicomOnePage;
-import com.taxi_pas_4.utils.connect.NetworkUtils;
-import com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
-import com.taxi_pas_4.utils.from_json_parser.FromJSONParserRetrofit;
-import com.taxi_pas_4.utils.ip.RetrofitClient;
-import com.taxi_pas_4.utils.log.Logger;
-import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
-import com.taxi_pas_4.utils.tariff.DatabaseHelperTariffs;
-import com.taxi_pas_4.utils.tariff.Tariff;
-import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
-import com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
+import  com.taxi_pas_4.MainActivity;
+import  com.taxi_pas_4.R;
+import  com.taxi_pas_4.cities.check.CityCheckActivity;
+import  com.taxi_pas_4.databinding.FragmentVisicomBinding;
+import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetBonusFragment;
+import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
+import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGPSFragment;
+import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGeoFragment;
+import  com.taxi_pas_4.utils.bottom_sheet.MyPhoneDialogFragment;
+import  com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
+import  com.taxi_pas_4.ui.visicom.visicom_search.ActivityVisicomOnePage;
+import  com.taxi_pas_4.utils.connect.NetworkUtils;
+import  com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
+import  com.taxi_pas_4.utils.data.DataArr;
+import  com.taxi_pas_4.utils.download.AppUpdater;
+import  com.taxi_pas_4.utils.from_json_parser.FromJSONParserRetrofit;
+import  com.taxi_pas_4.utils.ip.RetrofitClient;
+import  com.taxi_pas_4.utils.log.Logger;
+import  com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
+import  com.taxi_pas_4.utils.tariff.DatabaseHelperTariffs;
+import  com.taxi_pas_4.utils.tariff.TariffInfo;
+import  com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
+import  com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -122,9 +128,14 @@ public class VisicomFragment extends Fragment{
     public static long MIN_COST_VALUE;
     public static long firstCostForMin;
 
-    public static AppCompatButton btnAdd, btn_clear_from_text, btn1, btn2, btn3;
+    public static AppCompatButton btnAdd, btn_clear_from_text, ubt_btn;
     @SuppressLint("StaticFieldLeak")
-    public static ImageButton btn_clear_from, btn_clear_to;
+    static ImageButton btn1;
+    @SuppressLint("StaticFieldLeak")
+    static ImageButton btn2;
+    @SuppressLint("StaticFieldLeak")
+    static ImageButton btn3;
+
     @SuppressLint("StaticFieldLeak")
     public static TextView textwhere, num2;
     private AlertDialog alertDialog;
@@ -137,26 +148,36 @@ public class VisicomFragment extends Fragment{
     private final int LOCATION_PERMISSION_REQUEST_CODE = 123;
 
     @SuppressLint("StaticFieldLeak")
-    static LinearLayout linearLayout;
+    static ConstraintLayout linearLayout;
     Activity context;
     FragmentManager fragmentManager;
     private SharedPreferencesHelper sharedPreferencesHelper;
+    @SuppressLint("StaticFieldLeak")
+    static FrameLayout frame_1;
+    @SuppressLint("StaticFieldLeak")
+    static FrameLayout frame_2;
+    @SuppressLint("StaticFieldLeak")
+    static FrameLayout frame_3;
+    @SuppressLint("StaticFieldLeak")
+    public static TextView schedule;
+    ImageButton shed_down;
+    @SuppressLint("StaticFieldLeak")
+    static ConstraintLayout constr2;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
+        binding = FragmentVisicomBinding.inflate(inflater, container, false);
+        View root = binding.getRoot();
+
         context = requireActivity();
         sharedPreferencesHelper = new SharedPreferencesHelper(context);
 
-            binding = FragmentVisicomBinding.inflate(inflater, container, false);
-            View root = binding.getRoot();
 
 
             fragmentManager = getParentFragmentManager();
             progressBar = binding.progressBar;
             linearLayout = binding.linearLayoutButtons;
-    //        btn1 = binding.button1;
-    //        btn2 = binding.button2;
-    //        btn3 = binding.button3;
+
 
             btnCallAdmin = binding.btnCallAdmin;
             btnCallAdmin.setOnClickListener(v -> {
@@ -166,15 +187,122 @@ public class VisicomFragment extends Fragment{
                 intent.setData(Uri.parse(phone));
                 startActivity(intent);
             });
-        if(sharedPreferencesHelper.getValue("CityCheckActivity", "**").equals("run")) {
-            btnCallAdmin.setVisibility(View.GONE);
-        } else {
-            return null;
+            btn1 = binding.button1;
+            btn2 = binding.button2;
+            btn3 = binding.button3;
+
+            frame_1 = binding.frame1;
+            frame_2 = binding.frame2;
+            frame_3 = binding.frame3;
+
+        ubt_btn = binding.btn1;
+
+
+        ubt_btn.setOnClickListener(v -> {
+            AppUpdater appUpdater = new AppUpdater();
+            Logger.d(requireActivity(), TAG, "Starting app update process");
+
+            // Установка слушателя для обновления состояния установки
+            appUpdater.setOnUpdateListener(() -> {
+                // Показать пользователю сообщение о завершении обновления
+                Toast.makeText(requireActivity(), R.string.update_finish_mes, Toast.LENGTH_SHORT).show();
+
+                // Перезапуск приложения для применения обновлений
+                restartApplication(requireActivity());
+            });
+
+            // Регистрация слушателя
+            appUpdater.registerListener();
+
+            // Проверка наличия обновлений
+            checkForUpdate(requireActivity());
+        });
+        schedule = binding.schedule;
+        shed_down = binding.shedDown;
+
+        btnAdd = binding.btnAdd;
+        constr2 = binding.constr2;
+
+        constr2.setVisibility(View.INVISIBLE);
+
+    return root;
+    }
+
+    private void scheduleUpdate() {
+        schedule.setText(R.string.on_now);
+        if(!MainActivity.firstStart) {
+            ContentValues cv = new ContentValues();
+            cv.put("time", "no_time");
+            cv.put("date", "no_date");
+
+            // обновляем по id
+            SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+            database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
+                    new String[] { "1" });
+            database.close();
         }
-        return root;
+
+        schedule.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                btnVisible(View.INVISIBLE);
+                MyBottomSheetGeoFragment bottomSheetDialogFragment = new MyBottomSheetGeoFragment(text_view_cost);
+                bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+            }
+        });
+
+        shed_down.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                btnVisible(View.INVISIBLE);
+                MyBottomSheetGeoFragment bottomSheetDialogFragment = new MyBottomSheetGeoFragment(text_view_cost);
+                bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+            }
+        });
+    }
+
+    public void updateApp() {
+        AppUpdateManager appUpdateManager = AppUpdateManagerFactory.create(context);
+        Task<AppUpdateInfo> appUpdateInfoTask = appUpdateManager.getAppUpdateInfo();
+        appUpdateInfoTask.addOnSuccessListener(appUpdateInfo -> {
+            if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) {
+                // Доступны обновления
+                ubt_btn.setVisibility(View.VISIBLE);
+                Logger.d(requireActivity(), TAG, "Available updates found");
+            }
+        });
+
+
+    }
+
+
+
+    public static void  addCheck(Context context) {
+
+            int newCheck = 0;
+            List<String> services = logCursor(MainActivity.TABLE_SERVICE_INFO, context);
+            for (int i = 0; i < DataArr.arrayServiceCode().length; i++) {
+                if(services.get(i+1).equals("1")) {
+                    newCheck++;
+                }
+            }
+            String mes = context.getString(R.string.add_services);
+            if(newCheck != 0) {
+                mes = context.getString(R.string.add_services) + " (" + newCheck + ")";
+            }
+            btnAdd.setText(mes);
+
+    }
+
+
+    private static void restartApplication(Context context) {
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        context.startActivity(intent);
     }
 
      public static void btnVisible(int visible) {
+          constr2.setVisibility(visible);
 
          btn_clear_from_text.setVisibility(View.INVISIBLE);
          if (visible == View.INVISIBLE) {
@@ -182,9 +310,8 @@ public class VisicomFragment extends Fragment{
          } else {
              progressBar.setVisibility(View.GONE);
          }
+         linearLayout.setVisibility(visible);
 
-         btn_clear_from.setVisibility(View.INVISIBLE);
-         btn_clear_to.setVisibility(View.INVISIBLE);
 
 //         gpsbut.setVisibility(visible);
          btnAdd.setVisibility(visible);
@@ -213,8 +340,6 @@ public class VisicomFragment extends Fragment{
             geoText.setVisibility(View.INVISIBLE);
             progressBar.setVisibility(View.GONE);;
 
-            btn_clear_from.setVisibility(View.INVISIBLE);
-            btn_clear_to.setVisibility(View.INVISIBLE);
 
             textwhere.setVisibility(View.INVISIBLE);
             num2.setVisibility(View.INVISIBLE);
@@ -428,7 +553,7 @@ public class VisicomFragment extends Fragment{
         String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
         String displayName = logCursor(MainActivity.TABLE_USER_INFO, context).get(4);
 
-        if(urlAPI.equals("costSearchMarkers")) {
+        if(urlAPI.equals("costSearchMarkersTime")) {
             Cursor c = database.query(MainActivity.TABLE_USER_INFO, null, null, null, null, null, null);
 
             if (c.getCount() == 1) {
@@ -436,7 +561,8 @@ public class VisicomFragment extends Fragment{
                 c.close();
             }
             parameters = str_origin + "/" + str_dest + "/" + tarif + "/" + phoneNumber + "/"
-            + displayName + " (" + context.getString(R.string.version_code) + ") " + "*" + userEmail  + "*" + payment_type;
+            + displayName + " (" + context.getString(R.string.version_code) + ") " + "*" + userEmail  + "*" + payment_type + "/"
+                    + time + "/" + date ;
         }
         if(urlAPI.equals("orderSearchMarkersVisicom")) {
             phoneNumber = logCursor(MainActivity.TABLE_USER_INFO, context).get(2);
@@ -516,18 +642,9 @@ public class VisicomFragment extends Fragment{
 
         cursor.close();
 
-
-        List<String> stringList = logCursor(MainActivity.TABLE_ADD_SERVICE_INFO, context);
-        String time = stringList.get(1);
-        String comment = stringList.get(2);
-        String date = stringList.get(3);
-
         List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, context);
-        String tarif =  stringListInfo.get(2);
-        String payment_type = stringListInfo.get(4);
-        String addCost = stringListInfo.get(5);
-        // Building the parameters to the web service
 
+        String payment_type = stringListInfo.get(4);
 
         String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
         String displayName = logCursor(MainActivity.TABLE_USER_INFO, context).get(4);
@@ -564,20 +681,35 @@ public class VisicomFragment extends Fragment{
 
         List<String> listCity = logCursor(MainActivity.CITY_INFO, context);
         String city = listCity.get(1);
-        String api = listCity.get(2);
+
 
         String user = displayName + "*" + userEmail  + "*" + payment_type;
         database.close();
 
-//        TariffInfo tariffInfo = new TariffInfo(context);
-//        tariffInfo.fetchOrderCostDetails(originLatitude , originLongitude, toLatitude, toLongitude, user, result, city, context.getString(R.string.application));
+        List<String> stringList = logCursor(MainActivity.TABLE_ADD_SERVICE_INFO, context);
+        String time = stringList.get(1);
+        String date = stringList.get(3);
 
+
+        TariffInfo tariffInfo = new TariffInfo(context);
+        tariffInfo.fetchOrderCostDetails(
+                originLatitude,
+                originLongitude,
+                toLatitude,
+                toLongitude,
+                user,
+                time,
+                date,
+                result,
+                city,
+                context.getString(R.string.application)
+        );
     }
 
     @SuppressLint("SetTextI18n")
     public static void readTariffInfo(Context context){
         // Создаем экземпляр класса для работы с базой данных
-        Tariff foundTariff;
+
         try (DatabaseHelperTariffs dbHelper = new DatabaseHelperTariffs(context)) {
 
             progressBar.setVisibility(View.GONE);;
@@ -585,11 +717,11 @@ public class VisicomFragment extends Fragment{
             List<String> finalTariffDetailsList1 = dbHelper.getTariffDetailsByFlexibleTariffName(searchTariffName, new ArrayList<>());
             Logger.d(context, TAG, "readTariffInfo 1: " + finalTariffDetailsList1);
             if (!finalTariffDetailsList1.isEmpty() && finalTariffDetailsList1.size() > 2) {
-                btn1.setText(finalTariffDetailsList1.get(2) + " " + context.getString(R.string.base_t));
+
                 btn1. setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        btn1.setTextColor(context.getResources().getColor(R.color.colorAccent));
+
 
                         ContentValues cv = new ContentValues();
                         cv.put("tarif", "Базовый");
@@ -599,17 +731,20 @@ public class VisicomFragment extends Fragment{
                         database.update(MainActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
                                 new String[] { "1" });
                         database.close();
-
+                        frame_1.setBackgroundResource(R.drawable.input);
+                        frame_2.setBackgroundResource(R.drawable.buttons);
+                        frame_3.setBackgroundResource(R.drawable.buttons);
 
                         text_view_cost.setText(finalTariffDetailsList1.get(2));
-                        btn2.setTextColor(context.getResources().getColor(R.color.white));
-                        btn3.setTextColor(context.getResources().getColor(R.color.white));
+
                     }
                 });
             }
 
-            if (finalTariffDetailsList1.get(2).equals("0")){
-                btn1.setVisibility(View.GONE);
+            if (finalTariffDetailsList1.size() > 2 && finalTariffDetailsList1.get(2).equals("0")) {
+                frame_1.setVisibility(View.GONE);
+            } else {
+                frame_1.setVisibility(View.VISIBLE);
             }
 
             searchTariffName = "Универсал";
@@ -617,12 +752,12 @@ public class VisicomFragment extends Fragment{
             List<String> finalTariffDetailsList2 = dbHelper.getTariffDetailsByFlexibleTariffName(searchTariffName, new ArrayList<>());
             Logger.d(context, TAG, "readTariffInfo 2: " + finalTariffDetailsList2);
             if (!finalTariffDetailsList2.isEmpty() && finalTariffDetailsList2.size() > 2) {
-                btn2.setText(finalTariffDetailsList2.get(2) + " " + context.getString(R.string.univers_t));
+
                 btn2.setOnClickListener(new View.OnClickListener() {
                     @SuppressLint("SetTextI18n")
                     @Override
                     public void onClick(View v) {
-                        btn2.setTextColor(context.getResources().getColor(R.color.colorAccent));
+
 
                         ContentValues cv = new ContentValues();
                         cv.put("tarif", "Универсал");
@@ -634,25 +769,28 @@ public class VisicomFragment extends Fragment{
                         database.close();
 
                         text_view_cost.setText(finalTariffDetailsList2.get(2));
-                        btn1.setTextColor(context.getResources().getColor(R.color.white));
-                        btn3.setTextColor(context.getResources().getColor(R.color.white));
+                        frame_1.setBackgroundResource(R.drawable.buttons);
+                        frame_2.setBackgroundResource(R.drawable.input);
+                        frame_3.setBackgroundResource(R.drawable.buttons);
                     }
                 });
             }
-            if (finalTariffDetailsList2.get(2).equals("0")){
-                btn2.setVisibility(View.GONE);
+            if (finalTariffDetailsList2.size() > 2 && finalTariffDetailsList2.get(2).equals("0")) {
+                frame_2.setVisibility(View.GONE);
+            } else {
+                frame_2.setVisibility(View.VISIBLE);
             }
             searchTariffName = "Микроавтобус";
 
             List<String> finalTariffDetailsList3 = dbHelper.getTariffDetailsByFlexibleTariffName(searchTariffName, new ArrayList<>());
             Logger.d(context, TAG, "readTariffInfo 3: " + finalTariffDetailsList3);
             if (!finalTariffDetailsList3.isEmpty() && finalTariffDetailsList3.size() > 2) {
-                btn3.setText(finalTariffDetailsList3.get(2) + " " + context.getString(R.string.bus_t));
+
                 btn3.setOnClickListener(new View.OnClickListener() {
                     @SuppressLint("SetTextI18n")
                     @Override
                     public void onClick(View v) {
-                        btn3.setTextColor(context.getResources().getColor(R.color.colorAccent));
+
 
                         ContentValues cv = new ContentValues();
                         cv.put("tarif", "Микроавтобус");
@@ -664,16 +802,22 @@ public class VisicomFragment extends Fragment{
                         database.close();
 
                         text_view_cost.setText(finalTariffDetailsList3.get(2));
-                        btn2.setTextColor(context.getResources().getColor(R.color.white));
-                        btn1.setTextColor(context.getResources().getColor(R.color.white));
+                        frame_1.setBackgroundResource(R.drawable.buttons);
+                        frame_2.setBackgroundResource(R.drawable.buttons);
+                        frame_3.setBackgroundResource(R.drawable.input);
                     }
                 });
             }
-            if (finalTariffDetailsList3.get(2).equals("0")){
-                btn3.setVisibility(View.GONE);
+            if (finalTariffDetailsList3.size() > 2 && finalTariffDetailsList3.get(2).equals("0")) {
+                frame_3.setVisibility(View.GONE);
+            }   else {
+                frame_3.setVisibility(View.VISIBLE);
             }
-            linearLayout.setVisibility(View.VISIBLE);
-
+            if (!finalTariffDetailsList1.isEmpty()
+                    || !finalTariffDetailsList2.isEmpty()
+                    || !finalTariffDetailsList3.isEmpty()) {
+                linearLayout.setVisibility(View.VISIBLE);
+            }
         }
 
 
@@ -843,7 +987,7 @@ public class VisicomFragment extends Fragment{
         String phone = stringList.get(2);
 
         Logger.d(requireActivity(), TAG, "onClick befor validate: ");
-        String PHONE_PATTERN = "((\\+?380)(\\d{9}))$";
+        String PHONE_PATTERN = "\\+38 \\d{3} \\d{3} \\d{2} \\d{2}";
         boolean val = Pattern.compile(PHONE_PATTERN).matcher(phone).matches();
         Logger.d(requireActivity(), TAG, "onClick No validate: " + val);
         return val;
@@ -1038,6 +1182,7 @@ public class VisicomFragment extends Fragment{
     @Override
     public void onResume() {
         super.onResume();
+
         if(!sharedPreferencesHelper.getValue("CityCheckActivity", "**").equals("run")) {
             startActivity(new Intent(getActivity(), CityCheckActivity.class));
         }
@@ -1158,7 +1303,7 @@ public class VisicomFragment extends Fragment{
             btn_plus = binding.btnPlus;
             btnOrder = binding.btnOrder;
 
-            btnAdd = binding.btnAdd;
+
             btnAdd.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -1211,8 +1356,8 @@ public class VisicomFragment extends Fragment{
             btnOrder.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    linearLayout.setVisibility(View.GONE);
                     btnVisible(View.INVISIBLE);
-
                     List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
 
                     pay_method =  logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(4);
@@ -1288,29 +1433,9 @@ public class VisicomFragment extends Fragment{
                     }
 
                 }
-            });
-            btn_clear_from = binding.btnClearFrom;
 
-            btn_clear_from.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(getContext(), ActivityVisicomOnePage.class);
-                    intent.putExtra("start", "ok");
-                    intent.putExtra("end", "no");
-                    startActivity(intent);
-                }
             });
-            btn_clear_to = binding.btnClearTo;
-            btn_clear_to.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    textViewTo.setText("");
-                    Intent intent = new Intent(getContext(), ActivityVisicomOnePage.class);
-                    intent.putExtra("start", "no");
-                    intent.putExtra("end", "ok");
-                    startActivity(intent);
-                }
-            });
+
             textwhere = binding.textwhere;
             num2 = binding.num2;
 
@@ -1414,6 +1539,7 @@ public class VisicomFragment extends Fragment{
 
 
 
+
             if (NetworkUtils.isNetworkAvailable(requireContext())) {
                 if(geoText.getText().toString().isEmpty()) {
                     btn_clear_from_text.setVisibility(View.VISIBLE);
@@ -1423,9 +1549,6 @@ public class VisicomFragment extends Fragment{
                     binding.textfrom.setVisibility(View.INVISIBLE);
                     num1.setVisibility(View.INVISIBLE);
                     binding.textwhere.setVisibility(View.INVISIBLE);
-
-                    btn_clear_from.setVisibility(View.GONE);
-                    btn_clear_to.setVisibility(View.GONE);
                 }
 
                 if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
@@ -1438,6 +1561,7 @@ public class VisicomFragment extends Fragment{
                                 String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
                                 if(!userEmail.equals("email")) {
                                     visicomCost();
+
                                 }
 
                             } catch (MalformedURLException e) {
@@ -1507,7 +1631,7 @@ public class VisicomFragment extends Fragment{
             } else {
 
                 binding.textwhere.setVisibility(View.INVISIBLE);
-                btn_clear_from.setVisibility(View.INVISIBLE);
+
                 progressBar.setVisibility(View.GONE);
 
 
@@ -1516,12 +1640,14 @@ public class VisicomFragment extends Fragment{
                 btn_clear_from_text.setOnClickListener(v -> {
                     startActivity(new Intent(context, MainActivity.class));
                 });
-
-                btn_clear_from.setVisibility(View.GONE);
-                btn_clear_to.setVisibility(View.GONE);
             }
-        }
 
+             scheduleUpdate();
+             addCheck(context);
+
+
+        updateApp();
+    }
 
 
     private void firstLocation() {
@@ -1659,7 +1785,6 @@ public class VisicomFragment extends Fragment{
 
                             updateMyPosition(latitude, longitude, FromAdressString, context);
 
-                            btn_clear_from.setVisibility(View.INVISIBLE);
                             geoText.setText(FromAdressString);
                             progressBar.setVisibility(View.GONE);
                             String query = "SELECT * FROM " + MainActivity.ROUT_MARKER + " LIMIT 1";
@@ -1894,7 +2019,7 @@ public class VisicomFragment extends Fragment{
             @SuppressLint("Range") String finish = cursor.getString(cursor.getColumnIndex("finish"));
 
             String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(3);
-            String urlCost = getTaxiUrlSearchMarkers("costSearchMarkers", context);
+            String urlCost = getTaxiUrlSearchMarkers("costSearchMarkersTime", context);
 
             Logger.d(context, TAG, "visicomCost: " + urlCost);
 
@@ -1937,9 +2062,8 @@ public class VisicomFragment extends Fragment{
                                         Toast.makeText(context, context.getString(R.string.server_error_connected), Toast.LENGTH_SHORT).show();
                                     }
 
-                                    btn_clear_from.setVisibility(View.INVISIBLE);
-                                    btn_clear_to.setVisibility(View.INVISIBLE);
                                 } else {
+
                                     if (discountText.matches("[+-]?\\d+") || discountText.equals("0")) {
                                         long discountInt = Integer.parseInt(discountText);
                                         long discount;
@@ -1954,9 +2078,6 @@ public class VisicomFragment extends Fragment{
 
                                         geoText.setVisibility(View.VISIBLE);
                                         progressBar.setVisibility(View.GONE);
-
-                                        btn_clear_from.setVisibility(View.INVISIBLE);
-                                        btn_clear_to.setVisibility(View.INVISIBLE);
 
                                         textfrom.setVisibility(View.VISIBLE);
                                         num1.setVisibility(View.VISIBLE);
@@ -1973,7 +2094,9 @@ public class VisicomFragment extends Fragment{
                                         btnOrder.setVisibility(View.VISIBLE);
 
                                         btn_clear_from_text.setVisibility(View.GONE);
+
                                     }
+                                    costSearchMarkersLocalTariffs(context);
                                 }
                             }
                         });
@@ -1990,9 +2113,11 @@ public class VisicomFragment extends Fragment{
                         });
                     }
                 });
-            } catch (MalformedURLException e) {
+
+            } catch (MalformedURLException ignored) {
 
             }
         }).start();
+        constr2.setVisibility(View.VISIBLE);
     }
 }

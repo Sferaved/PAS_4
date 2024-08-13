@@ -32,18 +32,18 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.NetworkChangeReceiver;
-import com.taxi_pas_4.R;
-import com.taxi_pas_4.databinding.FragmentUidBinding;
-import com.taxi_pas_4.ui.finish.ApiClient;
-import com.taxi_pas_4.ui.finish.RouteResponse;
-import com.taxi_pas_4.ui.home.MyBottomSheetErrorFragment;
-import com.taxi_pas_4.utils.connect.NetworkUtils;
-import com.taxi_pas_4.utils.db.DatabaseHelper;
-import com.taxi_pas_4.utils.db.DatabaseHelperUid;
-import com.taxi_pas_4.utils.db.RouteInfo;
-import com.taxi_pas_4.utils.log.Logger;
+import  com.taxi_pas_4.MainActivity;
+import  com.taxi_pas_4.NetworkChangeReceiver;
+import  com.taxi_pas_4.R;
+import  com.taxi_pas_4.databinding.FragmentUidBinding;
+import  com.taxi_pas_4.ui.finish.ApiClient;
+import  com.taxi_pas_4.ui.finish.RouteResponse;
+import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
+import  com.taxi_pas_4.utils.connect.NetworkUtils;
+import  com.taxi_pas_4.utils.db.DatabaseHelper;
+import  com.taxi_pas_4.utils.db.DatabaseHelperUid;
+import  com.taxi_pas_4.utils.db.RouteInfo;
+import  com.taxi_pas_4.utils.log.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -245,7 +245,7 @@ public class UIDFragment extends Fragment {
         String city = stringList.get(1);
         String url = baseUrl + "/android/UIDStatusShowEmailCityApp/" + email + "/" + city + "/" +  context.getString(R.string.application);
         Call<List<RouteResponse>> call = ApiClient.getApiService().getRoutes(url);
-        Logger.d (getActivity(), TAG, "fetchRoutes: " + url);
+        Logger.d (context, TAG, "fetchRoutes: " + url);
 
         call.enqueue(new Callback<List<RouteResponse>>() {
             @Override
@@ -253,7 +253,7 @@ public class UIDFragment extends Fragment {
                 progressBar.setVisibility(View.GONE);
                 if (response.isSuccessful()) {
                     List<RouteResponse> routes = response.body();
-                    Logger.d (getActivity(), TAG, "onResponse: " + routes);
+                    Logger.d (context, TAG, "onResponse: " + routes);
                     if (routes != null && !routes.isEmpty()) {
                         boolean hasRouteWithAsterisk = false;
                         for (RouteResponse route : routes) {
@@ -403,12 +403,12 @@ public class UIDFragment extends Fragment {
             settings.add(to_lng);
             settings.add(routeFrom + " " + routefromnumber);
             settings.add(routeTo + " " + routeTonumber);
-            Logger.d(getActivity(), TAG, settings.toString());
+            Logger.d(context, TAG, settings.toString());
             databaseHelperUid.addRouteInfoUid(settings);
-            Logger.d(getActivity(), TAG, settings.toString());
+            Logger.d(context, TAG, settings.toString());
         }
         array = databaseHelper.readRouteInfo();
-        Logger.d (getActivity(), TAG, "processRouteList: array " + Arrays.toString(array));
+        Logger.d (context, TAG, "processRouteList: array " + Arrays.toString(array));
         if(array != null) {
             ArrayAdapter<String> adapter = new ArrayAdapter<>(requireActivity(), R.layout.drop_down_layout, array);
             listView.setAdapter(adapter);
