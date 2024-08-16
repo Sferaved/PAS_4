@@ -1249,18 +1249,16 @@ public class VisicomFragment extends Fragment{
             numberFlagTo = "2";
 
             geoText = binding.textGeo;
-            geoText.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (fusedLocationProviderClient != null && locationCallback != null) {
-                        fusedLocationProviderClient.removeLocationUpdates(locationCallback);
-                        gpsbut.setText(R.string.change);
-                    }
-                    Intent intent = new Intent(getContext(), ActivityVisicomOnePage.class);
-                    intent.putExtra("start", "ok");
-                    intent.putExtra("end", "no");
-                    startActivity(intent);
+            geoText.setOnClickListener(v -> {
+                if (fusedLocationProviderClient != null && locationCallback != null) {
+                    fusedLocationProviderClient.removeLocationUpdates(locationCallback);
+                    gpsbut.setText(R.string.change);
                 }
+                sharedPreferencesHelper.saveValue("gps_upd", false);
+                Intent intent = new Intent(getContext(), ActivityVisicomOnePage.class);
+                intent.putExtra("start", "ok");
+                intent.putExtra("end", "no");
+                startActivity(intent);
             });
 
             btn_clear_from_text = binding.btnClearFromText;
@@ -1365,74 +1363,47 @@ public class VisicomFragment extends Fragment{
                 updateAddCost(String.valueOf(addCost));
                 text_view_cost.setText(String.valueOf(cost));
             });
-            btnOrder.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    linearLayout.setVisibility(View.GONE);
-                    btnVisible(View.INVISIBLE);
-                    List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
+            btnOrder.setOnClickListener(v -> {
+                linearLayout.setVisibility(View.GONE);
+                btnVisible(View.INVISIBLE);
+                List<String> stringList1 = logCursor(MainActivity.CITY_INFO, context);
 
-                    pay_method =  logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(4);
+                sharedPreferencesHelper.saveValue("gps_upd", true);
+                sharedPreferencesHelper.saveValue("gps_upd_address", true);
 
-                    switch (stringList.get(1)) {
-                        case "Kyiv City":
-                        case "Dnipropetrovsk Oblast":
-                        case "Odessa":
-                        case "Zaporizhzhia":
-                        case "Cherkasy Oblast":
-                            break;
-                        case "OdessaTest":
-                            if(pay_method.equals("bonus_payment")) {
-                                String bonus = logCursor(MainActivity.TABLE_USER_INFO, context).get(5);
-                                if(Long.parseLong(bonus) < cost * 100 ) {
-                                    paymentType();
-                                }
+                pay_method =  logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(4);
+
+                switch (stringList1.get(1)) {
+                    case "Kyiv City":
+                    case "Dnipropetrovsk Oblast":
+                    case "Odessa":
+                    case "Zaporizhzhia":
+                    case "Cherkasy Oblast":
+                        break;
+                    case "OdessaTest":
+                        if(pay_method.equals("bonus_payment")) {
+                            String bonus = logCursor(MainActivity.TABLE_USER_INFO, context).get(5);
+                            if(Long.parseLong(bonus) < cost * 100 ) {
+                                paymentType();
                             }
-                            break;
-                    }
+                        }
+                        break;
+                }
 
-                    Logger.d(context, TAG, "onClick: pay_method " + pay_method );
+                Logger.d(context, TAG, "onClick: pay_method " + pay_method );
 
 
 
-                    List<String> stringListCity = logCursor(MainActivity.CITY_INFO, context);
-                    String card_max_pay = stringListCity.get(4);
-                    Logger.d(context, TAG, "onClick:card_max_pay " + card_max_pay);
+                List<String> stringListCity = logCursor(MainActivity.CITY_INFO, context);
+                String card_max_pay = stringListCity.get(4);
+                Logger.d(context, TAG, "onClick:card_max_pay " + card_max_pay);
 
-                    String bonus_max_pay = stringListCity.get(5);
-                    switch (pay_method) {
-                        case "bonus_payment":
-                            if (Long.parseLong(bonus_max_pay) <= Long.parseLong(text_view_cost.getText().toString()) * 100) {
-                                changePayMethodMax(text_view_cost.getText().toString(), pay_method);
-                            } else {
-                                if(orderRout()) {
-                                    try {
-                                        orderFinished();
-                                    } catch (MalformedURLException e) {
-                                        FirebaseCrashlytics.getInstance().recordException(e);
-                                        throw new RuntimeException(e);
-                                    }
-                                }
-                            }
-                            break;
-                        case "card_payment":
-                        case "fondy_payment":
-                        case "mono_payment":
-                        case "wfp_payment":
-                            if (Long.parseLong(card_max_pay) <= Long.parseLong(text_view_cost.getText().toString())) {
-                                changePayMethodMax(text_view_cost.getText().toString(), pay_method);
-                            } else {
-                                if(orderRout()) {
-                                    try {
-                                        orderFinished();
-                                    } catch (MalformedURLException e) {
-                                        FirebaseCrashlytics.getInstance().recordException(e);
-                                        throw new RuntimeException(e);
-                                    }
-                                }
-                            }
-                            break;
-                        default:
+                String bonus_max_pay = stringListCity.get(5);
+                switch (pay_method) {
+                    case "bonus_payment":
+                        if (Long.parseLong(bonus_max_pay) <= Long.parseLong(text_view_cost.getText().toString()) * 100) {
+                            changePayMethodMax(text_view_cost.getText().toString(), pay_method);
+                        } else {
                             if(orderRout()) {
                                 try {
                                     orderFinished();
@@ -1441,8 +1412,34 @@ public class VisicomFragment extends Fragment{
                                     throw new RuntimeException(e);
                                 }
                             }
-
-                    }
+                        }
+                        break;
+                    case "card_payment":
+                    case "fondy_payment":
+                    case "mono_payment":
+                    case "wfp_payment":
+                        if (Long.parseLong(card_max_pay) <= Long.parseLong(text_view_cost.getText().toString())) {
+                            changePayMethodMax(text_view_cost.getText().toString(), pay_method);
+                        } else {
+                            if(orderRout()) {
+                                try {
+                                    orderFinished();
+                                } catch (MalformedURLException e) {
+                                    FirebaseCrashlytics.getInstance().recordException(e);
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                        }
+                        break;
+                    default:
+                        if(orderRout()) {
+                            try {
+                                orderFinished();
+                            } catch (MalformedURLException e) {
+                                FirebaseCrashlytics.getInstance().recordException(e);
+                                throw new RuntimeException(e);
+                            }
+                        }
 
                 }
 
@@ -1589,7 +1586,18 @@ public class VisicomFragment extends Fragment{
                             }
 
                     } else {
-                        if(MainActivity.gps_upd){
+                        boolean gps_upd = (boolean) sharedPreferencesHelper.getValue("gps_upd", false);
+                        boolean gps_upd_address = (boolean) sharedPreferencesHelper.getValue("gps_upd_address", false);
+                        Logger.d(context, TAG, "gps_upd" +sharedPreferencesHelper.getValue("gps_upd", false));
+                        Logger.d(context, TAG, "gps_upd_address" +sharedPreferencesHelper.getValue("gps_upd_address", false));
+
+                        if(gps_upd && gps_upd_address){
+                            textfrom.setVisibility(View.VISIBLE);
+                            num1.setVisibility(View.VISIBLE);
+                            geoText.setVisibility(View.VISIBLE);
+                            binding.textwhere.setVisibility(View.VISIBLE);
+                            num2.setVisibility(View.VISIBLE);
+                            textViewTo.setVisibility(View.VISIBLE);
                             Logger.d(context, TAG, "onResume: 3");
                             firstLocation();
                         } else {
@@ -1668,7 +1676,7 @@ public class VisicomFragment extends Fragment{
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
 
-        gpsbut.setText(R.string.cancel_gps);
+        btnVisible(View.INVISIBLE);
         gpsbut.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

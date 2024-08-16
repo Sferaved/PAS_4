@@ -44,6 +44,7 @@ import com.taxi_pas_4.utils.db.DatabaseHelper;
 import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.db.RouteInfo;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -191,7 +192,8 @@ public class UIDFragment extends Fragment {
             updateRoutMarker(settings);
             MainActivity.navController.popBackStack();
             MainActivity.navController.navigate(R.id.nav_visicom);
-            MainActivity.gps_upd = false;
+            SharedPreferencesHelper sharedPreferencesHelper = new SharedPreferencesHelper(context);
+            sharedPreferencesHelper.saveValue("gps_upd", false);
             return true;
         } else if (item.getItemId() == R.id.action_exit) {
 // Обработка действия "Delete"

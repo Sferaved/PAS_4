@@ -153,7 +153,7 @@ public class FinishFragment extends Fragment {
 
         binding = FragmentFinishBinding.inflate(inflater, container, false);
         root = binding.getRoot();
-
+        fragmentManager = getChildFragmentManager();
         context = requireActivity();
 
         context.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);

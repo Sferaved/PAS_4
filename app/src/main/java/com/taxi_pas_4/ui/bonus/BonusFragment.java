@@ -33,6 +33,7 @@ import com.taxi_pas_4.ui.finish.BonusResponse;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -116,13 +117,13 @@ public class BonusFragment extends Fragment {
 
 
         btnOrder = binding.btnOrder;
-        btnOrder.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Удаляем последний фрагмент из стека навигации и переходим к новому фрагменту
-                MainActivity.navController.popBackStack();
-                MainActivity.navController.navigate(R.id.nav_visicom);
-            }
+        btnOrder.setOnClickListener(v -> {
+            // Удаляем последний фрагмент из стека навигации и переходим к новому фрагменту
+            SharedPreferencesHelper sharedPreferencesHelper = new SharedPreferencesHelper(context);
+            sharedPreferencesHelper.saveValue("gps_upd", true);
+            sharedPreferencesHelper.saveValue("gps_upd_address", true);
+            MainActivity.navController.popBackStack();
+            MainActivity.navController.navigate(R.id.nav_visicom);
         });
     }
 

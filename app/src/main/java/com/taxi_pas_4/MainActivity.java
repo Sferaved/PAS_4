@@ -162,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
     String baseUrl = "https://m.easy-order-taxi.site";
     private List<RouteResponse> routeList;
     private String[] array;
-    public static boolean gps_upd;
+    private boolean gps_upd;
     VisicomFragment visicomFragment;
     public static SharedPreferences sharedPreferences;
     public static SharedPreferences sharedPreferencesCount;
@@ -318,6 +318,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             gps_upd = false;
         }
+        sharedPreferencesHelper.saveValue("gps_upd", gps_upd);
     }
 
     @Override

@@ -129,10 +129,12 @@ public class CustomCardAdapter extends ArrayAdapter<Map<String, String>> {
                     switch (pay_method) {
                         case "wfp_payment":
                             database.delete(MainActivity.TABLE_WFP_CARDS, "rectoken = ?", new String[]{rectoken});
+                            reIndexCards();
                             deleteCardToken(rectoken);
                             break;
                         case "fondy_payment":
                             database.delete(MainActivity.TABLE_FONDY_CARDS, "rectoken = ?", new String[]{rectoken});
+                            reIndexCards();
                             deleteCardToken(rectoken);
                             break;
 
@@ -250,7 +252,7 @@ public class CustomCardAdapter extends ArrayAdapter<Map<String, String>> {
             public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
                 if (response.isSuccessful()) {
                     // Обработка успешного ответа
-                    reIndexCards();
+
                     Toast.makeText(getContext(), getContext().getString(R.string.un_link_token), Toast.LENGTH_LONG).show();
 
                 } else {

@@ -49,7 +49,7 @@ import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.cities.Kyiv.KyivRegion;
 import com.taxi_pas_4.cities.Kyiv.KyivRegionRu;
-import com.taxi_pas_4.ui.keyboard.KeyboardUtils;
+import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGPSFragment;
 import com.taxi_pas_4.ui.maps.FromJSONParser;
 import com.taxi_pas_4.ui.open_map.OpenStreetMapVisicomActivity;
 import com.taxi_pas_4.ui.open_map.mapbox.Feature;
@@ -61,8 +61,8 @@ import com.taxi_pas_4.ui.open_map.mapbox.key_mapbox.ApiClientMapbox;
 import com.taxi_pas_4.ui.open_map.mapbox.key_mapbox.ApiResponseMapbox;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.ui.visicom.visicom_search.key_visicom.ApiResponse;
+import com.taxi_pas_4.ui.keyboard.KeyboardUtils;
 import com.taxi_pas_4.utils.LocaleHelper;
-import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGPSFragment;
 import com.taxi_pas_4.utils.connect.ConnectionSpeedTester;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.log.Logger;
@@ -438,6 +438,9 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
             }
         });
         btn_ok.setOnClickListener(v -> {
+            sharedPreferencesHelper.saveValue("gps_upd_address", false);
+            Logger.d(this, TAG, "sharedPreferencesHelper.getValue(\"gps_upd\", false)" +sharedPreferencesHelper.getValue("gps_upd", false));
+
             startActivity(new Intent(this, MainActivity.class));
         });
 
