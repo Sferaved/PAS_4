@@ -45,28 +45,28 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import  com.taxi_pas_4.MainActivity;
-import  com.taxi_pas_4.R;
-import  com.taxi_pas_4.cities.Kyiv.KyivRegion;
-import  com.taxi_pas_4.cities.Kyiv.KyivRegionRu;
-import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGPSFragment;
-import  com.taxi_pas_4.ui.maps.FromJSONParser;
-import  com.taxi_pas_4.ui.open_map.OpenStreetMapVisicomActivity;
-import  com.taxi_pas_4.ui.open_map.mapbox.Feature;
-import  com.taxi_pas_4.ui.open_map.mapbox.Geometry;
-import  com.taxi_pas_4.ui.open_map.mapbox.MapboxApiClient;
-import  com.taxi_pas_4.ui.open_map.mapbox.MapboxResponse;
-import  com.taxi_pas_4.ui.open_map.mapbox.MapboxService;
-import  com.taxi_pas_4.ui.open_map.mapbox.key_mapbox.ApiClientMapbox;
-import  com.taxi_pas_4.ui.open_map.mapbox.key_mapbox.ApiResponseMapbox;
-import  com.taxi_pas_4.ui.visicom.VisicomFragment;
-import  com.taxi_pas_4.ui.visicom.visicom_search.key_visicom.ApiResponse;
-import  com.taxi_pas_4.ui.keyboard.KeyboardUtils;
-import  com.taxi_pas_4.utils.LocaleHelper;
-import  com.taxi_pas_4.utils.connect.ConnectionSpeedTester;
-import  com.taxi_pas_4.utils.connect.NetworkUtils;
-import  com.taxi_pas_4.utils.log.Logger;
-import  com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
+import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.R;
+import com.taxi_pas_4.cities.Kyiv.KyivRegion;
+import com.taxi_pas_4.cities.Kyiv.KyivRegionRu;
+import com.taxi_pas_4.ui.keyboard.KeyboardUtils;
+import com.taxi_pas_4.ui.maps.FromJSONParser;
+import com.taxi_pas_4.ui.open_map.OpenStreetMapVisicomActivity;
+import com.taxi_pas_4.ui.open_map.mapbox.Feature;
+import com.taxi_pas_4.ui.open_map.mapbox.Geometry;
+import com.taxi_pas_4.ui.open_map.mapbox.MapboxApiClient;
+import com.taxi_pas_4.ui.open_map.mapbox.MapboxResponse;
+import com.taxi_pas_4.ui.open_map.mapbox.MapboxService;
+import com.taxi_pas_4.ui.open_map.mapbox.key_mapbox.ApiClientMapbox;
+import com.taxi_pas_4.ui.open_map.mapbox.key_mapbox.ApiResponseMapbox;
+import com.taxi_pas_4.ui.visicom.VisicomFragment;
+import com.taxi_pas_4.ui.visicom.visicom_search.key_visicom.ApiResponse;
+import com.taxi_pas_4.utils.LocaleHelper;
+import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGPSFragment;
+import com.taxi_pas_4.utils.connect.ConnectionSpeedTester;
+import com.taxi_pas_4.utils.connect.NetworkUtils;
+import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -2356,7 +2356,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
     }
 
     private void visicomKey() {
-         com.taxi_pas_4.ui.visicom.visicom_search.key_visicom.ApiClient.getVisicomKeyInfo(new Callback<ApiResponse>() {
+        com.taxi_pas_4.ui.visicom.visicom_search.key_visicom.ApiClient.getVisicomKeyInfo(new Callback<ApiResponse>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
                 if (response.isSuccessful()) {

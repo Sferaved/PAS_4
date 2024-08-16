@@ -19,8 +19,8 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import  com.taxi_pas_4.R;
-import  com.taxi_pas_4.databinding.FragmentAboutBinding;
+import com.taxi_pas_4.R;
+import com.taxi_pas_4.databinding.FragmentAboutBinding;
 
 public class AboutFragment extends Fragment {
 

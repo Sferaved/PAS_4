@@ -3,7 +3,7 @@ package com.taxi_pas_4.ui.visicom;
 
 import static android.content.Context.MODE_PRIVATE;
 
-import static  com.taxi_pas_4.utils.notify.NotificationHelper.checkForUpdate;
+import static com.taxi_pas_4.utils.notify.NotificationHelper.checkForUpdate;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -45,6 +45,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -57,29 +58,29 @@ import com.google.android.play.core.appupdate.AppUpdateManager;
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
 import com.google.android.play.core.install.model.UpdateAvailability;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import  com.taxi_pas_4.MainActivity;
-import  com.taxi_pas_4.R;
-import  com.taxi_pas_4.cities.check.CityCheckActivity;
-import  com.taxi_pas_4.databinding.FragmentVisicomBinding;
-import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetBonusFragment;
-import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
-import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGPSFragment;
-import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGeoFragment;
-import  com.taxi_pas_4.utils.bottom_sheet.MyPhoneDialogFragment;
-import  com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
-import  com.taxi_pas_4.ui.visicom.visicom_search.ActivityVisicomOnePage;
-import  com.taxi_pas_4.utils.connect.NetworkUtils;
-import  com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
-import  com.taxi_pas_4.utils.data.DataArr;
-import  com.taxi_pas_4.utils.download.AppUpdater;
-import  com.taxi_pas_4.utils.from_json_parser.FromJSONParserRetrofit;
-import  com.taxi_pas_4.utils.ip.RetrofitClient;
-import  com.taxi_pas_4.utils.log.Logger;
-import  com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
-import  com.taxi_pas_4.utils.tariff.DatabaseHelperTariffs;
-import  com.taxi_pas_4.utils.tariff.TariffInfo;
-import  com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
-import  com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
+import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.R;
+import com.taxi_pas_4.cities.check.CityCheckActivity;
+import com.taxi_pas_4.databinding.FragmentVisicomBinding;
+import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetBonusFragment;
+import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
+import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGPSFragment;
+import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGeoFragment;
+import com.taxi_pas_4.utils.bottom_sheet.MyPhoneDialogFragment;
+import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
+import com.taxi_pas_4.ui.visicom.visicom_search.ActivityVisicomOnePage;
+import com.taxi_pas_4.utils.connect.NetworkUtils;
+import com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
+import com.taxi_pas_4.utils.data.DataArr;
+import com.taxi_pas_4.utils.download.AppUpdater;
+import com.taxi_pas_4.utils.from_json_parser.FromJSONParserRetrofit;
+import com.taxi_pas_4.utils.ip.RetrofitClient;
+import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
+import com.taxi_pas_4.utils.tariff.DatabaseHelperTariffs;
+import com.taxi_pas_4.utils.tariff.TariffInfo;
+import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
+import com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -172,7 +173,20 @@ public class VisicomFragment extends Fragment{
         context = requireActivity();
         sharedPreferencesHelper = new SharedPreferencesHelper(context);
 
+        SwipeRefreshLayout swipeRefreshLayout = binding.swipeRefreshLayout;
 
+        // Устанавливаем слушатель для распознавания жеста свайпа вниз
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                // Метод, который нужно запустить по свайпу вниз
+
+                startActivity(new Intent(context, MainActivity.class));
+
+                // После завершения обновления, уберите индикатор загрузки
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        });
 
             fragmentManager = getParentFragmentManager();
             progressBar = binding.progressBar;
@@ -302,8 +316,6 @@ public class VisicomFragment extends Fragment{
     }
 
      public static void btnVisible(int visible) {
-          constr2.setVisibility(visible);
-
          btn_clear_from_text.setVisibility(View.INVISIBLE);
          if (visible == View.INVISIBLE) {
              progressBar.setVisibility(View.VISIBLE);
@@ -1993,6 +2005,7 @@ public class VisicomFragment extends Fragment{
 
     private void visicomCost() throws MalformedURLException {
 
+        constr2.setVisibility(View.INVISIBLE);
         btn_clear_from_text.setVisibility(View.INVISIBLE);
         textfrom.setVisibility(View.VISIBLE);
 
@@ -2094,7 +2107,7 @@ public class VisicomFragment extends Fragment{
                                         btnOrder.setVisibility(View.VISIBLE);
 
                                         btn_clear_from_text.setVisibility(View.GONE);
-
+                                        constr2.setVisibility(View.VISIBLE);
                                     }
                                     costSearchMarkersLocalTariffs(context);
                                 }
@@ -2113,11 +2126,10 @@ public class VisicomFragment extends Fragment{
                         });
                     }
                 });
-
             } catch (MalformedURLException ignored) {
 
             }
         }).start();
-        constr2.setVisibility(View.VISIBLE);
+
     }
 }

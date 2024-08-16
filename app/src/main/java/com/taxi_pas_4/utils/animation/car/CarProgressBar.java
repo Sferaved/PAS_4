@@ -10,7 +10,7 @@ import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
-import  com.taxi_pas_4.R;
+import com.taxi_pas_4.R;
 
 public class CarProgressBar extends RelativeLayout {
 

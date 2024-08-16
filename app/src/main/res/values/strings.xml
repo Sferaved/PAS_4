@@ -1,8 +1,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.110</string>
-    <string name="version">Версия: 4.110</string>
+    <string name="version_code">4.111</string>
+    <string name="version">Версия: 4.111</string>
 
     <string name="app_name">Такси Дюк Попутчик</string>
 
@@ -12,6 +12,7 @@
     <string name="nav_header_subtitle">Быстрые поездки по городам Украины</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Настройки</string>
+
     <string name="menu_maps">Карта</string>
     <string name="menu_home">По адресу (старое)</string>
     <string name="menu_gallery">Мои маршруты</string>
@@ -76,7 +77,7 @@
     <string name="from_edit">Откуда</string>
     <string name="sms_code">Код проверки со смс-сообщения</string>
     <string name="android">Андроид-приложение для скорых и дешевых поездок при заказе онлайн.</string>
-    <string name="good_day">Мои приветствия. Нашел великолепное приложение для поездок на такси. \n \n Советую попробовать по ссылке в официальном магазине Google: \n\n https://play.google.com/store/apps/details?id= com.taxi_pas_4 \n\n Хорошего дня. \n Еще увидимся.</string>
+    <string name="good_day">Мои приветствия. Нашел великолепное приложение для поездок на такси. \n \n Советую попробовать по ссылке в официальном магазине Google: \n\n https://play.google.com/store/apps/details?id=com.taxi_pas_4 \n\n Хорошего дня. \n Еще увидимся.</string>
     <string name="share">Посоветовать другу приложение...</string>
     <string name="no_email_agent">Почтовый клиент не установлен.</string>
     <string name="check_position">Подождите, происходит определение Вашего местоположения...</string>
@@ -127,7 +128,7 @@
     <string name="serve">Подача</string>
     <string name="coment">Комментарий</string>
     <string name="services">УСЛУГИ</string>
-    <string name="resettimetoorder">Измените дату или время для предварительного заказа</string>
+    <string name="resettimetoorder">Проверьте дату или время для предварительного заказа</string>
     <string name="my_routs">Выберите маршрут</string>
     <string name="no_routs">Нет маршрутов</string>
     <string name="cheng">Изменить</string>

@@ -16,7 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import  com.taxi_pas_4.databinding.FragmentAuthorBinding;
+import com.taxi_pas_4.databinding.FragmentAuthorBinding;
 
 public class AuthorFragment extends Fragment {
 

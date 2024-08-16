@@ -31,15 +31,16 @@ import androidx.annotation.Nullable;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import  com.taxi_pas_4.MainActivity;
-import  com.taxi_pas_4.R;
-import  com.taxi_pas_4.androidx.startup.MyApplication;
-import  com.taxi_pas_4.ui.home.CustomListAdapter;
-import  com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
-import  com.taxi_pas_4.ui.visicom.VisicomFragment;
-import  com.taxi_pas_4.utils.log.Logger;
-import  com.taxi_pas_4.utils.tariff.TariffInfo;
-import  com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
+import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.R;
+import java.time.Duration;
+import com.taxi_pas_4.ui.home.CustomListAdapter;
+import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
+import com.taxi_pas_4.ui.visicom.VisicomFragment;
+import com.taxi_pas_4.utils.data.DataArr;
+import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.tariff.TariffInfo;
+import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
@@ -94,6 +95,11 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
         
         context = requireActivity();
         database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        ContentValues cv = new ContentValues();
+        cv.put("time", "no_time");
+        cv.put("date", "no_date");
+        database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
+                new String[] { "1" });
 
         arrayService = new String[]{
                 getString(R.string.BAGGAGE),
@@ -111,22 +117,7 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
                 getString(R.string.WIRES),
                 getString(R.string.SMOKE),
         };
-        arrayServiceCode = new String[]{
-                "BAGGAGE",
-                "ANIMAL",
-                "CONDIT",
-                "MEET",
-                "COURIER",
-                "CHECK_OUT",
-                "BABY_SEAT",
-                "DRIVER",
-                "NO_SMOKE",
-                "ENGLISH",
-                "CABLE",
-                "FUEL",
-                "WIRES",
-                "SMOKE",
-        };
+        arrayServiceCode = DataArr.arrayServiceCode();
 
         CustomListAdapter adapterSet = new CustomListAdapter(context, arrayService, arrayService.length);
         listView.setAdapter(adapterSet);
@@ -155,8 +146,6 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
         spinner.setAdapter(adapterTariff);
         spinner.setPrompt("Title");
         spinner.setBackgroundResource(R.drawable.spinner_border);
-
-        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
 
         String tariffOld =  logCursor(MainActivity.TABLE_SETTINGS_INFO,context).get(2);
 
@@ -192,7 +181,7 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String tariff_to_server;
-                Logger.d(getActivity(), TAG, "onItemSelected: position" + position);
+                Logger.d(context, TAG, "onItemSelected: position" + position);
                 switch (position) {
                     case 0:
                         tariff_to_server = " ";
@@ -246,7 +235,6 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
         tvSelectedTime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 showTimePickerDialog();
             }
         });
@@ -266,33 +254,27 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
 
 
         btn_min = view.findViewById(R.id.btn_minus);
-        btn_min.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                discountFist -= 5;
-                if (discountFist <= MIN_VALUE) {
-                    discountFist = MIN_VALUE;
-                }
-                if(discountFist > 0) {
-                    discount.setText("+" + discountFist);
-                } else {
-                    discount.setText( String.valueOf(discountFist));
-                }
+        btn_min.setOnClickListener(v -> {
+            discountFist -= 5;
+            if (discountFist <= MIN_VALUE) {
+                discountFist = MIN_VALUE;
+            }
+            if(discountFist > 0) {
+                discount.setText("+" + discountFist);
+            } else {
+                discount.setText( String.valueOf(discountFist));
             }
         });
         btn_plus = view.findViewById(R.id.btn_plus);
-        btn_plus.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                discountFist += 5;
-                if (discountFist >= MAX_VALUE) {
-                    discountFist = MAX_VALUE;
-                }
-                if(discountFist > 0) {
-                    discount.setText("+" + discountFist);
-                } else {
-                    discount.setText( String.valueOf(discountFist));
-                }
+        btn_plus.setOnClickListener(v -> {
+            discountFist += 5;
+            if (discountFist >= MAX_VALUE) {
+                discountFist = MAX_VALUE;
+            }
+            if(discountFist > 0) {
+                discount.setText("+" + discountFist);
+            } else {
+                discount.setText( String.valueOf(discountFist));
             }
         });
 
@@ -300,13 +282,6 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
         LocalDate currentDate = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         tvSelectedDate.setText(currentDate.format(formatter));
-        ContentValues cv = new ContentValues();
-        cv.put("date", currentDate.format(formatter));
-
-        // обновляем по id
-        database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-        database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
-                new String[] { "1" });
 
         tvSelectedDate.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -314,10 +289,6 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
                 showDataPickerDialog();
             }
         });
-
-        database.close();
-
-
 
         return view;
     }
@@ -341,8 +312,6 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
     @Override
     public void onPause() {
         super.onPause();
-
-
 
         List<String> services = logCursor(MainActivity.TABLE_SERVICE_INFO, context);
 
@@ -395,89 +364,8 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
             database.close();
         }
         //Проверка даты времени
-        List<String> stringList = logCursor(MainActivity.TABLE_ADD_SERVICE_INFO, context);
-        String time = stringList.get(1);
-        String date = stringList.get(3);
-        Logger.d(getActivity(), TAG, "onPause:time  " + time);
-        Logger.d(getActivity(), TAG, "onPause:date  " + date);
+        timeVerify();
 
-
-        if(!time.equals("no_time")) {
-            if(date.equals("no_date")) {
-                LocalDate currentDate = LocalDate.now();
-
-                // Получение завтрашней даты путем добавления одного дня к текущей дате
-                LocalDate tomorrowDate = currentDate.plusDays(1);
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-
-                // Преобразование завтрашней даты в строку в формате "dd.MM.yyyy"
-                date = tomorrowDate.format(formatter);
-
-                ContentValues cv = new ContentValues();
-                cv.put("date", date);
-
-                // обновляем по id
-                SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-                database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
-                        new String[] { "1" });
-                database.close();
-
-            }
-
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
-
-            // Преобразование времени и даты из строк в LocalDateTime
-            LocalDateTime dateTimeFromString = LocalDateTime.parse(date + " " + time, formatter);
-
-            LocalDateTime currentDateTimeInKyiv = LocalDateTime.now(ZoneId.of("Europe/Kiev"));
-            Logger.d(getActivity(), TAG, "onPause:dateTimeFromString  " + dateTimeFromString);
-            Logger.d(getActivity(), TAG, "onPause:currentDateTimeInKyiv  " + currentDateTimeInKyiv);
-
-
-            // Сравнение дат и времени
-
-            if (dateTimeFromString.isBefore(currentDateTimeInKyiv)) {
-                Toast.makeText(context, context.getString(R.string.resettimetoorder), Toast.LENGTH_SHORT).show();
-                ContentValues cv = new ContentValues();
-
-                LocalDate currentDate = LocalDate.now();
-                Logger.d(getActivity(), TAG, "onPause:currentDate " + currentDate);
-                // Получение завтрашней даты путем добавления одного дня к текущей дате
-                LocalDate tomorrowDate = currentDate.plusDays(1);
-                formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-
-                // Преобразование завтрашней даты в строку в формате "dd.MM.yyyy"
-                date = tomorrowDate.format(formatter);
-
-                cv = new ContentValues();
-                cv.put("date", date);
-
-                // обновляем по id
-                SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-                database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
-                        new String[] { "1" });
-                database.close();
-                Logger.d(getActivity(), TAG, "onPause:date " + date);
-            }
-
-        } else {
-            ContentValues cv = new ContentValues();
-
-            cv.put("time", "no_time");
-            cv.put("date", "no_date");
-
-            // обновляем по id
-            SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-            database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
-                    new String[] { "1" });
-            database.close();
-        }
-        if(time.equals("no_time")) {
-            VisicomFragment.schedule.setText(R.string.on_now);
-        } else {
-            String mes = getString(R.string.on) + " " +  time + " " + date;
-            VisicomFragment.schedule.setText(mes);
-        }
         try {
             changeCost();
         } catch (MalformedURLException e) {
@@ -486,6 +374,171 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
         }
 
     }
+
+    private void timeVerify() {
+        String mes;
+
+        List<String> stringList = logCursor(MainActivity.TABLE_ADD_SERVICE_INFO, context);
+        String time = stringList.get(1);
+        String date = stringList.get(3);
+
+        Logger.d(context, TAG, "onPause:time 1 " + time);
+        Logger.d(context, TAG, "onPause:date 1 " + date);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+        DateTimeFormatter formatterDate = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+        LocalDateTime currentDateTimeInKyiv = LocalDateTime.now(ZoneId.of("Europe/Kiev"));
+        Logger.d(context, TAG, "onPause:currentDateTimeInKyiv 2 " + currentDateTimeInKyiv);
+
+        LocalDate currentDate = LocalDate.now();
+        Logger.d(context, TAG, "onPause:currentDate 2 " + currentDate);
+
+        if(!time.equals("no_time") && !date.equals("no_date")) {
+            // Преобразование времени и даты из строк в LocalDateTime
+            LocalDateTime dateTimeFromString = LocalDateTime.parse(date + " " + time, formatter);
+            Logger.d(context, TAG, "onPause:dateTimeFromString 2 " + dateTimeFromString);
+            // Сравнение дат и времени
+            if (dateTimeFromString.isBefore(currentDateTimeInKyiv)) {
+                Toast.makeText(context, context.getString(R.string.resettimetoorder), Toast.LENGTH_SHORT).show();
+                Logger.d(context, TAG, "onPause:currentDate 3" + currentDate);
+                // Получение завтрашней даты путем добавления одного дня к текущей дате
+                LocalDate tomorrowDate = currentDate.plusDays(1);
+                formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+                // Преобразование завтрашней даты в строку в формате "dd.MM.yyyy"
+                date = tomorrowDate.format(formatter);
+
+                ContentValues cv  = new ContentValues();
+                cv.put("date", date);
+
+                // обновляем по id
+                SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+                database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
+                        new String[] { "1" });
+                database.close();
+                Logger.d(context, TAG, "onPause:date 6" + date);
+
+            }
+            mes = getString(R.string.on) + " " +  time + " " + date;
+
+            long minutesDifference = Duration.between(currentDateTimeInKyiv, dateTimeFromString).toMinutes();
+            Logger.d(context, TAG, "Разница во времени: " + minutesDifference + " минут");
+
+            if(minutesDifference <= 10 && minutesDifference >= 0) {
+                ContentValues cv = new ContentValues();
+                cv.put("time", "no_time");
+                cv.put("date", "no_date");
+
+                // обновляем по id
+                SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+                database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
+                        new String[]{"1"});
+                database.close();
+
+                Logger.d(context, TAG, "Разница во времени <= 10 : " + minutesDifference + " минут");
+            }
+
+        } else if(!time.equals("no_time")) {
+
+            date = currentDate.format(formatterDate);
+
+            LocalDateTime dateTimeFromString = LocalDateTime.parse(date + " " + time, formatter);
+            if (dateTimeFromString.isBefore(currentDateTimeInKyiv)) {
+                Toast.makeText(context, context.getString(R.string.resettimetoorder), Toast.LENGTH_SHORT).show();
+                // Получение завтрашней даты путем добавления одного дня к текущей дате
+                LocalDate tomorrowDate = currentDate.plusDays(1);
+                // Преобразование завтрашней даты в строку в формате "dd.MM.yyyy"
+                date = tomorrowDate.format(formatterDate);
+            }
+
+            long minutesDifference = Duration.between(currentDateTimeInKyiv, dateTimeFromString).toMinutes();
+            Logger.d(context, TAG, "Разница во времени: " + minutesDifference + " минут");
+
+            if(minutesDifference <= 10 && minutesDifference >= 0) {
+                ContentValues cv = new ContentValues();
+                cv.put("time", "no_time");
+                cv.put("date", "no_date");
+
+                // обновляем по id
+                SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+                database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
+                        new String[]{"1"});
+                database.close();
+                mes = context.getString((R.string.on_now));
+                Logger.d(context, TAG, "Разница во времени <= 10 : " + minutesDifference + " минут");
+            } else {
+                ContentValues cv = new ContentValues();
+                cv.put("date", date);
+
+                // обновляем по id
+                SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+                database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
+                        new String[] { "1" });
+                database.close();
+                Logger.d(context, TAG, "onPause:date 5" + date);
+
+                mes = getString(R.string.on) + " " +  time + " " + date;
+            }
+        }  else {
+            time = tvSelectedTime.getText().toString();
+            date = tvSelectedDate.getText().toString();
+
+            LocalDateTime dateTimeFromString = LocalDateTime.parse(date + " " + time, formatter);
+            if (dateTimeFromString.isBefore(currentDateTimeInKyiv)) {
+                Toast.makeText(context, context.getString(R.string.resettimetoorder), Toast.LENGTH_SHORT).show();
+                // Получение завтрашней даты путем добавления одного дня к текущей дате
+                LocalDate tomorrowDate = currentDate.plusDays(1);
+                // Преобразование завтрашней даты в строку в формате "dd.MM.yyyy"
+                date = tomorrowDate.format(formatterDate);
+            }
+            ContentValues cv = new ContentValues();
+            cv.put("time", time);
+            cv.put("date", date);
+
+            // обновляем по id
+            SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+            database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
+                    new String[] { "1" });
+
+            mes = getString(R.string.on) + " " + time + " " + date;
+
+            long minutesDifference = Duration.between(currentDateTimeInKyiv, dateTimeFromString).toMinutes();
+            Logger.d(context, TAG, "Разница во времени: " + minutesDifference + " минут");
+
+            if(minutesDifference <= 10 && minutesDifference >= 0) {
+
+                cv.put("time", "no_time");
+                cv.put("date", "no_date");
+
+                // обновляем по id
+                database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
+                        new String[]{"1"});
+
+                mes = context.getString((R.string.on_now));
+                Logger.d(context, TAG, "Разница во времени <= 10 : " + minutesDifference + " минут");
+            } else {
+                cv = new ContentValues();
+                cv.put("date", date);
+
+                // обновляем по id
+                database.update(MainActivity.TABLE_ADD_SERVICE_INFO, cv, "id = ?",
+                        new String[] { "1" });
+
+                Logger.d(context, TAG, "onPause:date 5" + date);
+
+                mes = getString(R.string.on) + " " +  time + " " + date;
+            }
+            database.close();
+
+            Logger.d(context, TAG, "onPause:date 4" + date);
+        }
+        if(time.equals("no_time") && date.equals("no_date")) {
+            mes = context.getString((R.string.on_now));
+        }
+        VisicomFragment.schedule.setText(mes);
+    }
+
     private void changeCost() throws MalformedURLException {
 
 
@@ -493,18 +546,8 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
         String message = context.getString(R.string.change_tarrif);
         String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(3);
         ToJSONParserRetrofit parser = new ToJSONParserRetrofit();
-
-        Context context = getActivity() != null ? getActivity().getApplicationContext() : MyApplication.getContext();
-        if (context != null) {
-            try {
-                Logger.d(context, TAG, "orderFinished: "  + "https://m.easy-order-taxi.site"+ url);
-                costSearchMarkersLocalTariffs(context);
-            } catch (NullPointerException e) {
-                Log.e(TAG, "orderFinished: "  + "https://m.easy-order-taxi.site"+ url);
-            }
-        } else {
-            Log.e(TAG, "Context is null. Cannot log messages.");
-        }
+        Logger.d(context, TAG, "orderFinished: "  + "https://m.easy-order-taxi.site"+ url);
+        costSearchMarkersLocalTariffs(context);
 
         parser.sendURL(url, new Callback<Map<String, String>>() {
             @Override
@@ -513,20 +556,8 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
 
                 assert sendUrl != null;
                 String orderC = sendUrl.get("order_cost");
-                Context context = getActivity() != null ? getActivity().getApplicationContext() : MyApplication.getContext();
-                if (context != null) {
-                    try {
-                        Logger.d(context, TAG, "changeCost: sendUrl " + sendUrl);
-                        Logger.d(context, TAG, "changeCost: orderC " + orderC);
-                    } catch (NullPointerException e) {
-                        Log.e(TAG, "Error logging message: " + e.getMessage());
-                    }
-                } else {
-                    Log.e(TAG, "Context is null. Cannot log messages.");
-                }
-
-
-
+                Logger.d(context, TAG, "changeCost: sendUrl " + sendUrl);
+                Logger.d(context, TAG, "changeCost: orderC " + orderC);
 
                 assert orderC != null;
                 if (!orderC.equals("0")) {
@@ -662,12 +693,7 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
     private void updateAddCost(String addCost) {
         ContentValues cv = new ContentValues();
 
-        Context context = getActivity() != null ? getActivity().getApplicationContext() : MyApplication.getContext();
-        if (context != null) {
-            Logger.d(context, TAG, "updateAddCost: addCost" + addCost);
-        } else {
-            Log.e(TAG, "Context is null, cannot write log.");
-        }
+        Logger.d(context, TAG, "updateAddCost: addCost" + addCost);
         cv.put("addCost", addCost);
 
         // обновляем по id
@@ -684,7 +710,7 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
 
         if (context != null) {
             try {
-                Logger.d(getActivity(), TAG, "getTaxiUrlSearchMarkers: " + urlAPI);
+                Logger.d(context, TAG, "getTaxiUrlSearchMarkers: " + urlAPI);
             } catch (NullPointerException e) {
                 Log.e(TAG, "getTaxiUrlSearchMarkers: " + e);
             }
@@ -692,6 +718,7 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
             Log.e(TAG, "Context is null. Cannot log messages.");
         }
         String query = "SELECT * FROM " + MainActivity.ROUT_MARKER + " LIMIT 1";
+        assert context != null;
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
         Cursor cursor = database.rawQuery(query, null);
 
@@ -966,7 +993,7 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
     private void updateSelectedTime() {
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
         String formattedTime = sdf.format(calendar.getTime());
-        Logger.d(getActivity(), TAG, "updateSelectedTime:formattedTime " + formattedTime);
+        Logger.d(context, TAG, "updateSelectedTime:formattedTime " + formattedTime);
         tvSelectedTime.setText(formattedTime);
     }
     @SuppressLint("Range")

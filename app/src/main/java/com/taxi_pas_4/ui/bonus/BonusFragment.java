@@ -24,15 +24,15 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.navigation.Navigation;
 
-import  com.taxi_pas_4.MainActivity;
-import  com.taxi_pas_4.NetworkChangeReceiver;
-import  com.taxi_pas_4.R;
-import  com.taxi_pas_4.databinding.FragmentBonusBinding;
-import  com.taxi_pas_4.ui.finish.ApiClient;
-import  com.taxi_pas_4.ui.finish.BonusResponse;
-import  com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
-import  com.taxi_pas_4.utils.connect.NetworkUtils;
-import  com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.NetworkChangeReceiver;
+import com.taxi_pas_4.R;
+import com.taxi_pas_4.databinding.FragmentBonusBinding;
+import com.taxi_pas_4.ui.finish.ApiClient;
+import com.taxi_pas_4.ui.finish.BonusResponse;
+import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
+import com.taxi_pas_4.utils.connect.NetworkUtils;
+import com.taxi_pas_4.utils.log.Logger;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -16,7 +16,7 @@ import androidx.annotation.NonNull;
 import com.github.anrwatchdog.ANRWatchDog;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import  com.taxi_pas_4.R;
+import com.taxi_pas_4.R;
 
 import java.io.File;
 import java.io.FileOutputStream;

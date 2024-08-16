@@ -7,7 +7,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-import  com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.MainActivity;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;

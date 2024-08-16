@@ -1,6 +1,6 @@
 package com.taxi_pas_4.utils.notify;
 
-import static  com.taxi_pas_4.ui.visicom.VisicomFragment.ubt_btn;
+import static com.taxi_pas_4.ui.visicom.VisicomFragment.ubt_btn;
 
 import android.app.Activity;
 import android.app.NotificationChannel;
@@ -30,8 +30,8 @@ import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
 import com.google.android.play.core.install.model.AppUpdateType;
 import com.google.android.play.core.install.model.UpdateAvailability;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import  com.taxi_pas_4.R;
-import  com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.log.Logger;
 
 
 public class NotificationHelper {

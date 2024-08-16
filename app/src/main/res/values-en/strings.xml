@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.110</string>
-    <string name="version">Version: 4.110</string>
+    <string name="version_code">4.111</string>
+    <string name="version">Version: 4.111</string>
 
     <string name="app_name">Taxi Duke Fellow</string>
 
@@ -78,7 +78,7 @@
     <string name="from_edit">From</string>
     <string name="sms_code">Verification code from SMS message</string>
     <string name="android">Android application for fast and cheap trips when ordering online.</string>
-    <string name="good_day">My greetings. \n \n Found a great app for taxi rides. \n \n I advise you to try the link in the official Google store: \n\n https://play.google.com/store/apps/details?id= com.taxi_pas_4 \n\n Have a nice day. \n See you later.</string>
+    <string name="good_day">My greetings. \n \n Found a great app for taxi rides. \n \n I advise you to try the link in the official Google store: \n\n https://play.google.com/store/apps/details?id=com.taxi_pas_4 \n\n Have a nice day. \n See you later.</string>
     <string name="share">Recommend the app to a friend...</string>
     <string name="no_email_agent">Email client is not installed.</string>
     <string name="check_position">Wait, your location is being determined...</string>
@@ -127,7 +127,7 @@
     <string name="serve">Serve</string>
     <string name="coment">Comment</string>
     <string name="services">SERVICES</string>
-    <string name="resettimetoorder">Change date or time for preorder</string>
+    <string name="resettimetoorder">Check the date or time for pre-order</string>
     <string name="my_routs">Choose a route</string>
     <string name="no_routs">No routes</string>
     <string name="cheng">Change</string>
