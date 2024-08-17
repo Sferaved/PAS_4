@@ -153,8 +153,8 @@ public class FinishFragment extends Fragment {
 
         binding = FragmentFinishBinding.inflate(inflater, container, false);
         root = binding.getRoot();
-        fragmentManager = getChildFragmentManager();
         context = requireActivity();
+        fragmentManager = getParentFragmentManager();
 
         context.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
         progressBar = root.findViewById(R.id.progress_bar);
