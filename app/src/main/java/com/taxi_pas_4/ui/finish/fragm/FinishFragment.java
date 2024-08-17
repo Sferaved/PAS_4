@@ -2,8 +2,6 @@ package com.taxi_pas_4.ui.finish.fragm;
 
 import static android.content.Context.MODE_PRIVATE;
 
-import static org.chromium.base.ThreadUtils.runOnUiThread;
-
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
@@ -47,7 +45,7 @@ import com.taxi_pas_4.ui.finish.Status;
 import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureClient;
 import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureResponse;
 import com.taxi_pas_4.ui.fondy.payment.ApiResponsePay;
-import com.taxi_pas_4.ui.fondy.payment.MyBottomSheetCardPayment;
+
 import com.taxi_pas_4.ui.fondy.payment.PaymentApi;
 import com.taxi_pas_4.ui.fondy.payment.RequestData;
 import com.taxi_pas_4.ui.fondy.payment.StatusRequestPay;
@@ -153,7 +151,9 @@ public class FinishFragment extends Fragment {
 
         binding = FragmentFinishBinding.inflate(inflater, container, false);
         root = binding.getRoot();
+
         context = requireActivity();
+
         fragmentManager = getParentFragmentManager();
 
         context.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
@@ -476,14 +476,24 @@ public class FinishFragment extends Fragment {
                         String checkoutUrl = invoiceResponse.getInvoiceUrl();
                         Logger.d(context, TAG, "onResponse: Invoice URL: " + checkoutUrl);
                         if(checkoutUrl != null) {
-                            MyBottomSheetCardPayment bottomSheetDialogFragment = new MyBottomSheetCardPayment(
-                                    checkoutUrl,
-                                    amount,
-                                    uid,
-                                    uid_Double,
-                                    context
-                            );
-                            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+
+
+                            Bundle bundle = new Bundle();
+                            bundle.putString("checkoutUrl", checkoutUrl);
+                            bundle.putString("amount", amount);
+                            bundle.putString("uid", uid);
+                            bundle.putString("uid_Double", uid_Double);
+
+                            MainActivity.navController.navigate(R.id.nav_card_enter, bundle);
+
+//                            MyBottomSheetCardPayment bottomSheetDialogFragment = new MyBottomSheetCardPayment(
+//                                    checkoutUrl,
+//                                    amount,
+//                                    uid,
+//                                    uid_Double,
+//                                    context
+//                            );
+//                            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
 
                         } else {
                             Logger.d(context, TAG,"Response body is null");
@@ -1038,15 +1048,21 @@ public class FinishFragment extends Fragment {
                                     String checkoutUrl = responseBody.getCheckoutUrl();
                                     if ("success".equals(responseStatus)) {
                                         // Обработка успешного ответа
+                                        Bundle bundle = new Bundle();
+                                        bundle.putString("checkoutUrl", checkoutUrl);
+                                        bundle.putString("amount", amount);
+                                        bundle.putString("uid", uid);
+                                        bundle.putString("uid_Double", uid_Double);
 
-                                        MyBottomSheetCardPayment bottomSheetDialogFragment = new MyBottomSheetCardPayment(
-                                                checkoutUrl,
-                                                amount,
-                                                uid,
-                                                uid_Double,
-                                                context
-                                        );
-                                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                                        MainActivity.navController.navigate(R.id.nav_card_enter, bundle);
+//                                        MyBottomSheetCardPayment bottomSheetDialogFragment = new MyBottomSheetCardPayment(
+//                                                checkoutUrl,
+//                                                amount,
+//                                                uid,
+//                                                uid_Double,
+//                                                context
+//                                        );
+//                                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
 
                                     } else {
                                         MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
@@ -1141,14 +1157,22 @@ public class FinishFragment extends Fragment {
                         String pageUrl = response.body().getPageUrl();
                         MainActivity.invoiceId = response.body().getInvoiceId();
 
-                        MyBottomSheetCardPayment bottomSheetDialogFragment = new MyBottomSheetCardPayment(
-                                pageUrl,
-                                amount,
-                                uid,
-                                uid_Double,
-                                context
-                        );
-                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                        Bundle bundle = new Bundle();
+                        bundle.putString("checkoutUrl", pageUrl);
+                        bundle.putString("amount", amount);
+                        bundle.putString("uid", uid);
+                        bundle.putString("uid_Double", uid_Double);
+
+                        MainActivity.navController.navigate(R.id.nav_card_enter, bundle);
+//
+//                        MyBottomSheetCardPayment bottomSheetDialogFragment = new MyBottomSheetCardPayment(
+//                                pageUrl,
+//                                amount,
+//                                uid,
+//                                uid_Double,
+//                                context
+//                        );
+//                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
 
                     } catch (JsonSyntaxException e) {
                         // Возникла ошибка при разборе JSON, возможно, сервер вернул неправильный формат ответа

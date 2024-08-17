@@ -203,7 +203,7 @@ public class MainActivity extends AppCompatActivity {
         mAppBarConfiguration = new AppBarConfiguration.Builder(
               R.id.nav_visicom, R.id.nav_home, R.id.nav_cancel, R.id.nav_gallery,
               R.id.nav_about, R.id.nav_uid, R.id.nav_bonus, R.id.nav_card,
-              R.id.nav_account, R.id.nav_author, R.id.nav_finish
+              R.id.nav_account, R.id.nav_author, R.id.nav_finish, R.id.nav_card_enter
         )
              .setOpenableLayout(drawer)
              .build();
@@ -1062,10 +1062,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, getString(R.string.gps_ok), Toast.LENGTH_SHORT).show();
         }
     }
-    public void phoneNumberChange() {
-        MainActivity.navController.popBackStack();
-        MainActivity.navController.navigate(R.id.nav_account);
-    }
+
     private void updateRecordsUser(String field, String result) {
         ContentValues cv = new ContentValues();
 

@@ -273,14 +273,7 @@ public class CancelFragment extends Fragment {
                 to_name_local + ".";
         Logger.d(context, TAG, "startFinishPage: messageResult " + messageResult);
         Logger.d(context, TAG, "startFinishPage: to_name " + to_name);
-//        Intent intent = new Intent(context, FinishActivity.class);
-//        intent.putExtra("messageResult_key", messageResult);
-//        intent.putExtra("messageFondy_key", messageFondy);
-//        intent.putExtra("messageCost_key", Objects.requireNonNull(sendUrlMap.get("orderWeb")));
-//        intent.putExtra("sendUrlMap", new HashMap<>(sendUrlMap));
-//        intent.putExtra("card_payment_key", "no");
-//        intent.putExtra("UID_key", Objects.requireNonNull(sendUrlMap.get("dispatching_order_uid")));
-//        startActivity(intent);
+
 
          Bundle bundle = new Bundle();
          bundle.putString("messageResult_key", messageResult);
