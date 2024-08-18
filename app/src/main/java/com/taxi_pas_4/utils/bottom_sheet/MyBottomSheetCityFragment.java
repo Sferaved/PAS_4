@@ -733,8 +733,7 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
     public void onDismiss(@NonNull DialogInterface dialog) {
 
         super.onDismiss(dialog);
-//        MainActivity.navController.popBackStack();
-//        MainActivity.navController.navigate(R.id.nav_visicom);
+
         MainActivity.firstStart = false;
         if (positionFirst != 6) {
             message = context.getString(R.string.change_message) + context.getString(R.string.hi_mes) + " " + context.getString(R.string.order_in) + cityMenu + ".";

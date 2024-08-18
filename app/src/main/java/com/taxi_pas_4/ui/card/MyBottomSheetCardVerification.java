@@ -296,7 +296,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                             database.close();
                         }
                     }
-                    MainActivity.navController.popBackStack();
+                    
                     MainActivity.navController.navigate(R.id.nav_card);
                 } else {
                     if (isAdded()) {
@@ -365,7 +365,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                     }
 
                 }
-                MainActivity.navController.popBackStack();
+                
                 MainActivity.navController.navigate(R.id.nav_bonus);
             }
 

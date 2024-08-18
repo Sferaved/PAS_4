@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.navigation.NavOptions;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.gson.Gson;
@@ -111,8 +112,10 @@ public class CardFragment extends Fragment {
         context = requireActivity();
        
         if (!NetworkUtils.isNetworkAvailable(requireContext())) {
-            MainActivity.navController.popBackStack();
-            MainActivity.navController.navigate(R.id.nav_visicom);
+            
+            MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_visicom, true) 
+                        .build());
         }
         context.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
         btnCardLink  = binding.btnCardLink;
@@ -122,8 +125,10 @@ public class CardFragment extends Fragment {
             SharedPreferencesHelper sharedPreferencesHelper = new SharedPreferencesHelper(context);
             sharedPreferencesHelper.saveValue("gps_upd", true);
             sharedPreferencesHelper.saveValue("gps_upd_address", true);
-            MainActivity.navController.popBackStack();
-            MainActivity.navController.navigate(R.id.nav_visicom);
+            
+            MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_visicom, true) 
+                        .build());
         });
 
         btnCallAdmin = binding.btnCallAdmin;
@@ -197,8 +202,10 @@ public class CardFragment extends Fragment {
 
                             Logger.d(context, TAG, "onClick: " + pay_method);
                             if (!NetworkUtils.isNetworkAvailable(requireContext())) {
-                                MainActivity.navController.popBackStack();
-                                MainActivity.navController.navigate(R.id.nav_visicom);
+                                
+                                MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_visicom, true) 
+                        .build());
                             } else {
                                 MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(getActivity());
 

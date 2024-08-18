@@ -31,6 +31,7 @@ import androidx.appcompat.widget.AppCompatButton;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.navigation.NavOptions;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
@@ -107,8 +108,10 @@ public class GalleryFragment extends Fragment {
         context = requireActivity();
         
         if (!NetworkUtils.isNetworkAvailable(context)) {
-            MainActivity.navController.popBackStack();
-            MainActivity.navController.navigate(R.id.nav_visicom);
+            
+            MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_visicom, true) 
+                        .build());
         }
         requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
 
@@ -431,8 +434,10 @@ public class GalleryFragment extends Fragment {
     @SuppressLint("ResourceAsColor")
     private boolean orderRout() {
         if (!NetworkUtils.isNetworkAvailable(context)) {
-            MainActivity.navController.popBackStack();
-            MainActivity.navController.navigate(R.id.nav_visicom);
+            
+            MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_visicom, true) 
+                        .build());
             return false;
         } else {
             if (!verifyOrder(context)) {
@@ -646,8 +651,10 @@ public class GalleryFragment extends Fragment {
 
     private void dialogFromToOneRout(Map <String, String> rout) throws MalformedURLException, InterruptedException, JSONException {
         if (!NetworkUtils.isNetworkAvailable(context)) {
-            MainActivity.navController.popBackStack();
-            MainActivity.navController.navigate(R.id.nav_visicom);
+            
+            MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_visicom, true) 
+                        .build());
         } else  {
             Logger.d(getActivity(), TAG, "dialogFromToOneRout: " + rout.toString());
             from_lat =  Double.valueOf(rout.get("from_lat"));

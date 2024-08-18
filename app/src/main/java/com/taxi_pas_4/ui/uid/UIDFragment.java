@@ -30,6 +30,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.navigation.NavOptions;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
@@ -86,8 +87,9 @@ public class UIDFragment extends Fragment {
         root = binding.getRoot();
 
         fragmentManager = getParentFragmentManager();
-        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+
         context = requireActivity();
+        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
         listView = binding.listView;
         progressBar = binding.progressBar;
         networkChangeReceiver = new NetworkChangeReceiver();
@@ -103,8 +105,10 @@ public class UIDFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if (!NetworkUtils.isNetworkAvailable(requireContext())) {
-                    MainActivity.navController.popBackStack();
-                    MainActivity.navController.navigate(R.id.nav_visicom);
+                    
+                    MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_visicom, true) 
+                        .build());
                 }
 
             }
@@ -145,7 +149,7 @@ public class UIDFragment extends Fragment {
         btnCallAdmin = binding.btnCallAdmin;
         btnCallAdmin.setOnClickListener(v -> {
             Intent intent = new Intent(Intent.ACTION_DIAL);
-            String phone = logCursor(MainActivity.CITY_INFO, requireActivity()).get(3);
+            String phone = logCursor(MainActivity.CITY_INFO, context).get(3);
             intent.setData(Uri.parse(phone));
             startActivity(intent);
         });
@@ -170,9 +174,6 @@ public class UIDFragment extends Fragment {
 
         if (item.getItemId() == R.id.action_order) {
 
-            // Обработка действия "Edit"
-//            Toast.makeText(requireActivity(), "Edit: " + array[position], Toast.LENGTH_SHORT).show();
-//            Log.d(TAG, "onContextItemSelected: " + position);
             Log.d(TAG, "onContextItemSelected: " + array[position]);
 
             routeInfo = databaseHelperUid.getRouteInfoById(position+1);
@@ -190,8 +191,10 @@ public class UIDFragment extends Fragment {
             settings.add(routeInfo.getFinish());
 
             updateRoutMarker(settings);
-            MainActivity.navController.popBackStack();
-            MainActivity.navController.navigate(R.id.nav_visicom);
+            
+            MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_visicom, true) 
+                        .build());
             SharedPreferencesHelper sharedPreferencesHelper = new SharedPreferencesHelper(context);
             sharedPreferencesHelper.saveValue("gps_upd", false);
             return true;
@@ -216,7 +219,7 @@ public class UIDFragment extends Fragment {
         cv.put("finish", settings.get(5));
         if(isAdded()) {
             // обновляем по id
-            SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+            SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
             database.update(MainActivity.ROUT_MARKER, cv, "id = ?",
                     new String[]{"1"});
             database.close();
@@ -239,11 +242,13 @@ public class UIDFragment extends Fragment {
         upd_but.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MainActivity.navController.popBackStack();
-                MainActivity.navController.navigate(R.id.nav_visicom);
+                
+                MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_visicom, true) 
+                        .build());
             }
         });
-        List<String> stringList = logCursor(MainActivity.CITY_INFO,requireActivity());
+        List<String> stringList = logCursor(MainActivity.CITY_INFO,context);
         String city = stringList.get(1);
         String url = baseUrl + "/android/UIDStatusShowEmailCityApp/" + email + "/" + city + "/" +  context.getString(R.string.application);
         Call<List<RouteResponse>> call = ApiClient.getApiService().getRoutes(url);
@@ -412,7 +417,7 @@ public class UIDFragment extends Fragment {
         array = databaseHelper.readRouteInfo();
         Logger.d (context, TAG, "processRouteList: array " + Arrays.toString(array));
         if(array != null) {
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireActivity(), R.layout.drop_down_layout, array);
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(context, R.layout.drop_down_layout, array);
             listView.setAdapter(adapter);
             listView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                 @Override

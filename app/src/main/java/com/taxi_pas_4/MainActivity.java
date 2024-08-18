@@ -3,6 +3,8 @@ package com.taxi_pas_4;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -18,6 +20,8 @@ import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -203,7 +207,7 @@ public class MainActivity extends AppCompatActivity {
         mAppBarConfiguration = new AppBarConfiguration.Builder(
               R.id.nav_visicom, R.id.nav_home, R.id.nav_cancel, R.id.nav_gallery,
               R.id.nav_about, R.id.nav_uid, R.id.nav_bonus, R.id.nav_card,
-              R.id.nav_account, R.id.nav_author, R.id.nav_finish, R.id.nav_card_enter
+              R.id.nav_account, R.id.nav_author, R.id.nav_finish
         )
              .setOpenableLayout(drawer)
              .build();
@@ -873,7 +877,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, R.string.update_finish_mes, Toast.LENGTH_SHORT).show();
 
             // Перезапуск приложения для применения обновлений
-            restartApplication();
+            new Handler(Looper.getMainLooper()).postDelayed(this::restartApplication, 1000); // Задержка 1 секунда
         });
 
         // Регистрация слушателя
@@ -938,10 +942,14 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void restartApplication() {
-        Intent intent = new Intent(MainActivity.this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
+        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+        int pendingIntentId = 123456;
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, pendingIntentId, intent, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 1000, pendingIntent); // Задержка 1 секунда
+        System.exit(0); // Завершение текущего процесса
     }
+
 
     @Override
     protected void onDestroy() {
@@ -1062,7 +1070,10 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, getString(R.string.gps_ok), Toast.LENGTH_SHORT).show();
         }
     }
-
+    public void phoneNumberChange() {
+        
+        MainActivity.navController.navigate(R.id.nav_account);
+    }
     private void updateRecordsUser(String field, String result) {
         ContentValues cv = new ContentValues();
 

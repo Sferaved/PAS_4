@@ -26,6 +26,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavOptions;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
@@ -176,8 +177,10 @@ public class AccountFragment extends Fragment {
             sharedPreferencesHelper.saveValue("gps_upd", true);
             sharedPreferencesHelper.saveValue("gps_upd_address", true);
             // Удаляем последний фрагмент из стека навигации и переходим к новому фрагменту
-            MainActivity.navController.popBackStack();
-            MainActivity.navController.navigate(R.id.nav_visicom);
+            
+            MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_visicom, true) 
+                        .build());
         });
         return root;
     }

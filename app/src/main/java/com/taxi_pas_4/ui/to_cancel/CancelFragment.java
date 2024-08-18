@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.navigation.NavOptions;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
@@ -114,8 +115,10 @@ public class CancelFragment extends Fragment {
         upd_but = binding.updBut;
         upd_but.setOnClickListener(v -> {
             if (!NetworkUtils.isNetworkAvailable(context)) {
-                MainActivity.navController.popBackStack();
-                MainActivity.navController.navigate(R.id.nav_visicom);
+                
+                MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_visicom, true) 
+                        .build());
             }
         });
         scrollButtonUp = binding.scrollButtonUp;
@@ -307,8 +310,10 @@ public class CancelFragment extends Fragment {
         upd_but.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MainActivity.navController.popBackStack();
-                MainActivity.navController.navigate(R.id.nav_visicom);
+                
+                MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_visicom, true) 
+                        .build());
             }
         });
 

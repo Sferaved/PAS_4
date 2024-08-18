@@ -125,7 +125,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
 
             intent.setData(Uri.parse(phone));
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // Добавляем флаг FLAG_ACTIVITY_NEW_TASK
-            context.startActivity(intent);
+            startActivity(intent);
         });
 
         btn_ok = view.findViewById(R.id.btn_ok);
@@ -386,7 +386,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
                     bundle.putSerializable("sendUrlMap", new HashMap<>(sendUrlMap));
                     bundle.putString("card_payment_key", "no");
                     bundle.putString("UID_key", Objects.requireNonNull(sendUrlMap.get("dispatching_order_uid")));
-                    MainActivity.navController.popBackStack();
+                    
                     MainActivity.navController.navigate(R.id.nav_finish, bundle);
                 }
             }

@@ -22,6 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 
 import com.taxi_pas_4.MainActivity;
@@ -67,7 +68,9 @@ public class BonusFragment extends Fragment {
         fragmentManager = getParentFragmentManager();
         MainActivity.navController = Navigation.findNavController(context, R.id.nav_host_fragment_content_main);
         if (!NetworkUtils.isNetworkAvailable(context)) {
-            MainActivity.navController.navigate(R.id.nav_visicom);
+            MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_visicom, true) 
+                        .build());
         }
         text0 =  binding.text0;
         networkChangeReceiver = new NetworkChangeReceiver();
@@ -99,8 +102,10 @@ public class BonusFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if (!NetworkUtils.isNetworkAvailable(requireContext())) {
-                    MainActivity.navController.popBackStack();
-                    MainActivity.navController.navigate(R.id.nav_visicom);
+                    
+                    MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_visicom, true) 
+                        .build());
                 } else {
                     @SuppressLint("UseRequireInsteadOfGet")
                     String email = logCursor(MainActivity.TABLE_USER_INFO, Objects.requireNonNull(context)).get(3);
@@ -122,8 +127,10 @@ public class BonusFragment extends Fragment {
             SharedPreferencesHelper sharedPreferencesHelper = new SharedPreferencesHelper(context);
             sharedPreferencesHelper.saveValue("gps_upd", true);
             sharedPreferencesHelper.saveValue("gps_upd_address", true);
-            MainActivity.navController.popBackStack();
-            MainActivity.navController.navigate(R.id.nav_visicom);
+            
+            MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_visicom, true) 
+                        .build());
         });
     }
 

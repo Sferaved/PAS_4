@@ -51,6 +51,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.navigation.NavOptions;
 import androidx.room.Room;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
@@ -180,8 +181,10 @@ public class HomeFragment extends Fragment {
 
         city = stringList.get(1);
         if (!NetworkUtils.isNetworkAvailable(requireContext()) || city.equals("foreign countries")) {
-            MainActivity.navController.popBackStack();
-            MainActivity.navController.navigate(R.id.nav_visicom);
+            
+            MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_visicom, true) 
+                        .build());
         }
 
         finiched = true;
@@ -888,7 +891,7 @@ public class HomeFragment extends Fragment {
                     if (hasFocus) {
                         // Фокус установлен на TextView, очищаем его
                         resetRoutHome();
-                        MainActivity.navController.popBackStack();
+                        
                         MainActivity.navController.navigate(R.id.nav_home);
                     }
                 }
@@ -904,7 +907,7 @@ public class HomeFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 resetRoutHome();
-                MainActivity.navController.popBackStack();
+                
                 MainActivity.navController.navigate(R.id.nav_home);
 
             }
