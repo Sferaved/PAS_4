@@ -24,6 +24,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.navigation.NavOptions;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
@@ -296,8 +297,10 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                             database.close();
                         }
                     }
-                    
-                    MainActivity.navController.navigate(R.id.nav_card);
+
+                    MainActivity.navController.navigate(R.id.nav_card, null, new NavOptions.Builder()
+                            .setPopUpTo(R.id.nav_visicom, true)
+                            .build());
                 } else {
                     if (isAdded()) {
                         MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(context.getString(R.string.verify_internet));

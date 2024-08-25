@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.115</string>
-    <string name="version">Version: 4.115</string>
+    <string name="version_code">4.116</string>
+    <string name="version">Version: 4.116</string>
 
     <string name="app_name">Taxi Duke Fellow</string>
 
@@ -405,4 +405,5 @@
     <string name="data_order">Select date</string>
     <string name="on_now">On now</string>
     <string name="on">On</string>
+    <string name="time_order">" Car delivery on "</string>
 </resources>

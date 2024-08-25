@@ -6,11 +6,9 @@ import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
 import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -64,6 +62,7 @@ public class ToJSONParserRetrofit {
                         costMap.put("routefromnumber", jsonarray.getRouteFromNumber());
                         costMap.put("routeto", jsonarray.getRouteTo());
                         costMap.put("to_number", jsonarray.getToNumber());
+                        costMap.put("required_time", jsonarray.getRequired_time());
 
                         if (jsonarray.getDoubleOrder() != null) {
                             costMap.put("doubleOrder", jsonarray.getDoubleOrder());

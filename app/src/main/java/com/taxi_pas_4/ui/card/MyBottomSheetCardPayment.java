@@ -1,4 +1,4 @@
-package com.taxi_pas_4.ui.fondy.payment;
+package com.taxi_pas_4.ui.card;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -32,11 +32,11 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
-import com.taxi_pas_4.ui.card.CardInfo;
 import com.taxi_pas_4.ui.finish.ApiService;
 import com.taxi_pas_4.ui.finish.fragm.FinishFragment;
 import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureClient;
 import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureResponse;
+import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorPaymentFragment;
 import com.taxi_pas_4.ui.payment_system.PayApi;

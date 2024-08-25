@@ -29,7 +29,7 @@ import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureClient;
 import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureResponse;
 import com.taxi_pas_4.ui.fondy.payment.ApiResponsePay;
-import com.taxi_pas_4.ui.fondy.payment.MyBottomSheetCardPayment;
+import com.taxi_pas_4.ui.card.MyBottomSheetCardPayment;
 import com.taxi_pas_4.ui.fondy.payment.PaymentApi;
 import com.taxi_pas_4.ui.fondy.payment.RequestData;
 import com.taxi_pas_4.ui.fondy.payment.StatusRequestPay;
