@@ -12,6 +12,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -60,6 +61,8 @@ public class AccountFragment extends Fragment {
     EditText phoneNumber;
     EditText userName;
     TextView email;
+    TextView text_model;
+    TextView text_androidVersion;
 
     ProgressBar progressBar;
     AppCompatButton upd_but;
@@ -74,7 +77,7 @@ public class AccountFragment extends Fragment {
     private String[] array;
     private Context context;
     private List<RouteResponseCancel> routeList;
-    String baseUrl = "https://m.easy-order-taxi.site";
+
 
     @SuppressLint("SourceLockedOrientationActivity")
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -89,6 +92,14 @@ public class AccountFragment extends Fragment {
         del_but.setVisibility(View.GONE);
         btnCallAdmin = binding.btnCallAdmin;
 
+        String model = Build.MODEL;
+        text_model = binding.textModel;
+        text_model.setText(model);
+// Получение версии Android
+        String androidVersion = Build.VERSION.RELEASE;
+        text_androidVersion = binding.textAndroidVersion;
+        text_androidVersion.setText(androidVersion);
+
         userName = binding.userName;
         phoneNumber = binding.phoneNumber;
         email = binding.email;
@@ -99,6 +110,10 @@ public class AccountFragment extends Fragment {
         userName.setText(stringList.get(4));
         phoneNumber.setText(formatPhoneNumber(stringList.get(2)));
         email.setText(userEmail);
+
+
+
+
         fetchRoutesCancel();
 
         userName.addTextChangedListener(new TextWatcher() {
@@ -292,6 +307,9 @@ public class AccountFragment extends Fragment {
             String dispatchingOrderUidDouble = route.getDispatchingOrderUidDouble();
             String pay_method = route.getPay_method();
             String required_time = route.getRequired_time();
+            String flexible_tariff_name = route.getFlexible_tariff_name();
+            String comment_info = route.getComment_info();
+            String extra_charge_codes = route.getExtra_charge_codes();
 
             switch (closeReason){
                 case "-1":
@@ -356,7 +374,7 @@ public class AccountFragment extends Fragment {
             }
 
             if(routeFrom.equals(routeTo)) {
-                routeInfo = context.getString(R.string.close_resone_from) + routeFrom + " " + routefromnumber
+                routeInfo = routeFrom + " " + routefromnumber
                         + context.getString(R.string.close_resone_to)
                         + context.getString(R.string.on_city)
                         + required_time
@@ -365,7 +383,7 @@ public class AccountFragment extends Fragment {
                         + context.getString(R.string.close_resone_time)
                         + createdAt + context.getString(R.string.close_resone_text) + closeReasonText;
             } else {
-                routeInfo = context.getString(R.string.close_resone_from) + routeFrom + " " + routefromnumber
+                routeInfo = routeFrom + " " + routefromnumber
                         + context.getString(R.string.close_resone_to) + routeTo + " " + routeTonumber + "."
                         + required_time
                         + context.getString(R.string.close_resone_cost) + webCost + " " + context.getString(R.string.UAH)
@@ -387,6 +405,9 @@ public class AccountFragment extends Fragment {
             settings.add(dispatchingOrderUidDouble);
             settings.add(pay_method);
             settings.add(required_time);
+            settings.add(flexible_tariff_name);
+            settings.add(comment_info);
+            settings.add(extra_charge_codes);
 
             Logger.d(context, TAG, settings.toString());
             dbHUid.addCancelInfoUid(settings);

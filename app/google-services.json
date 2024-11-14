@@ -2,7 +2,7 @@
   "project_info": {
     "project_number": "10844390327",
     "project_id": "taxipas4",
-    "storage_bucket": "taxipas4.appspot.com"
+    "storage_bucket": "taxipas4.firebasestorage.app"
   },
   "client": [
     {

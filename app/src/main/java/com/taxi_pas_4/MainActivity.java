@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -43,6 +44,7 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
+import com.firebase.ui.auth.IdpResponse;
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.play.core.appupdate.AppUpdateInfo;
@@ -58,11 +60,11 @@ import com.taxi_pas_4.cities.api.CityApiClient;
 import com.taxi_pas_4.cities.api.CityResponse;
 import com.taxi_pas_4.cities.api.CityResponseMerchantFondy;
 import com.taxi_pas_4.cities.api.CityService;
+import com.taxi_pas_4.cities.check.CityCheckActivity;
 import com.taxi_pas_4.databinding.ActivityMainBinding;
 import com.taxi_pas_4.ui.card.CardInfo;
 import com.taxi_pas_4.ui.clear.AppDataUtils;
 import com.taxi_pas_4.ui.finish.RouteResponse;
-import com.taxi_pas_4.ui.finish.RouteResponseCancel;
 import com.taxi_pas_4.ui.home.HomeFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetCityFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGPSFragment;
@@ -76,6 +78,7 @@ import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
 
 import com.taxi_pas_4.utils.LocaleHelper;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
+
 import com.taxi_pas_4.utils.download.AppUpdater;
 import com.taxi_pas_4.utils.fcm.token_send.ApiServiceToken;
 import com.taxi_pas_4.utils.fcm.token_send.RetrofitClientToken;
@@ -173,35 +176,50 @@ public class MainActivity extends AppCompatActivity {
     //    private static final long ONE_DAY_IN_MILLISECONDS = 0; // 24 часа в миллисекундах
     private static final long ONE_DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000; // 24 часа в миллисекундах
 //    private static final long ONE_DAY_IN_MILLISECONDS = 60 * 1000; // 1 минута в миллисекундах
-    private List<RouteResponseCancel> routeListCancel;
+
     @SuppressLint("StaticFieldLeak")
     public static NavController navController;
     private FirebaseUserManager userManager;
-    private SharedPreferencesHelper sharedPreferencesHelper;
+    public static SharedPreferencesHelper sharedPreferencesHelperMain;
     private String cityMenu;
     private String city;
     private String newTitle;
-
+    public static List<Call<?>> activeCalls = new ArrayList<>();
+    public static NavigationView navigationView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ActivityMainBinding binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(binding.getRoot());
+
         deleteOldLogFile();
-        Logger.writeLog(this, getString(R.string.application));
-        Logger.writeLog(this, getString(R.string.version));
-        Logger.writeLog(this, "MainActivity started");
+        Logger.i(this, TAG, "MainActivity started");
+
+        Logger.i(this, TAG, getString(R.string.application));
+        Logger.i(this, TAG, getString(R.string.version));
+
+        String model = Build.MODEL;
+        String androidVersion = Build.VERSION.RELEASE;
+        int sdkVersion = Build.VERSION.SDK_INT;
+
+        Logger.i(this, TAG, "device: " + model);
+        Logger.i(this, TAG, "android_version: " + androidVersion);
+        Logger.i(this, TAG, "Build.VERSION.SDK_INT: " + sdkVersion);
+
         setSupportActionBar(binding.appBarMain.toolbar);
-        sharedPreferencesHelper = new SharedPreferencesHelper(this);
+
+        sharedPreferencesHelperMain = new SharedPreferencesHelper(this);
 
         DrawerLayout drawer = binding.drawerLayout;
-        NavigationView navigationView = binding.navView;
+        navigationView = binding.navView;
             // Passing each menu ID as a set of Ids because each
             // menu should be considered as top level destinations.
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-              R.id.nav_visicom, R.id.nav_home, R.id.nav_cancel, R.id.nav_gallery,
+              R.id.nav_visicom, R.id.nav_home, R.id.nav_cancel,
+//                R.id.nav_gallery,
               R.id.nav_about, R.id.nav_uid, R.id.nav_bonus, R.id.nav_card,
-              R.id.nav_account, R.id.nav_author, R.id.nav_finish
+              R.id.nav_account, R.id.nav_author, R.id.nav_finish_separate
         )
              .setOpenableLayout(drawer)
              .build();
@@ -276,7 +294,55 @@ public class MainActivity extends AppCompatActivity {
                 cityMenu = getString(R.string.city_zaporizhzhia);
                 break;
             case "Cherkasy Oblast":
-                cityMenu = getString(R.string.city_cherkasy);
+                cityMenu = getString(R.string.city_cherkassy);
+                break;
+            case "Lviv":
+                cityMenu = getString(R.string.city_lviv);
+                break;
+            case "Ivano_frankivsk":
+                cityMenu = getString(R.string.city_ivano_frankivsk);
+                break;
+            case "Vinnytsia":
+                cityMenu = getString(R.string.city_vinnytsia);
+                break;
+            case "Poltava":
+                cityMenu = getString(R.string.city_poltava);
+                break;
+            case "Sumy":
+                cityMenu = getString(R.string.city_sumy);
+                break;
+            case "Kharkiv":
+                cityMenu = getString(R.string.city_kharkiv);
+                break;
+            case "Chernihiv":
+                cityMenu = getString(R.string.city_chernihiv);
+                break;
+            case "Rivne":
+                cityMenu = getString(R.string.city_rivne);
+                break;
+            case "Ternopil":
+                cityMenu = getString(R.string.city_ternopil);
+                break;
+            case "Khmelnytskyi":
+                cityMenu = getString(R.string.city_khmelnytskyi);
+                break;
+            case "Zakarpattya":
+                cityMenu = getString(R.string.city_zakarpattya);
+                break;
+            case "Zhytomyr":
+                cityMenu = getString(R.string.city_zhytomyr);
+                break;
+            case "Kropyvnytskyi":
+                cityMenu = getString(R.string.city_kropyvnytskyi);
+                break;
+            case "Mykolaiv":
+                cityMenu = getString(R.string.city_mykolaiv);
+                break;
+            case "Сhernivtsi":
+                cityMenu = getString(R.string.city_chernivtsi);
+                break;
+            case "Lutsk":
+                cityMenu = getString(R.string.city_lutsk);
                 break;
             case "OdessaTest":
                 cityMenu = "Test";
@@ -285,7 +351,7 @@ public class MainActivity extends AppCompatActivity {
                 cityMenu = getString(R.string.foreign_countries);
         }
         newTitle =  getString(R.string.menu_city) + " " + cityMenu;
-        sharedPreferencesHelper.saveValue("newTitle", newTitle);
+        sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
     }
 
     @Override
@@ -302,13 +368,21 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (!sharedPreferencesHelperMain.getValue("CityCheckActivity", "**").equals("run")) {
+            startActivity(new Intent(this, CityCheckActivity.class));
+        } else if (NetworkUtils.isNetworkAvailable(this)) {
+            // Действия при наличии интернета
+            newUser();
+        }
+
+
         if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
             gps_upd = getIntent().getBooleanExtra("gps_upd", true);
         } else {
             gps_upd = false;
         }
-        sharedPreferencesHelper.saveValue("gps_upd", gps_upd);
+        sharedPreferencesHelperMain.saveValue("gps_upd", gps_upd);
     }
 
     @Override
@@ -321,11 +395,6 @@ public class MainActivity extends AppCompatActivity {
             VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
         }
 
-    }
-    private String timeFormatter(long timeMsec) {
-        Date formattedTime = new Date(timeMsec);
-        @SuppressLint("SimpleDateFormat") SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        return formatter.format(formattedTime);
     }
 
     @SuppressLint("SuspiciousIndentation")
@@ -532,10 +601,10 @@ public class MainActivity extends AppCompatActivity {
 
         database.close();
 
-        if (NetworkUtils.isNetworkAvailable(this)) {
-            // Действия при наличии интернета
-            newUser();
-        }
+//        if (NetworkUtils.isNetworkAvailable(this)) {
+//            // Действия при наличии интернета
+//            newUser();
+//        }
 
     }
 
@@ -1117,44 +1186,42 @@ public class MainActivity extends AppCompatActivity {
     public void newUser() {
         String userEmail = logCursor(TABLE_USER_INFO).get(3);
         Logger.d(this, TAG, "newUser: " + userEmail);
+
         new Thread(this::mapboxKey).start();
         new Thread(this::visicomKey).start();
         new Thread(() -> insertPushDate(getApplicationContext())).start();
-        Logger.d(this, TAG, "CityCheckActivity: " + sharedPreferencesHelper.getValue("CityCheckActivity", "**"));
-        if(sharedPreferencesHelper.getValue("CityCheckActivity", "**").equals("run")) {
-            if(userEmail.equals("email")) {
-                firstStart = true;
 
-                    VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
-                    Toast.makeText(this, R.string.checking, Toast.LENGTH_SHORT).show();
-                    startFireBase();
-            } else {
-                firstStart = false;
+        Logger.d(this, TAG, "CityCheckActivity: " + sharedPreferencesHelperMain.getValue("CityCheckActivity", "**"));
 
-                new Thread(this::versionFromMarket).start();
-                new Thread(this::userPhoneFromFb).start();
-                new Thread(() -> updatePushDate(getApplicationContext())).start();
+        if(userEmail.equals("email")) {
+            firstStart = true;
 
-                new VerifyUserTask(this).execute();
+            VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
+            Toast.makeText(this, R.string.checking, Toast.LENGTH_SHORT).show();
+            startFireBase();
+        } else {
+            firstStart = false;
 
-                UserPermissions.getPermissions(userEmail, getApplicationContext());
+            new Thread(this::versionFromMarket).start();
+            new Thread(this::userPhoneFromFb).start();
+            new Thread(() -> updatePushDate(getApplicationContext())).start();
 
-                Thread wfpCardThread = new Thread(() -> {
-                    List<String> stringList = logCursor(MainActivity.CITY_INFO);
-                    String city = stringList.get(1);
-                    if(city != null) {
-                        getCardTokenWfp(city,"wfp", userEmail);
-                    }
-                });
-                wfpCardThread.start();
+            UserPermissions.getPermissions(userEmail, getApplicationContext());
 
-                Thread sendTokenThread = new Thread(() -> {
-                    sendToken(userEmail);
-                });
-                sendTokenThread.start();
-            }
-            }
+            Thread wfpCardThread = new Thread(() -> {
+                List<String> stringList = logCursor(MainActivity.CITY_INFO);
+                String city = stringList.get(1);
+                if(city != null) {
+                    getCardTokenWfp(city,"wfp", userEmail);
+                }
+            });
+            wfpCardThread.start();
 
+            Thread sendTokenThread = new Thread(() -> {
+                sendToken(userEmail);
+            });
+            sendTokenThread.start();
+        }
     }
 
     private  void getCardTokenWfp(String city, String pay_system, String email) {
@@ -1245,27 +1312,24 @@ public class MainActivity extends AppCompatActivity {
         startSignInInBackground();
     }
     private void startSignInInBackground() {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                Logger.d(getApplicationContext(), TAG, "run: ");
-                // Choose authentication providers
-                List<AuthUI.IdpConfig> providers = Collections.singletonList(
-                        new AuthUI.IdpConfig.GoogleBuilder().build());
+        Thread thread = new Thread(() -> {
+            try {
+            Logger.d(getApplicationContext(), TAG, "run: ");
+            // Choose authentication providers
+            List<AuthUI.IdpConfig> providers = Collections.singletonList(
+                    new AuthUI.IdpConfig.GoogleBuilder().build());
 
-                // Create and launch sign-in intent
-                Intent signInIntent = AuthUI.getInstance()
-                        .createSignInIntentBuilder()
-                        .setAvailableProviders(providers)
-                        .build();
+            // Create and launch sign-in intent
+            Intent signInIntent = AuthUI.getInstance()
+                    .createSignInIntentBuilder()
+                    .setAvailableProviders(providers)
+                    .build();
 
-                    runOnUiThread(() -> signInLauncher.launch(signInIntent));
-                } catch (Exception e) {
-                    Logger.e(getApplicationContext(), TAG, "Exception during sign-in launch " + e);
-                    FirebaseCrashlytics.getInstance().recordException(e);
-                    VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
-                }
+                runOnUiThread(() -> signInLauncher.launch(signInIntent));
+            } catch (Exception e) {
+                Logger.e(getApplicationContext(), TAG, "Exception during sign-in launch " + e);
+                FirebaseCrashlytics.getInstance().recordException(e);
+                VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
             }
         });
         thread.start();
@@ -1299,7 +1363,14 @@ public class MainActivity extends AppCompatActivity {
 
 
           } else {
-                Toast.makeText(this, getString(R.string.firebase_error), Toast.LENGTH_SHORT).show();
+                IdpResponse response = result.getIdpResponse();
+                if (response == null) {
+                    Logger.d(this, TAG, "Sign-in canceled by user.");
+                } else {
+                    Logger.d(this, TAG, "Sign-in error: " + response.getError().getMessage());
+                    FirebaseCrashlytics.getInstance().recordException(response.getError());
+                }
+
                 VisicomFragment.progressBar.setVisibility(View.GONE);
                 cv.put("verifyOrder", "0");
                 SQLiteDatabase database = getApplicationContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
@@ -1327,7 +1398,6 @@ public class MainActivity extends AppCompatActivity {
             ContentValues cv = new ContentValues();
             updateRecordsUserInfo("email", emailUser, getApplicationContext());
             cv.put("verifyOrder", "1");
-
             SQLiteDatabase database = getApplicationContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
             database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
             database.close();
@@ -1535,10 +1605,12 @@ public class MainActivity extends AppCompatActivity {
                     if (cityResponse != null) {
                         int cardMaxPay = cityResponse.getCardMaxPay();
                         int bonusMaxPay = cityResponse.getBonusMaxPay();
+                        String black_list = cityResponse.getBlack_list();
 
                         ContentValues cv = new ContentValues();
                         cv.put("card_max_pay", cardMaxPay);
                         cv.put("bonus_max_pay", bonusMaxPay);
+                        sharedPreferencesHelperMain.saveValue("black_list", black_list);
 
                         SQLiteDatabase database = openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
                         database.update(MainActivity.CITY_INFO, cv, "id = ?",
@@ -1548,6 +1620,7 @@ public class MainActivity extends AppCompatActivity {
 
                         Logger.d(getApplicationContext(), TAG, "onResponse: cardMaxPay" + cardMaxPay);
                         Logger.d(getApplicationContext(), TAG, "onResponse: bonus_max_pay" + bonusMaxPay);
+                        Logger.d(getApplicationContext(), TAG, "onResponse: black_list" + black_list);
                         Logger.d(getApplicationContext(), TAG, "onResponse: " + logCursor(CITY_INFO).toString());
 
                         // Добавьте здесь код для обработки полученных значений
