@@ -80,6 +80,7 @@ import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorPaymentFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetFinishOptionFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetMessageFragment;
+import com.taxi_pas_4.utils.data.DataArr;
 import com.taxi_pas_4.utils.log.Logger;
 
 import java.io.UnsupportedEncodingException;
@@ -1925,7 +1926,7 @@ public class FinishSeparateFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-
+        addCheck(context);
         btn_open.setOnClickListener(v -> {
             btnOpen();
         });
@@ -2118,5 +2119,21 @@ public class FinishSeparateFragment extends Fragment {
                     dialog.dismiss();
                 })
                 .show();
+    }
+    private void addCheck(Context context) {
+
+        int newCheck = 0;
+        List<String> services = logCursor(MainActivity.TABLE_SERVICE_INFO);
+        for (int i = 0; i < DataArr.arrayServiceCode().length; i++) {
+            if (services.get(i + 1).equals("1")) {
+                newCheck++;
+            }
+        }
+        String mes = context.getString(R.string.add_services);
+        if (newCheck != 0) {
+            mes = context.getString(R.string.add_services) + " (" + newCheck + ")";
+        }
+        btn_options.setText(mes);
+
     }
  }
