@@ -4,7 +4,7 @@ package com.taxi_pas_4.ui.home;
 import static android.content.Context.MODE_PRIVATE;
 import static android.graphics.Color.RED;
 import static com.taxi_pas_4.MainActivity.navController;
-import static com.taxi_pas_4.MainActivity.sharedPreferencesHelperMain;
+import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 import static com.taxi_pas_4.R.string.address_error_message;
 
 import android.Manifest;
@@ -197,12 +197,14 @@ public class HomeFragment extends Fragment {
     ConstraintLayout constraintLayoutHomeMain, constraintLayoutHomeFinish;
     public static TextView text_full_message, textCostMessage, textStatusCar;
     private Animation blinkAnimation;
-    private final String baseUrl = "https://m.easy-order-taxi.site";
+//    private String baseUrl = "https://m.easy-order-taxi.site";
+    private String baseUrl;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
+        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
 
         constraintLayoutHomeMain = root.findViewById(R.id.homeMain);
         constraintLayoutHomeFinish = root.findViewById(R.id.homeFinish);
@@ -576,7 +578,7 @@ public class HomeFragment extends Fragment {
             constraintLayoutHomeFinish.setVisibility(View.VISIBLE);ToJSONParserRetrofit parser = new ToJSONParserRetrofit();
 
 //            // Пример строки URL с параметрами
-            Logger.d(context, TAG, "orderFinished: "  + "https://m.easy-order-taxi.site"+ urlOrder);
+            Logger.d(context, TAG, "orderFinished: "  + baseUrl + urlOrder);
             parser.sendURL(urlOrder, new Callback<Map<String, String>>() {
                 @Override
                 public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
@@ -913,6 +915,9 @@ public class HomeFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
+        constraintLayoutHomeMain.setVisibility(View.VISIBLE);
+        constraintLayoutHomeFinish.setVisibility(View.GONE);
+
         databaseHelper = new DatabaseHelper(context);
         databaseHelperUid = new DatabaseHelperUid(context);
 
@@ -930,18 +935,34 @@ public class HomeFragment extends Fragment {
         addCost = 0;
         updateAddCost(String.valueOf(addCost));
         btn_clear = binding.btnClear;
-        SwipeRefreshLayout swipeRefreshLayout = binding.swipeRefreshLayout;
 
-        // Устанавливаем слушатель для распознавания жеста свайпа вниз
+
+        SwipeRefreshLayout swipeRefreshLayout =binding.swipeRefreshLayout;
+        TextView svButton = binding.svButton;
+
+// Устанавливаем слушатель для распознавания жеста свайпа вниз
         swipeRefreshLayout.setOnRefreshListener(() -> {
-            // Метод, который нужно запустить по свайпу вниз
+            // Скрываем TextView (⬇️) сразу после появления индикатора свайпа
+            svButton.setVisibility(View.GONE);
 
+            // Выполняем необходимое действие (например, запуск новой активности)
             btn_clear.performClick();
 
             // После завершения обновления, уберите индикатор загрузки
             swipeRefreshLayout.setRefreshing(false);
             new VerifyUserTask(context).execute();
+
+            // Эмулируем окончание обновления с задержкой
+            swipeRefreshLayout.postDelayed(() -> {
+                // Отключаем индикатор загрузки
+                swipeRefreshLayout.setRefreshing(false);
+
+                // Показываем TextView (⬇️) снова после завершения обновления
+                svButton.setVisibility(View.VISIBLE);
+            }, 500); // Задержка 500 мс
         });
+
+
         textViewTo.setOnFocusChangeListener((v, hasFocus) -> {
             if (hasFocus) {
                 // Фокус установлен на TextView, очищаем его
@@ -1010,8 +1031,8 @@ public class HomeFragment extends Fragment {
                     List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
                     String city = stringList.get(1);
                     String api =  stringList.get(2);
-
-                    String url = "https://m.easy-order-taxi.site/" + api + "/android/autocompleteSearchComboHid/" + from + "/" + city;
+                    baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+                    String url = baseUrl + "/" + api + "/android/autocompleteSearchComboHid/" + from + "/" + city;
 
                     Map sendUrlMapCost = null;
                     try {
@@ -1095,8 +1116,8 @@ public class HomeFragment extends Fragment {
                 List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
                 String city = stringList.get(1);
                 String api =  stringList.get(2);
-
-                String url = "https://m.easy-order-taxi.site/" + api + "/android/autocompleteSearchComboHid/" + to + "/" + city;
+                baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+                String url = baseUrl + "/" + api + "/android/autocompleteSearchComboHid/" + to + "/" + city;
 
                 Map sendUrlMapCost = null;
                 try {
@@ -2084,11 +2105,12 @@ public class HomeFragment extends Fragment {
 
             routeListCancel = new ArrayList<>();
 
-            String baseUrl = "https://m.easy-order-taxi.site";
+//            String baseUrl = "https://m.easy-order-taxi.site";
+            String baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
 
             List<String> stringList = logCursor(MainActivity.CITY_INFO,context);
             String city = stringList.get(1);
-
+            baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
             String url = baseUrl + "/android/UIDStatusShowEmailCancelApp/" + userEmail + "/" + city + "/" +  context.getString(R.string.application);
 
             Call<List<RouteResponseCancel>> call = ApiClient.getApiService().getRoutesCancel(url);
@@ -2227,7 +2249,7 @@ public class HomeFragment extends Fragment {
                 auto = "??";
             }
             if(required_time != null && !required_time.contains("01.01.1970")) {
-                required_time = getString(R.string.time_order) + required_time;
+                required_time = " " + getString(R.string.time_order) + required_time;
             } else {
                 required_time = "";
             }

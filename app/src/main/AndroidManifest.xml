@@ -86,11 +86,6 @@
         </activity>
 
         <activity
-            android:name=".ui.finish.FinishActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.PAS_4.NoActionBar" />
-
-        <activity
             android:name=".ui.open_map.OpenStreetMapActivity"
             android:exported="true"
             android:screenOrientation="portrait"
@@ -107,6 +102,9 @@
             android:theme="@style/Theme.PAS_4.NoActionBar"
             tools:ignore="Instantiatable" />
         <activity android:name=".cities.check.CityCheckActivity" />
+        <activity android:name=".ui.settings.SettingsActivity" />
+
+
         <receiver android:name=".NetworkChangeReceiver" />
 
         <provider

@@ -1,7 +1,11 @@
 package com.taxi_pas_4.ui.finish;
 
+import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
@@ -9,7 +13,8 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiClient {
-    static final String BASE_URL = "https://m.easy-order-taxi.site/";
+//    static final String BASE_URL = "https://m.easy-order-taxi.site/";
+    static String BASE_URL = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
 
     private static Retrofit retrofit = null;
 
@@ -19,9 +24,10 @@ public class ApiClient {
         loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
         OkHttpClient client = new OkHttpClient.Builder()
-                .addInterceptor(loggingInterceptor)
+                .connectTimeout(30, TimeUnit.SECONDS) // Тайм-аут подключения
+                .writeTimeout(30, TimeUnit.SECONDS)  // Тайм-аут записи
+                .readTimeout(30, TimeUnit.SECONDS)   // Тайм-аут чтения
                 .build();
-        //****
 
         if (retrofit == null) {
             Gson gson = new GsonBuilder()

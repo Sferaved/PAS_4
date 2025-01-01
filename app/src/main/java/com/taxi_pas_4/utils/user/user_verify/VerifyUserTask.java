@@ -2,6 +2,8 @@ package com.taxi_pas_4.utils.user.user_verify;
 
 import static android.content.Context.MODE_PRIVATE;
 
+import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
+
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
@@ -38,7 +40,8 @@ public class VerifyUserTask {
     public void execute() {
         String userEmail = logCursor(MainActivity.TABLE_USER_INFO, this.context).get(3);
 
-        String url = "https://m.easy-order-taxi.site/android/verifyBlackListUser/" + userEmail + "/" + context.getString(R.string.application);
+//        String url = "https://m.easy-order-taxi.site/android/verifyBlackListUser/" + userEmail + "/" + context.getString(R.string.application);
+        String url = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/android/verifyBlackListUser/" + userEmail + "/" + context.getString(R.string.application);
         CostJSONParserRetrofit parser = new CostJSONParserRetrofit();
 
         try {

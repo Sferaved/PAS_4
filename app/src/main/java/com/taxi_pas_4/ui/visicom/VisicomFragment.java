@@ -4,13 +4,13 @@ package com.taxi_pas_4.ui.visicom;
 import static android.content.Context.MODE_PRIVATE;
 
 import static com.taxi_pas_4.MainActivity.activeCalls;
-import static com.taxi_pas_4.MainActivity.sharedPreferencesHelperMain;
+import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 import static com.taxi_pas_4.utils.notify.NotificationHelper.checkForUpdate;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.AlertDialog;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -18,6 +18,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.location.Location;
@@ -34,6 +35,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
@@ -69,7 +71,9 @@ import com.google.android.play.core.install.model.UpdateAvailability;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
-import com.taxi_pas_4.cities.check.CityCheckActivity;
+import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 import com.taxi_pas_4.databinding.FragmentVisicomBinding;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.RouteResponseCancel;
@@ -115,8 +119,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
-
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 public class VisicomFragment extends Fragment {
 
@@ -196,7 +198,8 @@ public class VisicomFragment extends Fragment {
     public static TextView text_full_message, textCostMessage, textStatusCar;
 
     private Animation blinkAnimation;
-    private final String baseUrl = "https://m.easy-order-taxi.site";
+//    private final String baseUrl = "https://m.easy-order-taxi.site";
+    private static String baseUrl;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -204,8 +207,13 @@ public class VisicomFragment extends Fragment {
         View root = binding.getRoot();
 
 
+
         constraintLayoutVisicomMain = root.findViewById(R.id.visicomMain);
         constraintLayoutVisicomFinish = root.findViewById(R.id.visicomFinish);
+
+
+
+
         constraintLayoutVisicomFinish.setVisibility(View.GONE);
 
         text_full_message = root.findViewById(R.id.text_full_message);
@@ -218,15 +226,27 @@ public class VisicomFragment extends Fragment {
         context = requireActivity();
         binding.textwhere.setVisibility(View.VISIBLE);
 
-        SwipeRefreshLayout swipeRefreshLayout = binding.swipeRefreshLayout;
+        SwipeRefreshLayout swipeRefreshLayout = root.findViewById(R.id.swipeRefreshLayout);
+        TextView svButton = root.findViewById(R.id.sv_button);
 
-        // Устанавливаем слушатель для распознавания жеста свайпа вниз
+// Устанавливаем слушатель для распознавания жеста свайпа вниз
         swipeRefreshLayout.setOnRefreshListener(() -> {
-            // Метод, который нужно запустить по свайпу вниз
+            // Скрываем TextView (⬇️) сразу после появления индикатора свайпа
+            svButton.setVisibility(View.GONE);
+
+            // Выполняем необходимое действие (например, запуск новой активности)
             startActivity(new Intent(context, MainActivity.class));
-             // После завершения обновления, уберите индикатор загрузки
-            swipeRefreshLayout.setRefreshing(false);
+
+            // Эмулируем окончание обновления с задержкой
+            swipeRefreshLayout.postDelayed(() -> {
+                // Отключаем индикатор загрузки
+                swipeRefreshLayout.setRefreshing(false);
+
+                // Показываем TextView (⬇️) снова после завершения обновления
+                svButton.setVisibility(View.VISIBLE);
+            }, 500); // Задержка 500 мс
         });
+
 
         fragmentManager = getParentFragmentManager();
         progressBar = binding.progressBar;
@@ -262,6 +282,8 @@ public class VisicomFragment extends Fragment {
         schedule = binding.schedule;
 
         shed_down = binding.shedDown;
+        Logger.d(requireActivity(), TAG, "MainActivity.firstStart" + MainActivity.firstStart);
+
 
 
         btnAdd = binding.btnAdd;
@@ -415,6 +437,9 @@ public class VisicomFragment extends Fragment {
         text_view_cost.setVisibility(visible);
         btn_plus.setVisibility(visible);
         btnOrder.setVisibility(visible);
+        schedule.setVisibility(visible);
+
+        shed_down.setVisibility(visible);
     }
 
     @Override
@@ -962,8 +987,8 @@ public class VisicomFragment extends Fragment {
 //            carProgressBar.resumeAnimation();
 
             ToJSONParserRetrofit parser = new ToJSONParserRetrofit();
-
-            Logger.d(context, TAG, "orderFinished: " + "https://m.easy-order-taxi.site" + urlOrder);
+            baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+            Logger.d(context, TAG, "orderFinished: " + baseUrl + urlOrder);
             parser.sendURL(urlOrder, new Callback<Map<String, String>>() {
                 @Override
                 public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
@@ -982,6 +1007,15 @@ public class VisicomFragment extends Fragment {
                         if (Objects.equals(sendUrlMap.get("routefrom"), sendUrlMap.get("routeto"))) {
                             to_name = getString(R.string.on_city_tv);
                             Logger.d(context, TAG, "orderFinished: to_name 1 " + to_name);
+                            if (!Objects.equals(sendUrlMap.get("lat"), "0")) {
+                                insertRecordsOrders(
+                                        sendUrlMap.get("routefrom"), sendUrlMap.get("routefrom"),
+                                        sendUrlMap.get("routefromnumber"), sendUrlMap.get("routefromnumber"),
+                                        sendUrlMap.get("from_lat"), sendUrlMap.get("from_lng"),
+                                        sendUrlMap.get("from_lat"), sendUrlMap.get("from_lng"),
+                                        context
+                                );
+                            }
                         } else {
                             if (Objects.equals(sendUrlMap.get("routeto"), "Точка на карте")) {
                                 to_name = context.getString(R.string.end_point_marker);
@@ -989,6 +1023,15 @@ public class VisicomFragment extends Fragment {
                                 to_name = sendUrlMap.get("routeto") + " " + sendUrlMap.get("to_number");
                             }
                             Logger.d(context, TAG, "orderFinished: to_name 2 " + to_name);
+                            if (!Objects.equals(sendUrlMap.get("lat"), "0")) {
+                                insertRecordsOrders(
+                                        sendUrlMap.get("routefrom"), to_name,
+                                        sendUrlMap.get("routefromnumber"), sendUrlMap.get("to_number"),
+                                        sendUrlMap.get("from_lat"), sendUrlMap.get("from_lng"),
+                                        sendUrlMap.get("lat"), sendUrlMap.get("lng"),
+                                        context
+                                );
+                            }
                         }
                         Logger.d(context, TAG, "orderFinished: to_name 3" + to_name);
                         String to_name_local = to_name;
@@ -1002,7 +1045,7 @@ public class VisicomFragment extends Fragment {
 
                         String required_time = sendUrlMap.get("required_time");
                         if (required_time != null && !required_time.contains("01.01.1970")) {
-                            required_time = context.getString(R.string.time_order) + required_time + ". ";
+                            required_time = " " + context.getString(R.string.time_order) + required_time + ". ";
                         } else {
                             required_time = "";
                         }
@@ -1113,6 +1156,59 @@ public class VisicomFragment extends Fragment {
                 }
             });
         }
+
+    }
+
+    private static void insertRecordsOrders( String from, String to,
+                                             String from_number, String to_number,
+                                             String from_lat, String from_lng,
+                                             String to_lat, String to_lng, Context context) {
+        Logger.d(context, TAG, "insertRecordsOrders: from_lat" + from_lat);
+        Logger.d(context, TAG, "insertRecordsOrders: from_lng" + from_lng);
+        Logger.d(context, TAG, "insertRecordsOrders: to_lat" + to_lat);
+        Logger.d(context, TAG, "insertRecordsOrders: to_lng" + to_lng);
+
+        String selection = "from_street = ?";
+        String[] selectionArgs = new String[] {from};
+        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        Cursor cursor_from = database.query(MainActivity.TABLE_ORDERS_INFO,
+                null, selection, selectionArgs, null, null, null);
+
+        selection = "to_street = ?";
+        selectionArgs = new String[] {to};
+
+        Cursor cursor_to = database.query(MainActivity.TABLE_ORDERS_INFO,
+                null, selection, selectionArgs, null, null, null);
+
+
+
+        if (cursor_from.getCount() == 0 || cursor_to.getCount() == 0) {
+
+            String sql = "INSERT INTO " + MainActivity.TABLE_ORDERS_INFO + " VALUES(?,?,?,?,?,?,?,?,?);";
+            SQLiteStatement statement = database.compileStatement(sql);
+            database.beginTransaction();
+            try {
+                statement.clearBindings();
+                statement.bindString(2, from);
+                statement.bindString(3, from_number);
+                statement.bindString(4, from_lat);
+                statement.bindString(5, from_lng);
+                statement.bindString(6, to);
+                statement.bindString(7, to_number);
+                statement.bindString(8, to_lat);
+                statement.bindString(9, to_lng);
+
+                statement.execute();
+                database.setTransactionSuccessful();
+
+            } finally {
+                database.endTransaction();
+            }
+
+        }
+
+        cursor_from.close();
+        cursor_to.close();
 
     }
 
@@ -1238,12 +1334,9 @@ public class VisicomFragment extends Fragment {
         });
 
         Button cancelButton = dialogView.findViewById(R.id.dialog_cancel_button);
-        cancelButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                progressBar.setVisibility(View.GONE);
-                alertDialog.dismiss();
-            }
+        cancelButton.setOnClickListener(v -> {
+            progressBar.setVisibility(View.GONE);
+            alertDialog.dismiss();
         });
 
         alertDialog.show();
@@ -1265,10 +1358,38 @@ public class VisicomFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        if (!NetworkUtils.isNetworkAvailable(context)) {
+            // Ваш код при нажатии на заголовок
+            gpsbut.setVisibility(View.INVISIBLE);
+            binding.num1.setVisibility(View.INVISIBLE);
+            binding.textfrom.setVisibility(View.INVISIBLE);
+            schedule.setVisibility(View.INVISIBLE);
+            shed_down.setVisibility(View.INVISIBLE);
+            binding.textwhere.setVisibility(View.VISIBLE);
+            progressBar.setVisibility(View.VISIBLE);
+
+        }
+
+        String visible_shed = (String) sharedPreferencesHelperMain.getValue("visible_shed", "no");
+        if(visible_shed.equals("no")) {
+            schedule.setVisibility(View.INVISIBLE);
+            shed_down.setVisibility(View.INVISIBLE);
+        } else  {
+            if (NetworkUtils.isNetworkAvailable(context)) {
+                schedule.setVisibility(View.VISIBLE);
+                shed_down.setVisibility(View.VISIBLE);
+            } else {
+                schedule.setVisibility(View.INVISIBLE);
+                shed_down.setVisibility(View.INVISIBLE);
+            }
+        }
+
+        constraintLayoutVisicomMain.setVisibility(View.VISIBLE);
+        constraintLayoutVisicomFinish.setVisibility(View.GONE);
 
         databaseHelper = new DatabaseHelper(context);
         databaseHelperUid = new DatabaseHelperUid(context);
-
+        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
         new Thread(this::fetchRoutesCancel).start();
 
         new VerifyUserTask(context).execute();
@@ -1403,30 +1524,23 @@ public class VisicomFragment extends Fragment {
 
         Logger.d(context, TAG, "onCreateView: geo_marker " + geo_marker);
 
-        buttonBonus.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                btnVisible(View.INVISIBLE);
-                String costText = text_view_cost.getText().toString().trim();
-                if (!costText.isEmpty() && costText.matches("\\d+")) {
-                    updateAddCost("0");
-                    MyBottomSheetBonusFragment bottomSheetDialogFragment = new MyBottomSheetBonusFragment(Long.parseLong(costText), geo_marker, api, text_view_cost);
-                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-                }
+        buttonBonus.setOnClickListener(v -> {
+            btnVisible(View.INVISIBLE);
+            String costText = text_view_cost.getText().toString().trim();
+            if (!costText.isEmpty() && costText.matches("\\d+")) {
+                updateAddCost("0");
+                MyBottomSheetBonusFragment bottomSheetDialogFragment = new MyBottomSheetBonusFragment(Long.parseLong(costText), geo_marker, api, text_view_cost);
+                bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
             }
-
         });
 
         textViewTo = binding.textTo;
-        textViewTo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                textViewTo.setText("");
-                Intent intent = new Intent(getContext(), ActivityVisicomOnePage.class);
-                intent.putExtra("start", "no");
-                intent.putExtra("end", "ok");
-                startActivity(intent);
-            }
+        textViewTo.setOnClickListener(v -> {
+            textViewTo.setText("");
+            Intent intent = new Intent(getContext(), ActivityVisicomOnePage.class);
+            intent.putExtra("start", "no");
+            intent.putExtra("end", "ok");
+            startActivity(intent);
         });
 
         List<String> addresses = new ArrayList<>();
@@ -1898,8 +2012,8 @@ public class VisicomFragment extends Fragment {
 
                     Locale locale = Locale.getDefault();
                     String language = locale.getLanguage(); // Получаем язык устройства
-
-                    String urlFrom = "https://m.easy-order-taxi.site/" + api + "/android/fromSearchGeoLocal/" + latitude + "/" + longitude + "/" + language;
+                    baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+                    String urlFrom = baseUrl + "/" + api + "/android/fromSearchGeoLocal/" + latitude + "/" + longitude + "/" + language;
                     String mes_city = context.getString(R.string.on_city_tv);
                     FromJSONParserRetrofit.sendURL(urlFrom, result -> {
                         // Обработка результата в основном потоке
@@ -2310,11 +2424,11 @@ public class VisicomFragment extends Fragment {
 
             routeListCancel = new ArrayList<>();
 
-            String baseUrl = "https://m.easy-order-taxi.site";
+//            String baseUrl = "https://m.easy-order-taxi.site";
 
             List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
             String city = stringList.get(1);
-
+            baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
             String url = baseUrl + "/android/UIDStatusShowEmailCancelApp/" + userEmail + "/" + city + "/" + context.getString(R.string.application);
 
             Call<List<RouteResponseCancel>> call = ApiClient.getApiService().getRoutesCancel(url);
@@ -2453,7 +2567,7 @@ public class VisicomFragment extends Fragment {
                 auto = "??";
             }
             if (required_time != null && !required_time.contains("01.01.1970")) {
-                required_time = getString(R.string.time_order) + required_time;
+                required_time = " " + getString(R.string.time_order) + required_time;
             } else {
                 required_time = "";
             }
@@ -2502,99 +2616,217 @@ public class VisicomFragment extends Fragment {
         if (array != null) {
             String message = getString(R.string.order_to_cancel_true);
             MyBottomSheetErrorFragment myBottomSheetMessageFragment = new MyBottomSheetErrorFragment(message);
-            myBottomSheetMessageFragment.show(fragmentManager, myBottomSheetMessageFragment.getTag());
+            fragmentManager.beginTransaction()
+                    .add(myBottomSheetMessageFragment, myBottomSheetMessageFragment.getTag())
+                    .commitAllowingStateLoss();
         } else {
             databaseHelper.clearTableCancel();
             databaseHelperUid.clearTableCancel();
         }
     }
 
+//    private void showAddCostDoubleDialog(String addType) {
+//
+//            MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext());
+//            LayoutInflater inflater = requireActivity().getLayoutInflater();
+//            int  dialogViewInt = R.layout.dialog_add_cost;
+//            switch(addType) {
+//                case "60":
+//                    dialogViewInt = R.layout.dialog_add_60_cost;
+//                    break;
+//                case "45":
+//                    break;
+//            }
+//            View dialogView = inflater.inflate(dialogViewInt, null);
+//
+//
+//            String title = getString(R.string.double_order);
+//            String message = getString(R.string.add_cost_fin_60);
+//            String numberIndexString = "";
+//
+//            switch(addType) {
+//                case "60":
+//                    title = getString(R.string.double_order);
+//
+//                    Button minus = dialogView.findViewById(R.id.btn_minus);
+//                    Button plus = dialogView.findViewById(R.id.btn_plus);
+//                    EditText discinp = dialogView.findViewById(R.id.discinp);
+//
+//                    minus.setOnClickListener(v -> {
+//                        String addCost = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(5);
+//                        int addCostInt = Integer.parseInt(addCost);
+//                        if(addCostInt >= 5) {
+//                            addCostInt -=5;
+//                            updateAddCost(String.valueOf(addCostInt));
+//                            discinp.setText(String.valueOf(addCostInt + 60));
+//                        }
+//
+//                    });
+//
+//                    plus.setOnClickListener(v -> {
+//                        String addCost = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(5);
+//                        int addCostInt = Integer.parseInt(addCost);
+//                        addCostInt +=5;
+//                        updateAddCost(String.valueOf(addCostInt));
+//                        discinp.setText(String.valueOf(addCostInt + 60));
+//                    });
+//
+//                    message = getString(R.string.add_cost_fin_60);
+//                    numberIndexString = message;
+//                    break;
+//                case "45":
+//                    title = getString(R.string.black_list);
+//                    message = getString(R.string.add_cost_fin_45);
+//                    numberIndexString = "45";
+//                    blockUserBlackList();
+//                    break;
+//            }
+//            TextView titleView = dialogView.findViewById(R.id.dialogTitle);
+//            titleView.setText(title);
+//
+//            TextView messageView = dialogView.findViewById(R.id.dialogMessage);
+//
+//            SpannableStringBuilder spannable = new SpannableStringBuilder(message);
+//
+//            int numberIndex = message.indexOf(numberIndexString);
+//            int length = numberIndexString.length();
+//            spannable.setSpan(new StyleSpan(Typeface.BOLD), numberIndex, numberIndex + length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+//            messageView.setText(spannable);
+//
+//            builder.setView(dialogView)
+//                    .setCancelable(false)
+//                    .setPositiveButton(R.string.ok_button, (dialog, which) -> {
+//                        dialog.dismiss();
+//
+//                        switch (addType) {
+//                            case "60":
+//                                createDoubleOrder();
+//                                break;
+//                            case "45":
+//                                createBlackList();
+//                                break;
+//                        }
+//
+//                    })
+//                    .setNegativeButton(R.string.cancel_button, (dialog, which) -> {
+//                        switch (addType) {
+//                            case "60":
+//                                sharedPreferencesHelperMain.saveValue("doubleOrderPref", false);
+//                                break;
+//                            case "45":
+//                                break;
+//                        }
+//
+//                        dialog.dismiss();
+//                    })
+//                    .show();
+//
+//    }
+
     private void showAddCostDoubleDialog(String addType) {
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext());
+        LayoutInflater inflater = requireActivity().getLayoutInflater();
+        int dialogViewInt = R.layout.dialog_add_cost;
 
-            MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext());
-            LayoutInflater inflater = requireActivity().getLayoutInflater();
-            int  dialogViewInt = R.layout.dialog_add_cost;
-            switch(addType) {
-                case "60":
-                    dialogViewInt = R.layout.dialog_add_60_cost;
-                    break;
-                case "45":
-                    break;
+        if ("60".equals(addType)) {
+            dialogViewInt = R.layout.dialog_add_60_cost;
+        }
+
+        View dialogView = inflater.inflate(dialogViewInt, null);
+
+        // Заголовок и сообщение
+        String title = getString(R.string.double_order);
+        String message = getString(R.string.add_cost_fin_60);
+        String numberIndexString = "";
+
+        // Инициализация элементов для типа "60"
+        if ("60".equals(addType)) {
+            title = getString(R.string.double_order);
+
+            AppCompatButton minus = dialogView.findViewById(R.id.btn_minus);
+            AppCompatButton plus = dialogView.findViewById(R.id.btn_plus);
+            EditText discinp = dialogView.findViewById(R.id.discinp);
+
+            minus.setOnClickListener(v -> {
+                String addCost = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(5);
+                int addCostInt = Integer.parseInt(addCost);
+                if (addCostInt >= 5) {
+                    addCostInt -= 5;
+                    updateAddCost(String.valueOf(addCostInt));
+                    discinp.setText(String.valueOf(addCostInt + 60));
+                }
+            });
+
+            plus.setOnClickListener(v -> {
+                String addCost = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(5);
+                int addCostInt = Integer.parseInt(addCost);
+                addCostInt += 5;
+                updateAddCost(String.valueOf(addCostInt));
+                discinp.setText(String.valueOf(addCostInt + 60));
+            });
+
+            message = getString(R.string.add_cost_fin_60);
+            numberIndexString = message;
+        } else if ("45".equals(addType)) {
+            title = getString(R.string.black_list);
+            message = getString(R.string.add_cost_fin_45);
+            numberIndexString = "45";
+            blockUserBlackList();
+        }
+
+        // Установка заголовка и сообщения
+        TextView titleView = dialogView.findViewById(R.id.dialogTitle);
+        titleView.setText(title);
+
+        TextView messageView = dialogView.findViewById(R.id.dialogMessage);
+        SpannableStringBuilder spannable = new SpannableStringBuilder(message);
+        int numberIndex = message.indexOf(numberIndexString);
+        if (numberIndex != -1) {
+            spannable.setSpan(new StyleSpan(Typeface.BOLD), numberIndex, numberIndex + numberIndexString.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+        messageView.setText(spannable);
+
+        // Обработка кнопок
+        builder.setView(dialogView)
+                .setCancelable(false)
+                .setPositiveButton(R.string.ok_button, (dialog, which) -> {
+                    dialog.dismiss();
+                    if ("60".equals(addType)) {
+                        createDoubleOrder();
+                    } else if ("45".equals(addType)) {
+                        createBlackList();
+                    }
+                })
+                .setNegativeButton(R.string.cancel_button, (dialog, which) -> {
+                    if ("60".equals(addType)) {
+                        sharedPreferencesHelperMain.saveValue("doubleOrderPref", false);
+                    }
+                    dialog.dismiss();
+                });
+
+        AlertDialog dialog = builder.create();
+        ViewGroup parent = (ViewGroup) dialog.findViewById(android.R.id.content);
+
+        dialog.show();
+
+        // Настройка цветов кнопок
+        Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+        Button negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+
+        if (positiveButton != null) {
+            positiveButton.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.colorAccent));
+            positiveButton.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white));
+            ViewParent buttonPanel = positiveButton.getParent();
+            if (buttonPanel instanceof ViewGroup) {
+                ((ViewGroup) buttonPanel).setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.background_color_new));
             }
-            View dialogView = inflater.inflate(dialogViewInt, null);
 
+        }
+        if (negativeButton != null) {
+            negativeButton.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.selected_text_color_2));
+            negativeButton.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white));
 
-            String title = getString(R.string.double_order);
-            String message = getString(R.string.add_cost_fin_60);
-            String numberIndexString = "";
-
-            switch(addType) {
-                case "60":
-                    title = getString(R.string.double_order);
-
-                    Button minus = dialogView.findViewById(R.id.btn_minus);
-                    Button plus = dialogView.findViewById(R.id.btn_plus);
-                    EditText discinp = dialogView.findViewById(R.id.discinp);
-
-                    minus.setOnClickListener(v -> {
-                        String addCost = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(5);
-                        int addCostInt = Integer.parseInt(addCost);
-                        if(addCostInt >= 5) {
-                            addCostInt -=5;
-                            updateAddCost(String.valueOf(addCostInt));
-                            discinp.setText(String.valueOf(addCostInt + 60));
-                        }
-
-                    });
-
-                    plus.setOnClickListener(v -> {
-                        String addCost = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(5);
-                        int addCostInt = Integer.parseInt(addCost);
-                        addCostInt +=5;
-                        updateAddCost(String.valueOf(addCostInt));
-                        discinp.setText(String.valueOf(addCostInt + 60));
-                    });
-
-                    message = getString(R.string.add_cost_fin_60);
-                    numberIndexString = message;
-                    break;
-                case "45":
-                    title = getString(R.string.black_list);
-                    message = getString(R.string.add_cost_fin_45);
-                    numberIndexString = "45";
-                    blockUserBlackList();
-                    break;
-            }
-            TextView titleView = dialogView.findViewById(R.id.dialogTitle);
-            titleView.setText(title);
-
-            TextView messageView = dialogView.findViewById(R.id.dialogMessage);
-
-            SpannableStringBuilder spannable = new SpannableStringBuilder(message);
-
-            int numberIndex = message.indexOf(numberIndexString);
-            int length = numberIndexString.length();
-            spannable.setSpan(new StyleSpan(Typeface.BOLD), numberIndex, numberIndex + length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-            messageView.setText(spannable);
-
-            builder.setView(dialogView)
-                    .setCancelable(false)
-                    .setPositiveButton(R.string.ok_button, (dialog, which) -> {
-                        dialog.dismiss();
-
-                        switch (addType) {
-                            case "60":
-                                createDoubleOrder();
-                                break;
-                            case "45":
-                                createBlackList();
-                                break;
-                        }
-
-                    })
-                    .setNegativeButton(R.string.cancel_button, (dialog, which) -> dialog.dismiss())
-                    .show();
-
+        }
     }
 
     private void createBlackList() {
@@ -2693,6 +2925,5 @@ public class VisicomFragment extends Fragment {
         }
 
     }
-
 
 }

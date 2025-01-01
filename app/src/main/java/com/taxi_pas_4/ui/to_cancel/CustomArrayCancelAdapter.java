@@ -148,7 +148,7 @@ public class CustomArrayCancelAdapter extends ArrayAdapter<String> {
         costMap.put("routefromnumber", routeInfo.getRouteFromNumber());
         costMap.put("routeto", routeInfo.getRouteTo());
         costMap.put("to_number", routeInfo.getToNumber());
-
+        Logger.d(context, TAG, "uid_Double getStringStringMap" + routeInfo.getDispatchingOrderUidDouble());
         if (routeInfo.getDispatchingOrderUidDouble() != null) {
             costMap.put("dispatching_order_uid_Double", routeInfo.getDispatchingOrderUidDouble());
         } else {
@@ -239,6 +239,7 @@ public class CustomArrayCancelAdapter extends ArrayAdapter<String> {
         bundle.putSerializable("sendUrlMap", new HashMap<>(sendUrlMap));
         bundle.putString("card_payment_key", "no");
         bundle.putString("UID_key", Objects.requireNonNull(sendUrlMap.get("dispatching_order_uid")));
+        bundle.putString("dispatching_order_uid_Double", Objects.requireNonNull(sendUrlMap.get("dispatching_order_uid_Double")));
 
 // Установите Bundle как аргументы фрагмента
         MainActivity.navController.navigate(R.id.nav_finish_separate, bundle, new NavOptions.Builder()
