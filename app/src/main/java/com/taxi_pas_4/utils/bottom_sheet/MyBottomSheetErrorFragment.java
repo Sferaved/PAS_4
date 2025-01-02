@@ -97,7 +97,7 @@ public class MyBottomSheetErrorFragment extends BottomSheetDialogFragment {
                 btn_ok.setText(getString(R.string.order_to_cancel_review));
                 btn_ok.setOnClickListener(v -> {
                     navController.navigate(R.id.nav_cancel, null, new NavOptions.Builder()
-                            .setPopUpTo(R.id.nav_cancel, true)
+                            .setPopUpTo(R.id.nav_visicom, true)
                             .build());
 
 

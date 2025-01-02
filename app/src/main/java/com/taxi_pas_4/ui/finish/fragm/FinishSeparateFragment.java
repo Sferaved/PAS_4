@@ -717,6 +717,9 @@ public class FinishSeparateFragment extends Fragment {
         Logger.d(context, TAG, "payWfp: MainActivity.order_id " + MainActivity.order_id);
         callOrderIdMemory(MainActivity.order_id, uid, pay_method);
         if (rectoken.isEmpty()) {
+            if (handlerAddcost != null) {
+                handlerAddcost.removeCallbacks(showDialogAddcost);
+            }
             getUrlToPaymentWfp(amount, MainActivity.order_id);
             getStatusWfp(MainActivity.order_id);
         } else {
@@ -966,7 +969,11 @@ public class FinishSeparateFragment extends Fragment {
                 getReversWfp(city);
             }
         });
-
+        if(need_20_add) {
+            if (handlerStatus == null) {
+                handlerAddcost.postDelayed(showDialogAddcost, timeCheckOutAddCost);
+            }
+        }
     }
 
     private void getReversWfp(String city) {
