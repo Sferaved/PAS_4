@@ -453,7 +453,7 @@ public class VisicomFragment extends Fragment {
             progressBar.setVisibility(View.GONE);
             ;
 
-            btn_clear_from_text.setText(getString(R.string.try_again));
+            btn_clear_from_text.setText(context.getString(R.string.try_again));
             btn_clear_from_text.setVisibility(View.VISIBLE);
             btn_clear_from_text.setOnClickListener(v -> {
                 startActivity(new Intent(context, MainActivity.class));
@@ -598,7 +598,7 @@ public class VisicomFragment extends Fragment {
             finish = start;
         }
         if (originLatitude == toLatitude) {
-            textViewTo.setText(getString(R.string.on_city_tv));
+            textViewTo.setText(context.getString(R.string.on_city_tv));
         }
         Logger.d(context, TAG, "getTaxiUrlSearchMarkers: start " + start);
         Logger.d(context, TAG, "getTaxiUrlSearchMarkers: finish " + finish);
@@ -974,7 +974,7 @@ public class VisicomFragment extends Fragment {
                             textViewTo.getText() + ".";
             text_full_message.setText(messageResult);
 
-            messageResult = getString(R.string.check_cost_message);
+            messageResult = context.getString(R.string.check_cost_message);
             textCostMessage.setText(messageResult);
 
             textStatusCar.setText(R.string.order_reg);
@@ -1005,7 +1005,7 @@ public class VisicomFragment extends Fragment {
                     if (!orderWeb.equals("0")) {
                         String to_name;
                         if (Objects.equals(sendUrlMap.get("routefrom"), sendUrlMap.get("routeto"))) {
-                            to_name = getString(R.string.on_city_tv);
+                            to_name = context.getString(R.string.on_city_tv);
                             Logger.d(context, TAG, "orderFinished: to_name 1 " + to_name);
                             if (!Objects.equals(sendUrlMap.get("lat"), "0")) {
                                 insertRecordsOrders(
@@ -1039,7 +1039,7 @@ public class VisicomFragment extends Fragment {
                                 || to_name.contains("по городу")
                                 || to_name.contains("around the city")
                         ) {
-                            to_name_local = getString(R.string.on_city_tv);
+                            to_name_local = context.getString(R.string.on_city_tv);
                         }
                         Logger.d(context, TAG, "orderFinished: to_name 4" + to_name_local);
 
@@ -1049,33 +1049,33 @@ public class VisicomFragment extends Fragment {
                         } else {
                             required_time = "";
                         }
-                        String pay_method_message = getString(R.string.pay_method_message_main);
+                        String pay_method_message = context.getString(R.string.pay_method_message_main);
 
                         switch (pay_method) {
                             case "bonus_payment":
-                                pay_method_message += " " + getString(R.string.pay_method_message_bonus);
+                                pay_method_message += " " + context.getString(R.string.pay_method_message_bonus);
                                 break;
                             case "card_payment":
                             case "fondy_payment":
                             case "mono_payment":
                             case "wfp_payment":
-                                pay_method_message += " " + getString(R.string.pay_method_message_card);
+                                pay_method_message += " " + context.getString(R.string.pay_method_message_card);
                                 break;
                             default:
-                                pay_method_message += " " + getString(R.string.pay_method_message_nal);
+                                pay_method_message += " " + context.getString(R.string.pay_method_message_nal);
                         }
 
                         String messageResult =
-                                sendUrlMap.get("routefrom") + " " + getString(R.string.to_message) +
+                                sendUrlMap.get("routefrom") + " " + context.getString(R.string.to_message) +
                                         to_name_local + "." +
                                         required_time;
                         messageResult = cleanString(messageResult);
 
-                        String messagePayment = orderWeb + " " + getString(R.string.UAH) + " " + pay_method_message;
+                        String messagePayment = orderWeb + " " + context.getString(R.string.UAH) + " " + pay_method_message;
 
 
-                        String messageFondy = getString(R.string.fondy_message) + " " +
-                                sendUrlMap.get("routefrom") + " " + getString(R.string.to_message) +
+                        String messageFondy = context.getString(R.string.fondy_message) + " " +
+                                sendUrlMap.get("routefrom") + " " + context.getString(R.string.to_message) +
                                 to_name_local + ".";
 
 
@@ -1130,7 +1130,7 @@ public class VisicomFragment extends Fragment {
                                 case "fondy_payment":
                                 case "mono_payment":
                                 case "wfp_payment":
-                                    changePayMethodToNal(getString(R.string.to_nal_payment));
+                                    changePayMethodToNal(context.getString(R.string.to_nal_payment));
                                     break;
                                 default:
                                     message = getResources().getString(R.string.error_message);
@@ -1400,77 +1400,77 @@ public class VisicomFragment extends Fragment {
 
         switch (city) {
             case "Kyiv City":
-                cityMenu = getString(R.string.city_kyiv);
+                cityMenu = context.getString(R.string.city_kyiv);
                 break;
             case "Dnipropetrovsk Oblast":
-                cityMenu = getString(R.string.city_dnipro);
+                cityMenu = context.getString(R.string.city_dnipro);
                 break;
             case "Odessa":
-                cityMenu = getString(R.string.city_odessa);
+                cityMenu = context.getString(R.string.city_odessa);
                 break;
             case "Zaporizhzhia":
-                cityMenu = getString(R.string.city_zaporizhzhia);
+                cityMenu = context.getString(R.string.city_zaporizhzhia);
                 break;
             case "Cherkasy Oblast":
-                cityMenu = getString(R.string.city_cherkassy);
+                cityMenu = context.getString(R.string.city_cherkassy);
                 break;
             case "Lviv":
-                cityMenu = getString(R.string.city_lviv);
+                cityMenu = context.getString(R.string.city_lviv);
                 break;
             case "Ivano_frankivsk":
-                cityMenu = getString(R.string.city_ivano_frankivsk);
+                cityMenu = context.getString(R.string.city_ivano_frankivsk);
                 break;
             case "Vinnytsia":
-                cityMenu = getString(R.string.city_vinnytsia);
+                cityMenu = context.getString(R.string.city_vinnytsia);
                 break;
             case "Poltava":
-                cityMenu = getString(R.string.city_poltava);
+                cityMenu = context.getString(R.string.city_poltava);
                 break;
             case "Sumy":
-                cityMenu = getString(R.string.city_sumy);
+                cityMenu = context.getString(R.string.city_sumy);
                 break;
             case "Kharkiv":
-                cityMenu = getString(R.string.city_kharkiv);
+                cityMenu = context.getString(R.string.city_kharkiv);
                 break;
             case "Chernihiv":
-                cityMenu = getString(R.string.city_chernihiv);
+                cityMenu = context.getString(R.string.city_chernihiv);
                 break;
             case "Rivne":
-                cityMenu = getString(R.string.city_rivne);
+                cityMenu = context.getString(R.string.city_rivne);
                 break;
             case "Ternopil":
-                cityMenu = getString(R.string.city_ternopil);
+                cityMenu = context.getString(R.string.city_ternopil);
                 break;
             case "Khmelnytskyi":
-                cityMenu = getString(R.string.city_khmelnytskyi);
+                cityMenu = context.getString(R.string.city_khmelnytskyi);
                 break;
             case "Zakarpattya":
-                cityMenu = getString(R.string.city_zakarpattya);
+                cityMenu = context.getString(R.string.city_zakarpattya);
                 break;
             case "Zhytomyr":
-                cityMenu = getString(R.string.city_zhytomyr);
+                cityMenu = context.getString(R.string.city_zhytomyr);
                 break;
             case "Kropyvnytskyi":
-                cityMenu = getString(R.string.city_kropyvnytskyi);
+                cityMenu = context.getString(R.string.city_kropyvnytskyi);
                 break;
             case "Mykolaiv":
-                cityMenu = getString(R.string.city_mykolaiv);
+                cityMenu = context.getString(R.string.city_mykolaiv);
                 break;
             case "Сhernivtsi":
-                cityMenu = getString(R.string.city_chernivtsi);
+                cityMenu = context.getString(R.string.city_chernivtsi);
                 break;
             case "Lutsk":
-                cityMenu = getString(R.string.city_lutsk);
+                cityMenu = context.getString(R.string.city_lutsk);
                 break;
             case "OdessaTest":
                 cityMenu = "Test";
                 break;
             default:
-                cityMenu = getString(R.string.foreign_countries);
+                cityMenu = context.getString(R.string.foreign_countries);
         }
 
 
-        String newTitle = getString(R.string.menu_city) + " " + cityMenu;
+        String newTitle = context.getString(R.string.menu_city) + " " + cityMenu;
         // Изменяем текст элемента меню
         MainActivity.navVisicomMenuItem.setTitle(newTitle);
         AppCompatActivity activity = (AppCompatActivity) context;
@@ -1688,7 +1688,7 @@ public class VisicomFragment extends Fragment {
             if (locationManager != null) {
                 if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                     if (loadPermissionRequestCount() >= 3 && !MainActivity.location_update) {
-                        MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment(getString(R.string.location_on));
+                        MyBottomSheetGPSFragment bottomSheetDialogFragment = new MyBottomSheetGPSFragment(context.getString(R.string.location_on));
                         bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                     } else {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -1719,7 +1719,7 @@ public class VisicomFragment extends Fragment {
 
                     // GPS включен, выполните ваш код здесь
                     if (!NetworkUtils.isNetworkAvailable(context)) {
-                        Toast.makeText(context, getString(R.string.verify_internet), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, context.getString(R.string.verify_internet), Toast.LENGTH_SHORT).show();
                     } else if (isAdded() && isVisible() && MainActivity.location_update) {
                         List<String> settings = new ArrayList<>();
 
@@ -1743,7 +1743,7 @@ public class VisicomFragment extends Fragment {
                         settings.add(Double.toString(0));
                         settings.add(Double.toString(toLatitude));
                         settings.add(Double.toString(toLongitude));
-                        settings.add(getString(R.string.search));
+                        settings.add(context.getString(R.string.search));
                         settings.add(ToAdressString);
 
                         updateRoutMarker(settings);
@@ -1784,7 +1784,7 @@ public class VisicomFragment extends Fragment {
             if (geoText.getText().toString().isEmpty()) {
                 btn_clear_from_text.setVisibility(View.VISIBLE);
                 String unuString = new String(Character.toChars(0x1F449));
-                unuString += " " + getString(R.string.search_text);
+                unuString += " " + context.getString(R.string.search_text);
                 btn_clear_from_text.setText(unuString);
                 binding.textfrom.setVisibility(View.INVISIBLE);
                 num1.setVisibility(View.INVISIBLE);
@@ -1886,7 +1886,7 @@ public class VisicomFragment extends Fragment {
             progressBar.setVisibility(View.GONE);
 
 
-            btn_clear_from_text.setText(getString(R.string.try_again));
+            btn_clear_from_text.setText(context.getString(R.string.try_again));
             btn_clear_from_text.setVisibility(View.VISIBLE);
             btn_clear_from_text.setOnClickListener(v -> {
                 startActivity(new Intent(context, MainActivity.class));
@@ -1922,7 +1922,7 @@ public class VisicomFragment extends Fragment {
 
     private void firstLocation() {
         progressBar.setVisibility(View.VISIBLE);
-        Toast.makeText(requireContext(), getString(R.string.search), Toast.LENGTH_SHORT).show();
+        Toast.makeText(requireContext(), context.getString(R.string.search), Toast.LENGTH_SHORT).show();
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
 
@@ -1940,7 +1940,7 @@ public class VisicomFragment extends Fragment {
                     if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                         // GPS включен, выполните ваш код здесь
                         if (!NetworkUtils.isNetworkAvailable(context)) {
-                            Toast.makeText(context, getString(R.string.verify_internet), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, context.getString(R.string.verify_internet), Toast.LENGTH_SHORT).show();
                         } else if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                                 || ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                             checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
@@ -1968,11 +1968,11 @@ public class VisicomFragment extends Fragment {
                             settings.add(Double.toString(0));
                             settings.add(Double.toString(toLatitude));
                             settings.add(Double.toString(toLongitude));
-                            settings.add(getString(R.string.search));
+                            settings.add(context.getString(R.string.search));
                             settings.add(ToAdressString);
 
                             updateRoutMarker(settings);
-                            Toast.makeText(requireContext(), getString(R.string.search), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(requireContext(), context.getString(R.string.search), Toast.LENGTH_SHORT).show();
                             firstLocation();
                         }
 
@@ -2026,25 +2026,25 @@ public class VisicomFragment extends Fragment {
                                 String city = context.getString(R.string.foreign_countries);
                                 switch (stringListCity.get(1)) {
                                     case "Kyiv City":
-                                        city = getString(R.string.Kyiv_city);
+                                        city = context.getString(R.string.Kyiv_city);
                                         break;
                                     case "Dnipropetrovsk Oblast":
                                         break;
                                     case "Odessa":
                                     case "OdessaTest":
-                                        city = getString(R.string.Odessa);
+                                        city = context.getString(R.string.Odessa);
                                         break;
                                     case "Zaporizhzhia":
-                                        city = getString(R.string.Zaporizhzhia);
+                                        city = context.getString(R.string.Zaporizhzhia);
                                         break;
                                     case "Cherkasy Oblast":
-                                        city = getString(R.string.Cherkasy);
+                                        city = context.getString(R.string.Cherkasy);
                                         break;
                                     default:
-                                        city = getString(R.string.foreign_countries);
+                                        city = context.getString(R.string.foreign_countries);
                                         break;
                                 }
-                                FromAdressString = getString(R.string.startPoint) + ", " + getString(R.string.city_loc) + " " + city;
+                                FromAdressString = context.getString(R.string.startPoint) + ", " + context.getString(R.string.city_loc) + " " + city;
                             }
 
                             updateMyPosition(latitude, longitude, FromAdressString, context);
@@ -2117,7 +2117,7 @@ public class VisicomFragment extends Fragment {
                                     if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                                         // GPS включен, выполните ваш код здесь
                                         if (!NetworkUtils.isNetworkAvailable(context)) {
-                                            Toast.makeText(context, getString(R.string.verify_internet), Toast.LENGTH_SHORT).show();
+                                            Toast.makeText(context, context.getString(R.string.verify_internet), Toast.LENGTH_SHORT).show();
                                         } else if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                                                 || ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                                             checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
@@ -2145,11 +2145,11 @@ public class VisicomFragment extends Fragment {
                                             settings1.add(Double.toString(0));
                                             settings1.add(Double.toString(toLatitude1));
                                             settings1.add(Double.toString(toLongitude1));
-                                            settings1.add(getString(R.string.search));
+                                            settings1.add(context.getString(R.string.search));
                                             settings1.add(ToAdressString1);
 
                                             updateRoutMarker(settings1);
-                                            Toast.makeText(requireContext(), getString(R.string.search), Toast.LENGTH_SHORT).show();
+                                            Toast.makeText(requireContext(), context.getString(R.string.search), Toast.LENGTH_SHORT).show();
                                             firstLocation();
                                         }
 
@@ -2492,7 +2492,7 @@ public class VisicomFragment extends Fragment {
         databaseHelper.clearTableCancel();
         databaseHelperUid.clearTableCancel();
 
-        String closeReasonText = getString(R.string.close_resone_def);
+        String closeReasonText = context.getString(R.string.close_resone_def);
 
         for (int i = 0; i < routeListCancel.size(); i++) {
             RouteResponseCancel route = routeListCancel.get(i);
@@ -2514,52 +2514,52 @@ public class VisicomFragment extends Fragment {
 
             switch (closeReason) {
                 case "-1":
-                    closeReasonText = getString(R.string.close_resone_in_work);
+                    closeReasonText = context.getString(R.string.close_resone_in_work);
                     break;
                 case "0":
-                    closeReasonText = getString(R.string.close_resone_0);
+                    closeReasonText = context.getString(R.string.close_resone_0);
                     break;
                 case "1":
-                    closeReasonText = getString(R.string.close_resone_1);
+                    closeReasonText = context.getString(R.string.close_resone_1);
                     break;
                 case "2":
-                    closeReasonText = getString(R.string.close_resone_2);
+                    closeReasonText = context.getString(R.string.close_resone_2);
                     break;
                 case "3":
-                    closeReasonText = getString(R.string.close_resone_3);
+                    closeReasonText = context.getString(R.string.close_resone_3);
                     break;
                 case "4":
-                    closeReasonText = getString(R.string.close_resone_4);
+                    closeReasonText = context.getString(R.string.close_resone_4);
                     break;
                 case "5":
-                    closeReasonText = getString(R.string.close_resone_5);
+                    closeReasonText = context.getString(R.string.close_resone_5);
                     break;
                 case "6":
-                    closeReasonText = getString(R.string.close_resone_6);
+                    closeReasonText = context.getString(R.string.close_resone_6);
                     break;
                 case "7":
-                    closeReasonText = getString(R.string.close_resone_7);
+                    closeReasonText = context.getString(R.string.close_resone_7);
                     break;
                 case "8":
-                    closeReasonText = getString(R.string.close_resone_8);
+                    closeReasonText = context.getString(R.string.close_resone_8);
                     break;
                 case "9":
-                    closeReasonText = getString(R.string.close_resone_9);
+                    closeReasonText = context.getString(R.string.close_resone_9);
                     break;
             }
 
             if (routeFrom.equals("Місце відправлення")) {
-                routeFrom = getString(R.string.start_point_text);
+                routeFrom = context.getString(R.string.start_point_text);
             }
 
             if (routeTo.equals("Точка на карте")) {
-                routeTo = getString(R.string.end_point_marker);
+                routeTo = context.getString(R.string.end_point_marker);
             }
             if (routeTo.contains("по городу")) {
-                routeTo = getString(R.string.on_city);
+                routeTo = context.getString(R.string.on_city);
             }
             if (routeTo.contains("по місту")) {
-                routeTo = getString(R.string.on_city);
+                routeTo = context.getString(R.string.on_city);
             }
             String routeInfo = "";
 
@@ -2567,28 +2567,28 @@ public class VisicomFragment extends Fragment {
                 auto = "??";
             }
             if (required_time != null && !required_time.contains("01.01.1970")) {
-                required_time = " " + getString(R.string.time_order) + required_time;
+                required_time = " " + context.getString(R.string.time_order) + required_time;
             } else {
                 required_time = "";
             }
             if (routeFrom.equals(routeTo)) {
                 routeInfo = routeFrom + " " + routefromnumber
-                        + getString(R.string.close_resone_to)
-                        + getString(R.string.on_city)
+                        + context.getString(R.string.close_resone_to)
+                        + context.getString(R.string.on_city)
                         + required_time + "#"
-                        + getString(R.string.close_resone_cost) + webCost + " " + getString(R.string.UAH) + "#"
-                        + getString(R.string.auto_info) + " " + auto + "#"
-                        + getString(R.string.close_resone_time)
+                        + context.getString(R.string.close_resone_cost) + webCost + " " + context.getString(R.string.UAH) + "#"
+                        + context.getString(R.string.auto_info) + " " + auto + "#"
+                        + context.getString(R.string.close_resone_time)
                         + createdAt + "#"
-                        + getString(R.string.close_resone_text) + closeReasonText;
+                        + context.getString(R.string.close_resone_text) + closeReasonText;
             } else {
                 routeInfo = routeFrom + " " + routefromnumber
-                        + getString(R.string.close_resone_to) + routeTo + " " + routeTonumber + "."
+                        + context.getString(R.string.close_resone_to) + routeTo + " " + routeTonumber + "."
                         + required_time + "#"
-                        + getString(R.string.close_resone_cost) + webCost + " " + getString(R.string.UAH) + "#"
-                        + getString(R.string.auto_info) + " " + auto + "#"
-                        + getString(R.string.close_resone_time) + createdAt + "#"
-                        + getString(R.string.close_resone_text) + closeReasonText;
+                        + context.getString(R.string.close_resone_cost) + webCost + " " + context.getString(R.string.UAH) + "#"
+                        + context.getString(R.string.auto_info) + " " + auto + "#"
+                        + context.getString(R.string.close_resone_time) + createdAt + "#"
+                        + context.getString(R.string.close_resone_text) + closeReasonText;
             }
 
             databaseHelper.addRouteCancel(uid, routeInfo);
@@ -2614,7 +2614,7 @@ public class VisicomFragment extends Fragment {
         String[] array = databaseHelper.readRouteCancel();
         Logger.d(context, TAG, "processRouteList: array " + Arrays.toString(array));
         if (array != null) {
-            String message = getString(R.string.order_to_cancel_true);
+            String message = context.getString(R.string.order_to_cancel_true);
             MyBottomSheetErrorFragment myBottomSheetMessageFragment = new MyBottomSheetErrorFragment(message);
             fragmentManager.beginTransaction()
                     .add(myBottomSheetMessageFragment, myBottomSheetMessageFragment.getTag())
@@ -2735,13 +2735,13 @@ public class VisicomFragment extends Fragment {
         View dialogView = inflater.inflate(dialogViewInt, null);
 
         // Заголовок и сообщение
-        String title = getString(R.string.double_order);
-        String message = getString(R.string.add_cost_fin_60);
+        String title = context.getString(R.string.double_order);
+        String message = context.getString(R.string.add_cost_fin_60);
         String numberIndexString = "";
 
         // Инициализация элементов для типа "60"
         if ("60".equals(addType)) {
-            title = getString(R.string.double_order);
+            title = context.getString(R.string.double_order);
 
             AppCompatButton minus = dialogView.findViewById(R.id.btn_minus);
             AppCompatButton plus = dialogView.findViewById(R.id.btn_plus);
@@ -2765,11 +2765,11 @@ public class VisicomFragment extends Fragment {
                 discinp.setText(String.valueOf(addCostInt + 60));
             });
 
-            message = getString(R.string.add_cost_fin_60);
+            message = context.getString(R.string.add_cost_fin_60);
             numberIndexString = message;
         } else if ("45".equals(addType)) {
-            title = getString(R.string.black_list);
-            message = getString(R.string.add_cost_fin_45);
+            title = context.getString(R.string.black_list);
+            message = context.getString(R.string.add_cost_fin_45);
             numberIndexString = "45";
             blockUserBlackList();
         }

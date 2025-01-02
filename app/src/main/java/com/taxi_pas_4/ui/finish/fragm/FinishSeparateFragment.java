@@ -35,6 +35,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.AppCompatButton;
@@ -203,6 +204,15 @@ public class FinishSeparateFragment extends Fragment {
         fragmentManager = getParentFragmentManager();
 
         context.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                        .build());
+            }
+        });
+
         progressBar = root.findViewById(R.id.progress_bar);
 
         baseUrl = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
