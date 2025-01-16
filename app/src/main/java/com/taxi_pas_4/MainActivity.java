@@ -5,8 +5,6 @@ import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHel
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -25,8 +23,6 @@ import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -50,22 +46,17 @@ import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
 import com.firebase.ui.auth.IdpResponse;
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.play.core.appupdate.AppUpdateInfo;
 import com.google.android.play.core.appupdate.AppUpdateManager;
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
 import com.google.android.play.core.install.model.AppUpdateType;
 import com.google.android.play.core.install.model.UpdateAvailability;
-import com.google.android.gms.tasks.Task;
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import com.taxi_pas_4.cities.api.CityApiClient;
-import com.taxi_pas_4.cities.api.CityApiTestClient;
-import com.taxi_pas_4.cities.api.CityLastAddressResponse;
-import com.taxi_pas_4.cities.api.CityResponse;
-import com.taxi_pas_4.cities.api.CityResponseMerchantFondy;
-import com.taxi_pas_4.cities.api.CityService;
 import com.taxi_pas_4.cities.check.CityCheckActivity;
 import com.taxi_pas_4.databinding.ActivityMainBinding;
 import com.taxi_pas_4.ui.card.CardInfo;
@@ -73,20 +64,15 @@ import com.taxi_pas_4.ui.clear.AppDataUtils;
 import com.taxi_pas_4.ui.finish.RouteResponse;
 import com.taxi_pas_4.ui.home.HomeFragment;
 import com.taxi_pas_4.ui.settings.SettingsActivity;
+import com.taxi_pas_4.ui.visicom.VisicomFragment;
+import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
+import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
+import com.taxi_pas_4.utils.LocaleHelper;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetCityFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGPSFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetMessageFragment;
-import com.taxi_pas_4.ui.open_map.mapbox.key_mapbox.ApiClientMapbox;
-import com.taxi_pas_4.ui.open_map.mapbox.key_mapbox.ApiResponseMapbox;
-import com.taxi_pas_4.ui.visicom.visicom_search.key_visicom.ApiResponse;
-import com.taxi_pas_4.ui.visicom.VisicomFragment;
-import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
-import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
-
-import com.taxi_pas_4.utils.LocaleHelper;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
-
 import com.taxi_pas_4.utils.download.AppUpdater;
 import com.taxi_pas_4.utils.fcm.token_send.ApiServiceToken;
 import com.taxi_pas_4.utils.fcm.token_send.RetrofitClientToken;
@@ -98,7 +84,6 @@ import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 import com.taxi_pas_4.utils.user.save_firebase.FirebaseUserManager;
 import com.taxi_pas_4.utils.user.save_server.ApiServiceUser;
 import com.taxi_pas_4.utils.user.save_server.UserResponse;
-import com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
 
 import org.json.JSONException;
 
@@ -173,7 +158,6 @@ public class MainActivity extends AppCompatActivity {
 
     private List<RouteResponse> routeList;
 
-    private boolean gps_upd;
     VisicomFragment visicomFragment;
     public static SharedPreferences sharedPreferences;
     public static SharedPreferences sharedPreferencesCount;
@@ -191,7 +175,6 @@ public class MainActivity extends AppCompatActivity {
     public static NavController navController;
     private FirebaseUserManager userManager;
 
-    private String cityMenu;
     private String city;
     private String newTitle;
     public static List<Call<?>> activeCalls = new ArrayList<>();
@@ -275,36 +258,6 @@ public class MainActivity extends AppCompatActivity {
         } catch (MalformedURLException | JSONException | InterruptedException e) {
             FirebaseCrashlytics.getInstance().recordException(e);
         }
-
-       // Устанавливаем Action Bar, если он доступен
-       if (getSupportActionBar() != null) {
-           // Устанавливаем пользовательский макет в качестве заголовка Action Bar
-           getSupportActionBar().setDisplayShowCustomEnabled(true);
-           getSupportActionBar().setDisplayShowTitleEnabled(false); // Отключаем стандартный заголовок
-           getSupportActionBar().setCustomView(R.layout.custom_action_bar_title);
-
-           // Доступ к TextView в пользовательском заголовке
-           View customView = getSupportActionBar().getCustomView();
-           TextView titleTextView = customView.findViewById(R.id.action_bar_title);
-
-           setCityAppbar();
-
-           titleTextView.setText(newTitle);
-           // Установка обработчика нажатий
-           titleTextView.setOnClickListener(v -> {
-               Logger.d(this, TAG, " Установка обработчика нажатий" + NetworkUtils.isNetworkAvailable(getApplicationContext()));
-               if (NetworkUtils.isNetworkAvailable(getApplicationContext())) {
-                   // Ваш код при нажатии на заголовок
-                   MyBottomSheetCityFragment bottomSheetDialogFragment = new MyBottomSheetCityFragment(city, MainActivity.this);
-                   bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
-               } else {
-                   MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
-                   bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
-               }
-
-           });
-       }
-
     }
     private void applyLocale(String localeCode) {
         Locale locale = new Locale(localeCode);
@@ -319,6 +272,7 @@ public class MainActivity extends AppCompatActivity {
     {
         List<String> stringList = logCursor(MainActivity.CITY_INFO);
         city = stringList.get(1);
+        String cityMenu;
         switch (city){
             case "Kyiv City":
                 cityMenu = getString(R.string.city_kyiv);
@@ -407,6 +361,41 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        String localeCode = (String) sharedPreferencesHelperMain.getValue("locale", "uk");
+        Logger.i(this, "locale", localeCode);
+        // Установка локали
+        applyLocale(localeCode);
+
+        // Устанавливаем Action Bar, если он доступен
+        if (getSupportActionBar() != null) {
+            // Устанавливаем пользовательский макет в качестве заголовка Action Bar
+            getSupportActionBar().setDisplayShowCustomEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(false); // Отключаем стандартный заголовок
+            getSupportActionBar().setCustomView(R.layout.custom_action_bar_title);
+
+            // Доступ к TextView в пользовательском заголовке
+            View customView = getSupportActionBar().getCustomView();
+            TextView titleTextView = customView.findViewById(R.id.action_bar_title);
+
+            setCityAppbar();
+
+            titleTextView.setText(newTitle);
+            // Установка обработчика нажатий
+            titleTextView.setOnClickListener(v -> {
+                Logger.d(this, TAG, " Установка обработчика нажатий" + NetworkUtils.isNetworkAvailable(getApplicationContext()));
+                if (NetworkUtils.isNetworkAvailable(getApplicationContext())) {
+                    // Ваш код при нажатии на заголовок
+                    MyBottomSheetCityFragment bottomSheetDialogFragment = new MyBottomSheetCityFragment(city, MainActivity.this);
+                    bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
+                } else {
+                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
+                    bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
+                }
+
+            });
+        }
+
         if (!NetworkUtils.isNetworkAvailable(getApplicationContext())) {
             // Ваш код при нажатии на заголовок
 
@@ -424,6 +413,7 @@ public class MainActivity extends AppCompatActivity {
 //        }
             baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
 
+            boolean gps_upd;
             if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
                 gps_upd = getIntent().getBooleanExtra("gps_upd", true);
@@ -898,8 +888,9 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 
         if (item.getItemId() == R.id.action_exit) {
+            FirebaseApp.getInstance().setDataCollectionDefaultEnabled(false);
             deleteOldLogFile();
-            System.gc();
+//            System.gc();
 
             finishAffinity(); // Закрывает все активити
             System.exit(0);
@@ -978,52 +969,23 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("StaticFieldLeak")
     private static AppUpdater appUpdater;
 
-    private boolean isUpdateInProgress = false;  // Переменная для отслеживания состояния обновления
 
-    public void updateApp() {
+    private void updateApp() {
         // Устанавливаем флаг обновления
         appUpdater = new AppUpdater();
-        isUpdateInProgress = true;
-        Logger.d(this, TAG, "Starting app update process");
-        sharedPreferencesHelperMain.saveValue("visible_shed", "ok");
-        // Проверка наличия обновлений
-        checkForUpdate(this);
 
-        // Устанавливаем слушателя для завершения обновления
         appUpdater.setOnUpdateListener(() -> {
-            // Обновление завершено
-            Toast.makeText(this, R.string.update_finish_mes, Toast.LENGTH_SHORT).show();
-
-            // Перезапуск приложения после небольшой задержки
-            new Handler(Looper.getMainLooper()).postDelayed(this::restartApplication, 1000);
-
-            // Сброс флага обновления
-            isUpdateInProgress = false;
+            restartApplication(this);
         });
 
         // Регистрация слушателя
         appUpdater.registerListener();
 
-        // Таймаут на случай зависания обновления
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            if (isUpdateInProgress) {
-                // Если обновление не завершилось за 10 минут
-                Logger.e(this, TAG, "Update process timed out");
-                Toast.makeText(this, R.string.update_timeout, Toast.LENGTH_LONG).show();
-
-                // Остановка обновления (если это поддерживается в вашем API)
-                stopUpdate();  // Пример: прекращение обновления (в зависимости от используемого механизма)
-                isUpdateInProgress = false;
-            }
-        }, 10 * 60 * 1000); // 10 минут
+        // Проверка наличия обновлений
+        checkForUpdate(this);
     }
 
-    private void stopUpdate() {
-        // Проверка и остановка обновления (если поддерживается в API)
-        Logger.d(this, TAG, "Stopping update...");
-        // Например, для сторонних библиотек:
-        // appUpdater.stopUpdate();
-    }
+
 
     private static final int MY_REQUEST_CODE = 1234; // Уникальный код запроса для обновления
 
@@ -1077,60 +1039,13 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == MY_REQUEST_CODE) {
-            if (resultCode == RESULT_OK) {
-                Logger.d(this, TAG, "Update successful!");
-                Toast.makeText(this, R.string.update_successful, Toast.LENGTH_SHORT).show();
-            } else {
-                Logger.e(this, TAG, "Update flow failed! Result code: " + resultCode);
 
-                // Обработка ошибки обновления
-                if (resultCode == Activity.RESULT_CANCELED) {
-                    Toast.makeText(this, R.string.update_canceled, Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(this, R.string.update_failed, Toast.LENGTH_LONG).show();
-                }
-
-                // Логирование дополнительной информации о процессе
-                if (data != null) {
-                    Logger.d(this, TAG, "Intent data: " + data.toString());
-                }
-            }
-        }
+    private static void restartApplication(Context context) {
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        context.startActivity(intent);
     }
-
-    private void restartApplication() {
-        try {
-            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-            int pendingIntentId = 123456;
-            PendingIntent pendingIntent = PendingIntent.getActivity(
-                    this,
-                    pendingIntentId,
-                    intent,
-                    PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE
-            );
-
-            AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-            if (alarmManager != null) {
-                alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 1000, pendingIntent); // Задержка 1 секунда
-                Logger.d(this, TAG, "Application restart scheduled.");
-            } else {
-                Logger.e(this, TAG, "AlarmManager is not available!");
-            }
-
-            // Завершение текущего процесса приложения
-            System.exit(0); // Завершение текущего процесса
-        } catch (Exception e) {
-            Logger.e(this, TAG, "Error during app restart: " + e.getMessage());
-            FirebaseCrashlytics.getInstance().recordException(e);
-            Toast.makeText(this, R.string.restart_error, Toast.LENGTH_LONG).show();
-        }
-    }
-
 
 
     @Override
@@ -1291,20 +1206,18 @@ public class MainActivity extends AppCompatActivity {
     public List<String> logCursor(String table) {
         List<String> list = new ArrayList<>();
         SQLiteDatabase db = openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-        Cursor c = db.query(table, null, null, null, null, null, null);
-        if (c != null) {
-            if (c.moveToFirst()) {
-                String str;
-                do {
-                    str = "";
-                    for (String cn : c.getColumnNames()) {
-                        str = str.concat(cn + " = " + c.getString(c.getColumnIndex(cn)) + "; ");
-                        list.add(c.getString(c.getColumnIndex(cn)));
+        @SuppressLint("Recycle") Cursor c = db.query(table, null, null, null, null, null, null);
+        if (c.moveToFirst()) {
+            String str;
+            do {
+                str = "";
+                for (String cn : c.getColumnNames()) {
+                    str = str.concat(cn + " = " + c.getString(c.getColumnIndex(cn)) + "; ");
+                    list.add(c.getString(c.getColumnIndex(cn)));
 
-                    }
+                }
 
-                } while (c.moveToNext());
-            }
+            } while (c.moveToNext());
         }
         db.close();
         return list;
@@ -1866,385 +1779,5 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-    private void checkForUpdateForBtn() {
 
-
-        AppUpdateManager appUpdateManager = AppUpdateManagerFactory.create(this);
-        Task<AppUpdateInfo> appUpdateInfoTask = appUpdateManager.getAppUpdateInfo();
-        appUpdateInfoTask.addOnSuccessListener(appUpdateInfo -> {
-            if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) {
-                // Доступны обновления
-
-                Logger.d(getApplicationContext(), TAG, "Available updates found");
-                String title = getString(R.string.new_version);
-                String messageNotif = getString(R.string.news_of_version);
-
-                String urlStr = "https://play.google.com/store/apps/details?id=com.taxi_pas_4";
-                NotificationHelper.showNotification(MainActivity.this, title, messageNotif, urlStr);
-            }
-        });
-    }
-
-
-    private void mapboxKey() {
-        ApiClientMapbox.getMapboxKeyInfo(new Callback<ApiResponseMapbox>() {
-            @Override
-            public void onResponse(@NonNull Call<ApiResponseMapbox> call, @NonNull Response<ApiResponseMapbox> response) {
-                if (response.isSuccessful()) {
-                    ApiResponseMapbox apiResponse = response.body();
-                    if (apiResponse != null) {
-                        String keyMaxbox = apiResponse.getKeyMapbox();
-                        Logger.d(getApplicationContext(),"ApiResponseMapbox", "keyMapbox: " + keyMaxbox);
-                        MainActivity.apiKeyMapBox = keyMaxbox;
-                        // Теперь у вас есть ключ Visicom для дальнейшего использования
-                    }
-                } else {
-                    // Обработка ошибки
-                    Logger.d(getApplicationContext(),"mapboxKey", "Error: " + response.code());
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<ApiResponseMapbox> call, @NonNull Throwable t) {
-                // Обработка ошибки
-                Logger.d(getApplicationContext(),"ApiResponseMapbox", "Failed to make API call" + t);
-            }
-        }, getString(R.string.application)
-        );
-    }
-
-    private void visicomKey() {
-        com.taxi_pas_4.ui.visicom.visicom_search.key_visicom.ApiClient.getVisicomKeyInfo(new Callback<ApiResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
-                if (response.isSuccessful()) {
-                    ApiResponse apiResponse = response.body();
-                    if (apiResponse != null) {
-                        String keyVisicom = apiResponse.getKeyVisicom();
-                        Logger.d(getApplicationContext(),"ApiResponse", "keyVisicom: " + keyVisicom);
-                        MainActivity.apiKey = keyVisicom;
-                    }
-                } else {
-                    // Обработка ошибки
-                    Logger.d(getApplicationContext(),"visicomKey", "Error: " + response.code());
-
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-                // Обработка ошибки
-                Logger.d(getApplicationContext(),"visicomKey", "Failed to make API call" + t);
-            }
-        },getString(R.string.application)
-        );
-    }
-
-//    private void lastAddressUser() {
-//
-//        String cityString = logCursor(MainActivity.CITY_INFO).get(1);
-//
-//        String email = logCursor(MainActivity.TABLE_USER_INFO).get(3);
-//        CityService cityService;
-//
-//        Logger.d(this, TAG, "lastAddressUser: cityString" + cityString);
-//        switch (cityString){
-//            case "OdessaTest":
-//                cityService = CityApiTestClient.getClient().create(CityService.class);
-//                break;
-//            default:
-//                cityService = CityApiClient.getClient().create(CityService.class);
-//        }
-//
-//        Call<CityLastAddressResponse> call = cityService.lastAddressUser(email, cityString, this.getString(R.string.application));
-//
-//        call.enqueue(new Callback<CityLastAddressResponse>() {
-//            @Override
-//            public void onResponse(@NonNull Call<CityLastAddressResponse> call, @NonNull Response<CityLastAddressResponse> response) {
-//                if (response.isSuccessful()) {
-//                    CityLastAddressResponse cityResponse = response.body();
-//                    Logger.d(getApplicationContext(), TAG, "onResponse: cityResponse" + cityResponse);
-//                    if (cityResponse != null) {
-//                        String routefrom = cityResponse.getRoutefrom();
-//                        String startLat = cityResponse.getStartLat();
-//                        String startLan = cityResponse.getStartLan();
-//
-//
-//                        Logger.d(getApplicationContext(), TAG, "lastAddressUser: routefrom" + routefrom);
-//                        Logger.d(getApplicationContext(), TAG, "lastAddressUser: startLat" + startLat);
-//                        Logger.d(getApplicationContext(), TAG, "lastAddressUser: startLan" + startLan);
-//                        if(routefrom.equals("*") || startLat.equals("0.0") || startLan.equals("0.0")) {
-//                            updateMyPosition(cityString);
-//                        } else {
-//                            updateMyLatsPosition(routefrom, startLat, startLan, cityString);
-//                        }
-//
-//                    }
-//                } else {
-//                    Logger.d(getApplicationContext(), TAG, "Failed. Error code: " + response.code());
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(Call<CityLastAddressResponse> call, Throwable t) {
-//                Logger.d(getApplicationContext(), TAG, "Failed. Error message: " + t.getMessage());
-//                VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
-//            }
-//        });
-//    }
-//
-//    private void updateMyPosition(String city) {
-//
-//        double startLat;
-//        double startLan;
-//        String position;
-//        Logger.d(getApplicationContext(), TAG, "updateMyPosition:city "+ city);
-//
-//
-//        switch (city) {
-//            case "Kyiv City":
-//                position = getApplicationContext().getString(R.string.pos_k);
-//                startLat = 50.451107;
-//                startLan = 30.524907;
-//
-//                break;
-//            case "Dnipropetrovsk Oblast":
-//                // Днепр
-//                position = getApplicationContext().getString(R.string.pos_d);
-//                startLat = 48.4647;
-//                startLan = 35.0462;
-//
-//                break;
-//            case "Odessa":
-//                position = getApplicationContext().getString(R.string.pos_o);
-//                startLat = 46.4694;
-//                startLan = 30.7404;
-//
-//                break;
-//            case "Zaporizhzhia":
-//                position = getApplicationContext().getString(R.string.pos_z);
-//                startLat = 47.84015;
-//                startLan = 35.13634;
-//
-//                break;
-//            case "Cherkasy Oblast":
-//                position = getApplicationContext().getString(R.string.pos_c);
-//                startLat = 49.44469;
-//                startLan = 32.05728;
-//
-//                break;
-//            case "Lviv":
-//                position = getApplicationContext().getString(R.string.pos_l);
-//                startLat = 49.83993;
-//                startLan = 24.02973;
-//
-//                break;
-//            case "Ivano_frankivsk":
-//                position = getApplicationContext().getString(R.string.pos_if);
-//                startLat = 48.92005;
-//                startLan = 24.71067;
-//
-//                break;
-//            case "Vinnytsia":
-//                position = getApplicationContext().getString(R.string.pos_v);
-//                startLat = 49.23325;
-//                startLan = 28.46865;
-//
-//                break;
-//            case "Poltava":
-//                position = getApplicationContext().getString(R.string.pos_p);
-//                startLat = 49.59325;
-//                startLan = 34.54938;
-//
-//                break;
-//            case "Sumy":
-//                position = getApplicationContext().getString(R.string.pos_s);
-//                startLat = 50.90775;
-//                startLan = 34.79865;
-//
-//                break;
-//            case "Kharkiv":
-//                position = getApplicationContext().getString(R.string.pos_h);
-//                startLat = 49.99358;
-//                startLan = 36.23191;
-//
-//                break;
-//            case "Chernihiv":
-//                position = getApplicationContext().getString(R.string.pos_ch);
-//                startLat = 51.4933;
-//                startLan = 31.2972;
-//
-//                break;
-//            case "Rivne":
-//                position = getApplicationContext().getString(R.string.pos_r);
-//                startLat = 50.6198;
-//                startLan = 26.2406;
-//
-//                break;
-//            case "Ternopil":
-//                position = getApplicationContext().getString(R.string.pos_t);
-//                startLat = 49.54479;
-//                startLan = 25.5990;
-//
-//                break;
-//            case "Khmelnytskyi":
-//                position = getApplicationContext().getString(R.string.pos_kh);
-//                startLat = 49.41548;
-//                startLan = 27.00674;
-//
-//                break;
-//
-//            case "Zakarpattya":
-//                position = getApplicationContext().getString(R.string.pos_uz);
-//                startLat = 48.61913;
-//                startLan = 22.29475;
-//
-//                break;
-//            case "Zhytomyr":
-//                position = getApplicationContext().getString(R.string.pos_zt);
-//                startLat = 50.26801;
-//                startLan = 28.68026;
-//
-//                break;
-//            case "Kropyvnytskyi":
-//                position = getApplicationContext().getString(R.string.pos_kr);
-//                startLat = 48.51159;
-//                startLan = 32.26982;
-//
-//                break;
-//            case "Mykolaiv":
-//                position = getApplicationContext().getString(R.string.pos_m);
-//                startLat = 46.97498;
-//                startLan = 31.99378;
-//
-//                break;
-//            case "Сhernivtsi":
-//                position = getApplicationContext().getString(R.string.pos_chr);
-//                startLat = 48.29306;
-//                startLan = 25.93484;
-//
-//                break;
-//            case "Lutsk":
-//                position = getApplicationContext().getString(R.string.pos_ltk);
-//                startLat = 50.73968;
-//                startLan = 25.32400;
-//
-//                break;
-//
-//            case "OdessaTest":
-//                position = getApplicationContext().getString(R.string.pos_o);
-//                startLat = 46.4694;
-//                startLan = 30.7404;
-//
-//                break;
-//
-//            default:
-//                position = getApplicationContext().getString(R.string.pos_f);
-//                startLat = 52.13472;
-//                startLan = 21.00424;
-//        }
-//
-//
-//        SQLiteDatabase database = getApplicationContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-//
-//        ContentValues cv = new ContentValues();
-//        cv.put("startLat", startLat);
-//        cv.put("startLan", startLan);
-//        cv.put("position", position);
-//        database.update(MainActivity.TABLE_POSITION_INFO, cv, "id = ?",
-//                new String[] { "1" });
-//
-//        cv = new ContentValues();
-//        cv.put("tarif", " ");
-//        database.update(MainActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
-//                new String[] { "1" });
-//
-//        cv = new ContentValues();
-//        cv.put("payment_type", "nal_payment");
-//
-//        database.update(MainActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
-//                new String[] { "1" });
-//        database.close();
-//
-//
-//        List<String> settings = new ArrayList<>();
-//
-//
-//        settings.add(Double.toString(startLat));
-//        settings.add(Double.toString(startLan));
-//        settings.add(Double.toString(startLat));
-//        settings.add(Double.toString(startLan));
-//        settings.add(position);
-//        settings.add(position);
-//
-//        updateRoutMarker(settings);
-//
-//        String userEmail = logCursor(MainActivity.TABLE_USER_INFO ).get(3);
-//        Logger.d(getApplicationContext(), TAG, "newUser: " + userEmail);
-//
-//    }
-//
-//    private void updateMyLatsPosition(String routefrom, String startLatString, String startLanString, String city) {
-//
-//        double startLat = Double.parseDouble(startLatString);;
-//        double startLan = Double.parseDouble(startLanString);
-//        String position = routefrom;
-//        Logger.d(getApplicationContext(), TAG, "updateMyPosition:city "+ city);
-//
-//
-//        SQLiteDatabase database = getApplicationContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-//
-//        ContentValues cv = new ContentValues();
-//        cv.put("startLat", startLat);
-//        cv.put("startLan", startLan);
-//        cv.put("position", position);
-//        database.update(MainActivity.TABLE_POSITION_INFO, cv, "id = ?",
-//                new String[] { "1" });
-//
-//        cv = new ContentValues();
-//        cv.put("tarif", " ");
-//        database.update(MainActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
-//                new String[] { "1" });
-//
-//        cv = new ContentValues();
-//        cv.put("payment_type", "nal_payment");
-//
-//        database.update(MainActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
-//                new String[] { "1" });
-//        database.close();
-//
-//        List<String> settings = new ArrayList<>();
-//
-//
-//        settings.add(Double.toString(startLat));
-//        settings.add(Double.toString(startLan));
-//        settings.add(Double.toString(startLat));
-//        settings.add(Double.toString(startLan));
-//        settings.add(position);
-//        settings.add(position);
-//
-//        updateRoutMarker(settings);
-//
-//        String userEmail = logCursor(MainActivity.TABLE_USER_INFO ).get(3);
-//        Logger.d(getApplicationContext(), TAG, "newUser: " + userEmail);
-//
-//    }
-//
-//    private void updateRoutMarker(List<String> settings) {
-//        Logger.d(getApplicationContext(), TAG, "updateRoutMarker: " + settings.toString());
-//        ContentValues cv = new ContentValues();
-//
-//        cv.put("startLat", Double.parseDouble(settings.get(0)));
-//        cv.put("startLan", Double.parseDouble(settings.get(1)));
-//        cv.put("to_lat", Double.parseDouble(settings.get(2)));
-//        cv.put("to_lng", Double.parseDouble(settings.get(3)));
-//        cv.put("start", settings.get(4));
-//        cv.put("finish", settings.get(5));
-//
-//        // обновляем по id
-//        SQLiteDatabase database = getApplicationContext().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-//        database.update(MainActivity.ROUT_MARKER, cv, "id = ?",
-//                new String[]{"1"});
-//        database.close();
-//    }
 }

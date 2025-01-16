@@ -1,7 +1,6 @@
 package com.taxi_pas_4.utils.bottom_sheet;
 
 import static android.content.Context.MODE_PRIVATE;
-
 import static com.taxi_pas_4.MainActivity.navController;
 
 import android.annotation.SuppressLint;
@@ -27,7 +26,7 @@ import androidx.navigation.NavOptions;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
-import com.taxi_pas_4.ui.visicom.VisicomFragment;
+import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.log.Logger;
 
 import java.util.ArrayList;
@@ -87,7 +86,14 @@ public class MyBottomSheetErrorFragment extends BottomSheetDialogFragment {
                             new String[] { "1" });
                     database.close();
                     dismiss();
-                    startActivity(new Intent(requireContext(), MainActivity.class));
+
+                    if (NetworkUtils.isNetworkAvailable(requireContext())) {
+
+                        MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                                .setPopUpTo(R.id.nav_visicom, true)
+                                .build());
+                    }
+//                    startActivity(new Intent(requireContext(), MainActivity.class));
                 });
             } else if(errorMessage.equals(getString(R.string.server_error_connected))) {
                 textViewInfo.setOnClickListener(v -> dismiss());

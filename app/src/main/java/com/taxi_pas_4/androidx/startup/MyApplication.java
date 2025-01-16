@@ -5,8 +5,6 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
-import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -20,7 +18,6 @@ import com.github.anrwatchdog.ANRWatchDog;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.R;
-import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 
 import java.io.File;
@@ -46,10 +43,7 @@ public class MyApplication extends Application {
     public void onCreate() {
         super.onCreate();
         sharedPreferencesHelperMain = new SharedPreferencesHelper(this);
-        String localeCode = (String) sharedPreferencesHelperMain.getValue("locale", "uk");
-        Logger.i(this, "locale", localeCode);
-        // Установка локали
-        applyLocale(localeCode);
+
 
         instance = this;
 
@@ -61,15 +55,7 @@ public class MyApplication extends Application {
         setDefaultOrientation();
         registerActivityLifecycleCallbacks();
     }
-    private void applyLocale(String localeCode) {
-        Locale locale = new Locale(localeCode);
-        Locale.setDefault(locale);
 
-        Resources resources = getResources();
-        Configuration config = resources.getConfiguration();
-        config.setLocale(locale);
-        resources.updateConfiguration(config, resources.getDisplayMetrics());
-    }
     private void setDefaultOrientation() {
         // Установка ориентации экрана в портретный режим
         // Это может не сработать для всех активити

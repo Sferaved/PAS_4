@@ -1,7 +1,5 @@
 package com.taxi_pas_4.utils.fcm.token_send;
 
-import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
-
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
