@@ -89,6 +89,7 @@ import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetMessageFragment;
 import com.taxi_pas_4.utils.data.DataArr;
 import com.taxi_pas_4.utils.log.Logger;
 
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.text.ParseException;
@@ -597,6 +598,7 @@ public class FinishSeparateFragment extends Fragment {
     private void startCycle() {
         if (!isTaskRunning && !isTaskCancelled) {
             handlerStatus.postDelayed(myTaskStatus, delayMillisStatus);
+            delayMillisStatus = 10 * 1000;
         }
     }
 
@@ -632,17 +634,21 @@ public class FinishSeparateFragment extends Fragment {
     private void payWfp() throws UnsupportedEncodingException {
         String rectoken = getCheckRectoken(MainActivity.TABLE_WFP_CARDS);
         Logger.d(context, TAG, "payWfp: rectoken " + rectoken);
-        MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-        Logger.d(context, TAG, "payWfp: MainActivity.order_id " + MainActivity.order_id);
-        callOrderIdMemory(MainActivity.order_id, uid, pay_method);
+
         if (rectoken.isEmpty()) {
             if (handlerAddcost != null) {
                 handlerAddcost.removeCallbacks(showDialogAddcost);
             }
+
+            MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
+            Logger.d(context, TAG, "payWfp: MainActivity.order_id " + MainActivity.order_id);
+            callOrderIdMemory(MainActivity.order_id, uid, pay_method);
+
             getUrlToPaymentWfp(amount, MainActivity.order_id);
             getStatusWfp(MainActivity.order_id, "0");
         } else {
-            paymentByTokenWfp(messageFondy, amount, rectoken, MainActivity.order_id);
+
+            getStatusWfp(MainActivity.order_id, amount);
         }
 
     }
@@ -716,22 +722,19 @@ public class FinishSeparateFragment extends Fragment {
 
                         } else {
                             Logger.d(context, TAG,"Response body is null");
-                            MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-                            callOrderIdMemory(MainActivity.order_id, uid, pay_method);
+
                             MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
                             bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                         }
                     } else {
                         Logger.d(context, TAG,"Response body is null");
-                        MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-                        callOrderIdMemory(MainActivity.order_id, uid, pay_method);
+
                         MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
                         bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                     }
                 } else {
                     Logger.d(context, TAG, "Request failed: " + response.code());
-                    MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-                    callOrderIdMemory(MainActivity.order_id, uid, pay_method);
+
                     MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
                     bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                 }
@@ -740,8 +743,7 @@ public class FinishSeparateFragment extends Fragment {
             @Override
             public void onFailure(@NonNull Call<InvoiceResponse> call, @NonNull Throwable t) {
                 Logger.d(context, TAG, "Request failed: " + t.getMessage());
-                MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-                callOrderIdMemory(MainActivity.order_id, uid, pay_method);
+
                 MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
                 bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
             }
@@ -756,7 +758,6 @@ public class FinishSeparateFragment extends Fragment {
     private void paymentByTokenWfp(
             String orderDescription,
             String amount,
-            String rectoken,
             String order_id
     ) {
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
@@ -783,8 +784,7 @@ public class FinishSeparateFragment extends Fragment {
                 amount,
                 orderDescription,
                 email,
-                phoneNumber,
-                rectoken
+                phoneNumber
         );
         call.enqueue(new Callback<PurchaseResponse>() {
             @Override
@@ -798,27 +798,25 @@ public class FinishSeparateFragment extends Fragment {
                     } else {
                         // Ошибка при парсинге ответа
                         Logger.d(context, TAG, "Ошибка при парсинге ответа");
-                        MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-                        callOrderIdMemory(MainActivity.order_id, uid, pay_method);
+
                         MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
                         bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                     }
                 } else {
                     // Ошибка запроса
                     Logger.d(context, TAG, "Ошибка запроса");
-                    MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-                    callOrderIdMemory(MainActivity.order_id, uid, pay_method);
+
                     MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
                     bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                 }
+
             }
 
             @Override
             public void onFailure(@NonNull Call<PurchaseResponse> call, @NonNull Throwable t) {
                 // Ошибка при выполнении запроса
                 Logger.d(context, TAG, "Ошибка при выполнении запроса");
-                MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-                callOrderIdMemory(MainActivity.order_id, uid, pay_method);
+
                 MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
                 bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
             }
@@ -866,27 +864,24 @@ public class FinishSeparateFragment extends Fragment {
                         switch (orderStatus) {
                             case "Approved":
                             case "WaitingAuthComplete":
-
+                                sharedPreferencesHelperMain.saveValue("pay_error", "**");
                                 newOrderCardPayAdd20(order_id);
-
-
                                 break;
                             default:
-                                MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-                                callOrderIdMemory(MainActivity.order_id, uid, pay_method);
+                                sharedPreferencesHelperMain.saveValue("pay_error", "pay_error");
+//                                NotificationHelper.sendPaymentErrorNotification(context, getString(R.string.pay_error_title), getString(R.string.try_again_pay) + MainActivity.order_id);
+
                                 MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", FinishSeparateFragment.messageFondy, amount, context);
                                 bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
 
                         }
                     }
-                } else {
-                    getReversWfp(city);
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<StatusResponse> call, @NonNull Throwable t) {
-                getReversWfp(city);
+//                getReversWfp(city);
             }
         });
         if(need_20_add) {
@@ -928,8 +923,7 @@ public class FinishSeparateFragment extends Fragment {
                     } else {
                         Logger.d(context, TAG, "Response body is null");
                         Logger.d(context, TAG,"Response body is null");
-                        MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-                        callOrderIdMemory(MainActivity.order_id, uid, pay_method);
+
                         MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
                         bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
 
@@ -1682,48 +1676,55 @@ public class FinishSeparateFragment extends Fragment {
                             carProgressBar.setVisibility(View.GONE);
                             progressSteps.setVisibility(View.GONE);
                             btn_again.setVisibility(View.VISIBLE);
+
+                            textStatusCar.setVisibility(View.GONE);
+                            textCarMessage.setVisibility(View.GONE);
+
                             break;
                         case 1:
-                            text_status.clearAnimation();
-                            btn_cancel_order.setVisibility(View.GONE);
-                            btn_reset_status.setVisibility(View.GONE);
-                            btn_open.setVisibility(View.GONE);
-                            btn_options.setVisibility(View.GONE);
-                            canceled = true;
-                            if (handler != null) {
-                                handler.removeCallbacks(myRunnable);
-                            }
-                            if (handlerBonusBtn != null) {
-                                handlerBonusBtn.removeCallbacks(runnableBonusBtn);
-                            }
-
-
-                            if (handlerAddcost != null) {
-                                handlerAddcost.removeCallbacks(showDialogAddcost);
-                            }
-                            if (handlerCheckTask != null) {
-                                handlerCheckTask.removeCallbacks(checkTask);
-                            }
-                            Logger.d(context, TAG, "statusOrderWithDifferentValue canceled: " + canceled);
-                            if (cancel_btn_click) {
-                                message = context.getString(R.string.ex_st_canceled);
-                                stopCycle();
-                            } else {
-                                if (pay_method.equals("fondy_payment") || pay_method.equals("mono_payment") || pay_method.equals("wfp_payment")) {
-                                    Logger.d(context, TAG, "statusOrderWithDifferentValue canceled: " + uid);
-                                    message = context.getString(R.string.pay_cancel);
+                            if(!executionStatus.equals("Executed")) {
+                                text_status.clearAnimation();
+                                btn_cancel_order.setVisibility(View.GONE);
+                                btn_reset_status.setVisibility(View.GONE);
+                                btn_open.setVisibility(View.GONE);
+                                btn_options.setVisibility(View.GONE);
+                                textStatusCar.setVisibility(View.GONE);
+                                textCarMessage.setVisibility(View.GONE);
+                                canceled = true;
+                                if (handler != null) {
+                                    handler.removeCallbacks(myRunnable);
+                                }
+                                if (handlerBonusBtn != null) {
+                                    handlerBonusBtn.removeCallbacks(runnableBonusBtn);
+                                }
+                                if (handlerAddcost != null) {
+                                    handlerAddcost.removeCallbacks(showDialogAddcost);
+                                }
+                                if (handlerCheckTask != null) {
+                                    handlerCheckTask.removeCallbacks(checkTask);
+                                }
+                                Logger.d(context, TAG, "statusOrderWithDifferentValue canceled: " + canceled);
+                                if (cancel_btn_click) {
+                                    message = context.getString(R.string.ex_st_canceled);
                                     stopCycle();
                                 } else {
-                                    message = context.getString(R.string.ex_st_canceled);
+                                    if (pay_method.equals("fondy_payment") || pay_method.equals("mono_payment") || pay_method.equals("wfp_payment")) {
+                                        Logger.d(context, TAG, "statusOrderWithDifferentValue canceled: " + uid);
+                                        message = context.getString(R.string.pay_cancel);
+                                        stopCycle();
+                                    } else {
+                                        message = context.getString(R.string.ex_st_canceled);
+                                    }
+                                    textCost.setVisibility(View.GONE);
+                                    textCostMessage.setVisibility(View.GONE);
+                                    carProgressBar.setVisibility(View.GONE);
+                                    progressSteps.setVisibility(View.GONE);
+                                    btn_again.setVisibility(View.VISIBLE);
                                 }
-                                textCost.setVisibility(View.GONE);
-                                textCostMessage.setVisibility(View.GONE);
-                                carProgressBar.setVisibility(View.GONE);
-                                progressSteps.setVisibility(View.GONE);
-                                btn_again.setVisibility(View.VISIBLE);
+
+                                text_status.setText(message);
                             }
 
-                            text_status.setText(message);
                             break;
                         default:
                             // Обработка различных вариантов executionStatus
@@ -1878,6 +1879,38 @@ public class FinishSeparateFragment extends Fragment {
                                     }
                                     text_status.setText(message);
                                     break;
+                                case "Executed":
+                                    text_status.clearAnimation();
+                                    btn_cancel_order.setVisibility(View.GONE);
+                                    btn_reset_status.setVisibility(View.GONE);
+                                    btn_open.setVisibility(View.GONE);
+                                    btn_options.setVisibility(View.GONE);
+                                    textStatusCar.setVisibility(View.GONE);
+                                    textCarMessage.setVisibility(View.GONE);
+                                    textCost.setVisibility(View.GONE);
+                                    textCostMessage.setVisibility(View.GONE);
+                                    carProgressBar.setVisibility(View.GONE);
+                                    progressSteps.setVisibility(View.GONE);
+                                    btn_again.setVisibility(View.VISIBLE);
+                                    canceled = true;
+                                    if (handler != null) {
+                                        handler.removeCallbacks(myRunnable);
+                                    }
+                                    if (handlerBonusBtn != null) {
+                                        handlerBonusBtn.removeCallbacks(runnableBonusBtn);
+                                    }
+                                    if (handlerAddcost != null) {
+                                        handlerAddcost.removeCallbacks(showDialogAddcost);
+                                    }
+                                    if (handlerCheckTask != null) {
+                                        handlerCheckTask.removeCallbacks(checkTask);
+                                    }
+                                    Logger.d(context, TAG, "statusOrderWithDifferentValue canceled: " + canceled);
+                                    stopCycle();
+
+                                    message = context.getString(R.string.ex_st_finished);
+                                    text_status.setText(message);
+                                    break;
                                 default:
                                     if (handlerAddcost != null) {
                                         handlerAddcost.removeCallbacks(showDialogAddcost);
@@ -2005,6 +2038,13 @@ public class FinishSeparateFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+
+        if(sharedPreferencesHelperMain.getValue("pay_error", "**").equals("pay_error")) {
+            callOrderIdMemory(MainActivity.order_id, uid, pay_method);
+            MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", FinishSeparateFragment.messageFondy, amount, context);
+            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+        }
+
 
         pay_method = logCursor(MainActivity.TABLE_SETTINGS_INFO).get(4);
         if(pay_method.equals("nal_payment")) {
@@ -2167,8 +2207,7 @@ public class FinishSeparateFragment extends Fragment {
                         Logger.d(context, TAG, "No numeric value found in the text.");
                     }
                 } else if ("bonus_payment".equals(pay_method)) {
-                    MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-                    callOrderIdMemory(MainActivity.order_id, uid, pay_method);
+
                     String message = context.getString(R.string.addCostBonusMessage);
                     MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context, message);
                     bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
@@ -2349,10 +2388,11 @@ public class FinishSeparateFragment extends Fragment {
 
         wfpInvoice(MainActivity.order_id , "20", uid);
         text_status.setText(R.string.recounting_order);
+        stopCycle();
         if (rectoken.isEmpty()) {
             getUrlToPaymentWfp("20", MainActivity.order_id );
         } else {
-            paymentByTokenWfp(messageFondy, "20", rectoken, MainActivity.order_id );
+            paymentByTokenWfp(messageFondy, "20", MainActivity.order_id );
         }
 
     }
@@ -2399,11 +2439,10 @@ public class FinishSeparateFragment extends Fragment {
         textCost.setVisibility(View.VISIBLE);
         textCostMessage.setVisibility(View.VISIBLE);
         carProgressBar.setVisibility(View.VISIBLE);
-//        progressBar.setVisibility(View.VISIBLE);
         progressSteps.setVisibility(View.VISIBLE);
         btn_options.setVisibility(View.VISIBLE);
         btn_open.setVisibility(View.VISIBLE);
-
+        delayMillisStatus = 20 * 1000;
         call.enqueue(new Callback<Status>() {
             @Override
             public void onResponse(@NonNull Call<Status> call, @NonNull Response<Status> response) {
@@ -2418,12 +2457,14 @@ public class FinishSeparateFragment extends Fragment {
                     // Обработка неуспешного ответа
                     text_status.setText(R.string.verify_internet);
                 }
+
+                startCycle();
             }
 
             @Override
             public void onFailure(@NonNull Call<Status> call, @NonNull Throwable t) {
                 // Обработайте ошибку при выполнении запроса
-
+                startCycle();
                 FirebaseCrashlytics.getInstance().recordException(t);
             }
         });
@@ -2501,6 +2542,11 @@ public class FinishSeparateFragment extends Fragment {
             if (services.get(i + 1).equals("1")) {
                 newCheck++;
             }
+        }
+        List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO);
+        String tarif = stringListInfo.get(2);
+        if (!tarif.equals(" ")) {
+            newCheck++;
         }
         String mes = context.getString(R.string.add_services);
         if (newCheck != 0) {

@@ -190,7 +190,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
 
                                 FinishSeparateFragment.textCostMessage.setText(updatedCost);
                                 String message =  context.getString(R.string.ex_st_0);
-                                FinishSeparateFragment.textStatus.setText(message);
+                                FinishSeparateFragment.text_status.setText(message);
                                 Log.d("UpdatedCost", "Обновленная строка: " + updatedCost);
                             } else {
                                 Log.e("UpdatedCost", "Число не найдено в строке: " + cost);
@@ -234,7 +234,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
             getUrlToPaymentWfp(addCost, MainActivity.order_id );
             getStatusWfp(MainActivity.order_id, addCost);
         } else {
-            paymentByTokenWfp(FinishSeparateFragment.messageFondy, addCost, rectoken, MainActivity.order_id );
+            paymentByTokenWfp(FinishSeparateFragment.messageFondy, addCost, MainActivity.order_id );
         }
 
     }
@@ -319,7 +319,6 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
         });
     }
     private void newOrderCardPayAdd20 (
-            String order_id,
             String addCost
     ) {
 
@@ -336,9 +335,9 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
             FinishSeparateFragment.textCost.setVisibility(View.VISIBLE);
             FinishSeparateFragment.textCostMessage.setVisibility(View.VISIBLE);
             FinishSeparateFragment.carProgressBar.setVisibility(View.VISIBLE);
-//            FinishSeparateFragment.progressBar.setVisibility(View.VISIBLE);
+
             FinishSeparateFragment.progressSteps.setVisibility(View.VISIBLE);
-//            FinishSeparateFragment.progressBar.setVisibility(View.GONE);
+
 
             FinishSeparateFragment.btn_options.setVisibility(View.VISIBLE);
             FinishSeparateFragment.btn_open.setVisibility(View.VISIBLE);
@@ -347,7 +346,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
 
             FinishSeparateFragment.textCostMessage.setText(updatedCost);
             String message =  context.getString(R.string.ex_st_0);
-            FinishSeparateFragment.textStatus.setText(message);
+            FinishSeparateFragment.text_status.setText(message);
             Log.d("UpdatedCost", "Обновленная строка: " + updatedCost);
 
         } else {
@@ -365,11 +364,16 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
         ApiService apiService = retrofit.create(ApiService.class);
         List<String> stringList = logCursor(MainActivity.CITY_INFO);
         String city = stringList.get(1);
+
+        if( MainActivity.order_id == null) {
+            MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
+        }
+
         Call<Status> call = apiService.startAddCostCardBottomUpdate(
                 uid,
                 uid_Double,
                 pay_method,
-                order_id,
+                MainActivity.order_id,
                 city,
                 addCost
 
@@ -401,7 +405,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
                 FirebaseCrashlytics.getInstance().recordException(t);
             }
         });
-
+        FinishSeparateFragment.handlerStatus.post(FinishSeparateFragment.myTaskStatus);
 
     }
 
@@ -525,7 +529,6 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
     private void paymentByTokenWfp(
             String orderDescription,
             String amount,
-            String rectoken,
             String order_id
     ) {
         String  baseUrl = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
@@ -558,8 +561,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
                 amount,
                 orderDescription,
                 email,
-                phoneNumber,
-                rectoken
+                phoneNumber
         );
         call.enqueue(new Callback<PurchaseResponse>() {
             @Override
@@ -577,9 +579,11 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
                         switch (orderStatus) {
                             case "Approved":
                             case "WaitingAuthComplete":
-                                newOrderCardPayAdd20(MainActivity.order_id, amount);
+                                sharedPreferencesHelperMain.saveValue("pay_error", "**");
+                                newOrderCardPayAdd20(amount);
                                 break;
                             default:
+                                sharedPreferencesHelperMain.saveValue("pay_error", "pay_error");
                                 MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
                                 callOrderIdMemory(MainActivity.order_id, uid, pay_method);
                                 MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", FinishSeparateFragment.messageFondy, amount, context);
@@ -665,9 +669,11 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
                     switch (orderStatus) {
                         case "Approved":
                         case "WaitingAuthComplete":
-                            newOrderCardPayAdd20(MainActivity.order_id, amount);
+                            sharedPreferencesHelperMain.saveValue("pay_error", "**");
+                            newOrderCardPayAdd20(amount);
                             break;
                         default:
+                            sharedPreferencesHelperMain.saveValue("pay_error", "pay_error");
                             MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
                             callOrderIdMemory(MainActivity.order_id, uid, pay_method);
                             MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", FinishSeparateFragment.messageFondy, amount, context);
