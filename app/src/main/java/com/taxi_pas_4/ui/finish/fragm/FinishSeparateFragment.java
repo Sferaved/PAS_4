@@ -88,7 +88,7 @@ import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetFinishOptionFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetMessageFragment;
 import com.taxi_pas_4.utils.data.DataArr;
 import com.taxi_pas_4.utils.log.Logger;
-
+import com.taxi_pas_4.utils.time_ut.TimeUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -102,6 +102,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -1554,9 +1555,12 @@ public class FinishSeparateFragment extends Fragment {
             @Override
             public void onResponse(@NonNull Call<Status> call, @NonNull Response<Status> response) {
                 if (response.isSuccessful()) {
-//                    Status status = response.body();
-//                    assert status != null;
-//                    text_status.setText(context.getString(R.string.finish_info));
+
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                        MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                                .setPopUpTo(R.id.nav_visicom, true)
+                                .build());
+                    }, 5000); // 10 секунд = 10000 миллисекунд
                 } else {
                     // Обработка неуспешного ответа
                     text_status.setText(R.string.verify_internet);
@@ -1591,7 +1595,11 @@ public class FinishSeparateFragment extends Fragment {
         call.enqueue(new Callback<Status>() {
             @Override
             public void onResponse(@NonNull Call<Status> call, @NonNull Response<Status> response) {
-//                text_status.setText(context.getString(R.string.finish_info));
+                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                        MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                                .setPopUpTo(R.id.nav_visicom, true)
+                                .build());
+                    }, 5000); // 10 секунд = 10000 миллисекунд
             }
 
             @Override
@@ -2102,63 +2110,49 @@ public class FinishSeparateFragment extends Fragment {
             showAddCostDialog(timeCheckout);
         };
 
-        @SuppressLint("SimpleDateFormat")
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+
 
         Logger.e(context, TAG, "required_time +++" + required_time);
-        if (required_time.equals("01.01.1970 00:00") || required_time.isEmpty()) {
+        if (required_time.contains("1970-01-01") || required_time.isEmpty()) {
             need_20_add = true;
         } else {
             // Регулярное выражение для проверки формата даты "dd.MM.yyyy HH:mm"
-            String dateTimePattern = "\\d{2}\\.\\d{2}\\.\\d{4} \\d{2}:\\d{2}";
-            Pattern pattern = Pattern.compile(dateTimePattern);
-            Matcher matcher = pattern.matcher(required_time);
-
-            // Извлекаем только дату и время, если они найдены
-            if (matcher.find()) {
-                required_time = matcher.group(); // Оставляем только дату и время
-            } else {
-                required_time = ""; // Если формат не найден, установим пустую строку
-            }
-
             handlerCheckTask = new Handler(Looper.getMainLooper());
             checkTask = new Runnable() {
                 @Override
                 public void run() {
-                    try {
+                    if (!required_time.isEmpty()) {
+                        required_time = TimeUtils.convertAndSubtractMinutes(required_time);
+
                         Logger.e(context, TAG, "required_time " + required_time);
-                        if (!required_time.isEmpty()) {
-                            Date requiredDate = dateFormat.parse(required_time);
-                            Date currentDate = new Date();
 
-                            if (requiredDate != null) {
-                                long timeDifferenceMillis = requiredDate.getTime() - currentDate.getTime();
-                                long timeDifferenceMinutes = timeDifferenceMillis / (60 * 1000);
+                        @SuppressLint("SimpleDateFormat")
+                        SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
 
-                                Logger.e(context, TAG, "timeDifferenceMinutes 22 " + timeDifferenceMinutes);
-                                // Проверяем, если разница в пределах 30 минут
-                                if (timeDifferenceMinutes > 0 && timeDifferenceMinutes <= 30) {
-                                    need_20_add = true; // Время ещё не наступило и в пределах 30 минут
-                                } else if (timeDifferenceMinutes > 30){
-                                    need_20_add = false; // Время либо наступило, либо за пределами 30 минут
-                                }
-                            } else {
-                                need_20_add = true; // requiredDate null, устанавливаем true
+                        try {
+                            Date requiredDate = inputFormat.parse(required_time);
+                            Date currentDate = new Date(); // Текущее время
+
+                            // Разница в миллисекундах
+                            long diffInMillis = requiredDate.getTime() - currentDate.getTime();
+
+                            // Конвертируем в минуты
+                            long diffInMinutes = TimeUnit.MILLISECONDS.toMinutes(diffInMillis);
+
+                            if (diffInMinutes > 0 && diffInMinutes <= 30) {
+                                need_20_add = true; // Время ещё не наступило и в пределах 30 минут
+                            } else if (diffInMinutes > 30){
+                                need_20_add = false; // Время либо наступило, либо за пределами 30 минут
                             }
-                        } else {
-                            need_20_add = true; // Формат даты некорректен
+
+                        } catch (ParseException e) {
+                            e.printStackTrace();
                         }
-
-                        Logger.e(context, TAG, "need_20_add 22 " + need_20_add);
-                    } catch (ParseException e) {
-                        need_20_add = true; // Если произошла ошибка разбора, установить need_20_add в true
-                        Logger.e(context, TAG, "Ошибка разбора даты: " + e.getMessage());
+                    } else {
+                        need_20_add = true; // Формат даты некорректен
                     }
-
                     // Повторяем задачу через минуту, если окно активно
-
                     handlerCheckTask.postDelayed(this, 60000); // 60000 миллисекунд = 1 минута
-
                 }
             };
 
@@ -2168,13 +2162,16 @@ public class FinishSeparateFragment extends Fragment {
         Logger.e(context, TAG, "status pay_method" + pay_method);
         Logger.e(context, TAG, "status need_20_add" + need_20_add);
         handlerAddcost = new Handler();
-        if ("nal_payment".equals(pay_method) || "wfp_payment".equals(pay_method) && need_20_add) {
-            Logger.e(context, TAG, "status pay_method" + pay_method);
-            Logger.e(context, TAG, "status need_20_add" + need_20_add);
+        if (need_20_add) {
+            if ("nal_payment".equals(pay_method) || "wfp_payment".equals(pay_method)) {
+                Logger.e(context, TAG, "status pay_method" + pay_method);
+                Logger.e(context, TAG, "status need_20_add" + need_20_add);
 
-           // Запускаем выполнение через 1 минуты (60 000 миллисекунд)
-            handlerAddcost.postDelayed(showDialogAddcost, timeCheckout);
+                // Запускаем выполнение через 1 минуты (60 000 миллисекунд)
+                handlerAddcost.postDelayed(showDialogAddcost, timeCheckout);
+            }
         }
+
 
         btn_reset_status.setOnClickListener(view -> {
 
@@ -2472,32 +2469,39 @@ public class FinishSeparateFragment extends Fragment {
 
     }
 
-    private void isTenMinutesRemainingFunction() throws ParseException {
+    private void isTenMinutesRemainingFunction() {
+        if (!required_time.isEmpty()) {
+            Logger.e(context, TAG, "required_time " + required_time);
 
-        if (required_time != null && !required_time.isEmpty()) {
-            Date currentDate = new Date();
             @SuppressLint("SimpleDateFormat")
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
 
-            Date requiredDate = dateFormat.parse(required_time);
-            assert requiredDate != null;
-            long differenceInMillis = requiredDate.getTime() - currentDate.getTime(); // Разница в миллисекундах
-            Log.d("isTenMinutesRemainingFunction", " 1 required_time " + required_time);
-            Log.d("isTenMinutesRemainingFunction", " 1 differenceInMillis " + differenceInMillis);
-            if(differenceInMillis <=0 && !required_time.equals("01.01.1970 00:00")) {
-                isTenMinutesRemaining = true;
-            } else {
-                long tenMinutesInMillis = 10 * 60 * 1000; // 10 минут в миллисекундах
-                // Проверка на оставшиеся 10 минут
-                Log.d("isTenMinutesRemainingFunction", "tenMinutesInMillis " + tenMinutesInMillis);
-                Log.d("isTenMinutesRemainingFunction", "differenceInMillis " + differenceInMillis);
-                Log.d("isTenMinutesRemainingFunction", "isTenMinutesRemaining " + isTenMinutesRemaining);
-                isTenMinutesRemaining = differenceInMillis <= tenMinutesInMillis && differenceInMillis > 0;
+            try {
+                Date requiredDate = inputFormat.parse(required_time);
+                Date currentDate = new Date(); // Текущее время
+
+                // Разница в миллисекундах
+                assert requiredDate != null;
+                long diffInMillis = requiredDate.getTime() - currentDate.getTime();
+
+                // Конвертируем в минуты
+                long diffInMinutes = TimeUnit.MILLISECONDS.toMinutes(diffInMillis);
+
+                if (diffInMinutes <=0 && !required_time.contains("1970-01-01")) {
+                    isTenMinutesRemaining = true; // Время ещё не наступило и в пределах 30 минут
+                } else {
+                    long tenMinutes = 10 * 60; // 10 минут
+                    // Проверка на оставшиеся 10 минут
+                    Log.d("isTenMinutesRemainingFunction", "tenMinutes " + tenMinutes);
+                    Log.d("isTenMinutesRemainingFunction", "diffInMinutes " + diffInMinutes);
+                    Log.d("isTenMinutesRemainingFunction", "isTenMinutesRemaining " + isTenMinutesRemaining);
+                    isTenMinutesRemaining = diffInMinutes <= tenMinutes && diffInMinutes > 0;
+                }
+
+            } catch (ParseException e) {
+                e.printStackTrace();
             }
-
-
         }
-
     }
     private void isTenMinutesRemainingAction() {
         isTenMinutesRemainingBlock = true;
@@ -2525,14 +2529,36 @@ public class FinishSeparateFragment extends Fragment {
                             throw new RuntimeException(e);
                         }
                     }
-                    MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
-                            .setPopUpTo(R.id.nav_visicom, true)
-                            .build());
+
+
+
                 })
                 .setNegativeButton(R.string.cancel_button, (dialog, which) -> {
                     dialog.dismiss();
-                })
-                .show();
+                });
+
+        AlertDialog dialog = builder.create();
+
+        dialog.show();
+
+        // Настройка цветов кнопок
+        Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+        Button negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+
+        if (positiveButton != null) {
+            positiveButton.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.colorAccent));
+            positiveButton.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white));
+            ViewParent buttonPanel = positiveButton.getParent();
+            if (buttonPanel instanceof ViewGroup) {
+                ((ViewGroup) buttonPanel).setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.background_color_new));
+            }
+
+        }
+        if (negativeButton != null) {
+            negativeButton.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.selected_text_color_2));
+            negativeButton.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white));
+
+        }
     }
     private void addCheck(Context context) {
 

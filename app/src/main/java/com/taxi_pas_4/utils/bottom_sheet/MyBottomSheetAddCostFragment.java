@@ -242,7 +242,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
     @Override
     public void onDismiss(@NonNull DialogInterface dialog) {
         super.onDismiss(dialog);
-        FinishSeparateFragment.handlerStatus.postDelayed(FinishSeparateFragment.myTaskStatus, 10000);
+        FinishSeparateFragment.handlerStatus.postDelayed(FinishSeparateFragment.myTaskStatus, 20000);
     }
 
     @SuppressLint("Range")
@@ -364,11 +364,9 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
         ApiService apiService = retrofit.create(ApiService.class);
         List<String> stringList = logCursor(MainActivity.CITY_INFO);
         String city = stringList.get(1);
-
         if( MainActivity.order_id == null) {
             MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
         }
-
         Call<Status> call = apiService.startAddCostCardBottomUpdate(
                 uid,
                 uid_Double,
@@ -382,7 +380,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
         Logger.d(context, TAG, "URL запроса wfp_payment: " + url);
 
 
-        call.enqueue(new Callback<Status>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<Status> call, @NonNull Response<Status> response) {
                 if (response.isSuccessful()) {
@@ -390,7 +388,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
                     assert status != null;
                     String responseStatus = status.getResponse();
                     Logger.d(context, TAG, "startAddCostUpdate wfp_payment status: " + responseStatus);
-                    if(!responseStatus.equals("200")) {
+                    if (!responseStatus.equals("200")) {
                         // Обработка неуспешного ответа
                         FinishSeparateFragment.text_status.setText(R.string.verify_internet);
                     }
@@ -563,7 +561,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
                 email,
                 phoneNumber
         );
-        call.enqueue(new Callback<PurchaseResponse>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<PurchaseResponse> call, @NonNull Response<PurchaseResponse> response) {
                 if (response.isSuccessful()) {

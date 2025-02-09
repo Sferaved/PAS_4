@@ -606,7 +606,7 @@ public class CityCheckActivity extends AppCompatActivity {
         database.update(MainActivity.ROUT_MARKER, cv, "id = ?",
                 new String[]{"1"});
         database.close();
-        sharedPreferencesHelper.saveValue("CityCheckActivity", "run");
+        sharedPreferencesHelperMain.saveValue("CityCheckActivity", "run");
         startActivity(new Intent(this, MainActivity.class));
     }
 
@@ -913,12 +913,15 @@ public class CityCheckActivity extends AppCompatActivity {
     public void onBackPressed() {
         // Ничего не делать, блокируя действие кнопки "назад"
         super.onBackPressed();
-        closeApplication();
+        sharedPreferencesHelperMain.saveValue("CityCheckActivity", "run");
+        city = "Kyiv City";
+        updateMyPosition();
+
     }
 
     private void closeApplication() {
         // Полный выход из приложения
-        sharedPreferencesHelper.saveValue("CityCheckActivity", "**");
+        sharedPreferencesHelperMain.saveValue("CityCheckActivity", "**");
         finishAffinity();
         System.exit(0);
     }
@@ -954,7 +957,7 @@ public class CityCheckActivity extends AppCompatActivity {
                         Logger.d(getApplicationContext(), TAG, "lastAddressUser: routefrom" + routefrom);
                         Logger.d(getApplicationContext(), TAG, "lastAddressUser: startLat" + startLat);
                         Logger.d(getApplicationContext(), TAG, "lastAddressUser: startLan" + startLan);
-                        if(routefrom.equals("*") || startLat.equals("0.0") || startLan.equals("0.0")) {
+                        if (startLat.equals("0.0") || startLat.equals("0")) {
                             updateMyPosition();
 
                         } else {
@@ -968,7 +971,7 @@ public class CityCheckActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<CityLastAddressResponse> call, Throwable t) {
+            public void onFailure(@NonNull Call<CityLastAddressResponse> call, Throwable t) {
                 Logger.d(getApplicationContext(), TAG, "Failed. Error message: " + t.getMessage());
                 VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
             }

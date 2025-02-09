@@ -1,5 +1,7 @@
 package com.taxi_pas_4.cities.api;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.annotations.SerializedName;
 
 public class CityLastAddressResponse {
@@ -22,5 +24,15 @@ public class CityLastAddressResponse {
 
     public String getStartLan() {
         return startLan;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "CityLastAddressResponse{" +
+                "routefrom='" + routefrom + '\'' +
+                ", startLat='" + startLat + '\'' +
+                ", startLan='" + startLan + '\'' +
+                '}';
     }
 }

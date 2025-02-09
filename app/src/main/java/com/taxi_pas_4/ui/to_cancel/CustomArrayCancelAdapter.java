@@ -1,6 +1,7 @@
 package com.taxi_pas_4.ui.to_cancel;
 
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -19,6 +20,9 @@ import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.db.RouteInfoCancel;
 import com.taxi_pas_4.utils.log.Logger;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -115,7 +119,11 @@ public class CustomArrayCancelAdapter extends ArrayAdapter<String> {
             Map<String, String> costMap = getStringStringMap();
             Logger.d(getContext(), TAG, "costMap " + (position + 1));
             Logger.d(getContext(), TAG, "onContextItemSelected costMap: " + costMap);
-            startFinishPage(costMap);
+            try {
+                startFinishPage(costMap);
+            } catch (ParseException e) {
+                throw new RuntimeException(e);
+            }
 
         });
 
@@ -132,7 +140,11 @@ public class CustomArrayCancelAdapter extends ArrayAdapter<String> {
             Map<String, String> costMap = getStringStringMap();
             Logger.d(getContext(), TAG, "costMap " + (position + 1));
             Logger.d(getContext(), TAG, "onContextItemSelected costMap: " + costMap);
-            startFinishPage(costMap);
+            try {
+                startFinishPage(costMap);
+            } catch (ParseException e) {
+                throw new RuntimeException(e);
+            }
 
         });
 
@@ -163,8 +175,7 @@ public class CustomArrayCancelAdapter extends ArrayAdapter<String> {
         return costMap;
     }
 
-    private void startFinishPage(Map<String, String> sendUrlMap)
-    {
+    private void startFinishPage(Map<String, String> sendUrlMap) throws ParseException {
         String to_name;
         if (Objects.equals(sendUrlMap.get("routefrom"), sendUrlMap.get("routeto"))) {
             to_name = context.getString(R.string.on_city_tv);
@@ -210,6 +221,30 @@ public class CustomArrayCancelAdapter extends ArrayAdapter<String> {
         String uah = cleanString(context.getString(R.string.UAH));
         String payMethodMessage = cleanString(pay_method_message);
         String required_time = sendUrlMap.get("required_time");
+        Logger.d(context, TAG, "orderFinished: required_time " + required_time);
+
+
+        if (required_time != null && !required_time.contains("1970-01-01")) {
+            try {
+                @SuppressLint("SimpleDateFormat")
+                SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
+                @SuppressLint("SimpleDateFormat")
+                SimpleDateFormat outputFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+
+                // Преобразуем строку required_time в Date
+                Date date = inputFormat.parse(required_time);
+
+                // Преобразуем Date в строку нужного формата
+                assert date != null;
+                required_time = context.getString(R.string.time_order)  + " " +  outputFormat.format(date)  + ".";
+
+            } catch (ParseException e) {
+                e.printStackTrace();
+                required_time = ""; // Если ошибка парсинга, задаём пустое значение
+            }
+        } else {
+            required_time = "";
+        }
 
         String messageResult =
                 routeFrom + " " +

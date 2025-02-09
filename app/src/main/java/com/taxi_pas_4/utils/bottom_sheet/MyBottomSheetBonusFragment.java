@@ -178,7 +178,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
         listView.setOnItemClickListener((parent, view1, position, id) -> {
             progressBar.setVisibility(View.VISIBLE);
             btn_ok.setVisibility(View.GONE);
-            textView.setText("");
+
             pos = position;
             Log.d(TAG, "onItemClick: pos " + pos);
             if (pos == 2) {

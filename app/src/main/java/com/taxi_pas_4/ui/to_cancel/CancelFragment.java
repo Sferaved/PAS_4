@@ -39,10 +39,14 @@ import com.taxi_pas_4.utils.db.DatabaseHelper;
 import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.log.Logger;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -217,8 +221,6 @@ public class CancelFragment extends Fragment {
         // Создайте массив строк
         array = new String[routeList.size()];
 
-
-
         String closeReasonText = context.getString(R.string.close_resone_def);
 
         for (int i = 0; i < routeList.size(); i++) {
@@ -236,6 +238,7 @@ public class CancelFragment extends Fragment {
             Logger.d(getContext(), TAG, "uid_Double processCancelList: " + dispatchingOrderUidDouble);
             String pay_method = route.getPay_method();
             String required_time = route.getRequired_time();
+            String required_time_clear = route.getRequired_time();
             String flexible_tariff_name = route.getFlexible_tariff_name();
             String comment_info = route.getComment_info();
             String extra_charge_codes = route.getExtra_charge_codes();
@@ -297,11 +300,7 @@ public class CancelFragment extends Fragment {
                 auto = "??";
             }
 
-            if(required_time != null && !required_time.contains("01.01.1970")) {
-                required_time = " " + context.getString(R.string.time_order) + required_time;
-            } else {
-                required_time = "";
-            }
+
             if (routeFrom.equals(routeTo)) {
                 routeInfo = routeFrom + ", " + routeFromNumber
                         + getString(R.string.close_resone_to)
@@ -334,7 +333,7 @@ public class CancelFragment extends Fragment {
              settings.add(routeToNumber);
              settings.add(dispatchingOrderUidDouble);
              settings.add(pay_method);
-             settings.add(required_time);
+             settings.add(takeData(required_time));
              settings.add(flexible_tariff_name);
              settings.add(comment_info);
              settings.add(extra_charge_codes);
@@ -399,6 +398,28 @@ public class CancelFragment extends Fragment {
             scrollButtonUp.setVisibility(View.GONE);
         }
     }
+
+
+    private String takeData(String text) {
+
+        LocalDateTime dateTime = null;
+        // Регулярное выражение для поиска даты и времени
+        String regex = "(\\d{2}\\.\\d{2}\\.\\d{4}) (\\d{2}:\\d{2})";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(text);
+
+        if (matcher.find()) {
+            String dateTimeString = matcher.group(1) + " " + matcher.group(2); // "10.02.2025 14:10"
+
+            // Парсим строку в LocalDateTime
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+            dateTime = LocalDateTime.parse(dateTimeString, formatter);
+        }
+        assert dateTime != null;
+        return dateTime.toString();
+    }
+
+
     @Override
     public void onResume() {
         super.onResume();

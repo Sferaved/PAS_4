@@ -526,7 +526,7 @@ public class CityFinder {
         Logger.d(context, TAG, "getCardTokenWfp: ");
         String email = logCursor(MainActivity.TABLE_USER_INFO).get(3);
         // Выполните запрос
-        Call<CallbackResponseWfp> call = service.handleCallbackWfp(
+        Call<CallbackResponseWfp> call = service.handleCallbackWfpCardsId(
                 context.getString(R.string.application),
                 city,
                 email,
