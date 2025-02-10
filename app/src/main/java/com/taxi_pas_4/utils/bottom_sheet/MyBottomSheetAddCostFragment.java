@@ -36,7 +36,7 @@ import com.taxi_pas_4.ui.wfp.invoice.InvoiceResponse;
 import com.taxi_pas_4.ui.wfp.invoice.InvoiceService;
 import com.taxi_pas_4.ui.wfp.purchase.PurchaseResponse;
 import com.taxi_pas_4.ui.wfp.purchase.PurchaseService;
-import com.taxi_pas_4.utils.LocaleHelper;
+import com.taxi_pas_4.utils.helpers.LocaleHelper;
 import com.taxi_pas_4.utils.log.Logger;
 
 import java.util.ArrayList;

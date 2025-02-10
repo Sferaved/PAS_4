@@ -29,7 +29,7 @@ import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 
 import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.NetworkChangeReceiver;
+import com.taxi_pas_4.utils.connect.NetworkChangeReceiver;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.databinding.FragmentBonusBinding;
 import com.taxi_pas_4.ui.finish.ApiClient;

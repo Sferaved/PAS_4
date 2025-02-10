@@ -33,7 +33,6 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.AppCompatButton;
@@ -79,7 +78,7 @@ import com.taxi_pas_4.ui.wfp.purchase.PurchaseResponse;
 import com.taxi_pas_4.ui.wfp.purchase.PurchaseService;
 import com.taxi_pas_4.ui.wfp.revers.ReversResponse;
 import com.taxi_pas_4.ui.wfp.revers.ReversService;
-import com.taxi_pas_4.utils.LocaleHelper;
+import com.taxi_pas_4.utils.helpers.LocaleHelper;
 import com.taxi_pas_4.utils.animation.car.CarProgressBar;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetAddCostFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
@@ -89,6 +88,7 @@ import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetMessageFragment;
 import com.taxi_pas_4.utils.data.DataArr;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.time_ut.TimeUtils;
+import com.taxi_pas_4.utils.ui.BackPressBlocker;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -203,18 +203,16 @@ public class FinishSeparateFragment extends Fragment {
         root = binding.getRoot();
 
         context = requireActivity();
+        // Включаем блокировку кнопки "Назад" Применяем блокировку кнопки "Назад"
+        BackPressBlocker backPressBlocker = new BackPressBlocker();
+        backPressBlocker.setBackButtonBlocked(true);
+        backPressBlocker.blockBackButtonWithCallback(this);
 
         fragmentManager = getParentFragmentManager();
 
         context.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
-                        .build());
-            }
-        });
+
 
 //        progressBar = root.findViewById(R.id.progress_bar);
 
@@ -256,7 +254,11 @@ public class FinishSeparateFragment extends Fragment {
 
 
         String no_pay_key = arguments.getString("card_payment_key");
+
+        Logger.d(context, TAG, "no_pay: key " + no_pay_key);
+
         no_pay = no_pay_key != null && no_pay_key.equals("no");
+        Logger.d(context, TAG, "no_pay: " + no_pay);
 
         receivedMap = (HashMap<String, String>) arguments.getSerializable("sendUrlMap");
 
@@ -454,8 +456,8 @@ public class FinishSeparateFragment extends Fragment {
             }
         });
 
-        
 
+        Logger.d(context, TAG, "no_pay: 2 " + no_pay);
 
         if(!no_pay) {
             switch (pay_method) {
@@ -483,6 +485,9 @@ public class FinishSeparateFragment extends Fragment {
                     break;
 
             }
+        } else {
+            Logger.d(context, TAG, "no_pay: 3 pay_method" + pay_method);
+            getStatusWfp(MainActivity.order_id, "0");
         }
         ImageButton btn_no = root.findViewById(R.id.btn_no);
         btn_no.setOnClickListener(view -> startActivity(new Intent(context, MainActivity.class)));
@@ -852,7 +857,7 @@ public class FinishSeparateFragment extends Fragment {
                 orderReferens
         );
         String order_id= MainActivity.order_id;
-        call.enqueue(new Callback<StatusResponse>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<StatusResponse> call, @NonNull Response<StatusResponse> response) {
 
@@ -861,7 +866,14 @@ public class FinishSeparateFragment extends Fragment {
                     assert statusResponse != null;
                     String orderStatus = statusResponse.getTransactionStatus();
                     Logger.d(context, TAG, "Transaction Status: " + orderStatus);
-                    if(amount_20.equals("20")) {
+                    if(orderStatus.equals("Declined")) {
+
+                        Logger.d(context, TAG, "Transaction Status messageFondy: " + messageFondy);
+                        Logger.d(context, TAG, "Transaction Status: amount " + orderStatus);
+
+                        MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
+                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                    } else if (amount_20.equals("20")) {
                         switch (orderStatus) {
                             case "Approved":
                             case "WaitingAuthComplete":
@@ -870,7 +882,6 @@ public class FinishSeparateFragment extends Fragment {
                                 break;
                             default:
                                 sharedPreferencesHelperMain.saveValue("pay_error", "pay_error");
-//                                NotificationHelper.sendPaymentErrorNotification(context, getString(R.string.pay_error_title), getString(R.string.try_again_pay) + MainActivity.order_id);
 
                                 MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", FinishSeparateFragment.messageFondy, amount, context);
                                 bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());

@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.124</string>
-    <string name="version">Версія: 4.124</string>
+    <string name="version_code">4.125</string>
+    <string name="version">Версія: 4.125</string>
 
     <string name="app_name">Таксі Дюк Попутник</string>
 
@@ -493,5 +493,6 @@
     <string name="try_again_pay">"Спробуйте знову номер рахунку на оплату: "</string>
     <string name="no_cards_info">У вас немає підтверджених карток для оплати. Підтвердьте платіжну картку для оплати поїздок.</string>
     <string name="verify_address">Перевірте правильність введення адреси</string>
+    <string name="paymentErrMes">Помилка платежу</string>
 
 </resources>

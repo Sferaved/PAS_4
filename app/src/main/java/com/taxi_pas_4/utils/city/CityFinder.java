@@ -17,8 +17,8 @@ import androidx.annotation.NonNull;
 
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
-import com.taxi_pas_4.cities.api.CityApiClient;
-import com.taxi_pas_4.cities.api.CityService;
+import com.taxi_pas_4.ui.home.cities.api.CityApiClient;
+import com.taxi_pas_4.ui.home.cities.api.CityService;
 import com.taxi_pas_4.ui.card.CardInfo;
 import com.taxi_pas_4.ui.payment_system.PayApi;
 import com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
@@ -595,13 +595,13 @@ public class CityFinder {
         CityService cityService = CityApiClient.getClient().create(CityService.class);
 
         // Замените "your_city" на фактическое название города
-        Call<com.taxi_pas_4.cities.api.CityResponse> call = cityService.getMaxPayValues(city, context.getString(R.string.application));
+        Call<com.taxi_pas_4.ui.home.cities.api.CityResponse> call = cityService.getMaxPayValues(city, context.getString(R.string.application));
 
-        call.enqueue(new Callback<com.taxi_pas_4.cities.api.CityResponse>() {
+        call.enqueue(new Callback<com.taxi_pas_4.ui.home.cities.api.CityResponse>() {
             @Override
-            public void onResponse(@NonNull Call<com.taxi_pas_4.cities.api.CityResponse> call, @NonNull Response<com.taxi_pas_4.cities.api.CityResponse> response) {
+            public void onResponse(@NonNull Call<com.taxi_pas_4.ui.home.cities.api.CityResponse> call, @NonNull Response<com.taxi_pas_4.ui.home.cities.api.CityResponse> response) {
                 if (response.isSuccessful()) {
-                    com.taxi_pas_4.cities.api.CityResponse cityResponse = response.body();
+                    com.taxi_pas_4.ui.home.cities.api.CityResponse cityResponse = response.body();
                     if (cityResponse != null) {
                         int cardMaxPay = cityResponse.getCardMaxPay();
                         int bonusMaxPay = cityResponse.getBonusMaxPay();
@@ -625,7 +625,7 @@ public class CityFinder {
             }
 
             @Override
-            public void onFailure(@NonNull Call<com.taxi_pas_4.cities.api.CityResponse> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<com.taxi_pas_4.ui.home.cities.api.CityResponse> call, @NonNull Throwable t) {
                 Logger.d(context, TAG, "Failed. Error message: " + t.getMessage());
             }
         });

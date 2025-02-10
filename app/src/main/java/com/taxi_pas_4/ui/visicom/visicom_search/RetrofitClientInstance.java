@@ -2,7 +2,7 @@ package com.taxi_pas_4.ui.visicom.visicom_search;
 
 import android.util.Log;
 
-import com.taxi_pas_4.utils.LocaleHelper;
+import com.taxi_pas_4.utils.helpers.LocaleHelper;
 
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;

@@ -68,12 +68,12 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
-import com.taxi_pas_4.cities.Cherkasy.Cherkasy;
-import com.taxi_pas_4.cities.Dnipro.DniproCity;
-import com.taxi_pas_4.cities.Kyiv.KyivCity;
-import com.taxi_pas_4.cities.Odessa.Odessa;
-import com.taxi_pas_4.cities.Odessa.OdessaTest;
-import com.taxi_pas_4.cities.Zaporizhzhia.Zaporizhzhia;
+import com.taxi_pas_4.ui.home.cities.Cherkasy.Cherkasy;
+import com.taxi_pas_4.ui.home.cities.Dnipro.DniproCity;
+import com.taxi_pas_4.ui.home.cities.Kyiv.KyivCity;
+import com.taxi_pas_4.ui.home.cities.Odessa.Odessa;
+import com.taxi_pas_4.ui.home.cities.Odessa.OdessaTest;
+import com.taxi_pas_4.ui.home.cities.Zaporizhzhia.Zaporizhzhia;
 import com.taxi_pas_4.databinding.FragmentHomeBinding;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.RouteResponseCancel;
@@ -102,6 +102,7 @@ import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
+import com.taxi_pas_4.utils.ui.BackPressBlocker;
 import com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
 
 import org.json.JSONException;
@@ -214,6 +215,11 @@ public class HomeFragment extends Fragment {
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
         baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+
+        // Включаем блокировку кнопки "Назад" Применяем блокировку кнопки "Назад"
+        BackPressBlocker backPressBlocker = new BackPressBlocker();
+        backPressBlocker.setBackButtonBlocked(true);
+        backPressBlocker.blockBackButtonWithCallback(this);
 
         constraintLayoutHomeMain = root.findViewById(R.id.homeMain);
         constraintLayoutHomeFinish = root.findViewById(R.id.homeFinish);

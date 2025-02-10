@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.124</string>
-    <string name="version">Version: 4.124</string>
+    <string name="version_code">4.125</string>
+    <string name="version">Version: 4.125</string>
 
     <string name="app_name">Taxi Duke Fellow</string>
 
@@ -489,4 +489,5 @@
     <string name="try_again_pay">"Try again, invoice number: "</string>
     <string name="no_cards_info">You have no verified cards for payment. Verify your payment card to pay for trips.</string>
     <string name="verify_address">Please check if you entered the address correctly</string>
+    <string name="paymentErrMes">Payment Error</string>
 </resources>

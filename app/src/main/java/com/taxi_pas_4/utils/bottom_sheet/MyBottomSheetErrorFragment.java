@@ -30,10 +30,9 @@ import androidx.navigation.NavOptions;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
-import com.taxi_pas_4.androidx.startup.MyApplication;
-import com.taxi_pas_4.cities.api.CityApiClient;
-import com.taxi_pas_4.cities.api.CityResponse;
-import com.taxi_pas_4.cities.api.CityService;
+import com.taxi_pas_4.ui.home.cities.api.CityApiClient;
+import com.taxi_pas_4.ui.home.cities.api.CityResponse;
+import com.taxi_pas_4.ui.home.cities.api.CityService;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.log.Logger;
 

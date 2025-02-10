@@ -43,9 +43,7 @@ import com.taxi_pas_4.ui.wfp.invoice.InvoiceResponse;
 import com.taxi_pas_4.ui.wfp.invoice.InvoiceService;
 import com.taxi_pas_4.ui.wfp.revers.ReversResponse;
 import com.taxi_pas_4.ui.wfp.revers.ReversService;
-import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
-import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
-import com.taxi_pas_4.utils.LocaleHelper;
+import com.taxi_pas_4.utils.helpers.LocaleHelper;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.utils.log.Logger;
 

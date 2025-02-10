@@ -43,7 +43,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.NetworkChangeReceiver;
+import com.taxi_pas_4.utils.connect.NetworkChangeReceiver;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.ui.maps.FromJSONParser;

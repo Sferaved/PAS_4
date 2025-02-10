@@ -105,6 +105,7 @@ import com.taxi_pas_4.utils.ip.RetrofitClient;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
+import com.taxi_pas_4.utils.ui.BackPressBlocker;
 import com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
 
 import java.net.MalformedURLException;
@@ -217,6 +218,11 @@ public class VisicomFragment extends Fragment {
                              ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentVisicomBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
+
+        // Включаем блокировку кнопки "Назад" Применяем блокировку кнопки "Назад"
+        BackPressBlocker backPressBlocker = new BackPressBlocker();
+        backPressBlocker.setBackButtonBlocked(true);
+        backPressBlocker.blockBackButtonWithCallback(this);
 
         constraintLayoutVisicomMain = root.findViewById(R.id.visicomMain);
         constraintLayoutVisicomFinish = root.findViewById(R.id.visicomFinish);
@@ -1627,8 +1633,12 @@ public class VisicomFragment extends Fragment {
                         default:
                             NotificationHelper.sendPaymentErrorNotification(context, context.getString(R.string.pay_error_title), context.getString(R.string.try_again_pay) + MainActivity.order_id);
                             sharedPreferencesHelperMain.saveValue("pay_error", "pay_error");
-                            MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
-                            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                            if (!fragmentManager.isStateSaved()) {
+                                MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment =
+                                        new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
+                                bottomSheetDialogFragment.show(fragmentManager, "bottom_sheet_error");
+                            }
+
                     }
                 }
             }
