@@ -87,6 +87,7 @@ import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.utils.permissions.UserPermissions;
 import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
+import com.taxi_pas_4.utils.pusher.PusherManager;
 import com.taxi_pas_4.utils.user.save_firebase.FirebaseUserManager;
 import com.taxi_pas_4.utils.user.save_server.ApiServiceUser;
 import com.taxi_pas_4.utils.user.save_server.UserResponse;
@@ -187,6 +188,7 @@ public class MainActivity extends AppCompatActivity {
     public static NavigationView navigationView;
 
     String baseUrl;
+    private PusherManager pusherManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -201,6 +203,10 @@ public class MainActivity extends AppCompatActivity {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(binding.getRoot());
 
+        // Инициализация и подключение к Pusher
+        pusherManager = new PusherManager(getString(R.string.application));
+        pusherManager.connect();
+        pusherManager.subscribeToChannel();
 
         deleteOldLogFile();
         Logger.i(this, TAG, "MainActivity started");
