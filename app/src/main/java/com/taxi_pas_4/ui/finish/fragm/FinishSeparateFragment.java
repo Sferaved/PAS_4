@@ -39,6 +39,7 @@ import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavOptions;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -193,7 +194,11 @@ public class FinishSeparateFragment extends Fragment {
     private boolean isTaskRunning = false;
     private boolean isTaskCancelled = false;
 
+    private ExecutionStatusViewModel viewModel;
 
+    private Handler handlerBtnCancel = new Handler();
+    private Runnable hideCancelRunnable;
+    private boolean isTimerRunning = false;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -208,6 +213,16 @@ public class FinishSeparateFragment extends Fragment {
         backPressBlocker.blockBackButtonWithCallback(this);
 
         fragmentManager = getParentFragmentManager();
+
+        viewModel = new ViewModelProvider(requireActivity()).get(ExecutionStatusViewModel.class);
+
+        // Подписка на изменения переменной executionStatusCancel
+        viewModel.getExecutionStatusCancel().observe(getViewLifecycleOwner(), status -> {
+            if (status != null) {
+                handleCancelButtonVisibility(status);
+            }
+        });
+
 
         context.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
@@ -523,6 +538,45 @@ public class FinishSeparateFragment extends Fragment {
         return root;
     }
 
+
+
+    private void handleCancelButtonVisibility(String status) {
+        switch (status) {
+            case "CarFound":
+            case "Running":
+            case "Executed":
+                if (!isTimerRunning) {
+                    isTimerRunning = true;
+                    hideCancelRunnable = () -> {
+                        btn_cancel_order.setVisibility(View.GONE);
+                    };
+                    handlerBtnCancel.postDelayed(hideCancelRunnable, 60 * 1000); // 60 секунд
+                }
+                break;
+
+            case "WaitingCarSearch":
+            case "SearchesForCar":
+                // Снимаем запрет, показываем кнопку и сбрасываем таймер
+                if (isTimerRunning) {
+                    handlerBtnCancel.removeCallbacks(hideCancelRunnable);
+                    isTimerRunning = false;
+                }
+                btn_cancel_order.setVisibility(View.VISIBLE);
+                break;
+            case "Canceled":
+                // При статусе "Canceled" скрываем кнопку отмены и показываем кнопку "btn_again"
+                btn_cancel_order.setVisibility(View.GONE);
+                btn_again.setVisibility(View.VISIBLE);
+                break;
+            default:
+                // Для остальных статусов показываем кнопку на 5 минут
+                btn_cancel_order.setVisibility(View.VISIBLE);
+                handlerBtnCancel.postDelayed(() -> btn_cancel_order.setVisibility(View.GONE), 5 * 60 * 1000);
+                break;
+        }
+    }
+
+
     private boolean verifyOrder(Context context) {
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
         Cursor cursor = database.query(MainActivity.TABLE_USER_INFO, null, null, null, null, null, null);
@@ -573,7 +627,9 @@ public class FinishSeparateFragment extends Fragment {
             // Анимация исчезновения кнопок
             btn_open.setTextColor(colorPressed);
             btn_reset_status.animate().alpha(0f).setDuration(300).withEndAction(() -> btn_reset_status.setVisibility(View.GONE));
-            btn_cancel_order.animate().alpha(0f).setDuration(300).withEndAction(() -> btn_cancel_order.setVisibility(View.GONE));
+//            if(btn_cancel_order.getVisibility() == View.VISIBLE) {
+//                btn_cancel_order.animate().alpha(0f).setDuration(300).withEndAction(() -> btn_cancel_order.setVisibility(View.GONE));
+//            }
             btn_again.animate().alpha(0f).setDuration(300).withEndAction(() -> btn_again.setVisibility(View.GONE));
         } else {
             // Анимация появления кнопок
@@ -584,9 +640,9 @@ public class FinishSeparateFragment extends Fragment {
             btn_reset_status.animate().alpha(1f).setDuration(300);
 
 
-            btn_cancel_order.setVisibility(View.VISIBLE);
-            btn_cancel_order.setAlpha(0f);
-            btn_cancel_order.animate().alpha(1f).setDuration(300);
+//            btn_cancel_order.setVisibility(View.VISIBLE);
+//            btn_cancel_order.setAlpha(0f);
+//            btn_cancel_order.animate().alpha(1f).setDuration(300);
 
 
             btn_again.setVisibility(View.VISIBLE);
@@ -1653,6 +1709,10 @@ public class FinishSeparateFragment extends Fragment {
                     // например:
                     assert orderResponse != null;
                     String executionStatus = orderResponse.getExecutionStatus();
+
+                    viewModel.setExecutionStatusCancel(executionStatus);
+
+
                     String orderCarInfo = orderResponse.getOrderCarInfo();
                     String driverPhone = orderResponse.getDriverPhone();
                     String requiredTime = orderResponse.getRequiredTime();
@@ -1689,7 +1749,7 @@ public class FinishSeparateFragment extends Fragment {
                             message = context.getString(R.string.ex_st_finished);
                             text_status.setText(message);
                             text_status.clearAnimation();
-                            btn_cancel_order.setVisibility(View.GONE);
+
                             btn_reset_status.setVisibility(View.GONE);
                             btn_open.setVisibility(View.GONE);
                             btn_options.setVisibility(View.GONE);
@@ -1706,7 +1766,7 @@ public class FinishSeparateFragment extends Fragment {
                         case 1:
                             if (!executionStatus.equals("Executed")) {
                                 text_status.clearAnimation();
-                                btn_cancel_order.setVisibility(View.GONE);
+//                                btn_cancel_order.setVisibility(View.GONE);
                                 btn_reset_status.setVisibility(View.GONE);
                                 btn_open.setVisibility(View.GONE);
                                 btn_options.setVisibility(View.GONE);
@@ -1773,7 +1833,7 @@ public class FinishSeparateFragment extends Fragment {
                                             handlerCheckTask.removeCallbacks(checkTask);
                                         }
                                         btn_reset_status.setVisibility(View.GONE);
-                                        btn_cancel_order.setVisibility(View.GONE);
+//                                        btn_cancel_order.setVisibility(View.GONE);
                                         carProgressBar.setVisibility(View.GONE);
                                         message = context.getString(R.string.checkout_status);
                                         text_status.setText(message);
@@ -1814,7 +1874,7 @@ public class FinishSeparateFragment extends Fragment {
                                         handlerAddcost.removeCallbacks(showDialogAddcost);
                                     }
                                     text_status.clearAnimation();
-                                    btn_cancel_order.setVisibility(View.GONE);
+//                                    btn_cancel_order.setVisibility(View.GONE);
                                     if (closeReason == -1) {
                                         // Гекоординаты водителя по АПИ
                                         drivercarposition(value, city, api);
@@ -1869,7 +1929,7 @@ public class FinishSeparateFragment extends Fragment {
                                         handlerCheckTask.removeCallbacks(checkTask);
                                     }
                                     text_status.clearAnimation();
-                                    btn_cancel_order.setVisibility(View.GONE);
+//                                    btn_cancel_order.setVisibility(View.GONE);
                                     carProgressBar.setVisibility(View.GONE);
                                     countdownTextView.setVisibility(View.GONE);
                                     updateProgress(4);
@@ -1903,7 +1963,7 @@ public class FinishSeparateFragment extends Fragment {
                                     break;
                                 case "Executed":
                                     text_status.clearAnimation();
-                                    btn_cancel_order.setVisibility(View.GONE);
+//                                    btn_cancel_order.setVisibility(View.GONE);
                                     btn_reset_status.setVisibility(View.GONE);
                                     btn_open.setVisibility(View.GONE);
                                     btn_options.setVisibility(View.GONE);
@@ -1939,7 +1999,7 @@ public class FinishSeparateFragment extends Fragment {
                                     }
                                     textCost.setVisibility(View.VISIBLE);
                                     textCostMessage.setVisibility(View.VISIBLE);
-                                    btn_cancel_order.setVisibility(View.VISIBLE);
+//                                    btn_cancel_order.setVisibility(View.VISIBLE);
                                     carProgressBar.setVisibility(View.VISIBLE);
                                     delayMillisStatus = 30 * 1000;
                                     message = context.getString(R.string.status_checkout_message);

@@ -102,7 +102,7 @@ public class PusherManager {
                 eventValues.put("routefromnumber", eventData.optString("routefromnumber", "null"));
                 eventValues.put("routeto", eventData.optString("routeto", "null"));
                 eventValues.put("to_number", eventData.optString("to_number", "null"));
-                eventValues.put("required_time", eventData.optString("required_time", "null"));
+                eventValues.put("required_time", eventData.optString("required_time", ""));
                 eventValues.put("flexible_tariff_name", eventData.optString("flexible_tariff_name", "null"));
                 eventValues.put("comment_info", eventData.optString("comment_info", "null"));
                 eventValues.put("extra_charge_codes", eventData.optString("extra_charge_codes", "null"));
