@@ -470,7 +470,13 @@ public class VisicomFragment extends Fragment {
         if (!tarif.equals(" ")) {
             newCheck++;
         }
+        List<String> stringList = logCursor(MainActivity.TABLE_ADD_SERVICE_INFO, context);
+        String comment = stringList.get(2);
+        Logger.d(context, TAG, "comment" + comment);
 
+        if (!comment.equals("no_comment")) {
+            newCheck++;
+        }
         String mes = context.getString(R.string.add_services);
         if (newCheck != 0) {
             mes = context.getString(R.string.add_services) + " (" + newCheck + ")";
@@ -700,8 +706,6 @@ public class VisicomFragment extends Fragment {
         List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, context);
         String tarif = stringListInfo.get(2);
         String payment_type = stringListInfo.get(4);
-//        String addCost = stringListInfo.get(5);
-
 
 
         // Building the parameters to the web service
@@ -789,7 +793,7 @@ public class VisicomFragment extends Fragment {
             ContentValues cv = new ContentValues();
 
             cv.put("time", "no_time");
-            cv.put("comment", "no_comment");
+//            cv.put("comment", "no_comment");
             cv.put("date", "no_date");
 
             // обновляем по id
@@ -880,207 +884,7 @@ public class VisicomFragment extends Fragment {
 // Теперь addCost содержит новое значение
         return  addcost; // Вывод: "145"
 
-    }
-    @SuppressLint("Range")
-    public void costSearchMarkersLocalTariffs(Context context) {
-
-        String query = "SELECT * FROM " + MainActivity.ROUT_MARKER + " LIMIT 1";
-        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-        Cursor cursor = database.rawQuery(query, null);
-
-        cursor.moveToFirst();
-
-        // Получите значения полей из первой записи
-
-        double originLatitude = cursor.getDouble(cursor.getColumnIndex("startLat"));
-        double originLongitude = cursor.getDouble(cursor.getColumnIndex("startLan"));
-        double toLatitude = cursor.getDouble(cursor.getColumnIndex("to_lat"));
-        double toLongitude = cursor.getDouble(cursor.getColumnIndex("to_lng"));
-
-
-        cursor.close();
-
-        List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, context);
-
-        String payment_type = stringListInfo.get(4);
-
-        String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
-        String displayName = logCursor(MainActivity.TABLE_USER_INFO, context).get(4);
-
-
-        // Building the url to the web service
-        List<String> services = logCursor(MainActivity.TABLE_SERVICE_INFO, context);
-        List<String> servicesChecked = new ArrayList<>();
-        String result;
-        boolean servicesVer = false;
-        for (int i = 1; i < services.size() - 1; i++) {
-            if (services.get(i).equals("1")) {
-                servicesVer = true;
-                break;
-            }
-        }
-        if (servicesVer) {
-            for (int i = 0; i < OpenStreetMapActivity.arrayServiceCode().length; i++) {
-                if (services.get(i + 1).equals("1")) {
-                    servicesChecked.add(OpenStreetMapActivity.arrayServiceCode()[i]);
-                }
-            }
-            for (int i = 0; i < servicesChecked.size(); i++) {
-                if (servicesChecked.get(i).equals("CHECK_OUT")) {
-                    servicesChecked.set(i, "CHECK");
-                }
-            }
-            result = String.join("*", servicesChecked);
-            Logger.d(context, TAG, "getTaxiUrlSearchGeo result:" + result + "/");
-        } else {
-            result = "no_extra_charge_codes";
-        }
-
-        List<String> listCity = logCursor(MainActivity.CITY_INFO, context);
-        String city = listCity.get(1);
-
-
-        String user = displayName + "*" + userEmail + "*" + payment_type;
-        database.close();
-
-        List<String> stringList = logCursor(MainActivity.TABLE_ADD_SERVICE_INFO, context);
-        String time = stringList.get(1);
-        String date = stringList.get(3);
-
-
-//        TariffInfo tariffInfo = new TariffInfo(context);
-//        tariffInfo.fetchOrderCostDetails(
-//                originLatitude,
-//                originLongitude,
-//                toLatitude,
-//                toLongitude,
-//                user,
-//                time,
-//                date,
-//                result,
-//                city,
-//                context.getString(R.string.application)
-//        );
-    }
-
-//    @SuppressLint("SetTextI18n")
-//    public static void readTariffInfo(Context context) {
-//        // Создаем экземпляр класса для работы с базой данных
-//
-//        try (DatabaseHelperTariffs dbHelper = new DatabaseHelperTariffs(context)) {
-//
-//            progressBar.setVisibility(View.GONE);
-//            ;
-//            String searchTariffName = "Базовый";
-//            List<String> finalTariffDetailsList1 = dbHelper.getTariffDetailsByFlexibleTariffName(searchTariffName, new ArrayList<>());
-//            Logger.d(context, TAG, "readTariffInfo 1: " + finalTariffDetailsList1);
-//            if (!finalTariffDetailsList1.isEmpty() && finalTariffDetailsList1.size() > 2) {
-//
-//                btn1.setOnClickListener(new View.OnClickListener() {
-//                    @Override
-//                    public void onClick(View v) {
-//
-//
-//                        ContentValues cv = new ContentValues();
-//                        cv.put("tarif", "Базовый");
-//
-//                        // обновляем по id
-//                        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-//                        database.update(MainActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
-//                                new String[]{"1"});
-//                        database.close();
-//                        frame_1.setBackgroundResource(R.drawable.input);
-//                        frame_2.setBackgroundResource(R.drawable.buttons);
-//                        frame_3.setBackgroundResource(R.drawable.buttons);
-//
-//                        text_view_cost.setText(finalTariffDetailsList1.get(2));
-//
-//                    }
-//                });
-//            }
-//
-//            if (finalTariffDetailsList1.size() > 2 && finalTariffDetailsList1.get(2).equals("0")) {
-//                frame_1.setVisibility(View.GONE);
-//            } else {
-//                frame_1.setVisibility(View.VISIBLE);
-//            }
-//
-//            searchTariffName = "Универсал";
-//
-//            List<String> finalTariffDetailsList2 = dbHelper.getTariffDetailsByFlexibleTariffName(searchTariffName, new ArrayList<>());
-//            Logger.d(context, TAG, "readTariffInfo 2: " + finalTariffDetailsList2);
-//            if (!finalTariffDetailsList2.isEmpty() && finalTariffDetailsList2.size() > 2) {
-//
-//                btn2.setOnClickListener(new View.OnClickListener() {
-//                    @SuppressLint("SetTextI18n")
-//                    @Override
-//                    public void onClick(View v) {
-//
-//
-//                        ContentValues cv = new ContentValues();
-//                        cv.put("tarif", "Универсал");
-//
-//                        // обновляем по id
-//                        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-//                        database.update(MainActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
-//                                new String[]{"1"});
-//                        database.close();
-//
-//                        text_view_cost.setText(finalTariffDetailsList2.get(2));
-//                        frame_1.setBackgroundResource(R.drawable.buttons);
-//                        frame_2.setBackgroundResource(R.drawable.input);
-//                        frame_3.setBackgroundResource(R.drawable.buttons);
-//                    }
-//                });
-//            }
-//            if (finalTariffDetailsList2.size() > 2 && finalTariffDetailsList2.get(2).equals("0")) {
-//                frame_2.setVisibility(View.GONE);
-//            } else {
-//                frame_2.setVisibility(View.VISIBLE);
-//            }
-//            searchTariffName = "Микроавтобус";
-//
-//            List<String> finalTariffDetailsList3 = dbHelper.getTariffDetailsByFlexibleTariffName(searchTariffName, new ArrayList<>());
-//            Logger.d(context, TAG, "readTariffInfo 3: " + finalTariffDetailsList3);
-//            if (!finalTariffDetailsList3.isEmpty() && finalTariffDetailsList3.size() > 2) {
-//
-//                btn3.setOnClickListener(new View.OnClickListener() {
-//                    @SuppressLint("SetTextI18n")
-//                    @Override
-//                    public void onClick(View v) {
-//
-//
-//                        ContentValues cv = new ContentValues();
-//                        cv.put("tarif", "Микроавтобус");
-//
-//                        // обновляем по id
-//                        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-//                        database.update(MainActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
-//                                new String[]{"1"});
-//                        database.close();
-//
-//                        text_view_cost.setText(finalTariffDetailsList3.get(2));
-//                        frame_1.setBackgroundResource(R.drawable.buttons);
-//                        frame_2.setBackgroundResource(R.drawable.buttons);
-//                        frame_3.setBackgroundResource(R.drawable.input);
-//                    }
-//                });
-//            }
-//            if (finalTariffDetailsList3.size() > 2 && finalTariffDetailsList3.get(2).equals("0")) {
-//                frame_3.setVisibility(View.GONE);
-//            } else {
-//                frame_3.setVisibility(View.VISIBLE);
-//            }
-//            if (!finalTariffDetailsList1.isEmpty()
-//                    || !finalTariffDetailsList2.isEmpty()
-//                    || !finalTariffDetailsList3.isEmpty()) {
-//                linearLayout.setVisibility(View.VISIBLE);
-//            }
-//        }
-//
-//
-//    }
-
+   }
 
     @SuppressLint("SetTextI18n")
     public static void readTariffInfo(Context context) {
@@ -1259,193 +1063,14 @@ public class VisicomFragment extends Fragment {
                 baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
                 Logger.d(context, TAG, "orderFinished: " + baseUrl + urlOrder);
 
-                parser.sendURLChannel(urlOrder, new Callback<Map<String, String>>() {
+                parser.sendURLChannel(urlOrder, new Callback<>() {
 
                     @Override
                     public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
                         Map<String, String> sendUrlMap = response.body();
 
                         assert sendUrlMap != null;
-
                         handleOrderFinished(sendUrlMap, pay_method, context);
-
-//                    String orderWeb = sendUrlMap.get("order_cost");
-//                    String message = sendUrlMap.get("message");
-//                    Logger.d(context, TAG, "orderFinished: message " + message);
-//                    assert orderWeb != null;
-//
-//                    boolean visicomBackPressed = (boolean) sharedPreferencesHelperMain.getValue("VisicomBackPressed", false);
-//
-//                    if (!orderWeb.equals("0")) {
-//                        if(pay_method.equals("wfp_payment")) {
-//                            String rectoken = getCheckRectoken(MainActivity.TABLE_WFP_CARDS, context);
-//                            Logger.d(context, TAG, "payWfp: rectoken " + rectoken);
-//
-//                            if (!rectoken.isEmpty()) {
-//                                getStatusWfp();
-//                            }
-//                        }
-//
-//                        String to_name;
-//                        if (Objects.equals(sendUrlMap.get("routefrom"), sendUrlMap.get("routeto"))) {
-//                            to_name = context.getString(R.string.on_city_tv);
-//                            Logger.d(context, TAG, "orderFinished: to_name 1 " + to_name);
-//                            if (!Objects.equals(sendUrlMap.get("lat"), "0")) {
-//                                insertRecordsOrders(
-//                                        sendUrlMap.get("routefrom"), sendUrlMap.get("routefrom"),
-//                                        sendUrlMap.get("routefromnumber"), sendUrlMap.get("routefromnumber"),
-//                                        sendUrlMap.get("from_lat"), sendUrlMap.get("from_lng"),
-//                                        sendUrlMap.get("from_lat"), sendUrlMap.get("from_lng"),
-//                                        context
-//                                );
-//                            }
-//                        } else {
-//                            if (Objects.equals(sendUrlMap.get("routeto"), "Точка на карте")) {
-//                                to_name = context.getString(R.string.end_point_marker);
-//                            } else {
-//                                to_name = sendUrlMap.get("routeto") + " " + sendUrlMap.get("to_number");
-//                            }
-//                            Logger.d(context, TAG, "orderFinished: to_name 2 " + to_name);
-//                            if (!Objects.equals(sendUrlMap.get("lat"), "0")) {
-//                                insertRecordsOrders(
-//                                        sendUrlMap.get("routefrom"), to_name,
-//                                        sendUrlMap.get("routefromnumber"), sendUrlMap.get("to_number"),
-//                                        sendUrlMap.get("from_lat"), sendUrlMap.get("from_lng"),
-//                                        sendUrlMap.get("lat"), sendUrlMap.get("lng"),
-//                                        context
-//                                );
-//                            }
-//                        }
-//                        Logger.d(context, TAG, "orderFinished: to_name 3" + to_name);
-//                        String to_name_local = to_name;
-//                        if (to_name.contains("по місту")
-//                                || to_name.contains("по городу")
-//                                || to_name.contains("around the city")
-//                        ) {
-//                            to_name_local = context.getString(R.string.on_city_tv);
-//                        }
-//                        Logger.d(context, TAG, "orderFinished: to_name 4" + to_name_local);
-//
-//                        String required_time = sendUrlMap.get("required_time");
-//                        Logger.d(context, TAG, "orderFinished: required_time " + required_time);
-//                        if (required_time != null && !required_time.contains("01.01.1970")) {
-//                            try {
-//
-//                                @SuppressLint("SimpleDateFormat")
-//                                SimpleDateFormat outputFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
-//
-//                                // Преобразуем строку required_time в Date
-//                                Date date = outputFormat.parse(required_time);
-//
-//                                // Преобразуем Date в строку нужного формата
-//                                assert date != null;
-//                                required_time = context.getString(R.string.time_order) + " " + outputFormat.format(date) + ".";
-//
-//                            } catch (ParseException e) {
-//                                e.printStackTrace();
-//                                required_time = ""; // Если ошибка парсинга, задаём пустое значение
-//                            }
-//                        } else {
-//                            required_time = "";
-//                        }
-//                        String pay_method_message = context.getString(R.string.pay_method_message_main);
-//
-//                        switch (pay_method) {
-//                            case "bonus_payment":
-//                                pay_method_message += " " + context.getString(R.string.pay_method_message_bonus);
-//                                break;
-//                            case "card_payment":
-//                            case "fondy_payment":
-//                            case "mono_payment":
-//                            case "wfp_payment":
-//                                pay_method_message += " " + context.getString(R.string.pay_method_message_card);
-//                                break;
-//                            default:
-//                                pay_method_message += " " + context.getString(R.string.pay_method_message_nal);
-//                        }
-//
-//                        String messageResult =
-//                                sendUrlMap.get("routefrom") + " " + context.getString(R.string.to_message) +
-//                                        to_name_local + "." +
-//                                        required_time;
-//                        messageResult = cleanString(messageResult);
-//
-//                        String messagePayment = orderWeb + " " + context.getString(R.string.UAH) + " " + pay_method_message;
-//
-//
-//                        String messageFondy = context.getString(R.string.fondy_message) + " " +
-//                                sendUrlMap.get("routefrom") + " " + context.getString(R.string.to_message) +
-//                                to_name_local + ".";
-//
-//
-//                        Logger.d(context, TAG, "orderFinished: messageResult " + messageResult);
-//                        Logger.d(context, TAG, "orderFinished: to_name " + to_name);
-//
-//// Создайте Bundle для передачи данных
-//                        Bundle bundle = new Bundle();
-//                        bundle.putString("messageResult_key", messageResult);
-//                        bundle.putString("messagePay_key", messagePayment);
-//                        bundle.putString("messageFondy_key", messageFondy);
-//                        bundle.putString("messageCost_key", orderWeb);
-//                        bundle.putSerializable("sendUrlMap", new HashMap<>(sendUrlMap));
-//                        bundle.putString("UID_key", Objects.requireNonNull(sendUrlMap.get("dispatching_order_uid")));
-//
-//// Установите Bundle как аргументы фрагмента
-//                        MainActivity.navController.navigate(R.id.nav_finish_separate, bundle, new NavOptions.Builder()
-//                                .setPopUpTo(R.id.nav_visicom, true)
-//                                .build());
-//
-//                    } else if (!visicomBackPressed) {
-//                        sharedPreferencesHelperMain.saveValue("VisicomBackPressed", false);
-//                        btnVisible(VISIBLE);
-//                        assert message != null;
-//                        constraintLayoutVisicomFinish.setVisibility(View.GONE);
-//                        constraintLayoutVisicomMain.setVisibility(VISIBLE);
-//                        Logger.d(context, TAG, "2 orderFinished: message " + message);
-//                        String addType ="60";
-//                        if (message.contains("Дублирование")) {
-//                            sharedPreferencesHelperMain.saveValue("doubleOrderPref", true);
-//                            showAddCostDoubleDialog(addType);
-//                         } else if (message.equals("cash") || message.equals("cards only")) {
-//
-//                                if(message.equals("cards only")) {
-//                                    addType ="45";
-//                                    showAddCostDoubleDialog(addType);
-//                                } else {
-//                                    message = context.getString(R.string.black_list_message);
-//                                    if (!isStateSaved() && isAdded()) {
-//                                        MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
-//                                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-//                                    }
-//                                }
-//                         } else if (message.equals("ErrorMessage")) {
-//                            message = getResources().getString(R.string.server_error_connected);
-//                            MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
-//                            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
-//                        } else  {
-//                            switch (pay_method) {
-//                                case "bonus_payment":
-//                                case "card_payment":
-//                                case "fondy_payment":
-//                                case "mono_payment":
-//                                case "wfp_payment":
-//                                    changePayMethodToNal(context.getString(R.string.to_nal_payment));
-//                                    break;
-//                                default:
-//                                    message = getResources().getString(R.string.error_message);
-//                                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
-//                                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-//                            }
-//                        }
-//
-//                        btnVisible(VISIBLE);
-//                    } else {
-//                        sharedPreferencesHelperMain.saveValue("VisicomBackPressed", false);
-//                        btnVisible(VISIBLE);
-//                        assert message != null;
-//                        constraintLayoutVisicomFinish.setVisibility(View.GONE);
-//                        constraintLayoutVisicomMain.setVisibility(VISIBLE);
-//                    }
                     }
 
                     @Override
@@ -1519,17 +1144,40 @@ public class VisicomFragment extends Fragment {
 
             String required_time = sendUrlMap.get("required_time");
             Logger.d(context, TAG, "orderFinished: required_time " + required_time);
-            if (required_time != null && !required_time.contains("01.01.1970")) {
+            if (required_time != null && !required_time.contains("1970")) {
                 try {
                     @SuppressLint("SimpleDateFormat")
                     SimpleDateFormat outputFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
-                    Date date = outputFormat.parse(required_time);
-                    assert date != null;
-                    required_time = context.getString(R.string.time_order) + " " + outputFormat.format(date) + ".";
-                } catch (ParseException e) {
+
+                    // Список возможных форматов
+                    String[] formats = {
+                            "dd.MM.yyyy HH:mm",
+                            "yyyy-MM-dd'T'HH:mm",
+                            "yyyy-MM-dd'T'HH:mm:ss"
+                    };
+
+                    Date date = null;
+                    for (String format : formats) {
+                        try {
+                            SimpleDateFormat inputFormat = new SimpleDateFormat(format);
+                            inputFormat.setLenient(false);
+                            date = inputFormat.parse(required_time);
+                            if (date != null) break;
+                        } catch (ParseException ignored) {
+                        }
+                    }
+
+                    if (date != null) {
+                        required_time = context.getString(R.string.time_order) + " " + outputFormat.format(date) + ".";
+                    } else {
+                        required_time = "";
+                    }
+
+                } catch (Exception e) {
                     e.printStackTrace();
                     required_time = "";
                 }
+
             } else {
                 required_time = "";
             }
@@ -1548,11 +1196,17 @@ public class VisicomFragment extends Fragment {
                 default:
                     pay_method_message += " " + context.getString(R.string.pay_method_message_nal);
             }
-
             String messageResult =
                     sendUrlMap.get("routefrom") + " " + context.getString(R.string.to_message) +
                             to_name_local + "." +
                             required_time;
+
+            if (required_time.isEmpty()) {
+                messageResult =
+                        sendUrlMap.get("routefrom") + " " + context.getString(R.string.to_message) +
+                                to_name_local + ".";
+            }
+
             messageResult = cleanString(messageResult);
 
             String messagePayment = orderWeb + " " + context.getString(R.string.UAH) + " " + pay_method_message;
@@ -1563,6 +1217,38 @@ public class VisicomFragment extends Fragment {
 
             Logger.d(context, TAG, "orderFinished: messageResult " + messageResult);
             Logger.d(context, TAG, "orderFinished: to_name " + to_name);
+
+            List<String> stringList = logCursor(MainActivity.TABLE_ADD_SERVICE_INFO, context);
+            String comment = stringList.get(2);
+            sendUrlMap.put("comment_info", comment);
+
+            List<String> services = logCursor(MainActivity.TABLE_SERVICE_INFO, context);
+            List<String> servicesChecked = new ArrayList<>();
+            String result;
+            boolean servicesVer = false;
+            for (int i = 1; i < services.size() - 1; i++) {
+                if (services.get(i).equals("1")) {
+                    servicesVer = true;
+                    break;
+                }
+            }
+            if (servicesVer) {
+                for (int i = 0; i < OpenStreetMapActivity.arrayServiceCode().length; i++) {
+                    if (services.get(i + 1).equals("1")) {
+                        servicesChecked.add(OpenStreetMapActivity.arrayServiceCode()[i]);
+                    }
+                }
+                for (int i = 0; i < servicesChecked.size(); i++) {
+                    if (servicesChecked.get(i).equals("CHECK_OUT")) {
+                        servicesChecked.set(i, "CHECK");
+                    }
+                }
+                result = String.join(",", servicesChecked);
+                Logger.d(context, TAG, "getTaxiUrlSearchGeo result:" + result + "/");
+                sendUrlMap.put("extra_charge_codes", result);
+            }
+            Logger.d(context, TAG, "sendUrlMap: comment_info " + sendUrlMap.get("comment_info"));
+            Logger.d(context, TAG, "sendUrlMap: extra_charge_codes " + sendUrlMap.get("extra_charge_codes"));
 
             Bundle bundle = new Bundle();
             bundle.putString("messageResult_key", messageResult);
@@ -2098,7 +1784,7 @@ public class VisicomFragment extends Fragment {
                 bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
             }
         });
-        setNalPaymentNoCards(context);
+//        setNalPaymentNoCards(context);
         textViewTo = binding.textTo;
         textViewTo.setOnClickListener(v -> {
             textViewTo.setText("");

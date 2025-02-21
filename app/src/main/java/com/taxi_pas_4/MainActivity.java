@@ -28,6 +28,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -142,6 +143,7 @@ public class MainActivity extends AppCompatActivity {
     public static Cursor cursorDb;
     public static boolean firstStart;
     public static String uid;
+    public static String transactionStatus;
     private AppBarConfiguration mAppBarConfiguration;
     private NetworkChangeReceiver networkChangeReceiver;
     /**
@@ -372,6 +374,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         sharedPreferencesHelperMain.saveValue("pay_error", "**");
+
+
+
         String localeCode = (String) sharedPreferencesHelperMain.getValue("locale", "uk");
         Logger.i(this, "locale", localeCode);
         // Установка локали
@@ -387,12 +392,26 @@ public class MainActivity extends AppCompatActivity {
             // Доступ к TextView в пользовательском заголовке
             View customView = getSupportActionBar().getCustomView();
             TextView titleTextView = customView.findViewById(R.id.action_bar_title);
+            ImageButton button1 = customView.findViewById(R.id.button1);
 
             setCityAppbar();
 
             titleTextView.setText(newTitle);
             // Установка обработчика нажатий
             titleTextView.setOnClickListener(v -> {
+                Logger.d(this, TAG, " Установка обработчика нажатий" + NetworkUtils.isNetworkAvailable(getApplicationContext()));
+                if (NetworkUtils.isNetworkAvailable(getApplicationContext())) {
+                    // Ваш код при нажатии на заголовок
+                    MyBottomSheetCityFragment bottomSheetDialogFragment = new MyBottomSheetCityFragment(city, MainActivity.this);
+                    bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
+                } else {
+                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
+                    bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
+                }
+            });
+
+            // Установка обработчика нажатий
+            button1.setOnClickListener(v -> {
                 Logger.d(this, TAG, " Установка обработчика нажатий" + NetworkUtils.isNetworkAvailable(getApplicationContext()));
                 if (NetworkUtils.isNetworkAvailable(getApplicationContext())) {
                     // Ваш код при нажатии на заголовок

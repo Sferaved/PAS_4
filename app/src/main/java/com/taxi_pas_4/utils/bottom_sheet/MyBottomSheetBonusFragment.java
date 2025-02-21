@@ -640,7 +640,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
         }
         progressBar.setVisibility(View.GONE);
         btn_ok.setVisibility(View.VISIBLE);
-        costSearchMarkersLocalTariffs();
+//        costSearchMarkersLocalTariffs();
     }
     private AlertDialog alertDialog;
     private void changePayMethodToNal() {
@@ -746,34 +746,13 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
             result = "no_extra_charge_codes";
         }
 
-        List<String> listCity = logCursor(MainActivity.CITY_INFO);
-        String city = listCity.get(1);
 
 
-        String user = displayName + "*" + userEmail  + "*" + payment_type;
-        database.close();
 
-        List<String> stringList = logCursor(MainActivity.TABLE_ADD_SERVICE_INFO);
-        String time = stringList.get(1);
-        String date = stringList.get(3);
 
-//
-//        TariffInfo tariffInfo = new TariffInfo(context);
-//        tariffInfo.fetchOrderCostDetails(
-//                originLatitude,
-//                originLongitude,
-//                toLatitude,
-//                toLongitude,
-//                user,
-//                time,
-//                date,
-//                result,
-//                city,
-//                context.getString(R.string.application)
-//        );
     }
 
-     
+
     private String getTaxiUrlSearch(String urlAPI, Context context) throws UnsupportedEncodingException {
 
         List<String> stringListRout = logCursor(MainActivity.ROUT_HOME);

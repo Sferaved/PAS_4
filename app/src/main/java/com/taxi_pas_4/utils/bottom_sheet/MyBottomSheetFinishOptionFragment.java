@@ -64,12 +64,12 @@ public class MyBottomSheetFinishOptionFragment extends BottomSheetDialogFragment
         }
         Logger.d(context, TAG, "flexibleTariffName" + flexibleTariffName);
         Logger.d(context, TAG, "commentInfo: " + commentInfo);
-        TextView textView = view.findViewById(R.id.komenterinp);
+        @SuppressLint("CutPasteId") TextView textView = view.findViewById(R.id.komenterinp);
 
 // Проверяем на null и на пустую строку с учетом возможных пробелов
         if (commentInfo != null && !commentInfo.trim().isEmpty()) {
             commentInfo = delAdminMessage(commentInfo);
-            if(!commentInfo.equals("")) {
+            if(!commentInfo.isEmpty()) {
                 view.findViewById(R.id.komentar).setVisibility(View.VISIBLE);
                 textView.setVisibility(View.VISIBLE);
                 textView.setText(commentInfo);
@@ -80,12 +80,7 @@ public class MyBottomSheetFinishOptionFragment extends BottomSheetDialogFragment
             view.findViewById(R.id.komentar).setVisibility(View.GONE);
             textView.setVisibility(View.GONE);
         }
-        view.findViewById(R.id.komenterinp).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                dismiss();
-            }
-        });
+        view.findViewById(R.id.komenterinp).setOnClickListener(view1 -> dismiss());
         listView = view.findViewById(R.id.list);
 
         Button button = view.findViewById(R.id.btnOk);
@@ -226,8 +221,18 @@ public class MyBottomSheetFinishOptionFragment extends BottomSheetDialogFragment
             view.findViewById(R.id.textView4).setVisibility(View.GONE);
         }
         Log.d(TAG, "options: " + options);
+
+
+        Logger.d(context, TAG, "commentInfo:" + commentInfo);
+
+        @SuppressLint("CutPasteId") TextView komenterinp = view.findViewById(R.id.komenterinp);
+        if (!commentInfo.equals("no_comment")) {
+            komenterinp.setVisibility(View.VISIBLE);
+            komenterinp.setText(commentInfo);
+        }
+
         if(!options) {
-            TextView komenterinp = view.findViewById(R.id.komenterinp);
+
             komenterinp.setVisibility(View.VISIBLE);
             komenterinp.setText(R.string.no_options);
         }

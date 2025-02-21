@@ -14,4 +14,25 @@ public class ExecutionStatusViewModel extends ViewModel {
     public void setExecutionStatusCancel(String status) {
         executionStatusCancel.postValue(status);
     }
+
+    private final MutableLiveData<String> transactionStatus = new MutableLiveData<>();
+
+    public LiveData<String> getTransactionStatus() {
+        return transactionStatus;
+    }
+
+    public void setTransactionStatus(String TransactionStatus) {
+        transactionStatus.postValue(TransactionStatus);
+    }
+
+
+    private final MutableLiveData<String> canceledStatus = new MutableLiveData<>();
+
+    public LiveData<String> getCanceledStatus() {
+        return canceledStatus;
+    }
+
+    public void setCanceledStatus(String canceled) {
+        canceledStatus.postValue(canceled);
+    }
 }

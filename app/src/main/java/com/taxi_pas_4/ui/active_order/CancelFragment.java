@@ -27,12 +27,12 @@ import androidx.navigation.NavOptions;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.utils.connect.NetworkChangeReceiver;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.databinding.FragmentCancelBinding;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.RouteResponseCancel;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
+import com.taxi_pas_4.utils.connect.NetworkChangeReceiver;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.db.DatabaseHelper;
 import com.taxi_pas_4.utils.db.DatabaseHelperUid;

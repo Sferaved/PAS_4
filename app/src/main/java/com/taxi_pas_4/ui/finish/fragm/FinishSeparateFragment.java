@@ -20,6 +20,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
+import android.text.TextUtils;
 import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -194,7 +195,7 @@ public class FinishSeparateFragment extends Fragment {
     private boolean isTaskRunning = false;
     private boolean isTaskCancelled = false;
 
-    private ExecutionStatusViewModel viewModel;
+    public static ExecutionStatusViewModel viewModel;
 
     private Handler handlerBtnCancel = new Handler();
     private Runnable hideCancelRunnable;
@@ -223,6 +224,30 @@ public class FinishSeparateFragment extends Fragment {
             }
         });
 
+
+        // Наблюдение за изменениями статуса транзакции через LiveData
+        viewModel.getTransactionStatus().observe(getViewLifecycleOwner(), status -> {
+            Log.d("Transaction", "LiveData status update received: " + status);
+            if (status != null) {
+                handleTransactionStatus(status);
+            } else {
+                Log.w("Transaction", "Received null status in observer");
+            }
+        });
+        // Наблюдение за изменениями статуса транзакции через LiveData
+        viewModel.getCanceledStatus().observe(getViewLifecycleOwner(), status -> {
+            Log.d("CanceledStatus", "LiveData status update received: " + status);
+            if(status.equals("Canceled")) {
+                viewModel.getTransactionStatus().observe(getViewLifecycleOwner(), Transactionstatus -> {
+                    Log.d("Transaction", "LiveData status update received: " + Transactionstatus);
+                    if (Transactionstatus != null) {
+                        handleTransactionStatusViewCanceled(Transactionstatus);
+                    } else {
+                        Log.w("Transaction", "Received null status in observer");
+                    }
+                });
+            }
+        });
 
         context.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
@@ -264,7 +289,6 @@ public class FinishSeparateFragment extends Fragment {
 
         Bundle arguments = getArguments();
         assert arguments != null;
-        messageResult = arguments.getString("messageResult_key");
 
 
         String no_pay_key = arguments.getString("card_payment_key");
@@ -290,11 +314,19 @@ public class FinishSeparateFragment extends Fragment {
         Logger.d(context, TAG, "need_20_add: " + need_20_add);
 
         comment_info = receivedMap.get("comment_info");
+        Logger.d(context, TAG, "comment_info: " + comment_info);
+
         extra_charge_codes = receivedMap.get("extra_charge_codes");
+        Logger.d(context, TAG, "extra_charge_codes: " + extra_charge_codes);
 
         Logger.d(context, TAG, "onCreate: receivedMap" + receivedMap.toString());
         text_full_message = root.findViewById(R.id.text_full_message);
-        text_full_message.setText(messageResult);
+        messageResult = arguments.getString("messageResult_key");
+
+        assert messageResult != null;
+        text_full_message.setText(messageResult.replace("null", ""));
+
+
 
         messageResultCost = arguments.getString("messagePay_key");
         textCost = root.findViewById(R.id.textCost);
@@ -408,31 +440,7 @@ public class FinishSeparateFragment extends Fragment {
         }
         btn_cancel_order.setOnClickListener(v -> {
 
-            if (handlerAddcost != null) {
-                handlerAddcost.removeCallbacks(showDialogAddcost);
-            }
 
-            carProgressBar.setVisibility(View.GONE);
-            cancel_btn_click = true;
-
-            textCost.setVisibility(View.GONE);
-            textCostMessage.setVisibility(View.GONE);
-//            progressBar.setVisibility(View.GONE);
-            progressSteps.setVisibility(View.GONE);
-
-
-
-            btn_options.setVisibility(View.GONE);
-            btn_open.setVisibility(View.GONE);
-            btn_reset_status.setVisibility(View.GONE);
-            btn_cancel_order.setVisibility(View.GONE);
-            btn_again.setVisibility(View.VISIBLE);
-
-            String messageInfo = context.getString(R.string.finish_info);
-            MyBottomSheetMessageFragment bottomSheetDialogFragment = new MyBottomSheetMessageFragment(messageInfo);
-            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-
-//
             if(connected()){
                 if(!uid_Double.equals(" ")) {
                     cancelOrderDouble();
@@ -538,7 +546,30 @@ public class FinishSeparateFragment extends Fragment {
         return root;
     }
 
+    private void handleTransactionStatus(String status) {
+        String orderStatus = status;
+        Logger.d(context, TAG, "1 Transaction Status: " + orderStatus);
 
+        if (orderStatus.equals("Declined")) {
+
+            MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment =
+                    new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
+            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+            Logger.d(context, TAG, "onResponse: Showing error bottom sheet for declined transaction");
+        }
+    }
+
+    private void handleTransactionStatusViewCanceled(String status) {
+
+        Logger.d(context, TAG, "1 Transaction Status: " + status);
+        String message = context.getString(R.string.ex_st_canceled);
+        if (status.equals("Declined")) {
+           message = context.getString(R.string.pay_cancel);
+           Logger.d(context, TAG, "onResponse: Showing error bottom sheet for declined transaction");
+        }
+        orderCanceled(message);
+
+    }
 
     private void handleCancelButtonVisibility(String status) {
         switch (status) {
@@ -556,6 +587,46 @@ public class FinishSeparateFragment extends Fragment {
 
             case "WaitingCarSearch":
             case "SearchesForCar":
+                btn_reset_status.setText(getString(R.string.add_cost_btn));
+                btn_reset_status.setOnClickListener( view -> {
+
+                    if ("nal_payment".equals(pay_method) || "wfp_payment".equals(pay_method)) {
+
+                        // Запускаем выполнение через 1 минуты (60 000 миллисекунд)
+                        if (handlerAddcost != null) {
+                            handlerAddcost.postDelayed(showDialogAddcost, timeCheckOutAddCost);
+                        }
+
+                        String text = textCostMessage.getText().toString();
+                        Logger.d(getActivity(), TAG, "textCostMessage.getText().toString() " + text);
+
+                        Pattern pattern = Pattern.compile("(\\d+)");
+                        Matcher matcher = pattern.matcher(text);
+
+                        if (matcher.find()) {
+                            Logger.d(context, TAG, "amount_to_add: " + matcher.group(1));
+                            stopCycle();
+                            MyBottomSheetAddCostFragment bottomSheetDialogFragment = new MyBottomSheetAddCostFragment(
+                                    matcher.group(1),
+                                    MainActivity.uid,
+                                    uid_Double,
+                                    pay_method,
+                                    context,
+                                    fragmentManager
+                            );
+                            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                        } else {
+                            Logger.d(context, TAG, "No numeric value found in the text.");
+                        }
+                    } else if ("bonus_payment".equals(pay_method)) {
+
+                        String messageBonus = context.getString(R.string.addCostBonusMessage);
+                        MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context, messageBonus);
+                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+
+
+                    }
+                });
                 // Снимаем запрет, показываем кнопку и сбрасываем таймер
                 if (isTimerRunning) {
                     handlerBtnCancel.removeCallbacks(hideCancelRunnable);
@@ -710,7 +781,7 @@ public class FinishSeparateFragment extends Fragment {
             getUrlToPaymentWfp(amount, MainActivity.order_id);
             getStatusWfp(MainActivity.order_id, "0");
         } else {
-
+            Logger.d(context, TAG, "payWfp: 1 MainActivity.order_id " + MainActivity.order_id);
             getStatusWfp(MainActivity.order_id, amount);
         }
 
@@ -888,9 +959,11 @@ public class FinishSeparateFragment extends Fragment {
     }
 
     private void getStatusWfp(String orderReferens, String amount_20) {
-        Logger.d(context, TAG, "getStatusWfp: ");
+        Logger.d(context, TAG, "getStatusWfp: Starting with orderReferens=" + orderReferens + ", amount_20=" + amount_20);
+
         List<String> stringList = logCursor(MainActivity.CITY_INFO);
         String city = stringList.get(1);
+        Logger.d(context, TAG, "getStatusWfp: Retrieved city=" + city);
 
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
@@ -898,7 +971,6 @@ public class FinishSeparateFragment extends Fragment {
         OkHttpClient client = new OkHttpClient.Builder()
                 .addInterceptor(interceptor)
                 .build();
-
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl)
@@ -907,116 +979,71 @@ public class FinishSeparateFragment extends Fragment {
                 .build();
 
         StatusService service = retrofit.create(StatusService.class);
+        String appName = context.getString(R.string.application);
+        Logger.d(context, TAG, "getStatusWfp: Preparing API call with app=" + appName + ", city=" + city);
 
-        Call<StatusResponse> call = service.checkStatus(
-                 context.getString(R.string.application),
-                city,
-                orderReferens
-        );
-        String order_id= MainActivity.order_id;
-        call.enqueue(new Callback<>() {
+        Call<StatusResponse> call = service.checkStatus(appName, city, orderReferens);
+        String order_id = MainActivity.order_id;
+        Logger.d(context, TAG, "getStatusWfp: Initiating call for order_id=" + order_id);
+
+        call.enqueue(new Callback<StatusResponse>() {
             @Override
             public void onResponse(@NonNull Call<StatusResponse> call, @NonNull Response<StatusResponse> response) {
+                Logger.d(context, TAG, "onResponse: Response received, isSuccessful=" + response.isSuccessful());
 
                 if (response.isSuccessful()) {
                     StatusResponse statusResponse = response.body();
-                    assert statusResponse != null;
+                    if (statusResponse == null) {
+                        Logger.e(context, TAG, "onResponse: StatusResponse is null");
+                        return;
+                    }
+
                     String orderStatus = statusResponse.getTransactionStatus();
-                    Logger.d(context, TAG, "Transaction Status: " + orderStatus);
-                    if(orderStatus.equals("Declined")) {
+                    Logger.d(context, TAG, "1 Transaction Status: " + orderStatus);
 
-                        Logger.d(context, TAG, "Transaction Status messageFondy: " + messageFondy);
-                        Logger.d(context, TAG, "Transaction Status: amount " + orderStatus);
+                    if (orderStatus.equals("Declined")) {
+                        Logger.d(context, TAG, "2 Transaction Status messageFondy: " + messageFondy);
+                        Logger.d(context, TAG, "3 Transaction Status: amount=" + amount_20);
 
-                        MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
+                        MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment =
+                                new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount_20, context);
                         bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-                    } else if (amount_20.equals("20")) {
+                        Logger.d(context, TAG, "onResponse: Showing error bottom sheet for declined transaction");
+                    }
+                    else if (amount_20.equals("20")) {
                         switch (orderStatus) {
                             case "Approved":
                             case "WaitingAuthComplete":
+                                Logger.d(context, TAG, "onResponse: Positive status received: " + orderStatus);
                                 sharedPreferencesHelperMain.saveValue("pay_error", "**");
                                 newOrderCardPayAdd20(order_id);
                                 break;
                             default:
+                                Logger.d(context, TAG, "onResponse: Unexpected status: " + orderStatus);
                                 sharedPreferencesHelperMain.saveValue("pay_error", "pay_error");
 
-                                MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", FinishSeparateFragment.messageFondy, amount, context);
+                                MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment =
+                                        new MyBottomSheetErrorPaymentFragment("wfp_payment", FinishSeparateFragment.messageFondy, amount_20, context);
                                 bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-
+                                Logger.d(context, TAG, "onResponse: Showing error bottom sheet for unexpected status");
                         }
                     }
+                } else {
+                    Logger.e(context, TAG, "onResponse: Unsuccessful response, code=" + response.code());
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<StatusResponse> call, @NonNull Throwable t) {
-//                getReversWfp(city);
+                Logger.e(context, TAG, "onFailure: API call failed: " + t.getMessage());
+
             }
         });
-        if(need_20_add) {
+
+        if (need_20_add) {
+            Logger.d(context, TAG, "getStatusWfp: Scheduling delayed task with delay=" + timeCheckOutAddCost);
             handlerAddcost.postDelayed(showDialogAddcost, timeCheckOutAddCost);
         }
-    }
-
-    private void getReversWfp(String city) {
-        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
-        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-
-        OkHttpClient client = new OkHttpClient.Builder()
-                .addInterceptor(interceptor)
-                .build();
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(baseUrl)
-                .addConverterFactory(GsonConverterFactory.create())
-                .client(client)
-                .build();
-
-        ReversService service = retrofit.create(ReversService.class);
-
-        Call<ReversResponse> call = service.checkStatus(
-                 context.getString(R.string.application),
-                city,
-                MainActivity.order_id,
-                amount
-        );
-        call.enqueue(new Callback<ReversResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<ReversResponse> call, @NonNull Response<ReversResponse> response) {
-                if (response.isSuccessful()) {
-                    ReversResponse statusResponse = response.body();
-                    assert statusResponse != null;
-                    if (statusResponse.getReasonCode() == 1100) {
-                        Logger.d(context, TAG, "Transaction Status: " + statusResponse.getTransactionStatus());
-                        // Другие данные можно также получить из statusResponse
-                    } else {
-                        Logger.d(context, TAG, "Response body is null");
-                        Logger.d(context, TAG,"Response body is null");
-
-                        MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
-                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-
-
-                    }
-                } else {
-                    Logger.d(context, TAG, "Request failed: " + response.code());
-                    Logger.d(context, TAG,"Response body is null");
-                    MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-                    callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
-                    MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
-                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-
-                }
-
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<ReversResponse> call, @NonNull Throwable t) {
-//                dismiss();
-                Logger.d(context, TAG, "Request failed: " + t.getMessage());
-            }
-        });
-
     }
     /**
      * payFondy
@@ -1607,6 +1634,7 @@ public class FinishSeparateFragment extends Fragment {
         return list;
     }
     private void cancelOrder(String value) throws ParseException {
+
         if (handlerAddcost != null) {
             handlerAddcost.removeCallbacks(showDialogAddcost);
         }
@@ -1622,16 +1650,12 @@ public class FinishSeparateFragment extends Fragment {
         call.enqueue(new Callback<Status>() {
             @Override
             public void onResponse(@NonNull Call<Status> call, @NonNull Response<Status> response) {
-                if (response.isSuccessful()) {
-
-//                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
-//                        MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
-//                                .setPopUpTo(R.id.nav_visicom, true)
-//                                .build());
-//                    }, 5000); // 10 секунд = 10000 миллисекунд
-                } else {
+                if (!response.isSuccessful()) {
                     // Обработка неуспешного ответа
                     text_status.setText(R.string.verify_internet);
+                } else {
+                    String message = context.getString(R.string.ex_st_canceled);
+                    orderCanceled(message);
                 }
             }
 
@@ -1654,28 +1678,32 @@ public class FinishSeparateFragment extends Fragment {
         List<String> listCity = logCursor(MainActivity.CITY_INFO);
         String city = listCity.get(1);
         String api = listCity.get(2);
-        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") +"/";
+        pay_method = logCursor(MainActivity.TABLE_SETTINGS_INFO).get(4);
+
+        baseUrl = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") +"/";
         String url = baseUrl + api + "/android/webordersCancelDouble/" + MainActivity.uid + "/" + uid_Double + "/" + pay_method + "/" + city  + "/" +  context.getString(R.string.application);
 
         Call<Status> call = ApiClient.getApiService().cancelOrderDouble(url);
         Logger.d(context, TAG, "cancelOrderDouble: " + url);
         text_status.setText(R.string.sent_cancel_message);
-        call.enqueue(new Callback<Status>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<Status> call, @NonNull Response<Status> response) {
-//                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
-//                        MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
-//                                .setPopUpTo(R.id.nav_visicom, true)
-//                                .build());
-//                    }, 5000); // 10 секунд = 10000 миллисекунд
+                if (response.body() != null) {
+                    String message = context.getString(R.string.ex_st_canceled);
+                    orderCanceled(message);
+                    Logger.d(context, TAG, "onResponse: " + response.body());
+                } else {
+                    Logger.d(context, TAG, "onResponse: Response body is null");
+                }
             }
+
 
             @Override
             public void onFailure(@NonNull Call<Status> call, @NonNull Throwable t) {
                 // Обработка ошибок сети или других ошибок
                 String errorMessage = t.getMessage();
                 Logger.d(context, TAG, "onFailure: " + errorMessage);
-//                text_status.setText(R.string.verify_internet);
             }
         });
 //        progressBar.setVisibility(View.GONE);
@@ -1692,10 +1720,10 @@ public class FinishSeparateFragment extends Fragment {
         String city = listCity.get(1);
         String api = listCity.get(2);
         baseUrl = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
-        String url = baseUrl  + api + "/android/historyUIDStatus/" + value + "/" + city  + "/" +  context.getString(R.string.application);
+        String url = baseUrl  + api + "/android/historyUIDStatusNew/" + value + "/" + city  + "/" +  context.getString(R.string.application);
 
         Call<OrderResponse> call = ApiClient.getApiService().statusOrder(url);
-        Logger.d(context, TAG, "/android/historyUIDStatus/: " + url);
+        Logger.d(context, TAG, "/android/historyUIDStatusNew/: " + url);
 
         // Выполняем запрос асинхронно
         call.enqueue(new Callback<>() {
@@ -1741,272 +1769,223 @@ public class FinishSeparateFragment extends Fragment {
                             return; // Выйти, если произошла ошибка парсинга
                         }
                     }
-                    String message;
-                    switch (closeReason) {
-                        case 0:
-                        case 8:
-                            stopCycle();
-                            message = context.getString(R.string.ex_st_finished);
-                            text_status.setText(message);
-                            text_status.clearAnimation();
+                    closeReasonReact (
+                        closeReason,
+                        executionStatus,
+                        driverPhone,
+                        time_to_start_point,
+                        orderCarInfo
+                    );
 
-                            btn_reset_status.setVisibility(View.GONE);
-                            btn_open.setVisibility(View.GONE);
-                            btn_options.setVisibility(View.GONE);
-                            textCost.setVisibility(View.GONE);
-                            textCostMessage.setVisibility(View.GONE);
-                            carProgressBar.setVisibility(View.GONE);
-                            progressSteps.setVisibility(View.GONE);
-                            btn_again.setVisibility(View.VISIBLE);
-
-                            textStatusCar.setVisibility(View.GONE);
-                            textCarMessage.setVisibility(View.GONE);
-
-                            break;
-                        case 1:
-                            if (!executionStatus.equals("Executed")) {
-                                text_status.clearAnimation();
-//                                btn_cancel_order.setVisibility(View.GONE);
-                                btn_reset_status.setVisibility(View.GONE);
-                                btn_open.setVisibility(View.GONE);
-                                btn_options.setVisibility(View.GONE);
-                                textStatusCar.setVisibility(View.GONE);
-                                textCarMessage.setVisibility(View.GONE);
-                                canceled = true;
-                                if (handler != null) {
-                                    handler.removeCallbacks(myRunnable);
-                                }
-                                if (handlerBonusBtn != null) {
-                                    handlerBonusBtn.removeCallbacks(runnableBonusBtn);
-                                }
-                                if (handlerAddcost != null) {
-                                    handlerAddcost.removeCallbacks(showDialogAddcost);
-                                }
-                                if (handlerCheckTask != null) {
-                                    handlerCheckTask.removeCallbacks(checkTask);
-                                }
-                                Logger.d(context, TAG, "statusOrderWithDifferentValue canceled: " + canceled);
-                                if (cancel_btn_click) {
-                                    message = context.getString(R.string.ex_st_canceled);
-                                    stopCycle();
-                                } else {
-                                    if (pay_method.equals("fondy_payment") || pay_method.equals("mono_payment") || pay_method.equals("wfp_payment")) {
-                                        Logger.d(context, TAG, "statusOrderWithDifferentValue canceled: " + MainActivity.uid);
-                                        message = context.getString(R.string.pay_cancel);
-                                        stopCycle();
-                                    } else {
-                                        message = context.getString(R.string.ex_st_canceled);
-                                    }
-                                    textCost.setVisibility(View.GONE);
-                                    textCostMessage.setVisibility(View.GONE);
-                                    carProgressBar.setVisibility(View.GONE);
-                                    progressSteps.setVisibility(View.GONE);
-                                    btn_again.setVisibility(View.VISIBLE);
-                                }
-
-                                text_status.setText(message);
-                            }
-
-                            break;
-                        default:
-                            // Обработка различных вариантов executionStatus
-                            switch (executionStatus) {
-                                case "WaitingCarSearch":
-                                case "SearchesForCar":
-                                    // 10 минут до предварительного заказа
-                                    if (!isTenMinutesRemainingBlock && isTenMinutesRemaining) {
-                                        isTenMinutesRemainingAction();
-                                    }
-
-                                    if (cancel_btn_click) {
-                                        if (handler != null) {
-                                            handler.removeCallbacks(myRunnable);
-                                        }
-                                        if (handlerBonusBtn != null) {
-                                            handlerBonusBtn.removeCallbacks(runnableBonusBtn);
-                                        }
-
-                                        if (handlerAddcost != null) {
-                                            handlerAddcost.removeCallbacks(showDialogAddcost);
-                                        }
-                                        if (handlerCheckTask != null) {
-                                            handlerCheckTask.removeCallbacks(checkTask);
-                                        }
-                                        btn_reset_status.setVisibility(View.GONE);
-//                                        btn_cancel_order.setVisibility(View.GONE);
-                                        carProgressBar.setVisibility(View.GONE);
-                                        message = context.getString(R.string.checkout_status);
-                                        text_status.setText(message);
-                                    } else {
-                                        if (need_20_add) {
-                                            if (handlerAddcost != null && showDialogAddcost != null) {
-                                                handlerAddcost.postDelayed(showDialogAddcost, timeCheckOutAddCost);
-                                                textCost.setVisibility(View.VISIBLE);
-                                                textCostMessage.setVisibility(View.VISIBLE);
-                                                carProgressBar.setVisibility(View.VISIBLE);
-//                                                progressBar.setVisibility(View.VISIBLE);
-                                                progressSteps.setVisibility(View.VISIBLE);
-                                                btn_options.setVisibility(View.VISIBLE);
-                                                btn_open.setVisibility(View.VISIBLE);
-                                            }
-                                        }
-
-                                        message = context.getString(R.string.ex_st_0);
-                                        carProgressBar.setVisibility(View.VISIBLE);
-                                        text_status.setText(message);
-                                        text_status.startAnimation(blinkAnimation);
-                                        updateProgress(2);
-                                        countdownTextView.setVisibility(View.GONE);
-                                        delayMillisStatus = 5 * 1000;
-
-
-                                        textStatusCar.setVisibility(View.GONE);
-                                        textCarMessage.setVisibility(View.GONE);
-                                    }
-
-                                    break;
-
-                                case "CarFound":
-                                    text_status.clearAnimation();
-                                    textCost.setVisibility(View.VISIBLE);
-                                    textCostMessage.setVisibility(View.VISIBLE);
-                                    if (handlerAddcost != null) {
-                                        handlerAddcost.removeCallbacks(showDialogAddcost);
-                                    }
-                                    text_status.clearAnimation();
-//                                    btn_cancel_order.setVisibility(View.GONE);
-                                    if (closeReason == -1) {
-                                        // Гекоординаты водителя по АПИ
-                                        drivercarposition(value, city, api);
-                                    } else {
-                                        calculateTimeToStart(value, api);
-                                    }
-                                    updateProgress(3);
-
-                                    if (!cancel_btn_click) {
-                                        delayMillisStatus = 5 * 1000;
-                                        // Формируем сообщение с учетом возможных пустых значений переменных
-                                        StringBuilder messageBuilder = new StringBuilder(context.getString(R.string.ex_st_2));
-
-
-                                        if (driverPhone != null && !driverPhone.isEmpty()) {
-                                            Logger.d(context, TAG, "onResponse:driverPhone " + driverPhone);
-                                            btn_reset_status.setText(context.getString(R.string.phone_driver));
-                                            btn_reset_status.setOnClickListener(v -> {
-                                                Intent intent = new Intent(Intent.ACTION_DIAL);
-                                                intent.setData(Uri.parse("tel:" + driverPhone));
-                                                startActivity(intent);
-                                            });
-                                        }
-
-
-                                        if (time_to_start_point != null && !time_to_start_point.isEmpty()) {
-                                            messageBuilder.append(context.getString(R.string.ex_st_5)).append(formatDate2(time_to_start_point));
-                                        }
-
-                                        if (orderCarInfo != null && !orderCarInfo.isEmpty()) {
-                                            textStatusCar.setVisibility(View.VISIBLE);
-                                            textCarMessage.setVisibility(View.VISIBLE);
-                                            textCarMessage.setText(orderCarInfo);
-                                        }
-
-                                        countdownTextView.setVisibility(View.VISIBLE);
-
-//                                        progressBar.setVisibility(View.GONE);
-                                        message = messageBuilder.toString();
-                                    } else {
-                                        message = context.getString(R.string.ex_st_canceled);
-                                    }
-                                    text_status.setText(message);
-                                    break;
-                                case "CarInStartPoint":
-                                    textCost.setVisibility(View.VISIBLE);
-                                    textCostMessage.setVisibility(View.VISIBLE);
-                                    if (handlerAddcost != null) {
-                                        handlerAddcost.removeCallbacks(showDialogAddcost);
-                                    }
-                                    if (handlerCheckTask != null) {
-                                        handlerCheckTask.removeCallbacks(checkTask);
-                                    }
-                                    text_status.clearAnimation();
-//                                    btn_cancel_order.setVisibility(View.GONE);
-                                    carProgressBar.setVisibility(View.GONE);
-                                    countdownTextView.setVisibility(View.GONE);
-                                    updateProgress(4);
-                                    if (!cancel_btn_click) {
-                                        delayMillisStatus = 5 * 1000;
-                                        // Формируем сообщение с учетом возможных пустых значений переменных
-                                        StringBuilder messageBuilder = new StringBuilder(context.getString(R.string.ex_st_2_1));
-
-                                        if (driverPhone != null && !driverPhone.isEmpty()) {
-                                            Logger.d(context, TAG, "onResponse:driverPhone " + driverPhone);
-                                            btn_reset_status.setText(context.getString(R.string.phone_driver));
-                                            btn_reset_status.setOnClickListener(v -> {
-                                                Intent intent = new Intent(Intent.ACTION_DIAL);
-                                                intent.setData(Uri.parse("tel:" + driverPhone));
-                                                startActivity(intent);
-                                            });
-                                        }
-
-                                        if (orderCarInfo != null && !orderCarInfo.isEmpty()) {
-                                            textStatusCar.setVisibility(View.VISIBLE);
-                                            textCarMessage.setVisibility(View.VISIBLE);
-                                            textCarMessage.setText(orderCarInfo);
-                                        }
-
-//                                        progressBar.setVisibility(View.GONE);
-                                        message = messageBuilder.toString();
-                                    } else {
-                                        message = context.getString(R.string.ex_st_canceled);
-                                    }
-                                    text_status.setText(message);
-                                    break;
-                                case "Executed":
-                                    text_status.clearAnimation();
-//                                    btn_cancel_order.setVisibility(View.GONE);
-                                    btn_reset_status.setVisibility(View.GONE);
-                                    btn_open.setVisibility(View.GONE);
-                                    btn_options.setVisibility(View.GONE);
-                                    textStatusCar.setVisibility(View.GONE);
-                                    textCarMessage.setVisibility(View.GONE);
-                                    textCost.setVisibility(View.GONE);
-                                    textCostMessage.setVisibility(View.GONE);
-                                    carProgressBar.setVisibility(View.GONE);
-                                    progressSteps.setVisibility(View.GONE);
-                                    btn_again.setVisibility(View.VISIBLE);
-                                    canceled = true;
-                                    if (handler != null) {
-                                        handler.removeCallbacks(myRunnable);
-                                    }
-                                    if (handlerBonusBtn != null) {
-                                        handlerBonusBtn.removeCallbacks(runnableBonusBtn);
-                                    }
-                                    if (handlerAddcost != null) {
-                                        handlerAddcost.removeCallbacks(showDialogAddcost);
-                                    }
-                                    if (handlerCheckTask != null) {
-                                        handlerCheckTask.removeCallbacks(checkTask);
-                                    }
-                                    Logger.d(context, TAG, "statusOrderWithDifferentValue canceled: " + canceled);
-                                    stopCycle();
-
-                                    message = context.getString(R.string.ex_st_finished);
-                                    text_status.setText(message);
-                                    break;
-                                default:
-                                    if (handlerAddcost != null) {
-                                        handlerAddcost.removeCallbacks(showDialogAddcost);
-                                    }
-                                    textCost.setVisibility(View.VISIBLE);
-                                    textCostMessage.setVisibility(View.VISIBLE);
-//                                    btn_cancel_order.setVisibility(View.VISIBLE);
-                                    carProgressBar.setVisibility(View.VISIBLE);
-                                    delayMillisStatus = 30 * 1000;
-                                    message = context.getString(R.string.status_checkout_message);
-                                    text_status.setText(message);
-                                    break;
-                            }
-                    }
+//                    String message;
+//                    switch (closeReason) {
+//                        case 0:
+//                        case 8:
+//                            closeReasonReact(closeReason, executionStatus);
+//                            break;
+//                        case 1:
+//                            closeReasonExecReact(executionStatus);
+//                            break;
+//                        default:
+//                            // Обработка различных вариантов executionStatus
+//                            switch (executionStatus) {
+//                                case "WaitingCarSearch":
+//                                case "SearchesForCar":
+//                                    // 10 минут до предварительного заказа
+//                                    if (!isTenMinutesRemainingBlock && isTenMinutesRemaining) {
+//                                        isTenMinutesRemainingAction();
+//                                    }
+//                                    if (cancel_btn_click) {
+//                                        if (handler != null) {
+//                                            handler.removeCallbacks(myRunnable);
+//                                        }
+//                                        if (handlerBonusBtn != null) {
+//                                            handlerBonusBtn.removeCallbacks(runnableBonusBtn);
+//                                        }
+//
+//                                        if (handlerAddcost != null) {
+//                                            handlerAddcost.removeCallbacks(showDialogAddcost);
+//                                        }
+//                                        if (handlerCheckTask != null) {
+//                                            handlerCheckTask.removeCallbacks(checkTask);
+//                                        }
+//                                        btn_reset_status.setVisibility(View.GONE);
+////                                        btn_cancel_order.setVisibility(View.GONE);
+//                                        carProgressBar.setVisibility(View.GONE);
+//                                        message = context.getString(R.string.checkout_status);
+//                                        text_status.setText(message);
+//                                    } else {
+//                                        if (need_20_add) {
+//                                            if (handlerAddcost != null && showDialogAddcost != null) {
+//                                                handlerAddcost.postDelayed(showDialogAddcost, timeCheckOutAddCost);
+//                                                textCost.setVisibility(View.VISIBLE);
+//                                                textCostMessage.setVisibility(View.VISIBLE);
+//                                                carProgressBar.setVisibility(View.VISIBLE);
+////                                                progressBar.setVisibility(View.VISIBLE);
+//                                                progressSteps.setVisibility(View.VISIBLE);
+//                                                btn_options.setVisibility(View.VISIBLE);
+//                                                btn_open.setVisibility(View.VISIBLE);
+//                                            }
+//                                        }
+//
+//                                        message = context.getString(R.string.ex_st_0);
+//                                        carProgressBar.setVisibility(View.VISIBLE);
+//                                        text_status.setText(message);
+//                                        text_status.startAnimation(blinkAnimation);
+//                                        updateProgress(2);
+//                                        countdownTextView.setVisibility(View.GONE);
+//                                        delayMillisStatus = 5 * 1000;
+//
+//
+//                                        textStatusCar.setVisibility(View.GONE);
+//                                        textCarMessage.setVisibility(View.GONE);
+//                                    }
+//
+//                                    break;
+//
+//                                case "CarFound":
+//                                    text_status.clearAnimation();
+//                                    textCost.setVisibility(View.VISIBLE);
+//                                    textCostMessage.setVisibility(View.VISIBLE);
+//                                    if (handlerAddcost != null) {
+//                                        handlerAddcost.removeCallbacks(showDialogAddcost);
+//                                    }
+//                                    text_status.clearAnimation();
+////                                    btn_cancel_order.setVisibility(View.GONE);
+//                                    if (closeReason == -1) {
+//                                        // Гекоординаты водителя по АПИ
+//                                        drivercarposition(value, city, api);
+//                                    } else {
+//                                        calculateTimeToStart(value, api);
+//                                    }
+//                                    updateProgress(3);
+//
+//                                    if (!cancel_btn_click) {
+//                                        delayMillisStatus = 5 * 1000;
+//                                        // Формируем сообщение с учетом возможных пустых значений переменных
+//                                        StringBuilder messageBuilder = new StringBuilder(context.getString(R.string.ex_st_2));
+//
+//
+//                                        if (driverPhone != null && !driverPhone.isEmpty()) {
+//                                            Logger.d(context, TAG, "onResponse:driverPhone " + driverPhone);
+//                                            btn_reset_status.setText(context.getString(R.string.phone_driver));
+//                                            btn_reset_status.setOnClickListener(v -> {
+//                                                Intent intent = new Intent(Intent.ACTION_DIAL);
+//                                                intent.setData(Uri.parse("tel:" + driverPhone));
+//                                                startActivity(intent);
+//                                            });
+//                                        } else {
+//                                            btn_reset_status.setVisibility(View.GONE);
+//                                        }
+//
+//
+//                                        if (time_to_start_point != null && !time_to_start_point.isEmpty()) {
+//                                            messageBuilder.append(context.getString(R.string.ex_st_5)).append(formatDate2(time_to_start_point));
+//                                        }
+//
+//                                        if (orderCarInfo != null && !orderCarInfo.isEmpty()) {
+//                                            textStatusCar.setVisibility(View.VISIBLE);
+//                                            textCarMessage.setVisibility(View.VISIBLE);
+//                                            textCarMessage.setText(orderCarInfo);
+//                                        }
+//
+//                                        countdownTextView.setVisibility(View.VISIBLE);
+//
+////                                        progressBar.setVisibility(View.GONE);
+//                                        message = messageBuilder.toString();
+//                                    } else {
+//                                        message = context.getString(R.string.ex_st_canceled);
+//                                    }
+//                                    text_status.setText(message);
+//                                    break;
+//                                case "CarInStartPoint":
+//                                    textCost.setVisibility(View.VISIBLE);
+//                                    textCostMessage.setVisibility(View.VISIBLE);
+//                                    if (handlerAddcost != null) {
+//                                        handlerAddcost.removeCallbacks(showDialogAddcost);
+//                                    }
+//                                    if (handlerCheckTask != null) {
+//                                        handlerCheckTask.removeCallbacks(checkTask);
+//                                    }
+//                                    text_status.clearAnimation();
+////                                    btn_cancel_order.setVisibility(View.GONE);
+//                                    carProgressBar.setVisibility(View.GONE);
+//                                    countdownTextView.setVisibility(View.GONE);
+//                                    updateProgress(4);
+//                                    if (!cancel_btn_click) {
+//                                        delayMillisStatus = 5 * 1000;
+//                                        // Формируем сообщение с учетом возможных пустых значений переменных
+//                                        StringBuilder messageBuilder = new StringBuilder(context.getString(R.string.ex_st_2_1));
+//
+//                                        if (driverPhone != null && !driverPhone.isEmpty()) {
+//                                            Logger.d(context, TAG, "onResponse:driverPhone " + driverPhone);
+//                                            btn_reset_status.setText(context.getString(R.string.phone_driver));
+//                                            btn_reset_status.setOnClickListener(v -> {
+//                                                Intent intent = new Intent(Intent.ACTION_DIAL);
+//                                                intent.setData(Uri.parse("tel:" + driverPhone));
+//                                                startActivity(intent);
+//                                            });
+//                                        }
+//
+//                                        if (orderCarInfo != null && !orderCarInfo.isEmpty()) {
+//                                            textStatusCar.setVisibility(View.VISIBLE);
+//                                            textCarMessage.setVisibility(View.VISIBLE);
+//                                            textCarMessage.setText(orderCarInfo);
+//                                        }
+//
+////                                        progressBar.setVisibility(View.GONE);
+//                                        message = messageBuilder.toString();
+//                                    } else {
+//                                        message = context.getString(R.string.ex_st_canceled);
+//                                    }
+//                                    text_status.setText(message);
+//                                    break;
+//                                case "Executed":
+//                                    text_status.clearAnimation();
+////                                    btn_cancel_order.setVisibility(View.GONE);
+//                                    btn_reset_status.setVisibility(View.GONE);
+//                                    btn_open.setVisibility(View.GONE);
+//                                    btn_options.setVisibility(View.GONE);
+//                                    textStatusCar.setVisibility(View.GONE);
+//                                    textCarMessage.setVisibility(View.GONE);
+//                                    textCost.setVisibility(View.GONE);
+//                                    textCostMessage.setVisibility(View.GONE);
+//                                    carProgressBar.setVisibility(View.GONE);
+//                                    progressSteps.setVisibility(View.GONE);
+//                                    btn_again.setVisibility(View.VISIBLE);
+//                                    canceled = true;
+//                                    if (handler != null) {
+//                                        handler.removeCallbacks(myRunnable);
+//                                    }
+//                                    if (handlerBonusBtn != null) {
+//                                        handlerBonusBtn.removeCallbacks(runnableBonusBtn);
+//                                    }
+//                                    if (handlerAddcost != null) {
+//                                        handlerAddcost.removeCallbacks(showDialogAddcost);
+//                                    }
+//                                    if (handlerCheckTask != null) {
+//                                        handlerCheckTask.removeCallbacks(checkTask);
+//                                    }
+//                                    Logger.d(context, TAG, "statusOrderWithDifferentValue canceled: " + canceled);
+//                                    stopCycle();
+//
+//                                    message = context.getString(R.string.ex_st_finished);
+//                                    text_status.setText(message);
+//                                    break;
+//                                default:
+//                                    if (handlerAddcost != null) {
+//                                        handlerAddcost.removeCallbacks(showDialogAddcost);
+//                                    }
+//                                    textCost.setVisibility(View.VISIBLE);
+//                                    textCostMessage.setVisibility(View.VISIBLE);
+////                                    btn_cancel_order.setVisibility(View.VISIBLE);
+//                                    carProgressBar.setVisibility(View.VISIBLE);
+//                                    delayMillisStatus = 30 * 1000;
+//                                    message = context.getString(R.string.status_checkout_message);
+//                                    text_status.setText(message);
+//                                    break;
+//                            }
+//                    }
 
                 }
             }
@@ -2016,6 +1995,251 @@ public class FinishSeparateFragment extends Fragment {
             }
         });
 //        progressBar.setVisibility(View.GONE);
+    }
+
+
+    private void orderComplete() {
+        // Выполнено
+        stopCycle();
+
+        String message = context.getString(R.string.ex_st_finished);
+        text_status.setText(message);
+        text_status.clearAnimation();
+
+        // Скрываем элементы
+
+        setVisibility(
+                View.GONE,
+                btn_reset_status,
+                btn_open,
+                btn_options,
+                textCost,
+                textCostMessage,
+                carProgressBar,
+                progressSteps,
+                textStatusCar,
+                textCarMessage
+        );
+
+        // Показываем кнопку "Повторить"
+        btn_again.setVisibility(View.VISIBLE);
+
+        // Отменяем все обработчики
+        canceled = true;
+
+        cancelAllHandlers();
+
+        Logger.d(context, TAG, "orderComplete " + canceled);
+
+        stopCycle();
+    }
+
+
+    private void carSearch() {
+        Logger.d(context, TAG, "carSearch() started");
+
+        if (!isTenMinutesRemainingBlock && isTenMinutesRemaining) {
+            Logger.d(context, TAG, "Triggering isTenMinutesRemainingAction()");
+            isTenMinutesRemainingAction();
+        }
+
+        if (cancel_btn_click) {
+            Logger.d(context, TAG, "Order cancellation detected, stopping search...");
+            cancelAllHandlers();
+            setVisibility(View.GONE, btn_reset_status, carProgressBar);
+            text_status.setText(context.getString(R.string.checkout_status));
+            return;
+        }
+
+        if (need_20_add && handlerAddcost != null && showDialogAddcost != null) {
+            Logger.d(context, TAG, "Triggering add cost delay: " + timeCheckOutAddCost);
+            handlerAddcost.postDelayed(showDialogAddcost, timeCheckOutAddCost);
+            setVisibility(View.VISIBLE, textCost, textCostMessage, carProgressBar, progressSteps, btn_options, btn_open);
+        }
+
+        Logger.d(context, TAG, "Updating status and UI for car search");
+        text_status.setText(context.getString(R.string.ex_st_0));
+        carProgressBar.setVisibility(View.VISIBLE);
+        text_status.startAnimation(blinkAnimation);
+        updateProgress(2);
+        countdownTextView.setVisibility(View.GONE);
+        delayMillisStatus = 5 * 1000;
+
+        setVisibility(View.GONE, textStatusCar, textCarMessage);
+        Logger.d(context, TAG, "carSearch() completed");
+    }
+
+    // Вспомогательный метод для отмены всех обработчиков
+    private void cancelAllHandlers() {
+        if (handler != null) {
+            Logger.d(context, TAG, "Removing myRunnable handler");
+            handler.removeCallbacks(myRunnable);
+        }
+        if (handlerBonusBtn != null) {
+            Logger.d(context, TAG, "Removing runnableBonusBtn handler");
+            handlerBonusBtn.removeCallbacks(runnableBonusBtn);
+        }
+        if (handlerAddcost != null) {
+            Logger.d(context, TAG, "Removing showDialogAddcost handler");
+            handlerAddcost.removeCallbacks(showDialogAddcost);
+        }
+        if (handlerCheckTask != null) {
+            Logger.d(context, TAG, "Removing checkTask handler");
+            handlerCheckTask.removeCallbacks(checkTask);
+        }
+    }
+
+
+
+    private void setVisibility(int visibility, View... views) {
+        for (View view : views) {
+            view.setVisibility(visibility);
+        }
+    }
+
+
+    private void carFound(
+            int closeReason,
+            String driverPhone,
+            String time_to_start_point,
+            String orderCarInfo
+    ) {
+        text_status.clearAnimation();
+        setVisibility(View.VISIBLE, textCost, textCostMessage);
+
+        if (handlerAddcost != null) {
+            handlerAddcost.removeCallbacks(showDialogAddcost);
+        }
+
+        List<String> listCity = logCursor(MainActivity.CITY_INFO);
+        String city = listCity.get(1);
+        String api = listCity.get(2);
+
+        if (closeReason == -1) {
+            // Геокоординаты водителя по API
+            drivercarposition(MainActivity.uid, city, api);
+        } else {
+            calculateTimeToStart(MainActivity.uid, api);
+        }
+
+        updateProgress(3);
+
+        if (!cancel_btn_click) {
+            delayMillisStatus = 5000;
+            StringBuilder messageBuilder = new StringBuilder(context.getString(R.string.ex_st_2));
+
+            if (!TextUtils.isEmpty(driverPhone)) {
+                Logger.d(context, TAG, "onResponse: driverPhone " + driverPhone);
+                btn_reset_status.setText(context.getString(R.string.phone_driver));
+                btn_reset_status.setOnClickListener(v -> {
+                    Intent intent = new Intent(Intent.ACTION_DIAL);
+                    intent.setData(Uri.parse("tel:" + driverPhone));
+                    startActivity(intent);
+                });
+                btn_reset_status.setVisibility(View.VISIBLE);
+            } else {
+                btn_reset_status.setVisibility(View.GONE);
+            }
+
+            if (!TextUtils.isEmpty(time_to_start_point)) {
+                messageBuilder.append(context.getString(R.string.ex_st_5))
+                        .append(formatDate2(time_to_start_point));
+            }
+
+            if (!TextUtils.isEmpty(orderCarInfo)) {
+                setVisibility(View.VISIBLE, textStatusCar, textCarMessage);
+                textCarMessage.setText(orderCarInfo);
+            } else {
+                setVisibility(View.GONE, textStatusCar, textCarMessage);
+            }
+
+            countdownTextView.setVisibility(View.VISIBLE);
+            text_status.setText(messageBuilder.toString());
+
+        } else {
+            text_status.setText(context.getString(R.string.ex_st_canceled));
+        }
+    }
+
+    private void orderCanceled(String message) {
+        text_status.clearAnimation();
+        canceled = true;
+
+        // Скрываем ненужные элементы
+        setVisibility(View.GONE, btn_reset_status, btn_open, btn_options,
+                textStatusCar, textCarMessage, textCost,
+                textCostMessage, carProgressBar, progressSteps);
+
+        // Останавливаем все обработчики
+        if (handler != null) handler.removeCallbacks(myRunnable);
+        if (handlerBonusBtn != null) handlerBonusBtn.removeCallbacks(runnableBonusBtn);
+        if (handlerAddcost != null) handlerAddcost.removeCallbacks(showDialogAddcost);
+        if (handlerCheckTask != null) handlerCheckTask.removeCallbacks(checkTask);
+
+        Logger.d(context, TAG, "orderCanceled " + canceled);
+
+
+        stopCycle();
+
+        btn_again.setVisibility(View.VISIBLE);
+        text_status.setText(message);
+    }
+
+
+    private void closeReasonReact (
+            int closeReason,
+            String executionStatus,
+            String driverPhone,
+            String time_to_start_point,
+            String orderCarInfo
+    ) {
+        switch (closeReason) {
+            case -1:
+                switch (executionStatus) {
+                    case "CarFound": //Найдено авто
+                    case "Running": //Найдено авто
+                        carFound (
+                            closeReason,
+                            driverPhone,
+                            time_to_start_point,
+                            orderCarInfo
+                        );
+                        break;
+                    case "Executed": //Выполнено
+                        orderComplete();
+                        break;
+                    default: //Поиск авто
+                        carSearch();
+                }
+                break;
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+            case 9:
+                if(executionStatus != null) {
+                    // все статусы Отказ клиента
+                    String message = context.getString(R.string.ex_st_canceled);
+                    orderCanceled(message);
+                } else {
+                    // Поиск авто
+                    carSearch();
+                }
+                break;
+            case 0:
+            case 8:
+                if(executionStatus != null) {
+                    // все статусы Выполнено
+                    orderComplete();
+                } else {
+                    // Поиск авто
+                    carSearch();
+                }
+                break;
+        }
     }
 
     void drivercarposition (String value, String city, String api) {
@@ -2254,7 +2478,7 @@ public class FinishSeparateFragment extends Fragment {
         }
 
 
-        btn_reset_status.setOnClickListener(view -> {
+        btn_reset_status.setOnClickListener( view -> {
 
                 if ("nal_payment".equals(pay_method) || "wfp_payment".equals(pay_method)) {
 
@@ -2325,13 +2549,19 @@ public class FinishSeparateFragment extends Fragment {
                 .setCancelable(false)
                 .setPositiveButton(R.string.ok_button, (dialog, which) -> {
                     // Действие для кнопки "OK"
-                    dialog.dismiss();
-                    startAddCostUpdate();
 
+                    if (FinishSeparateFragment.btn_cancel_order != null) {
+                        FinishSeparateFragment.btn_cancel_order.setEnabled(false);
+                        FinishSeparateFragment.btn_cancel_order.setClickable(false);
+                    } else {
+                        Log.e("Pusher", "btn_cancel_order is null!");
+                    }
                     // Перезапускаем задачу
                     if (handlerAddcost != null) {
                         handlerAddcost.postDelayed(showDialogAddcost, timeCheckout);
                     }
+                    dialog.dismiss();
+                    startAddCostUpdate();
                 })
                 .setNegativeButton(R.string.cancel_button, (dialog, which) -> {
                     // Действие для кнопки "Отмена"
@@ -2646,6 +2876,11 @@ public class FinishSeparateFragment extends Fragment {
         if (!tarif.equals(" ")) {
             newCheck++;
         }
+
+        if (!comment_info.equals("no_comment")) {
+            newCheck++;
+        }
+
         String mes = context.getString(R.string.add_services);
         if (newCheck != 0) {
             mes = context.getString(R.string.add_services) + " (" + newCheck + ")";

@@ -81,6 +81,7 @@ import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
 import com.taxi_pas_4.ui.home.room.AppDatabase;
 import com.taxi_pas_4.ui.home.room.RouteCost;
 import com.taxi_pas_4.ui.home.room.RouteCostDao;
+import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
 import com.taxi_pas_4.ui.payment_system.PayApi;
 import com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
 import com.taxi_pas_4.ui.start.ResultSONParser;
@@ -682,6 +683,37 @@ public class HomeFragment extends Fragment {
                         }
 
                         String messagePayment = orderWeb + " " + getString(R.string.UAH) + " " + pay_method_message;
+
+                        List<String> stringList = logCursor(MainActivity.TABLE_ADD_SERVICE_INFO, context);
+                        String comment = stringList.get(2);
+                        sendUrlMap.put("comment_info", comment);
+
+                        List<String> services = logCursor(MainActivity.TABLE_SERVICE_INFO, context);
+                        List<String> servicesChecked = new ArrayList<>();
+                        String result;
+                        boolean servicesVer = false;
+                        for (int i = 1; i < services.size() - 1; i++) {
+                            if (services.get(i).equals("1")) {
+                                servicesVer = true;
+                                break;
+                            }
+                        }
+                        if (servicesVer) {
+                            for (int i = 0; i < OpenStreetMapActivity.arrayServiceCode().length; i++) {
+                                if (services.get(i + 1).equals("1")) {
+                                    servicesChecked.add(OpenStreetMapActivity.arrayServiceCode()[i]);
+                                }
+                            }
+                            for (int i = 0; i < servicesChecked.size(); i++) {
+                                if (servicesChecked.get(i).equals("CHECK_OUT")) {
+                                    servicesChecked.set(i, "CHECK");
+                                }
+                            }
+                            result = String.join(",", servicesChecked);
+                            Logger.d(context, TAG, "getTaxiUrlSearchGeo result:" + result + "/");
+                            sendUrlMap.put("extra_charge_codes", result);
+                        }
+
 
                         Bundle bundle = new Bundle();
                         bundle.putString("messageResult_key", messageResult);
@@ -1842,6 +1874,17 @@ public class HomeFragment extends Fragment {
                 newCheck++;
             }
         }
+
+        List<String> stringList = logCursor(MainActivity.TABLE_ADD_SERVICE_INFO, context);
+        String comment = stringList.get(2);
+        Logger.d(context, TAG, "comment" + comment);
+
+
+
+        if (!comment.equals("no_comment")) {
+            newCheck++;
+        }
+
         String mes = context.getString(R.string.add_services);
         if(newCheck != 0) {
             mes = context.getString(R.string.add_services) + " (" + newCheck + ")";
@@ -2007,7 +2050,7 @@ public class HomeFragment extends Fragment {
             ContentValues cv = new ContentValues();
 
             cv.put("time", "no_time");
-            cv.put("comment", "no_comment");
+//            cv.put("comment", "no_comment");
             cv.put("date", "no_date");
 
             // обновляем по id
