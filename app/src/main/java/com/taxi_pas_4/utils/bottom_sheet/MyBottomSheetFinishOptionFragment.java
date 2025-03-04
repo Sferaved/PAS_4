@@ -64,23 +64,27 @@ public class MyBottomSheetFinishOptionFragment extends BottomSheetDialogFragment
         }
         Logger.d(context, TAG, "flexibleTariffName" + flexibleTariffName);
         Logger.d(context, TAG, "commentInfo: " + commentInfo);
-        @SuppressLint("CutPasteId") TextView textView = view.findViewById(R.id.komenterinp);
+        @SuppressLint("CutPasteId") TextView komenterinp = view.findViewById(R.id.komenterinp);
 
 // Проверяем на null и на пустую строку с учетом возможных пробелов
         if (commentInfo != null && !commentInfo.trim().isEmpty()) {
             commentInfo = delAdminMessage(commentInfo);
             if(!commentInfo.isEmpty()) {
                 view.findViewById(R.id.komentar).setVisibility(View.VISIBLE);
-                textView.setVisibility(View.VISIBLE);
-                textView.setText(commentInfo);
+                komenterinp.setVisibility(View.VISIBLE);
+                komenterinp.setText(commentInfo);
                 options = true;
+                komenterinp.setOnClickListener(view1 -> dismiss());
+            } else {
+                view.findViewById(R.id.komentar).setVisibility(View.GONE);
+                komenterinp.setVisibility(View.GONE);
             }
 
         } else {
             view.findViewById(R.id.komentar).setVisibility(View.GONE);
-            textView.setVisibility(View.GONE);
+            komenterinp.setVisibility(View.GONE);
         }
-        view.findViewById(R.id.komenterinp).setOnClickListener(view1 -> dismiss());
+
         listView = view.findViewById(R.id.list);
 
         Button button = view.findViewById(R.id.btnOk);
@@ -224,12 +228,6 @@ public class MyBottomSheetFinishOptionFragment extends BottomSheetDialogFragment
 
 
         Logger.d(context, TAG, "commentInfo:" + commentInfo);
-
-        @SuppressLint("CutPasteId") TextView komenterinp = view.findViewById(R.id.komenterinp);
-        if (!commentInfo.equals("no_comment")) {
-            komenterinp.setVisibility(View.VISIBLE);
-            komenterinp.setText(commentInfo);
-        }
 
         if(!options) {
 

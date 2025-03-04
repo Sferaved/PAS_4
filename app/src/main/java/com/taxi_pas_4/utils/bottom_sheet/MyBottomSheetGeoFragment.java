@@ -585,12 +585,19 @@ public class MyBottomSheetGeoFragment extends BottomSheetDialogFragment {
                     long firstCost = Long.parseLong(orderC);
 
 
+
                     long discountInt = Integer.parseInt(discountText);
                     long discount = firstCost * discountInt / 100;
 
                     updateAddCost(String.valueOf(discount));
 
                     String newCost = String.valueOf(firstCost + discount);
+                    VisicomFragment.startCost = firstCost + discount;
+                    VisicomFragment.finalCost = firstCost + discount;
+
+                    Logger.d(context, TAG, "getTaxiUrlSearchMarkers cost: startCost " + VisicomFragment.startCost);
+                    Logger.d(context, TAG, "getTaxiUrlSearchMarkers cost: finalCost " + VisicomFragment.finalCost);
+
                     if (texViewCost != null) {
                         texViewCost.setText(newCost);
                         VisicomFragment.btnVisible(View.VISIBLE);

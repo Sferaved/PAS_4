@@ -501,7 +501,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
             String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO).get(3);
 
             CostJSONParserRetrofit parser = new CostJSONParserRetrofit();
-            parser.sendURL(urlCost, new Callback<Map<String, String>>() {
+            parser.sendURL(urlCost, new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
                     Map<String, String> sendUrlMapCost = response.body();
@@ -518,16 +518,18 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
                         firstCost = firstCost + discount;
 //                        updateAddCost(String.valueOf(discount));
 
+
                         HomeFragment.costFirstForMin = firstCost;
                         String costUpdate = String.valueOf(firstCost);
                         textView.setText(costUpdate);
-                    }  else {
+                    } else {
                         progressBar.setVisibility(View.INVISIBLE);
                         if (pos == 1 || pos == 2) {
                             changePayMethodToNal();
                         }
                     }
                 }
+
                 @Override
                 public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
                     Logger.d(getActivity(), TAG, " onFailure home" + t);
@@ -562,8 +564,12 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
 //                                updateAddCost(String.valueOf(discount));
 
                                 VisicomFragment.firstCostForMin = firstCost;
+
                                 VisicomFragment.startCost = firstCost;
-                                Log.d(TAG, "onResponse:VisicomFragment.startCost " + VisicomFragment.startCost);
+                                VisicomFragment.finalCost = firstCost;
+
+                                Logger.d(context, TAG, "getTaxiUrlSearchMarkers cost: startCost " + VisicomFragment.startCost);
+                                Logger.d(context, TAG, "getTaxiUrlSearchMarkers cost: finalCost " + VisicomFragment.finalCost);
 
                                 costUpdate = String.valueOf(firstCost);
                                 Log.d(TAG, "onResponse:costUpdate " + costUpdate);

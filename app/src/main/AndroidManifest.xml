@@ -104,6 +104,12 @@
         <activity android:name=".ui.home.cities.check.CityCheckActivity" />
         <activity android:name=".ui.settings.SettingsActivity" />
 
+        <activity
+            android:name=".utils.clear.ClearTaskActivity"
+            android:noHistory="true"
+            android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.NoDisplay"
+            android:launchMode="singleTask" />
 
         <receiver android:name=".utils.connect.NetworkChangeReceiver" />
 

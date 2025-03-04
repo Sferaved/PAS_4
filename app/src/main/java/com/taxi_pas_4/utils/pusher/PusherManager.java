@@ -1,10 +1,15 @@
 package com.taxi_pas_4.utils.pusher;
 
+import static android.view.View.VISIBLE;
+import static com.taxi_pas_4.MainActivity.viewModel;
+
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.pusher.client.Pusher;
 import com.pusher.client.PusherOptions;
 import com.pusher.client.channel.Channel;
@@ -12,6 +17,7 @@ import com.pusher.client.connection.ConnectionEventListener;
 import com.pusher.client.connection.ConnectionState;
 import com.pusher.client.connection.ConnectionStateChange;
 import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.ui.finish.OrderResponse;
 import com.taxi_pas_4.ui.finish.fragm.FinishSeparateFragment;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 
@@ -28,15 +34,19 @@ public class PusherManager {
 
     private final String eventUid;
     private final String eventOrder;
-    private final String eventStatus;
+    private final String eventTransactionStatus;
     private final String eventCanceled;
-    private final Pusher pusher;
+    private final String orderResponseEvent;
+    private final String eventStartExecution;
+    private static Pusher pusher = null;
     private boolean isSubscribed = false;
     public PusherManager(String eventSuffix, String userEmail) {
         this.eventUid = "order-status-updated-" + eventSuffix + "-" + userEmail;
         this.eventOrder = "order-" + eventSuffix + "-" + userEmail;
-        this.eventStatus = "transactionStatus-" + eventSuffix + "-" + userEmail;
+        this.eventTransactionStatus = "transactionStatus-" + eventSuffix + "-" + userEmail;
         this.eventCanceled = "eventCanceled-" + eventSuffix + "-" + userEmail;
+        this.orderResponseEvent = "orderResponseEvent-" + eventSuffix + "-" + userEmail;
+        this.eventStartExecution = "orderStartExecution-" + eventSuffix + "-" + userEmail;
 
         PusherOptions options = new PusherOptions();
         options.setCluster(PUSHER_CLUSTER);
@@ -71,22 +81,31 @@ public class PusherManager {
         Log.i("Pusher", "Subscribing to channel: " + CHANNEL_NAME);
         Log.i("Pusher", "Subscribing to event: " + eventUid);
         Log.i("Pusher", "Subscribing to eventOrder: " + eventOrder);
-        Log.i("Pusher", "Subscribing to eventStatus: " + eventStatus);
+        Log.i("Pusher", "Subscribing to eventStatus: " + eventTransactionStatus);
         Log.i("Pusher", "Subscribing to eventCanceled: " + eventCanceled);
+        Log.i("Pusher", "Subscribing to orderResponseEvent: " + orderResponseEvent);
 
-        // Обработка события
+        // Обработка события получения номера заказа после регистрации на сервере и определения нал/безнал для выбора способа опроса статусов
         channel.bind(eventUid, event -> {
             Log.i("Pusher", "Received event: " + event.toString());
             try {
                 JSONObject eventData = new JSONObject(event.getData());
                 String orderUid = eventData.getString("order_uid");
-
+                String  paySystemStatus;
+                if (eventData.has("paySystemStatus")) {
+                    paySystemStatus = eventData.getString("paySystemStatus");
+                } else {
+                    paySystemStatus = "nal_payment";
+                }
                 Log.i("Pusher", "Order UID: " + orderUid);
+                Log.i("Pusher", "paySystemStatus: " + paySystemStatus);
                 // Переключаемся на главный поток для обновления UI и переменной
                 new Handler(Looper.getMainLooper()).post(() -> {
                     MainActivity.uid = orderUid;
+                    MainActivity.paySystemStatus = paySystemStatus;
 
-                    if (FinishSeparateFragment.btn_cancel_order != null) {
+                    if (FinishSeparateFragment.btn_cancel_order != null ) {
+                        FinishSeparateFragment.btn_cancel_order.setVisibility(VISIBLE);
                         FinishSeparateFragment.btn_cancel_order.setEnabled(true);
                         FinishSeparateFragment.btn_cancel_order.setClickable(true);
                     } else {
@@ -99,8 +118,8 @@ public class PusherManager {
             }
         });
 
-        // Привязка к Pusher каналу
-        channel.bind(eventStatus, event -> {
+        //Получение статуса холда
+        channel.bind(eventTransactionStatus, event -> {
             Log.i("Pusher", "Received event: " + event.toString());
 
             try {
@@ -113,11 +132,12 @@ public class PusherManager {
                     Log.d("Pusher", "Updating UI with status: " + transactionStatus);
 
                     // Установка начального статуса транзакции
-                    FinishSeparateFragment.viewModel.setTransactionStatus(transactionStatus);
+                    viewModel.setTransactionStatus(transactionStatus);
                     Log.i("Transaction", "Initial transaction status set: " + transactionStatus);
 
                     // Проверка UI элемента перед взаимодействием
                     if (FinishSeparateFragment.btn_cancel_order != null) {
+                        FinishSeparateFragment.btn_cancel_order.setVisibility(VISIBLE);
                         FinishSeparateFragment.btn_cancel_order.setEnabled(true);
                         FinishSeparateFragment.btn_cancel_order.setClickable(true);
                         Log.d("Pusher", "Cancel button enabled successfully");
@@ -132,30 +152,29 @@ public class PusherManager {
                 Log.e("Pusher", "Unexpected error processing Pusher event", e);
             }
         });
- // Привязка к Pusher каналу
-        channel.bind(eventCanceled, event -> {
+
+
+        //Получение статуса холда
+        channel.bind(eventStartExecution, event -> {
             Log.i("Pusher", "Received event: " + event.toString());
 
             try {
                 JSONObject eventData = new JSONObject(event.getData());
-                String canceled = eventData.getString("canceled");
-                Log.i("Pusher", "Parsed eventCanceled: " + canceled);
+                String eventStartExecution = eventData.getString("eventStartExecution");
+                Log.i("Pusher", "Parsed transactionStatus: " + eventStartExecution);
 
                 // Проверка на null перед переключением на главный поток
                 new Handler(Looper.getMainLooper()).post(() -> {
-                    Log.d("Pusher", "Updating UI with eventCanceled: " + canceled);
-
-                    // Установка начального статуса транзакции
-                    FinishSeparateFragment.viewModel.setCanceledStatus(canceled);
-                    Log.i("Transaction", "Initial canceled set: " + canceled);
+                    Log.d("Pusher", "Updating UI with status: " + eventStartExecution);
 
                     // Проверка UI элемента перед взаимодействием
                     if (FinishSeparateFragment.btn_cancel_order != null) {
-                        FinishSeparateFragment.btn_cancel_order.setVisibility(View.GONE);
-                        FinishSeparateFragment.btn_again.setVisibility(View.VISIBLE);
+                        FinishSeparateFragment.btn_cancel_order.setVisibility(VISIBLE);
+                        FinishSeparateFragment.btn_cancel_order.setEnabled(true);
+                        FinishSeparateFragment.btn_cancel_order.setClickable(true);
                         Log.d("Pusher", "Cancel button enabled successfully");
                     } else {
-                        Log.e("Pusher", "btn_cancel_order is null when updating  canceled status: " + canceled);
+                        Log.e("Pusher", "btn_cancel_order is null when updating status: " + eventStartExecution);
                     }
                 });
 
@@ -166,7 +185,96 @@ public class PusherManager {
             }
         });
 
-        // Обработка события
+        // Получение статуса отмены заказа с сервера
+        channel.bind(eventCanceled, event -> {
+            Log.i("Pusher", "Received event: " + event.toString());
+
+            try {
+                JSONObject eventData = new JSONObject(event.getData());
+                String canceled = eventData.getString("canceled");
+                String uid = eventData.getString("uid");
+                Log.i("Pusher", "Parsed eventCanceled: " + canceled);
+
+
+                // Проверка, что uid существует и не null
+                if (uid == null) {
+                    Log.w("Pusher", "UID is null in orderResponse: " + eventData);
+                } else if (MainActivity.uid != null && MainActivity.uid.equals(uid)) {
+                    // Проверка на null перед переключением на главный поток
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        Log.d("Pusher", "Updating UI with eventCanceled: " + canceled);
+
+                        // Установка начального статуса транзакции
+                        viewModel.setCanceledStatus(canceled);
+                        Log.i("Transaction", "Initial canceled set: " + canceled);
+
+                        // Проверка UI элемента перед взаимодействием
+                        if (FinishSeparateFragment.btn_cancel_order != null) {
+                            FinishSeparateFragment.btn_cancel_order.setVisibility(View.GONE);
+                            FinishSeparateFragment.btn_again.setVisibility(VISIBLE);
+                            Log.d("Pusher", "Cancel button enabled successfully");
+                        } else {
+                            Log.e("Pusher", "btn_cancel_order is null when updating  canceled status: " + canceled);
+                        }
+                    });
+                }
+                } catch(JSONException e){
+                    Log.e("Pusher", "JSON Parsing error for event: " + event.getData(), e);
+                } catch(Exception e){
+                    Log.e("Pusher", "Unexpected error processing Pusher event", e);
+                }
+
+        });
+
+
+        //Получение заказа из вилки с действием для отображения на фнинишной
+        channel.bind(orderResponseEvent, event -> {
+            Log.i("Pusher orderResponseEvent", "Received orderResponseEvent: " + event.toString());
+
+            try {
+                Gson gson = new Gson();
+
+                // Сначала распарсим `event.getData()` как строку
+                String jsonString = gson.fromJson(event.getData(), String.class);
+
+                // Теперь распарсим результат в объект OrderResponse
+                MainActivity.orderResponse = gson.fromJson(jsonString, OrderResponse.class);
+                String uid = MainActivity.orderResponse.getUid();
+                String action = MainActivity.orderResponse.getAction();
+
+                Log.i("Pusher orderResponseEvent", "Received orderResponseEvent: " + MainActivity.orderResponse.getExecutionStatus());
+                Log.i("Pusher uid", "Received uid: " + uid);
+                Log.i("Pusher action", "Received action: " + action);
+
+                // Проверка, что uid существует и не null
+                if (uid == null) {
+                    Log.w("Pusher", "UID is null in orderResponse: " + jsonString);
+                } else if (MainActivity.uid != null && MainActivity.uid.equals(uid)) {
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        Log.d("Pusher orderResponseEvent", "Updating UI with orderResponse");
+
+                        viewModel.updateOrderResponse(MainActivity.orderResponse);
+                        if (FinishSeparateFragment.btn_cancel_order != null) {
+                            FinishSeparateFragment.btn_cancel_order.setVisibility(View.VISIBLE);
+                            FinishSeparateFragment.btn_cancel_order.setEnabled(true);
+                            FinishSeparateFragment.btn_cancel_order.setClickable(true);
+                        } else {
+                            Log.e("Pusher", "btn_cancel_order is null!");
+                        }
+                    });
+                } else {
+                    Log.d("Pusher", "UIDs do not match or MainActivity.uid is null. MainActivity.uid: " + MainActivity.uid + ", Response uid: " + uid);
+                }
+
+            } catch (JsonSyntaxException e) {
+                Log.e("Pusher", "JSON Parsing error for event: " + event.getData(), e);
+            } catch (Exception e) {
+                Log.e("Pusher", "Unexpected error processing Pusher event", e);
+            }
+
+        });
+
+        // Получение заказа с сервера после регистрации
         channel.bind(eventOrder, event -> {
             Log.i("Pusher", "Received eventOrder: " + event.toString());
             try {

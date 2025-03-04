@@ -4,17 +4,15 @@ package com.taxi_pas_4.ui.visicom;
 import static android.content.Context.MODE_PRIVATE;
 import static android.view.View.VISIBLE;
 import static com.taxi_pas_4.MainActivity.activeCalls;
+import static com.taxi_pas_4.MainActivity.viewModel;
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -70,14 +68,15 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.play.core.appupdate.AppUpdateInfo;
 import com.google.android.play.core.appupdate.AppUpdateManager;
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
-import com.google.android.play.core.install.model.AppUpdateType;
 import com.google.android.play.core.install.model.UpdateAvailability;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.FragmentVisicomBinding;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.RouteResponseCancel;
+import com.taxi_pas_4.ui.finish.fragm.FinishSeparateFragment;
 import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
 import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
 import com.taxi_pas_4.ui.payment_system.PayApi;
@@ -216,7 +215,7 @@ public class VisicomFragment extends Fragment {
     static TextView svButton;
 
     public static  long startCost;
-    static  long finalCost;
+    public static  long finalCost;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -383,7 +382,8 @@ public class VisicomFragment extends Fragment {
                 .setCancelable(false) // Запрет закрытия диалога при нажатии вне его
                 .setPositiveButton(R.string.upd_available_ok, (dialog, which) -> {
                     // Код для начала обновления
-                    startUpdate();
+                    AppUpdater appUpdater = new AppUpdater(requireActivity());
+                    appUpdater.startUpdate();
                 })
                 .setNegativeButton(R.string.upd_available_cancel, (dialog, which) -> {
                     // Просто закрываем диалог
@@ -392,71 +392,6 @@ public class VisicomFragment extends Fragment {
                 .show();
     }
 
-    private void startUpdate() {
-        // Ваш код для начала обновления
-        Logger.d(requireActivity(), TAG, "Начинаем обновление...");
-        // например, вызов метода для начала процесса обновления
-        AppUpdater appUpdater = new AppUpdater();
-        Logger.d(requireActivity(), TAG, "Starting app update process");
-
-        // Установка слушателя для обновления состояния установки
-        appUpdater.setOnUpdateListener(() -> {
-            // Показать пользователю сообщение о завершении обновления
-//            Toast.makeText(context, R.string.update_finish_mes, Toast.LENGTH_SHORT).show();
-
-            // Перезапуск приложения для применения обновлений
-            restartApplication(context);
-        });
-
-        // Регистрация слушателя
-        appUpdater.registerListener();
-
-        // Проверка наличия обновлений
-        checkForUpdate(context);
-    }
-
-    private void checkForUpdate(Context context) {
-        AppUpdateManager appUpdateManager = AppUpdateManagerFactory.create(context);
-        Task<AppUpdateInfo> appUpdateInfoTask = appUpdateManager.getAppUpdateInfo();
-
-        appUpdateInfoTask.addOnSuccessListener(appUpdateInfo -> {
-            Logger.d(context, TAG, "Update availability: " + appUpdateInfo.updateAvailability());
-            Logger.d(context, TAG, "Update priority: " + appUpdateInfo.updatePriority());
-            Logger.d(context, TAG, "Client version staleness days: " + appUpdateInfo.clientVersionStalenessDays());
-
-            if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) {
-                Logger.d(context, TAG, "Available updates found");
-
-                try {
-                    appUpdateManager.startUpdateFlowForResult(
-                            appUpdateInfo,
-                            AppUpdateType.IMMEDIATE,
-                            (Activity) context,
-                            MY_REQUEST_CODE);
-
-                } catch (IntentSender.SendIntentException e) {
-                    Logger.e(context, TAG, "Failed to start update flow: " + e.getMessage());
-                    FirebaseCrashlytics.getInstance().recordException(e);
-                    // Попытка запуска гибкого обновления
-                    try {
-                        appUpdateManager.startUpdateFlowForResult(
-                                appUpdateInfo,
-                                AppUpdateType.FLEXIBLE,
-                                (Activity) context,
-                                MY_REQUEST_CODE
-                        );
-                    } catch (IntentSender.SendIntentException ex) {
-                        Logger.e(context, TAG, "Failed to start flexible update: " + ex.getMessage());
-                        FirebaseCrashlytics.getInstance().recordException(ex);
-                        Toast.makeText(context, R.string.update_error, Toast.LENGTH_LONG).show();
-                    }
-                }
-            }
-        }).addOnFailureListener(e -> {
-            Logger.e(context, TAG, "Failed to check for updates: " + e.getMessage());
-            FirebaseCrashlytics.getInstance().recordException(e);
-        });
-    }
     public static void addCheck(Context context) {
         List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, context);
         String tarif = stringListInfo.get(2);
@@ -485,23 +420,6 @@ public class VisicomFragment extends Fragment {
 
         btnAdd.setText(mes);
 
-    }
-
-
-    private static void restartApplication(Context context) {
-        Intent intent = new Intent(context, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(
-                context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE
-        );
-
-        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        if (alarmManager != null) {
-            alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 500, pendingIntent);
-        }
-
-        // Завершаем процесс
-        android.os.Process.killProcess(android.os.Process.myPid());
-        System.exit(0);
     }
 
 
@@ -1009,9 +927,9 @@ public class VisicomFragment extends Fragment {
     }
 
     @SuppressLint("ResourceAsColor")
-    private boolean orderRout() {
-        urlOrder = getTaxiUrlSearchMarkers("orderSearchMarkersVisicomWfpInvoiceChannel", context);
-        Logger.d(context, TAG, "order:  urlOrder " + urlOrder);
+    public static boolean orderRout() {
+        urlOrder = getTaxiUrlSearchMarkers("orderSearchMarkersVisicomWfpInvoiceChannel", MyApplication.getContext());
+        Logger.d(MyApplication.getContext(), TAG, "order:  urlOrder " + urlOrder);
         return true;
     }
 
@@ -1093,7 +1011,7 @@ public class VisicomFragment extends Fragment {
 
         boolean visicomBackPressed = (boolean) sharedPreferencesHelperMain.getValue("VisicomBackPressed", false);
 
-        if (!orderWeb.equals("0")) {
+        if (!"0".equals(orderWeb)) {
             if (pay_method.equals("wfp_payment")) {
                 String rectoken = getCheckRectoken(MainActivity.TABLE_WFP_CARDS, context);
                 Logger.d(context, TAG, "payWfp: rectoken " + rectoken);
@@ -1249,6 +1167,8 @@ public class VisicomFragment extends Fragment {
             }
             Logger.d(context, TAG, "sendUrlMap: comment_info " + sendUrlMap.get("comment_info"));
             Logger.d(context, TAG, "sendUrlMap: extra_charge_codes " + sendUrlMap.get("extra_charge_codes"));
+
+            MainActivity.uid = sendUrlMap.get("dispatching_order_uid");
 
             Bundle bundle = new Bundle();
             bundle.putString("messageResult_key", messageResult);
@@ -1590,6 +1510,12 @@ public class VisicomFragment extends Fragment {
         Logger.d(context, TAG, "onResume 1" );
 
         VisicomFragment.sendUrlMap = null;
+        MainActivity.uid = null;
+        MainActivity.action = null;
+
+        MainActivity.orderResponse = null;
+        viewModel.updateOrderResponse(null);
+
 
         textfrom = binding.textfrom;
 

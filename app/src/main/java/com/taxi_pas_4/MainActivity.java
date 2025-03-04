@@ -4,14 +4,10 @@ import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHel
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
@@ -40,6 +36,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -54,12 +51,14 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.android.play.core.appupdate.AppUpdateInfo;
 import com.google.android.play.core.appupdate.AppUpdateManager;
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
-import com.google.android.play.core.install.model.AppUpdateType;
 import com.google.android.play.core.install.model.UpdateAvailability;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
+import com.taxi_pas_4.ui.finish.OrderResponse;
+import com.taxi_pas_4.ui.finish.fragm.ExecutionStatusViewModel;
+import com.taxi_pas_4.ui.finish.fragm.FinishSeparateFragment;
 import com.taxi_pas_4.ui.home.cities.api.CityApiClient;
 import com.taxi_pas_4.ui.home.cities.api.CityResponse;
 import com.taxi_pas_4.ui.home.cities.api.CityService;
@@ -116,6 +115,10 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
+
+    @SuppressLint("StaticFieldLeak")
+    private static AppUpdater appUpdater;
+
     public static String order_id;
     public static String invoiceId;
 
@@ -143,7 +146,8 @@ public class MainActivity extends AppCompatActivity {
     public static Cursor cursorDb;
     public static boolean firstStart;
     public static String uid;
-    public static String transactionStatus;
+
+    public static String paySystemStatus = "nal_payment";
     private AppBarConfiguration mAppBarConfiguration;
     private NetworkChangeReceiver networkChangeReceiver;
     /**
@@ -191,8 +195,10 @@ public class MainActivity extends AppCompatActivity {
     public static NavigationView navigationView;
 
     String baseUrl;
-    private PusherManager pusherManager;
-
+    public static PusherManager pusherManager;
+    public static ExecutionStatusViewModel viewModel;
+    public static OrderResponse orderResponse;
+    public static  String action;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -206,7 +212,7 @@ public class MainActivity extends AppCompatActivity {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(binding.getRoot());
 
-
+        viewModel = new ViewModelProvider(this).get(ExecutionStatusViewModel.class);
 
         deleteOldLogFile();
         Logger.i(this, TAG, "MainActivity started");
@@ -370,10 +376,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+
+
     @Override
     protected void onResume() {
         super.onResume();
         sharedPreferencesHelperMain.saveValue("pay_error", "**");
+
+        MainActivity.action = null;
+        viewModel = new ViewModelProvider(this).get(ExecutionStatusViewModel.class);
+
 
 
 
@@ -1003,8 +1015,22 @@ public class MainActivity extends AppCompatActivity {
         }
         if (item.getItemId() == R.id.update) {
             Logger.d(this, TAG, "onOptionsItemSelected: " + getString(R.string.version));
+
+            AppUpdateManager appUpdateManager = AppUpdateManagerFactory.create(MainActivity.this);
+            Task<AppUpdateInfo> appUpdateInfoTask = appUpdateManager.getAppUpdateInfo();
+            appUpdateInfoTask.addOnSuccessListener(appUpdateInfo -> {
+                if (appUpdateInfo.updateAvailability() != UpdateAvailability.UPDATE_AVAILABLE) {
+                    String message = getString(R.string.update_ok);
+                    MyBottomSheetMessageFragment bottomSheetDialogFragment = new MyBottomSheetMessageFragment(message);
+                    bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
+
+                }
+            });
+
+
             if (NetworkUtils.isNetworkAvailable(this)) {
-                updateApp();
+                appUpdater = new AppUpdater(MainActivity.this);
+                appUpdater.startUpdate();
 
             } else {
                 Toast.makeText(this, R.string.verify_internet, Toast.LENGTH_SHORT).show();
@@ -1037,118 +1063,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    @SuppressLint("StaticFieldLeak")
-    private static AppUpdater appUpdater;
-
-
-    private void updateApp() {
-        // Устанавливаем флаг обновления
-        appUpdater = new AppUpdater();
-
-        appUpdater.setOnUpdateListener(() -> {
-            restartApplication(this);
-        });
-
-        // Регистрация слушателя
-        appUpdater.registerListener();
-
-        // Проверка наличия обновлений
-        checkForUpdate(this);
-    }
-
-
-
-    private static final int MY_REQUEST_CODE = 1234; // Уникальный код запроса для обновления
-
-    private void checkForUpdate(Context context) {
-        AppUpdateManager appUpdateManager = AppUpdateManagerFactory.create(context);
-        Task<AppUpdateInfo> appUpdateInfoTask = appUpdateManager.getAppUpdateInfo();
-
-        appUpdateInfoTask.addOnSuccessListener(appUpdateInfo -> {
-            Logger.d(context, TAG, "Update availability: " + appUpdateInfo.updateAvailability());
-            Logger.d(context, TAG, "Update priority: " + appUpdateInfo.updatePriority());
-            Logger.d(context, TAG, "Client version staleness days: " + appUpdateInfo.clientVersionStalenessDays());
-
-            if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) {
-                Logger.d(context, TAG, "Available updates found");
-
-                try {
-                    appUpdateManager.startUpdateFlowForResult(
-                            appUpdateInfo,
-                            AppUpdateType.IMMEDIATE,
-                            (Activity) context,
-                            MY_REQUEST_CODE
-                    );
-                } catch (IntentSender.SendIntentException e) {
-                    Logger.e(context, TAG, "Failed to start immediate update: " + e.getMessage());
-                    FirebaseCrashlytics.getInstance().recordException(e);
-
-                    // Попытка запуска гибкого обновления
-                    try {
-                        appUpdateManager.startUpdateFlowForResult(
-                                appUpdateInfo,
-                                AppUpdateType.FLEXIBLE,
-                                (Activity) context,
-                                MY_REQUEST_CODE
-                        );
-                    } catch (IntentSender.SendIntentException ex) {
-                        Logger.e(context, TAG, "Failed to start flexible update: " + ex.getMessage());
-                        FirebaseCrashlytics.getInstance().recordException(ex);
-                        Toast.makeText(context, R.string.update_error, Toast.LENGTH_LONG).show();
-                    }
-                }
-            } else {
-                Logger.d(context, TAG, "No updates available");
-                String message = getString(R.string.update_ok);
-                MyBottomSheetMessageFragment bottomSheetDialogFragment = new MyBottomSheetMessageFragment(message);
-                bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
-            }
-        }).addOnFailureListener(e -> {
-            Logger.e(context, TAG, "Failed to check for updates: " + e.getMessage());
-            FirebaseCrashlytics.getInstance().recordException(e);
-            Toast.makeText(context, R.string.update_error, Toast.LENGTH_LONG).show();
-        });
-    }
-
-
-
-    private static void restartApplication(Context context) {
-        // Получаем текущую версию Android
-        int sdkVersion = Build.VERSION.SDK_INT;
-
-        // Если версия Android >= 13 (API 33 и выше)
-        if (sdkVersion >= Build.VERSION_CODES.TIRAMISU) {
-            // Для Android 13 и выше используем AlarmManager для отложенного запуска
-            restartWithAlarmManager(context);
-        } else {
-            // Для более старых версий просто перезапускаем активность
-            restartActivity(context);
-        }
-    }
-
-    private static void restartWithAlarmManager(Context context) {
-        Intent intent = new Intent(context, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(
-                context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE
-        );
-
-        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        if (alarmManager != null) {
-            alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 500, pendingIntent);
-        }
-
-        // Завершаем процесс
-        android.os.Process.killProcess(android.os.Process.myPid());
-        System.exit(0);
-    }
-
-    private static void restartActivity(Context context) {
-        Intent intent = new Intent(context, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
-        android.os.Process.killProcess(android.os.Process.myPid());
-        System.exit(0);
-    }
 
 
 
