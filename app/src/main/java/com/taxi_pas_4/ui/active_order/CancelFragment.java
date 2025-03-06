@@ -27,12 +27,12 @@ import androidx.navigation.NavOptions;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.utils.connect.NetworkChangeReceiver;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.databinding.FragmentCancelBinding;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.RouteResponseCancel;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
+import com.taxi_pas_4.utils.connect.NetworkChangeReceiver;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.db.DatabaseHelper;
 import com.taxi_pas_4.utils.db.DatabaseHelperUid;
@@ -81,6 +81,7 @@ public class CancelFragment extends Fragment {
     public CancelFragment() {
     }
 
+    @SuppressLint("SourceLockedOrientationActivity")
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentCancelBinding.inflate(inflater, container, false);
@@ -118,9 +119,9 @@ public class CancelFragment extends Fragment {
         upd_but = binding.updBut;
         upd_but.setOnClickListener(v -> {
             if (!NetworkUtils.isNetworkAvailable(context)) {
-                
-                MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
-                        .setPopUpTo(R.id.nav_visicom, true) 
+
+                MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_restart, true)
                         .build());
             }
         });

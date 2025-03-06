@@ -1,7 +1,6 @@
 package com.taxi_pas_4.utils.bottom_sheet;
 
 import static android.content.Context.MODE_PRIVATE;
-
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import android.annotation.SuppressLint;
@@ -31,6 +30,7 @@ import com.google.gson.JsonSyntaxException;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.card.CustomCardAdapter;
+import com.taxi_pas_4.ui.card.MyBottomSheetCardPayment;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.ApiService;
 import com.taxi_pas_4.ui.finish.Status;
@@ -38,7 +38,6 @@ import com.taxi_pas_4.ui.finish.fragm.FinishSeparateFragment;
 import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureClient;
 import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureResponse;
 import com.taxi_pas_4.ui.fondy.payment.ApiResponsePay;
-import com.taxi_pas_4.ui.card.MyBottomSheetCardPayment;
 import com.taxi_pas_4.ui.fondy.payment.PaymentApi;
 import com.taxi_pas_4.ui.fondy.payment.RequestData;
 import com.taxi_pas_4.ui.fondy.payment.StatusRequestPay;

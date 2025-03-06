@@ -1,7 +1,6 @@
 package com.taxi_pas_4.ui.card;
 
 import static android.content.Context.MODE_PRIVATE;
-
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import android.annotation.SuppressLint;
@@ -30,12 +29,12 @@ import androidx.navigation.NavOptions;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.utils.connect.NetworkChangeReceiver;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.databinding.FragmentCardBinding;
 import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
+import com.taxi_pas_4.utils.connect.NetworkChangeReceiver;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
@@ -144,7 +143,7 @@ public class CardFragment extends Fragment {
                 userEmail,
                 "wfp"
         );
-        call.enqueue(new Callback<CallbackResponseWfp>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<CallbackResponseWfp> call, @NonNull Response<CallbackResponseWfp> response) {
                 Logger.d(context, TAG, "onResponse: " + response.body());
@@ -168,7 +167,7 @@ public class CardFragment extends Fragment {
                                 String bank_name = cardInfo.getBank_name(); // Название банка
                                 String rectoken = cardInfo.getRectoken(); // Токен карты
                                 String merchant = cardInfo.getMerchant(); //
-                                String  active = cardInfo.getActive();
+                                String active = cardInfo.getActive();
 
                                 Logger.d(context, TAG, "onResponse: card_token: " + rectoken);
                                 ContentValues cv = new ContentValues();

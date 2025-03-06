@@ -4,9 +4,7 @@ import static android.content.Context.MODE_PRIVATE;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 import static com.taxi_pas_4.MainActivity.TABLE_USER_INFO;
-import static com.taxi_pas_4.MainActivity.invoiceId;
 import static com.taxi_pas_4.MainActivity.paySystemStatus;
-import static com.taxi_pas_4.MainActivity.pusherManager;
 import static com.taxi_pas_4.MainActivity.viewModel;
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
@@ -47,6 +45,7 @@ import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.Observer;
 import androidx.navigation.NavOptions;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -75,7 +74,6 @@ import com.taxi_pas_4.ui.fondy.token_pay.PaymentApiToken;
 import com.taxi_pas_4.ui.fondy.token_pay.RequestDataToken;
 import com.taxi_pas_4.ui.fondy.token_pay.StatusRequestToken;
 import com.taxi_pas_4.ui.fondy.token_pay.SuccessResponseDataToken;
-import com.taxi_pas_4.ui.home.cities.api.CityResponse;
 import com.taxi_pas_4.ui.mono.MonoApi;
 import com.taxi_pas_4.ui.mono.payment.RequestPayMono;
 import com.taxi_pas_4.ui.mono.payment.ResponsePayMono;
@@ -85,7 +83,6 @@ import com.taxi_pas_4.ui.wfp.invoice.InvoiceResponse;
 import com.taxi_pas_4.ui.wfp.invoice.InvoiceService;
 import com.taxi_pas_4.ui.wfp.purchase.PurchaseResponse;
 import com.taxi_pas_4.ui.wfp.purchase.PurchaseService;
-import com.taxi_pas_4.utils.helpers.LocaleHelper;
 import com.taxi_pas_4.utils.animation.car.CarProgressBar;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetAddCostFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
@@ -93,8 +90,8 @@ import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorPaymentFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetFinishOptionFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetMessageFragment;
 import com.taxi_pas_4.utils.data.DataArr;
+import com.taxi_pas_4.utils.helpers.LocaleHelper;
 import com.taxi_pas_4.utils.log.Logger;
-import com.taxi_pas_4.utils.pusher.PusherManager;
 import com.taxi_pas_4.utils.time_ut.TimeUtils;
 import com.taxi_pas_4.utils.ui.BackPressBlocker;
 
@@ -194,18 +191,15 @@ public class FinishSeparateFragment extends Fragment {
     public static int timeCheckOutAddCost;
     static boolean need_20_add;
     String required_time;
-    static boolean isTenMinutesRemaining;
-    static boolean isTenMinutesRemainingBlock;
+
     static Handler handlerCheckTask;
     static Runnable checkTask;
     private boolean isTaskRunning = false;
     private static boolean isTaskCancelled = false;
 
+    TimeUtils timeUtils;
+    private Observer<Boolean> observer;
 
-
-    private Handler handlerBtnCancel = new Handler();
-    private Runnable hideCancelRunnable;
-    private boolean isTimerRunning = false;
     public static LayoutInflater inflater;
     
     @SuppressLint("SourceLockedOrientationActivity")
@@ -351,28 +345,28 @@ public class FinishSeparateFragment extends Fragment {
 
         handler = new Handler();
 
-//        if (pay_method.equals("bonus_payment") || pay_method.equals("wfp_payment") || pay_method.equals("fondy_payment") || pay_method.equals("mono_payment") ) {
-//            handlerBonusBtn = new Handler();
-//
-//            runnableBonusBtn = () -> {
-//                MainActivity.order_id = null;
-//                String newStatus = text_status.getText().toString();
-//                if(!newStatus.contains( context.getString(R.string.time_out_text))
-//                        || !newStatus.contains( context.getString(R.string.error_payment_card))
-//                        || !newStatus.contains( context.getString(R.string.double_order_error))
-//                        || !newStatus.contains( context.getString(R.string.call_btn_cancel))
-//                        || !newStatus.contains( context.getString(R.string.ex_st_canceled))
-//                ) {
-//                    String cancelText = context.getString(R.string.status_checkout_message);
-//                    text_status.setText(cancelText);
-//
-//                } else {
-//                    text_status.setText(newStatus);
-//                }
-//
-//            };
-//            handlerBonusBtn.postDelayed(runnableBonusBtn, delayMillis);
-//        }
+        if (pay_method.equals("bonus_payment") || pay_method.equals("wfp_payment") || pay_method.equals("fondy_payment") || pay_method.equals("mono_payment") ) {
+            handlerBonusBtn = new Handler();
+
+            runnableBonusBtn = () -> {
+                MainActivity.order_id = null;
+                String newStatus = text_status.getText().toString();
+                if(!newStatus.contains( context.getString(R.string.time_out_text))
+                        || !newStatus.contains( context.getString(R.string.error_payment_card))
+                        || !newStatus.contains( context.getString(R.string.double_order_error))
+                        || !newStatus.contains( context.getString(R.string.call_btn_cancel))
+                        || !newStatus.contains( context.getString(R.string.ex_st_canceled))
+                ) {
+                    String cancelText = context.getString(R.string.status_checkout_message);
+                    text_status.setText(cancelText);
+
+                } else {
+                    text_status.setText(newStatus);
+                }
+
+            };
+            handlerBonusBtn.postDelayed(runnableBonusBtn, delayMillis);
+        }
 
         handlerStatus = new Handler();
         delayMillisStatus = 10 * 1000;
@@ -1661,7 +1655,7 @@ public class FinishSeparateFragment extends Fragment {
 
             String value = MainActivity.uid;
             Logger.d(context, "Pusher", "statusCacheOrder: " + value);
-            isTenMinutesRemainingFunction();
+
 
             List<String> listCity = logCursor(MainActivity.CITY_INFO, context);
             String city = listCity.get(1);
@@ -1772,11 +1766,11 @@ public class FinishSeparateFragment extends Fragment {
     private static void carSearch(Context context, LayoutInflater inflater) {
         Logger.d(context, TAG, "carSearch() started");
 
-        if (!isTenMinutesRemainingBlock && isTenMinutesRemaining) {
-            Logger.d(context, TAG, "Triggering isTenMinutesRemainingAction()");
-            
-            isTenMinutesRemainingAction(inflater, context);
-        }
+//        if (!isTenMinutesRemainingBlock && isTenMinutesRemaining) {
+//            Logger.d(context, TAG, "Triggering isTenMinutesRemainingAction()");
+//
+//            isTenMinutesRemainingAction(inflater, context);
+//        }
 
         if (cancel_btn_click) {
             Logger.d(context, TAG, "Order cancellation detected, stopping search...");
@@ -2152,13 +2146,33 @@ public class FinishSeparateFragment extends Fragment {
                 Logger.d(context, TAG, "Received null OrderResponse in observer");
             }
         });
+
+        viewModel.setIsTenMinutesRemaining(false);
+
+        observer = isTenMinutesRemaining -> {
+            if (isTenMinutesRemaining != null) {
+                if (isTenMinutesRemaining) {
+                    isTenMinutesRemainingAction(inflater, context);
+                }
+            }
+        };
+
+        // Начинаем наблюдение
+        viewModel.isTenMinutesRemaining.observe(this, observer);
+
+
     }
 
     @Override
     public void onResume() {
         super.onResume();
 
+        timeUtils = new TimeUtils(required_time);
+        timeUtils.startTimer();
+
         viewModelReviewer();
+
+
 
         if(sharedPreferencesHelperMain.getValue("pay_error", "**").equals("pay_error")) {
             callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
@@ -2586,42 +2600,10 @@ public class FinishSeparateFragment extends Fragment {
 
     }
 
-    private void isTenMinutesRemainingFunction() {
-        if (!required_time.isEmpty()) {
-            Logger.e(context, TAG, "required_time " + required_time);
+    private  void isTenMinutesRemainingAction(LayoutInflater inflater, Context context) {
+        timeUtils.stopTimer();
+        viewModel.isTenMinutesRemaining.removeObserver(observer);
 
-            @SuppressLint("SimpleDateFormat")
-            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
-
-            try {
-                Date requiredDate = inputFormat.parse(required_time);
-                Date currentDate = new Date(); // Текущее время
-
-                // Разница в миллисекундах
-                assert requiredDate != null;
-                long diffInMillis = requiredDate.getTime() - currentDate.getTime();
-
-                // Конвертируем в минуты
-                long diffInMinutes = TimeUnit.MILLISECONDS.toMinutes(diffInMillis);
-
-                if (diffInMinutes <=0 && !required_time.contains("1970-01-01")) {
-                    isTenMinutesRemaining = true; // Время ещё не наступило и в пределах 30 минут
-                } else {
-                    long tenMinutes = 10 * 60; // 10 минут
-                    // Проверка на оставшиеся 10 минут
-                    Log.d("isTenMinutesRemainingFunction", "tenMinutes " + tenMinutes);
-                    Log.d("isTenMinutesRemainingFunction", "diffInMinutes " + diffInMinutes);
-                    Log.d("isTenMinutesRemainingFunction", "isTenMinutesRemaining " + isTenMinutesRemaining);
-                    isTenMinutesRemaining = diffInMinutes <= tenMinutes && diffInMinutes > 0;
-                }
-
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-    private static void isTenMinutesRemainingAction(LayoutInflater inflater, Context context) {
-        isTenMinutesRemainingBlock = true;
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context);
 
         if (inflater == null) {

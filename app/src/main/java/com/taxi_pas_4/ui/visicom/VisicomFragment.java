@@ -76,7 +76,6 @@ import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.FragmentVisicomBinding;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.RouteResponseCancel;
-import com.taxi_pas_4.ui.finish.fragm.FinishSeparateFragment;
 import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
 import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
 import com.taxi_pas_4.ui.payment_system.PayApi;
@@ -134,7 +133,7 @@ public class VisicomFragment extends Fragment {
     public static ProgressBar progressBar;
     private FragmentVisicomBinding binding;
     private static final String TAG = "VisicomFragment";
-    private static final int REQUEST_LOCATION_PERMISSION = 1;
+ 
 
     @SuppressLint("StaticFieldLeak")
     public static AppCompatButton btn_minus, btn_plus, btnOrder, buttonBonus, gpsbut, btnCallAdmin, btnCallAdminFin;
@@ -161,7 +160,7 @@ public class VisicomFragment extends Fragment {
     public static long MIN_COST_VALUE;
     public static long firstCostForMin;
     @SuppressLint("StaticFieldLeak")
-    public static AppCompatButton btnAdd, btn_clear_from_text, ubt_btn;
+    public static AppCompatButton btnAdd, ubt_btn;
     @SuppressLint("StaticFieldLeak")
     static ImageButton btn1;
     @SuppressLint("StaticFieldLeak")
@@ -424,7 +423,7 @@ public class VisicomFragment extends Fragment {
 
 
     public static void btnVisible(int visible) {
-        btn_clear_from_text.setVisibility(View.INVISIBLE);
+        
         if (visible == View.INVISIBLE) {
             progressBar.setVisibility(VISIBLE);
         } else {
@@ -453,27 +452,9 @@ public class VisicomFragment extends Fragment {
         }
         if (!NetworkUtils.isNetworkAvailable(requireContext())) {
 
-            progressBar.setVisibility(View.GONE);
-
-            btn_clear_from_text.setText(context.getString(R.string.try_again));
-            btn_clear_from_text.setVisibility(VISIBLE);
-            btn_clear_from_text.setOnClickListener(v -> {
-                startActivity(new Intent(context, MainActivity.class));
-            });
-            binding.textGeo.setVisibility(View.INVISIBLE);
-            progressBar.setVisibility(View.GONE);
-
-            textwhere.setVisibility(View.INVISIBLE);
-            num2.setVisibility(View.INVISIBLE);
-            textViewTo.setVisibility(View.INVISIBLE);
-
-            btnAdd.setVisibility(View.INVISIBLE);
-
-            buttonBonus.setVisibility(View.INVISIBLE);
-            btn_minus.setVisibility(View.INVISIBLE);
-            text_view_cost.setVisibility(View.INVISIBLE);
-            btn_plus.setVisibility(View.INVISIBLE);
-            btnOrder.setVisibility(View.INVISIBLE);
+            MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                    .setPopUpTo(R.id.nav_restart, true)
+                    .build());
         }
     }
 
@@ -1315,7 +1296,7 @@ public class VisicomFragment extends Fragment {
 
             if (logCursor(MainActivity.TABLE_USER_INFO, context).get(1).equals("0")) {
                 verify = false;
-                Log.d("TAG", "verifyOrder:verify " + verify);
+                Log.d(TAG, "verifyOrder:verify " + verify);
             }
             cursor.close();
         }
@@ -1520,7 +1501,7 @@ public class VisicomFragment extends Fragment {
         textfrom = binding.textfrom;
 
         constraintLayoutVisicomMain.setVisibility(View.GONE);
-        binding.btnClearFromText.setVisibility(View.GONE);
+ 
         binding.svButton.setVisibility(View.GONE);
         binding.btnCallAdmin.setVisibility(View.GONE);
 
@@ -1537,17 +1518,9 @@ public class VisicomFragment extends Fragment {
 
         if (!NetworkUtils.isNetworkAvailable(context)) {
             // Ваш код при нажатии на заголовок
-            gpsbut.setVisibility(View.INVISIBLE);
-            binding.num1.setVisibility(View.INVISIBLE);
-            binding.textfrom.setVisibility(View.INVISIBLE);
-            schedule.setVisibility(View.INVISIBLE);
-            shed_down.setVisibility(View.INVISIBLE);
-            binding.textwhere.setVisibility(VISIBLE);
-            progressBar.setVisibility(VISIBLE);
-
-            binding.btnClearFromText.setVisibility(View.GONE);
-            binding.svButton.setVisibility(View.GONE);
-            binding.btnCallAdmin.setVisibility(View.GONE);
+            MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                    .setPopUpTo(R.id.nav_restart, true)
+                    .build());
 
         }
 
@@ -1562,8 +1535,7 @@ public class VisicomFragment extends Fragment {
             binding.textfrom.setVisibility(View.INVISIBLE);
 
             binding.textwhere.setVisibility(View.INVISIBLE);
-
-            binding.btnClearFromText.setVisibility(View.INVISIBLE);
+ 
             binding.svButton.setVisibility(View.INVISIBLE);
             binding.btnCallAdmin.setVisibility(View.INVISIBLE);
 
@@ -1585,7 +1557,7 @@ public class VisicomFragment extends Fragment {
                 schedule.setVisibility(VISIBLE);
                 shed_down.setVisibility(VISIBLE);
 
-                binding.btnClearFromText.setVisibility(View.INVISIBLE);
+ 
                 binding.svButton.setVisibility(View.VISIBLE);
                 binding.btnCallAdmin.setVisibility(View.VISIBLE);
 
@@ -1600,8 +1572,8 @@ public class VisicomFragment extends Fragment {
                 binding.textwhere.setVisibility(VISIBLE);
                 progressBar.setVisibility(VISIBLE);
 
-                btn_clear_from_text.setVisibility(View.INVISIBLE);
-                binding.btnClearFromText.setVisibility(View.INVISIBLE);
+              
+       
                 binding.svButton.setVisibility(View.GONE);
                 binding.btnCallAdmin.setVisibility(View.GONE);
 
@@ -1681,19 +1653,9 @@ public class VisicomFragment extends Fragment {
             startActivity(intent);
         });
 
-        btn_clear_from_text = binding.btnClearFromText;
+       
 
-        btn_clear_from_text.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getContext(), ActivityVisicomOnePage.class);
-                intent.putExtra("start", "ok");
-                intent.putExtra("end", "no");
-                startActivity(intent);
-
-            }
-        });
-
+         
 
         text_view_cost = binding.textViewCost;
 
@@ -1913,7 +1875,9 @@ public class VisicomFragment extends Fragment {
 
                     // GPS включен, выполните ваш код здесь
                     if (!NetworkUtils.isNetworkAvailable(context)) {
-                        Toast.makeText(context, context.getString(R.string.verify_internet), Toast.LENGTH_SHORT).show();
+                        MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                                .setPopUpTo(R.id.nav_restart, true)
+                                .build());
                     } else if (isAdded() && isVisible() && MainActivity.location_update) {
                         List<String> settings = new ArrayList<>();
 
@@ -1977,10 +1941,7 @@ public class VisicomFragment extends Fragment {
 
         if (NetworkUtils.isNetworkAvailable(context)) {
             if (geoText.getText().toString().isEmpty()) {
-//                btn_clear_from_text.setVisibility(VISIBLE);
-                String unuString = new String(Character.toChars(0x1F449));
-                unuString += " " + context.getString(R.string.search_text);
-                btn_clear_from_text.setText(unuString);
+         
                 binding.textfrom.setVisibility(View.INVISIBLE);
                 num1.setVisibility(View.INVISIBLE);
                 binding.textwhere.setVisibility(View.INVISIBLE);
@@ -2001,7 +1962,7 @@ public class VisicomFragment extends Fragment {
 
                     } catch (MalformedURLException e) {
                         FirebaseCrashlytics.getInstance().recordException(e);
-                        btn_clear_from_text.setVisibility(View.INVISIBLE);
+                        
                         textfrom.setVisibility(VISIBLE);
                         num1.setVisibility(VISIBLE);
                         geoText.setVisibility(VISIBLE);
@@ -2044,7 +2005,7 @@ public class VisicomFragment extends Fragment {
 
                         } catch (MalformedURLException e) {
                             FirebaseCrashlytics.getInstance().recordException(e);
-                            btn_clear_from_text.setVisibility(View.INVISIBLE);
+                            
                             textfrom.setVisibility(VISIBLE);
                             num1.setVisibility(VISIBLE);
                             geoText.setVisibility(VISIBLE);
@@ -2068,7 +2029,7 @@ public class VisicomFragment extends Fragment {
                     FirebaseCrashlytics.getInstance().recordException(e);
                     Logger.d(context, TAG, "onResume: 7");
 
-                    btn_clear_from_text.setVisibility(View.INVISIBLE);
+                    
                     textfrom.setVisibility(VISIBLE);
                     num1.setVisibility(VISIBLE);
                     geoText.setVisibility(VISIBLE);
@@ -2090,11 +2051,6 @@ public class VisicomFragment extends Fragment {
             progressBar.setVisibility(View.GONE);
 
 
-            btn_clear_from_text.setText(context.getString(R.string.try_again));
-            btn_clear_from_text.setVisibility(VISIBLE);
-            btn_clear_from_text.setOnClickListener(v -> {
-                startActivity(new Intent(context, MainActivity.class));
-            });
         }
 
         scheduleUpdate();
@@ -2147,7 +2103,9 @@ public class VisicomFragment extends Fragment {
                     if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                         // GPS включен, выполните ваш код здесь
                         if (!NetworkUtils.isNetworkAvailable(context)) {
-                            Toast.makeText(context, context.getString(R.string.verify_internet), Toast.LENGTH_SHORT).show();
+                            MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                                    .setPopUpTo(R.id.nav_restart, true)
+                                    .build());
                         } else if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                                 || ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                             checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
@@ -2327,7 +2285,9 @@ public class VisicomFragment extends Fragment {
                                     if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                                         // GPS включен, выполните ваш код здесь
                                         if (!NetworkUtils.isNetworkAvailable(context)) {
-                                            Toast.makeText(context, context.getString(R.string.verify_internet), Toast.LENGTH_SHORT).show();
+                                            MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                                                    .setPopUpTo(R.id.nav_restart, true)
+                                                    .build());
                                         } else if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                                                 || ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                                             checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
@@ -2467,7 +2427,7 @@ public class VisicomFragment extends Fragment {
 
         progressBar.setVisibility(VISIBLE);
         constr2.setVisibility(View.INVISIBLE);
-        btn_clear_from_text.setVisibility(View.INVISIBLE);
+        
 
 
         String query = "SELECT * FROM " + MainActivity.ROUT_MARKER + " LIMIT 1";
@@ -2494,6 +2454,9 @@ public class VisicomFragment extends Fragment {
                 num2.setVisibility(VISIBLE);
                 textViewTo.setVisibility(VISIBLE);
 
+                boolean black_list_yes = verifyOrder(context);
+                String black_list_city = sharedPreferencesHelperMain.getValue("black_list", "cache").toString();
+
                 Handler handler = new Handler(Looper.getMainLooper());
                 new Thread(() -> {
                     @SuppressLint("Range") String start = cursor.getString(cursor.getColumnIndex("start"));
@@ -2505,8 +2468,7 @@ public class VisicomFragment extends Fragment {
                     String urlCost = getTaxiUrlSearchMarkers("costSearchMarkersTime", context);
 
                     Logger.d(context, TAG, "visicomCost: " + urlCost);
-                    boolean black_list_yes = verifyOrder(context);
-                    String black_list_city = sharedPreferencesHelperMain.getValue("black_list", "cache").toString();
+
 
                     CostJSONParserRetrofit parser = new CostJSONParserRetrofit();
                     try {
@@ -2633,7 +2595,7 @@ public class VisicomFragment extends Fragment {
             btn_plus.setVisibility(VISIBLE);
             btnOrder.setVisibility(VISIBLE);
 
-            btn_clear_from_text.setVisibility(View.GONE);
+
             constr2.setVisibility(VISIBLE);
 
             schedule.setVisibility(VISIBLE);

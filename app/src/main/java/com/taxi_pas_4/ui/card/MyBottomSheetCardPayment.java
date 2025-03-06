@@ -1,7 +1,6 @@
 package com.taxi_pas_4.ui.card;
 
 import static android.content.Context.MODE_PRIVATE;
-
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import android.annotation.SuppressLint;
@@ -39,19 +38,15 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.finish.ApiService;
-
 import com.taxi_pas_4.ui.finish.fragm.FinishSeparateFragment;
 import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureClient;
 import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureResponse;
 import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
-import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
-import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorPaymentFragment;
-import com.taxi_pas_4.ui.payment_system.PayApi;
-import com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
 import com.taxi_pas_4.ui.wfp.checkStatus.StatusResponse;
 import com.taxi_pas_4.ui.wfp.checkStatus.StatusService;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
+import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorPaymentFragment;
 import com.taxi_pas_4.utils.log.Logger;
 
 import java.util.ArrayList;

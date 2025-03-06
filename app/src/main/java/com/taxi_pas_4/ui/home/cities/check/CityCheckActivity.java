@@ -19,15 +19,15 @@ import androidx.appcompat.widget.AppCompatButton;
 
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.ui.card.CardInfo;
+import com.taxi_pas_4.ui.fondy.callback.CallbackResponse;
+import com.taxi_pas_4.ui.fondy.callback.CallbackService;
 import com.taxi_pas_4.ui.home.cities.api.CityApiClient;
 import com.taxi_pas_4.ui.home.cities.api.CityApiTestClient;
 import com.taxi_pas_4.ui.home.cities.api.CityLastAddressResponse;
 import com.taxi_pas_4.ui.home.cities.api.CityResponse;
 import com.taxi_pas_4.ui.home.cities.api.CityResponseMerchantFondy;
 import com.taxi_pas_4.ui.home.cities.api.CityService;
-import com.taxi_pas_4.ui.card.CardInfo;
-import com.taxi_pas_4.ui.fondy.callback.CallbackResponse;
-import com.taxi_pas_4.ui.fondy.callback.CallbackService;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetMessageFragment;
 import com.taxi_pas_4.utils.ip.ApiServiceCountry;

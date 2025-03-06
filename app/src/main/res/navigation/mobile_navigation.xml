@@ -65,4 +65,10 @@
         android:name="com.taxi_pas_4.ui.finish.fragm.FinishSeparateFragment"
         android:label="@string/your_order"
         tools:layout="@layout/fragment_finish" />
+
+    <fragment
+        android:id="@+id/nav_restart"
+        android:name="com.taxi_pas_4.ui.restart.RestartFragment"
+        android:label="@string/your_order"
+        tools:layout="@layout/fragment_restart" />
 </navigation>

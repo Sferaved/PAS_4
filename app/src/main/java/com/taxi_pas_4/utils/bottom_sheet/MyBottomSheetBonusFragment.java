@@ -1,7 +1,6 @@
 package com.taxi_pas_4.utils.bottom_sheet;
 
 import static android.content.Context.MODE_PRIVATE;
-
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 import static com.taxi_pas_4.ui.visicom.VisicomFragment.setBtnBonusName;
 
@@ -31,14 +30,14 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
-import com.taxi_pas_4.ui.home.cities.api.CityApiClient;
-import com.taxi_pas_4.ui.home.cities.api.CityResponse;
-import com.taxi_pas_4.ui.home.cities.api.CityResponseMerchantFondy;
-import com.taxi_pas_4.ui.home.cities.api.CityService;
 import com.taxi_pas_4.ui.card.CardFragment;
 import com.taxi_pas_4.ui.gallery.GalleryFragment;
 import com.taxi_pas_4.ui.home.CustomArrayAdapter;
 import com.taxi_pas_4.ui.home.HomeFragment;
+import com.taxi_pas_4.ui.home.cities.api.CityApiClient;
+import com.taxi_pas_4.ui.home.cities.api.CityResponse;
+import com.taxi_pas_4.ui.home.cities.api.CityResponseMerchantFondy;
+import com.taxi_pas_4.ui.home.cities.api.CityService;
 import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
 import com.taxi_pas_4.ui.payment_system.PayApi;
 import com.taxi_pas_4.ui.payment_system.ResponsePaySystem;

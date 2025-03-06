@@ -1,7 +1,6 @@
 package com.taxi_pas_4.ui.card;
 
 import static android.content.Context.MODE_PRIVATE;
-
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import android.annotation.SuppressLint;
@@ -47,7 +46,6 @@ import com.taxi_pas_4.ui.fondy.status.FondyApiService;
 import com.taxi_pas_4.ui.fondy.status.StatusRequest;
 import com.taxi_pas_4.ui.fondy.status.StatusRequestBody;
 import com.taxi_pas_4.ui.fondy.status.SuccessfulResponseData;
-import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.ui.mono.MonoApi;
 import com.taxi_pas_4.ui.mono.cancel.RequestCancelMono;
 import com.taxi_pas_4.ui.mono.cancel.ResponseCancelMono;
@@ -60,6 +58,7 @@ import com.taxi_pas_4.ui.wfp.revers.ReversResponse;
 import com.taxi_pas_4.ui.wfp.revers.ReversService;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
+import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.utils.log.Logger;
 
 import java.io.IOException;

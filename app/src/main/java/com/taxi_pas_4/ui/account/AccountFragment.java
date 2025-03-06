@@ -1,9 +1,8 @@
 package com.taxi_pas_4.ui.account;
 
 import static android.content.Context.MODE_PRIVATE;
-
-import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 import static com.taxi_pas_4.R.string.format_phone;
+import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
@@ -36,8 +35,8 @@ import com.taxi_pas_4.R;
 import com.taxi_pas_4.databinding.FragmentAccountBinding;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.RouteResponseCancel;
-import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.ui.keyboard.KeyboardUtils;
+import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.utils.db.DatabaseHelper;
 import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.log.Logger;

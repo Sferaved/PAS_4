@@ -1,7 +1,6 @@
 package com.taxi_pas_4.utils.bottom_sheet;
 
 import static android.content.Context.MODE_PRIVATE;
-
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import android.annotation.SuppressLint;
@@ -31,16 +30,16 @@ import androidx.fragment.app.FragmentManager;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
-import com.taxi_pas_4.ui.home.cities.api.CityApiClient;
-import com.taxi_pas_4.ui.home.cities.api.CityLastAddressResponse;
-import com.taxi_pas_4.ui.home.cities.api.CityResponse;
-import com.taxi_pas_4.ui.home.cities.api.CityResponseMerchantFondy;
-import com.taxi_pas_4.ui.home.cities.api.CityService;
 import com.taxi_pas_4.ui.card.CardInfo;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.RouteResponse;
 import com.taxi_pas_4.ui.fondy.callback.CallbackResponse;
 import com.taxi_pas_4.ui.fondy.callback.CallbackService;
+import com.taxi_pas_4.ui.home.cities.api.CityApiClient;
+import com.taxi_pas_4.ui.home.cities.api.CityLastAddressResponse;
+import com.taxi_pas_4.ui.home.cities.api.CityResponse;
+import com.taxi_pas_4.ui.home.cities.api.CityResponseMerchantFondy;
+import com.taxi_pas_4.ui.home.cities.api.CityService;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;

@@ -1,7 +1,6 @@
 package com.taxi_pas_4.ui.card;
 
 import static android.content.Context.MODE_PRIVATE;
-
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import android.annotation.SuppressLint;
@@ -417,7 +416,7 @@ public class CustomCardAdapter extends ArrayAdapter<Map<String, String>> {
 
             @Override
             public void onFailure(@NonNull Call<CallbackResponseSetActivCardWfp> call, @NonNull Throwable t) {
-                Toast.makeText(getContext(), getContext().getString(R.string.verify_internet), Toast.LENGTH_LONG).show();
+
             }
         });
     }

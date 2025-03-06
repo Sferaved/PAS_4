@@ -3,7 +3,6 @@ package com.taxi_pas_4.utils.to_json_parser;
 import static com.taxi_pas_4.MainActivity.activeCalls;
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
-
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -18,6 +17,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;

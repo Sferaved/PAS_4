@@ -56,23 +56,21 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
+import com.taxi_pas_4.databinding.ActivityMainBinding;
+import com.taxi_pas_4.ui.card.CardInfo;
+import com.taxi_pas_4.ui.clear.AppDataUtils;
 import com.taxi_pas_4.ui.finish.OrderResponse;
+import com.taxi_pas_4.ui.finish.RouteResponse;
 import com.taxi_pas_4.ui.finish.fragm.ExecutionStatusViewModel;
-import com.taxi_pas_4.ui.finish.fragm.FinishSeparateFragment;
+import com.taxi_pas_4.ui.home.HomeFragment;
 import com.taxi_pas_4.ui.home.cities.api.CityApiClient;
 import com.taxi_pas_4.ui.home.cities.api.CityResponse;
 import com.taxi_pas_4.ui.home.cities.api.CityService;
 import com.taxi_pas_4.ui.home.cities.check.CityCheckActivity;
-import com.taxi_pas_4.databinding.ActivityMainBinding;
-import com.taxi_pas_4.ui.card.CardInfo;
-import com.taxi_pas_4.ui.clear.AppDataUtils;
-import com.taxi_pas_4.ui.finish.RouteResponse;
-import com.taxi_pas_4.ui.home.HomeFragment;
 import com.taxi_pas_4.ui.settings.SettingsActivity;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
-import com.taxi_pas_4.utils.helpers.LocaleHelper;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetCityFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGPSFragment;
@@ -82,6 +80,7 @@ import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.download.AppUpdater;
 import com.taxi_pas_4.utils.fcm.token_send.ApiServiceToken;
 import com.taxi_pas_4.utils.fcm.token_send.RetrofitClientToken;
+import com.taxi_pas_4.utils.helpers.LocaleHelper;
 import com.taxi_pas_4.utils.keys.FirestoreHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
@@ -244,7 +243,8 @@ public class MainActivity extends AppCompatActivity {
               R.id.nav_visicom, R.id.nav_home, R.id.nav_cancel,
 //                R.id.nav_gallery,
               R.id.nav_about, R.id.nav_uid, R.id.nav_bonus, R.id.nav_card,
-              R.id.nav_account, R.id.nav_author, R.id.nav_finish_separate
+              R.id.nav_account, R.id.nav_author, R.id.nav_finish_separate,
+              R.id.nav_restart
         )
              .setOpenableLayout(drawer)
              .build();
@@ -1032,16 +1032,12 @@ public class MainActivity extends AppCompatActivity {
                 appUpdater = new AppUpdater(MainActivity.this);
                 appUpdater.startUpdate();
 
-            } else {
-                Toast.makeText(this, R.string.verify_internet, Toast.LENGTH_SHORT).show();
             }
         }
         if (item.getItemId() == R.id.nav_driver) {
             if (NetworkUtils.isNetworkAvailable(this)) {
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.taxieasyua.job"));
                 startActivity(browserIntent);
-            } else {
-                Toast.makeText(this, R.string.verify_internet, Toast.LENGTH_SHORT).show();
             }
         }
 
@@ -1050,8 +1046,6 @@ public class MainActivity extends AppCompatActivity {
             if (NetworkUtils.isNetworkAvailable(this)) {
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.taxi_pas_4"));
                 startActivity(browserIntent);
-            } else {
-                Toast.makeText(this, R.string.verify_internet, Toast.LENGTH_SHORT).show();
             }
 
         }

@@ -6,8 +6,8 @@ import static android.graphics.Color.RED;
 import static android.view.View.GONE;
 import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
-import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 import static com.taxi_pas_4.R.string.address_error_message;
+import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -69,16 +69,16 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.databinding.FragmentHomeBinding;
+import com.taxi_pas_4.ui.finish.ApiClient;
+import com.taxi_pas_4.ui.finish.RouteResponseCancel;
+import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
 import com.taxi_pas_4.ui.home.cities.Cherkasy.Cherkasy;
 import com.taxi_pas_4.ui.home.cities.Dnipro.DniproCity;
 import com.taxi_pas_4.ui.home.cities.Kyiv.KyivCity;
 import com.taxi_pas_4.ui.home.cities.Odessa.Odessa;
 import com.taxi_pas_4.ui.home.cities.Odessa.OdessaTest;
 import com.taxi_pas_4.ui.home.cities.Zaporizhzhia.Zaporizhzhia;
-import com.taxi_pas_4.databinding.FragmentHomeBinding;
-import com.taxi_pas_4.ui.finish.ApiClient;
-import com.taxi_pas_4.ui.finish.RouteResponseCancel;
-import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
 import com.taxi_pas_4.ui.home.room.AppDatabase;
 import com.taxi_pas_4.ui.home.room.RouteCost;
 import com.taxi_pas_4.ui.home.room.RouteCostDao;
@@ -1380,7 +1380,7 @@ public class HomeFragment extends Fragment {
             urlCost = getTaxiUrlSearch("costSearchTime", context);
 
             CostJSONParserRetrofit parser = new CostJSONParserRetrofit();
-            parser.sendURL(urlCost, new Callback<Map<String, String>>() {
+            parser.sendURL(urlCost, new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
                     Map<String, String> sendUrlMapCost = response.body();

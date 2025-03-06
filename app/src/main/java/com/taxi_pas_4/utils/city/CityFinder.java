@@ -1,7 +1,6 @@
 package com.taxi_pas_4.utils.city;
 
 import static android.content.Context.MODE_PRIVATE;
-
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import android.annotation.SuppressLint;
@@ -17,9 +16,9 @@ import androidx.annotation.NonNull;
 
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.ui.card.CardInfo;
 import com.taxi_pas_4.ui.home.cities.api.CityApiClient;
 import com.taxi_pas_4.ui.home.cities.api.CityService;
-import com.taxi_pas_4.ui.card.CardInfo;
 import com.taxi_pas_4.ui.payment_system.PayApi;
 import com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;

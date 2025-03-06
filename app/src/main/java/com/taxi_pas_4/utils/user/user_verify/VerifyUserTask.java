@@ -1,7 +1,6 @@
 package com.taxi_pas_4.utils.user.user_verify;
 
 import static android.content.Context.MODE_PRIVATE;
-
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import android.annotation.SuppressLint;

@@ -1,7 +1,5 @@
 package com.taxi_pas_4.utils.notify;
 
-import static com.taxi_pas_4.ui.visicom.VisicomFragment.ubt_btn;
-
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -18,7 +16,6 @@ import androidx.core.app.NotificationManagerCompat;
 
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
-import com.taxi_pas_4.utils.log.Logger;
 
 
 public class NotificationHelper {
