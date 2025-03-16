@@ -216,6 +216,12 @@ public class CardFragment extends Fragment {
         btnCardLink  = binding.btnCardLink;
         btnOrder = binding.btnOrder;
         btnOrder.setOnClickListener(v -> {
+            if (!NetworkUtils.isNetworkAvailable(requireContext())) {
+
+                MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_restart, true)
+                        .build());
+            }
             // Удаляем последний фрагмент из стека навигации и переходим к новому фрагменту
             SharedPreferencesHelper sharedPreferencesHelper = new SharedPreferencesHelper(context);
             sharedPreferencesHelper.saveValue("gps_upd", true);

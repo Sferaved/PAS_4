@@ -1,8 +1,11 @@
 package com.taxi_pas_4.androidx.startup;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
@@ -11,11 +14,14 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.navigation.NavOptions;
 
 import com.github.anrwatchdog.ANRWatchDog;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
+import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.helpers.TelegramUtils;
 import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 import com.taxi_pas_4.utils.time_ut.IdleTimeoutManager;
@@ -44,6 +50,8 @@ public class MyApplication extends Application {
 
     private ThreadPoolExecutor threadPoolExecutor;
     private IdleTimeoutManager idleTimeoutManager;
+    private long backgroundStartTime = 0;
+    private long lastMemoryWarningTime = 0;
 
     @Override
     public void onCreate() {
@@ -71,6 +79,7 @@ public class MyApplication extends Application {
         );
     }
 
+    @SuppressLint("SourceLockedOrientationActivity")
     private void setDefaultOrientation() {
         // Установка ориентации экрана в портретный режим
         // Это может не сработать для всех активити
@@ -129,15 +138,37 @@ public class MyApplication extends Application {
 
             @Override
             public void onActivityResumed(@NonNull Activity activity) {
+                startMemoryMonitoring();
+                if (!NetworkUtils.isNetworkAvailable(getApplicationContext())) {
+                    if (MainActivity.currentNavDestination != R.id.nav_restart) {
+                        MainActivity.currentNavDestination = R.id.nav_restart; // Устанавливаем текущий экран
+                        MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                                .setPopUpTo(R.id.nav_restart, true)
+                                .build());
+                    }
+                    return;
+                }
+// Проверка длительного времени в фоне
+                if (backgroundStartTime > 0) {
+                    long timeInBackground = System.currentTimeMillis() - backgroundStartTime;
+                    if (timeInBackground > 5 * 60 * 1000) { // 5 минут
+                        restartApplication(activity);
+                        return;
+                    }
+                }
                 isAppInForeground = true;
                 if (idleTimeoutManager != null) {
                     idleTimeoutManager.resetTimer();
                 }
             }
 
+
             @Override
             public void onActivityPaused(@NonNull Activity activity) {
                 isAppInForeground = false;
+                backgroundStartTime = System.currentTimeMillis();
+                stopMemoryMonitoring(); // Останавливаем мониторинг при паузе
+                currentActivity = null;
             }
 
             @Override
@@ -153,6 +184,66 @@ public class MyApplication extends Application {
                 }
             }
         });
+    }
+
+    private final Handler memoryCheckHandler = new Handler();
+    private final Runnable memoryCheckRunnable = new Runnable() {
+        @Override
+        public void run() {
+            // Выполняем проверку памяти
+            if (currentActivity != null) {
+                checkMemoryUsage(currentActivity);
+            }
+            // Повторяем выполнение через 5 секунд (5000 миллисекунд)
+            memoryCheckHandler.postDelayed(this, 5000);
+        }
+    };
+
+    // Запуск мониторинга
+    public void startMemoryMonitoring() {
+        memoryCheckHandler.post(memoryCheckRunnable);
+    }
+
+    // Остановка мониторинга
+    public void stopMemoryMonitoring() {
+        memoryCheckHandler.removeCallbacks(memoryCheckRunnable);
+    }
+
+
+
+    private void checkMemoryUsage(Activity activity) {
+        ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
+        ActivityManager activityManager = (ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE);
+        activityManager.getMemoryInfo(memoryInfo);
+
+        if (memoryInfo.lowMemory) {
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastMemoryWarningTime > 60 * 1000) { // Уведомление раз в 60 секунд
+                // Отобразите уведомление пользователю
+
+                String message = getString(R.string.low_memory_0) + memoryInfo.availMem + getString(R.string.low_memory_1) + memoryInfo.lowMemory;
+                Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
+
+                lastMemoryWarningTime = currentTime;
+
+            }
+
+
+        }
+
+        Log.d("MemoryMonitor", "Свободная память: " + memoryInfo.availMem + " байт");
+        Log.d("MemoryMonitor", "Состояние нехватки памяти: " + memoryInfo.lowMemory);
+    }
+
+    private void restartApplication(Activity activity) {
+        Intent intent = activity.getBaseContext().getPackageManager()
+                .getLaunchIntentForPackage(activity.getBaseContext().getPackageName());
+        if (intent != null) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            activity.startActivity(intent);
+            activity.finish(); // Завершаем текущую активность
+            Runtime.getRuntime().exit(0); // Полный выход
+        }
     }
 
     public boolean isAppInForeground() {

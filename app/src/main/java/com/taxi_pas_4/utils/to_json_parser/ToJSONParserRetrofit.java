@@ -6,12 +6,14 @@ import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHel
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.navigation.NavOptions;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -175,17 +177,20 @@ public class ToJSONParserRetrofit {
                             costMap.put("order_cost", "0");
                             costMap.put("message", json.getMessage());
                             callback.onResponse(null, Response.success(costMap));
+
                         }
                     } else {
-                        callback.onResponse(null, Response.success(Collections.singletonMap("message", "Ошибка запроса")));
+                        MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                                .setPopUpTo(R.id.nav_restart, true)
+                                .build());
                     }
                 }
 
                 @Override
                 public void onFailure(@NonNull Call<JsonResponse> call, @NonNull Throwable t) {
-                    if (!eventReceived) {
-                        callback.onResponse(null, Response.success(Collections.singletonMap("message", "Ошибка соединения")));
-                    }
+                    MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                            .setPopUpTo(R.id.nav_restart, true)
+                            .build());
                 }
             });
         });
@@ -204,6 +209,9 @@ public class ToJSONParserRetrofit {
                 try {
                     Thread.sleep(100); // Ожидание события с минимальной задержкой
                 } catch (InterruptedException e) {
+                    MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                            .setPopUpTo(R.id.nav_restart, true)
+                            .build());
                     Thread.currentThread().interrupt();
                 }
             }

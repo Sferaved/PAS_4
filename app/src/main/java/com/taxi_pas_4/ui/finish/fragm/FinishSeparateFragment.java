@@ -10,6 +10,7 @@ import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHel
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -38,6 +39,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -50,8 +52,6 @@ import androidx.navigation.NavOptions;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.databinding.FragmentFinishSeparateBinding;
@@ -61,31 +61,13 @@ import com.taxi_pas_4.ui.finish.ApiService;
 import com.taxi_pas_4.ui.finish.BonusResponse;
 import com.taxi_pas_4.ui.finish.OrderResponse;
 import com.taxi_pas_4.ui.finish.Status;
-import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureClient;
-import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureResponse;
-import com.taxi_pas_4.ui.fondy.payment.ApiResponsePay;
-import com.taxi_pas_4.ui.fondy.payment.PaymentApi;
-import com.taxi_pas_4.ui.fondy.payment.RequestData;
-import com.taxi_pas_4.ui.fondy.payment.StatusRequestPay;
-import com.taxi_pas_4.ui.fondy.payment.SuccessResponseDataPay;
 import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
-import com.taxi_pas_4.ui.fondy.token_pay.ApiResponseToken;
-import com.taxi_pas_4.ui.fondy.token_pay.PaymentApiToken;
-import com.taxi_pas_4.ui.fondy.token_pay.RequestDataToken;
-import com.taxi_pas_4.ui.fondy.token_pay.StatusRequestToken;
-import com.taxi_pas_4.ui.fondy.token_pay.SuccessResponseDataToken;
-import com.taxi_pas_4.ui.mono.MonoApi;
-import com.taxi_pas_4.ui.mono.payment.RequestPayMono;
-import com.taxi_pas_4.ui.mono.payment.ResponsePayMono;
-import com.taxi_pas_4.ui.wfp.checkStatus.StatusResponse;
-import com.taxi_pas_4.ui.wfp.checkStatus.StatusService;
 import com.taxi_pas_4.ui.wfp.invoice.InvoiceResponse;
 import com.taxi_pas_4.ui.wfp.invoice.InvoiceService;
 import com.taxi_pas_4.ui.wfp.purchase.PurchaseResponse;
 import com.taxi_pas_4.ui.wfp.purchase.PurchaseService;
 import com.taxi_pas_4.utils.animation.car.CarProgressBar;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetAddCostFragment;
-import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorPaymentFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetFinishOptionFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetMessageFragment;
@@ -96,7 +78,6 @@ import com.taxi_pas_4.utils.time_ut.TimeUtils;
 import com.taxi_pas_4.utils.ui.BackPressBlocker;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -106,7 +87,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -330,7 +310,7 @@ public class FinishSeparateFragment extends Fragment {
 
 
         long delayMillis = 5 * 60 * 1000;
-        boolean black_list_yes = verifyOrder(context);
+
         if (pay_method.equals("wfp_payment")) {
             amount = receivedMap.get("order_cost");
         }
@@ -449,44 +429,15 @@ public class FinishSeparateFragment extends Fragment {
                         .setPopUpTo(R.id.nav_visicom, true)
                         .build());
             } else {
-                MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment( context.getString(R.string.verify_internet));
-                bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_restart, true)
+                        .build());
             }
         });
 
 
         Logger.d(context, TAG, "no_pay: 2 " + no_pay);
 
-        if(!no_pay) {
-            switch (pay_method) {
-                case "wfp_payment":
-                    try {
-                        payWfp();
-                    } catch (UnsupportedEncodingException e) {
-                        FirebaseCrashlytics.getInstance().recordException(e);
-                        throw new RuntimeException(e);
-                    }
-                    break;
-                case "fondy_payment":
-                    try {
-                        payFondy();
-                    } catch (UnsupportedEncodingException e) {
-                        FirebaseCrashlytics.getInstance().recordException(e);
-                        throw new RuntimeException(e);
-                    }
-                    break;
-                case "mono_payment":
-                    String reference = MainActivity.order_id;
-                    String comment =  context.getString(R.string.fondy_message);
-
-                    getUrlToPaymentMono(amount, reference, comment);
-                    break;
-
-            }
-        } else {
-            Logger.d(context, TAG, "no_pay: 3 pay_method" + pay_method);
-            getStatusWfp(MainActivity.order_id, "0");
-        }
         ImageButton btn_no = root.findViewById(R.id.btn_no);
         btn_no.setOnClickListener(view -> startActivity(new Intent(context, MainActivity.class)));
 
@@ -568,39 +519,37 @@ public class FinishSeparateFragment extends Fragment {
         }
 
     }
+    private static boolean isDialogShowing = false;
 
     public static void handleTransactionStatusDeclined(
             String status,
             Context context
     ) {
-        Logger.d(context, TAG, "1 Transaction Status: " + status);
+        Logger.d(context, TAG, "Transaction Status: " + status);
 
-        if (status.equals("Declined")) {
+        if ("Declined".equals(status)) { // Проверяем статус
+            // Проверяем, существует ли уже фрагмент с определённым тегом
+            if (!isDialogShowing && fragmentManager.findFragmentByTag("MyBottomSheetTag") == null) {
+                isDialogShowing = true;
 
-            MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment =
-                    new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
-            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-            Logger.d(context, TAG, "onResponse: Showing error bottom sheet for declined transaction");
-        }
-    }
+                MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment =
+                        new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
 
+                // Устанавливаем слушатель для сброса флага после закрытия диалога
+                bottomSheetDialogFragment.setDialogStateListener(() -> {
+                    Logger.d(context, TAG, "Dialog closed, resetting isDialogShowing flag.");
+                    isDialogShowing = false;
+                });
 
-    private boolean verifyOrder(Context context) {
-        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-        Cursor cursor = database.query(TABLE_USER_INFO, null, null, null, null, null, null);
-
-        boolean verify = true;
-        if (cursor.getCount() == 1) {
-
-            if (logCursor(TABLE_USER_INFO, context).get(1).equals("0")) {
-                verify = false;
-                Log.d("TAG", "verifyOrder:verify " + verify);
+                // Показываем диалог и задаём уникальный тег
+                bottomSheetDialogFragment.show(fragmentManager, "MyBottomSheetTag");
+                Logger.d(context, TAG, "onResponse: Showing error bottom sheet for declined transaction.");
+            } else {
+                Logger.d(context, TAG, "Dialog is already showing or exists, skipping...");
             }
-            cursor.close();
         }
-        database.close();
-        return verify;
     }
+
 
     private void btnOptions() {
         // Создаем Bundle для передачи данных
@@ -653,7 +602,9 @@ public class FinishSeparateFragment extends Fragment {
 //            btn_cancel_order.animate().alpha(1f).setDuration(300);
 
 
-            btn_again.setVisibility(View.VISIBLE);
+            if (btn_again.getVisibility() != View.VISIBLE || btn_again.getVisibility() != GONE) {
+                btn_again.setVisibility(View.VISIBLE);
+            }
             btn_again.setAlpha(0f);
             btn_again.animate().alpha(1f).setDuration(300);
         }
@@ -704,24 +655,24 @@ public class FinishSeparateFragment extends Fragment {
      */
     @SuppressLint("Range")
     private void payWfp() throws UnsupportedEncodingException {
-        String rectoken = getCheckRectoken(MainActivity.TABLE_WFP_CARDS);
-        Logger.d(context, TAG, "payWfp: rectoken " + rectoken);
-
-        if (rectoken.isEmpty()) {
-            if (handlerAddcost != null) {
-                handlerAddcost.removeCallbacks(showDialogAddcost);
-            }
-
-            MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-            Logger.d(context, TAG, "payWfp: MainActivity.order_id " + MainActivity.order_id);
-            callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
-
-            getUrlToPaymentWfp(amount, MainActivity.order_id);
-            getStatusWfp(MainActivity.order_id, "0");
-        } else {
-            Logger.d(context, TAG, "payWfp: 1 MainActivity.order_id " + MainActivity.order_id);
-            getStatusWfp(MainActivity.order_id, amount);
-        }
+//        String rectoken = getCheckRectoken(MainActivity.TABLE_WFP_CARDS);
+//        Logger.d(context, TAG, "payWfp: rectoken " + rectoken);
+//
+//        if (rectoken.isEmpty()) {
+//            if (handlerAddcost != null) {
+//                handlerAddcost.removeCallbacks(showDialogAddcost);
+//            }
+//
+//            MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
+//            Logger.d(context, TAG, "payWfp: MainActivity.order_id " + MainActivity.order_id);
+//            callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
+//
+//            getUrlToPaymentWfp(amount, MainActivity.order_id);
+//            getStatusWfp(MainActivity.order_id, "0");
+//        } else {
+////            Logger.d(context, TAG, "payWfp: 1 MainActivity.order_id " + MainActivity.order_id);
+////            getStatusWfp(MainActivity.order_id, amount);
+//        }
 
     }
 
@@ -792,39 +743,17 @@ public class FinishSeparateFragment extends Fragment {
                             );
                             bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
 
-                        } else {
-                            Logger.d(context, TAG, "Response body is null");
-
-                            MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
-                            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                         }
-                    } else {
-                        Logger.d(context, TAG, "Response body is null");
-
-                        MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
-                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                     }
-                } else {
-                    Logger.d(context, TAG, "Request failed: " + response.code());
-
-                    MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
-                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<InvoiceResponse> call, @NonNull Throwable t) {
                 Logger.d(context, TAG, "Request failed: " + t.getMessage());
-
-                MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
-                bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
             }
         });
-        
-        
-        
-        
-//        progressBar.setVisibility(View.GONE);
+
     }
 
     private void paymentByTokenWfp(
@@ -858,79 +787,11 @@ public class FinishSeparateFragment extends Fragment {
                 email,
                 phoneNumber
         );
-        call.enqueue(new Callback<PurchaseResponse>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<PurchaseResponse> call, @NonNull Response<PurchaseResponse> response) {
                 if (response.isSuccessful()) {
-                    PurchaseResponse purchaseResponse = response.body();
-                    if (purchaseResponse != null) {
-                        // Обработка ответа
-                        Logger.d(context, TAG, "onResponse:purchaseResponse " + purchaseResponse);
-                        getStatusWfp(order_id, amount);
-                    } else {
-                        // Ошибка при парсинге ответа
-                        Logger.d(context, TAG, "Ошибка при парсинге ответа");
-
-                        MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
-                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-                    }
-                } else {
-                    // Ошибка запроса
-                    Logger.d(context, TAG, "Ошибка запроса");
-
-                    MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
-                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-                }
-
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<PurchaseResponse> call, @NonNull Throwable t) {
-                // Ошибка при выполнении запроса
-                Logger.d(context, TAG, "Ошибка при выполнении запроса");
-
-                MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
-                bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-            }
-        });
-
-    }
-
-    private void getStatusWfp(String orderReferens, String amount_20) {
-        Logger.d(context, TAG, "getStatusWfp: Starting with orderReferens=" + orderReferens + ", amount_20=" + amount_20);
-
-        List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
-        String city = stringList.get(1);
-        Logger.d(context, TAG, "getStatusWfp: Retrieved city=" + city);
-
-        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
-        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-
-        OkHttpClient client = new OkHttpClient.Builder()
-                .addInterceptor(interceptor)
-                .build();
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(baseUrl)
-                .addConverterFactory(GsonConverterFactory.create())
-                .client(client)
-                .build();
-
-        StatusService service = retrofit.create(StatusService.class);
-        String appName = context.getString(R.string.application);
-        Logger.d(context, TAG, "getStatusWfp: Preparing API call with app=" + appName + ", city=" + city);
-
-        Call<StatusResponse> call = service.checkStatus(appName, city, orderReferens);
-        String order_id = MainActivity.order_id;
-        Logger.d(context, TAG, "getStatusWfp: Initiating call for order_id=" + order_id);
-
-        call.enqueue(new Callback<StatusResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<StatusResponse> call, @NonNull Response<StatusResponse> response) {
-                Logger.d(context, TAG, "onResponse: Response received, isSuccessful=" + response.isSuccessful());
-
-                if (response.isSuccessful()) {
-                    StatusResponse statusResponse = response.body();
+                    PurchaseResponse statusResponse = response.body();
                     if (statusResponse == null) {
                         Logger.e(context, TAG, "onResponse: StatusResponse is null");
                         return;
@@ -938,234 +799,37 @@ public class FinishSeparateFragment extends Fragment {
 
                     String orderStatus = statusResponse.getTransactionStatus();
                     Logger.d(context, TAG, "1 Transaction Status: " + orderStatus);
-
-                    if (orderStatus.equals("Declined")) {
-                        Logger.d(context, TAG, "2 Transaction Status messageFondy: " + messageFondy);
-                        Logger.d(context, TAG, "3 Transaction Status: amount=" + amount_20);
-
-                        MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment =
-                                new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount_20, context);
-                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-                        Logger.d(context, TAG, "onResponse: Showing error bottom sheet for declined transaction");
+                    switch (orderStatus) {
+                        case "Approved":
+                        case "WaitingAuthComplete":
+                            Logger.d(context, TAG, "onResponse: Positive status received: " + orderStatus);
+                            sharedPreferencesHelperMain.saveValue("pay_error", "**");
+                            newOrderCardPayAdd20(order_id);
+                            break;
+                        case "Declined":
+                            MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment =
+                                    new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, "20", context);
+                            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                            Logger.d(context, TAG, "onResponse: Showing error bottom sheet for declined transaction");
+                        default:
+                            Logger.d(context, TAG, "onResponse: Unexpected status: " + orderStatus);
                     }
-                    else if (amount_20.equals("20")) {
-                        switch (orderStatus) {
-                            case "Approved":
-                            case "WaitingAuthComplete":
-                                Logger.d(context, TAG, "onResponse: Positive status received: " + orderStatus);
-                                sharedPreferencesHelperMain.saveValue("pay_error", "**");
-                                newOrderCardPayAdd20(order_id);
-                                break;
-                            default:
-                                Logger.d(context, TAG, "onResponse: Unexpected status: " + orderStatus);
-                                sharedPreferencesHelperMain.saveValue("pay_error", "pay_error");
 
-                                MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment =
-                                        new MyBottomSheetErrorPaymentFragment("wfp_payment", FinishSeparateFragment.messageFondy, amount_20, context);
-                                bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-                                Logger.d(context, TAG, "onResponse: Showing error bottom sheet for unexpected status");
-                        }
-                    }
+
                 } else {
                     Logger.e(context, TAG, "onResponse: Unsuccessful response, code=" + response.code());
                 }
             }
 
             @Override
-            public void onFailure(@NonNull Call<StatusResponse> call, @NonNull Throwable t) {
-                Logger.e(context, TAG, "onFailure: API call failed: " + t.getMessage());
-
+            public void onFailure(@NonNull Call<PurchaseResponse> call, @NonNull Throwable t) {
+                // Ошибка при выполнении запроса
+                Logger.d(context, TAG, "Ошибка при выполнении запроса");
             }
         });
 
-        if (need_20_add) {
-            Logger.d(context, TAG, "getStatusWfp: Scheduling delayed task with delay=" + timeCheckOutAddCost);
-            handlerAddcost.postDelayed(showDialogAddcost, timeCheckOutAddCost);
-        }
     }
-    /**
-     * payFondy
-     * @throws UnsupportedEncodingException
-     */
 
-    @SuppressLint("Range")
-    private void payFondy() throws UnsupportedEncodingException {
-
-
-        String rectoken = getCheckRectoken(MainActivity.TABLE_FONDY_CARDS);
-        Logger.d(context, TAG, "payFondy: rectoken " + rectoken);
-        if (rectoken.isEmpty()) {
-            getUrlToPaymentFondy(messageFondy, amount);
-        } else {
-            paymentByTokenFondy(messageFondy, amount, rectoken);
-        }
-
-    }
-    private void paymentByTokenFondy(
-            String orderDescription,
-            String amount,
-            String rectoken
-    ) throws UnsupportedEncodingException {
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://pay.fondy.eu/api/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-        callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
-        PaymentApiToken paymentApi = retrofit.create(PaymentApiToken.class);
-        List<String>  arrayList = logCursor(MainActivity.CITY_INFO, context);
-        String MERCHANT_ID = arrayList.get(6);
-
-//        String merchantPassword = arrayList.get(7);
-        List<String> stringList = logCursor(TABLE_USER_INFO, context);
-        String email = stringList.get(3);
-
-        String order_id =  MainActivity.order_id;
-
-        Map<String, String> params = new TreeMap<>();
-        params.put("order_id", order_id);
-        params.put("order_desc", orderDescription);
-        params.put("currency", "UAH");
-        params.put("amount", amount);
-        params.put("rectoken", rectoken);
-        params.put("merchant_id", MERCHANT_ID);
-        params.put("preauth", "Y");
-        params.put("sender_email", email);
-
-        StringBuilder paramsBuilder = new StringBuilder();
-        for (Map.Entry<String, String> entry : params.entrySet()) {
-            if (paramsBuilder.length() > 0) {
-                paramsBuilder.append("&");
-            }
-            paramsBuilder.append(URLEncoder.encode(entry.getKey(), "UTF-8"))
-                    .append("=")
-                    .append(URLEncoder.encode(entry.getValue(), "UTF-8"));
-        }
-        String queryString = paramsBuilder.toString();
-
-
-
-
-        Logger.d(context, TAG, "paymentByTokenFondy: " + rectoken);
-
-        Logger.d(context, TAG, "getStatusFondy: " + params);
-        SignatureClient signatureClient = new SignatureClient();
-// Передаем экземпляр SignatureCallback в метод generateSignature
-        signatureClient.generateSignature(queryString, new SignatureClient.SignatureCallback() {
-            @Override
-            public void onSuccess(SignatureResponse response) {
-                // Обработка успешного ответа
-                String digest = response.getDigest();
-                Logger.d(context, TAG, "Received signature digest: " + digest);
-
-                RequestDataToken paymentRequest = new RequestDataToken(
-                        order_id,
-                        orderDescription,
-                        amount,
-                        MERCHANT_ID,
-                        digest,
-                        rectoken,
-                        email
-                );
-
-
-                StatusRequestToken statusRequest = new StatusRequestToken(paymentRequest);
-                Logger.d(context, TAG, "getUrlToPayment: " + statusRequest);
-
-                Call<ApiResponseToken<SuccessResponseDataToken>> call = paymentApi.makePayment(statusRequest);
-
-
-                call.enqueue(new Callback<ApiResponseToken<SuccessResponseDataToken>>() {
-
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponseToken<SuccessResponseDataToken>> call, Response<ApiResponseToken<SuccessResponseDataToken>> response) {
-                        Logger.d(context, TAG, "onResponse: 1111" + response.code());
-                        if (response.isSuccessful()) {
-                            ApiResponseToken<SuccessResponseDataToken> apiResponse = response.body();
-
-                            Logger.d(context, TAG, "onResponse: " +  new Gson().toJson(apiResponse));
-                            try {
-                                SuccessResponseDataToken responseBody = response.body().getResponse();
-
-                                // Теперь у вас есть объект ResponseBodyRev для обработки
-                                if (responseBody != null) {
-                                    Logger.d(context, TAG, "JSON Response: " + new Gson().toJson(apiResponse));
-                                    String orderStatus = responseBody.getOrderStatus();
-                                    if (!"approved".equals(orderStatus)) {
-                                        // Обработка ответа об ошибке
-                                        String errorResponseMessage = responseBody.getErrorMessage();
-                                        String errorResponseCode = responseBody.getErrorCode();
-                                        Logger.d(context, TAG, "onResponse: errorResponseMessage " + errorResponseMessage);
-                                        Logger.d(context, TAG, "onResponse: errorResponseCode" + errorResponseCode);
-
-//                                Toast.makeText(context, R.string.pay_failure_mes, Toast.LENGTH_SHORT).show();
-                                        MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-                                        callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
-                                        MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("fondy_payment", messageFondy, amount, context);
-                                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-
-                                    }
-                                } else {
-//                            Toast.makeText(context, R.string.pay_failure_mes, Toast.LENGTH_SHORT).show();
-                                    MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-                                    callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
-                                    MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("fondy_payment", messageFondy, amount, context);
-                                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-
-//                            getUrlToPaymentFondy(messageFondy, amount);
-                                }
-                            } catch (JsonSyntaxException e) {
-                                // Возникла ошибка при разборе JSON, возможно, сервер вернул неправильный формат ответа
-                                FirebaseCrashlytics.getInstance().recordException(e);
-                                Logger.d(context, TAG, "Error parsing JSON response: " + e.getMessage());
-//                        Toast.makeText(context, R.string.pay_failure_mes, Toast.LENGTH_SHORT).show();
-                                MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-                                callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
-                                MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("fondy_payment", messageFondy, amount, context);
-                                bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-//                        getUrlToPaymentFondy(messageFondy, amount);
-                            }
-                        } else {
-                            // Обработка ошибки
-                            Logger.d(context, TAG, "onFailure: " + response.code());
-//                    Toast.makeText(context, R.string.pay_failure_mes, Toast.LENGTH_SHORT).show();
-                            MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-                            callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
-                            MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("fondy_payment", messageFondy, amount, context);
-                            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-//                    getUrlToPaymentFondy(messageFondy, amount);
-                        }
-
-                    }
-
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponseToken<SuccessResponseDataToken>> call, @NonNull Throwable t) {
-                        Logger.d(context, TAG, "onFailure1111: " + t);
-//                Toast.makeText(context, R.string.pay_failure_mes, Toast.LENGTH_SHORT).show();
-
-                        MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-                        callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
-                        MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("fondy_payment", messageFondy, amount, context);
-                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-//                getUrlToPaymentFondy(messageFondy, amount);
-                    }
-                });
-            }
-
-
-            @Override
-            public void onError(String error) {
-                // Обработка ошибки
-
-                Logger.d(context, TAG, "Received signature error: " + error);
-            }
-        });
-
-
-
-
-
-    }
     @SuppressLint("Range")
     private String getCheckRectoken(String table) {
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
@@ -1216,226 +880,6 @@ public class FinishSeparateFragment extends Fragment {
     }
 
 
-    private void getUrlToPaymentFondy(String orderDescription, String amount) throws UnsupportedEncodingException {
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://pay.fondy.eu/api/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        PaymentApi paymentApi = retrofit.create(PaymentApi.class);
-        List<String>  arrayList = logCursor(MainActivity.CITY_INFO, context);
-        String MERCHANT_ID = arrayList.get(6);
-        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
-        String email = logCursor(TABLE_USER_INFO, context).get(3);
-
-        String order_id = MainActivity.order_id;
-
-        Map<String, String> params = new TreeMap<>();
-        params.put("order_id", order_id);
-        params.put("order_desc", orderDescription);
-        params.put("currency", "UAH");
-        params.put("amount", amount);
-        params.put("preauth", "Y");
-        params.put("required_rectoken", "Y");
-        params.put("merchant_id", MERCHANT_ID);
-        params.put("sender_email", email);
-        params.put("server_callback_url", baseUrl + "server-callback");
-
-        Logger.d(context, TAG, "getStatusFondy: " + params);
-        SignatureClient signatureClient = new SignatureClient();
-// Передаем экземпляр SignatureCallback в метод generateSignature
-
-        StringBuilder paramsBuilder = new StringBuilder();
-        for (Map.Entry<String, String> entry : params.entrySet()) {
-            if (paramsBuilder.length() > 0) {
-                paramsBuilder.append("&");
-            }
-            paramsBuilder.append(URLEncoder.encode(entry.getKey(), "UTF-8"))
-                    .append("=")
-                    .append(URLEncoder.encode(entry.getValue(), "UTF-8"));
-        }
-        String queryString = paramsBuilder.toString();
-
-
-        signatureClient.generateSignature(queryString, new SignatureClient.SignatureCallback() {
-            @Override
-            public void onSuccess(SignatureResponse response) {
-                // Обработка успешного ответа
-                String digest = response.getDigest();
-                Logger.d(context, TAG, "Received signature digest: " + digest);
-
-                RequestData paymentRequest = new RequestData(
-                        order_id,
-                        orderDescription,
-                        amount,
-                        MERCHANT_ID,
-                        digest,
-                        email
-                );
-
-
-                StatusRequestPay statusRequest = new StatusRequestPay(paymentRequest);
-                Logger.d(context, TAG, "getUrlToPayment: " + statusRequest);
-
-                Call<ApiResponsePay<SuccessResponseDataPay>> call = paymentApi.makePayment(statusRequest);
-
-                call.enqueue(new Callback<ApiResponsePay<SuccessResponseDataPay>>() {
-
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponsePay<SuccessResponseDataPay>> call, Response<ApiResponsePay<SuccessResponseDataPay>> response) {
-                        Logger.d(context, TAG, "onResponse: 1111" + response.code());
-
-                        if (response.isSuccessful()) {
-                            ApiResponsePay<SuccessResponseDataPay> apiResponse = response.body();
-
-                            Logger.d(context, TAG, "onResponse: " +  new Gson().toJson(apiResponse));
-                            try {
-                                SuccessResponseDataPay responseBody = response.body().getResponse();
-
-                                // Теперь у вас есть объект ResponseBodyRev для обработки
-                                if (responseBody != null) {
-                                    String responseStatus = responseBody.getResponseStatus();
-                                    String checkoutUrl = responseBody.getCheckoutUrl();
-                                    if ("success".equals(responseStatus)) {
-                                        // Обработка успешного ответа
-
-                                        MyBottomSheetCardPayment bottomSheetDialogFragment = new MyBottomSheetCardPayment(
-                                                checkoutUrl,
-                                                amount,
-                                                MainActivity.uid,
-                                                uid_Double,
-                                                context,
-                                                MainActivity.order_id
-                                        );
-                                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-
-                                    } else {
-                                        MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-                                        callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
-                                        MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("fondy_payment", messageFondy, amount, context);
-                                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-
-                                    }
-                                } else {
-                                    // Обработка пустого тела ответа
-
-                                    MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-                                    callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
-                                    MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("fondy_payment", messageFondy, amount, context);
-                                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-
-                                }
-                            } catch (JsonSyntaxException e) {
-                                // Возникла ошибка при разборе JSON, возможно, сервер вернул неправильный формат ответа
-                                Logger.d(context, TAG, "Error parsing JSON response: " + e.getMessage());
-                                FirebaseCrashlytics.getInstance().recordException(e);
-
-                                MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-                                callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
-                                MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("fondy_payment", messageFondy, amount, context);
-                                bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-
-                            }
-                        } else {
-                            // Обработка ошибки
-                            Logger.d(context, TAG, "onFailure: " + response.code());
-
-                            MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-                            callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
-                            MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("fondy_payment", messageFondy, amount, context);
-                            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-                        }
-
-                    }
-
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponsePay<SuccessResponseDataPay>> call, Throwable t) {
-                        Logger.d(context, TAG, "onFailure1111: " + t);
-                        MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-                        callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
-                        MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("fondy_payment", messageFondy, amount, context);
-                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-                    }
-                });
-            }
-            @Override
-            public void onError(String error) {
-                // Обработка ошибки
-                Logger.d(context, TAG, "Received signature error: " + error);
-            }
-        });
-//         progressBar.setVisibility(View.GONE);
-    }
-
-
-    private void getUrlToPaymentMono(String amount, String reference, String comment) {
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://api.monobank.ua/api/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        MonoApi monoApi = retrofit.create(MonoApi.class);
-        int amountMono = Integer.parseInt(amount);
-        RequestPayMono paymentRequest = new RequestPayMono(
-                amountMono,
-                reference,
-                comment
-        );
-
-        Logger.d(context, TAG, "getUrlToPayment: " + paymentRequest);
-
-        String token = context.getString(R.string.mono_key_storage); // Получение токена из ресурсов
-        Call<ResponsePayMono> call = monoApi.invoiceCreate(token, paymentRequest);
-
-        call.enqueue(new Callback<ResponsePayMono>() {
-
-            @Override
-            public void onResponse(@NonNull Call<ResponsePayMono> call, Response<ResponsePayMono> response) {
-                Logger.d(context, TAG, "onResponse: 1111" + response.code());
-                if (response.isSuccessful()) {
-                    ResponsePayMono apiResponse = response.body();
-
-                    Logger.d(context, TAG, "onResponse: " +  new Gson().toJson(apiResponse));
-                    try {
-                        assert response.body() != null;
-                        String pageUrl = response.body().getPageUrl();
-                        MainActivity.invoiceId = response.body().getInvoiceId();
-
-
-                        MyBottomSheetCardPayment bottomSheetDialogFragment = new MyBottomSheetCardPayment(
-                                pageUrl,
-                                amount,
-                                MainActivity.uid,
-                                uid_Double,
-                                context,
-                                MainActivity.order_id
-                        );
-                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-
-                    } catch (JsonSyntaxException e) {
-                        // Возникла ошибка при разборе JSON, возможно, сервер вернул неправильный формат ответа
-                        Logger.d(context, TAG, "Error parsing JSON response: " + e.getMessage());
-                        FirebaseCrashlytics.getInstance().recordException(e);
-                        cancelOrderDouble(context);
-                    }
-                } else {
-                    // Обработка ошибки
-                    Logger.d(context, TAG, "onFailure: " + response.code());
-                    cancelOrderDouble(context);
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<ResponsePayMono> call, @NonNull Throwable t) {
-                Logger.d(context, TAG, "onFailure1111: " + t);
-                cancelOrderDouble(context);
-            }
-
-
-        });
-    }
     private void updateAddCost(String addCost) {
         ContentValues cv = new ContentValues();
         Logger.d(context, TAG, "updateAddCost: addCost" + addCost);
@@ -1467,8 +911,9 @@ public class FinishSeparateFragment extends Fragment {
                     bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
 
                 } else {
-                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment( context.getString(R.string.verify_internet));
-                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                    MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                            .setPopUpTo(R.id.nav_restart, true)
+                            .build());
                 }
             }
 
@@ -1589,11 +1034,7 @@ public class FinishSeparateFragment extends Fragment {
         call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<Status> call, @NonNull Response<Status> response) {
-                String message = context.getString(R.string.ex_st_canceled);
-                orderCanceled(message, context);
-                if (btn_again.getVisibility() != View.VISIBLE) {
-                    btn_again.setVisibility(View.VISIBLE);
-                }
+
             }
 
             @Override
@@ -1625,11 +1066,7 @@ public class FinishSeparateFragment extends Fragment {
         call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<Status> call, @NonNull Response<Status> response) {
-                if (response.isSuccessful()) {
 
-//                    orderCanceled(context.getString(R.string.ex_st_canceled));
-
-                }
             }
 
 
@@ -1640,9 +1077,7 @@ public class FinishSeparateFragment extends Fragment {
                 Logger.d(context, TAG, "onFailure: " + errorMessage);
             }
         });
-        if (btn_again.getVisibility() != View.VISIBLE) {
-            btn_again.setVisibility(View.VISIBLE);
-        }
+
     }
 
     public void statusCacheOrder() throws ParseException {
@@ -1750,7 +1185,9 @@ public class FinishSeparateFragment extends Fragment {
         );
 
         // Показываем кнопку "Повторить"
-        btn_again.setVisibility(View.VISIBLE);
+        if (btn_again.getVisibility() != View.VISIBLE || btn_again.getVisibility() != GONE) {
+            btn_again.setVisibility(View.VISIBLE);
+        }
 
         // Отменяем все обработчики
         canceled = true;
@@ -1922,8 +1359,10 @@ public class FinishSeparateFragment extends Fragment {
 
         stopCycle();
 
-        btn_again.setVisibility(View.VISIBLE);
         text_status.setText(message);
+        if (btn_again.getVisibility() != View.VISIBLE || btn_again.getVisibility() != GONE) {
+            btn_again.setVisibility(View.VISIBLE);
+        }
 
     }
 
@@ -1969,9 +1408,6 @@ public class FinishSeparateFragment extends Fragment {
                     // все статусы Отказ клиента
                     String message = context.getString(R.string.ex_st_canceled);
                     orderCanceled(message, context);
-                    if (btn_again.getVisibility() != View.VISIBLE) {
-                        btn_again.setVisibility(View.VISIBLE);
-                    }
                 } else {
                     // Поиск авто
                     carSearch(context, inflater);
@@ -2012,9 +1448,6 @@ public class FinishSeparateFragment extends Fragment {
 
                 message = context.getString(R.string.ex_st_canceled);
                 orderCanceled(message, context);
-                if (btn_again.getVisibility() != View.VISIBLE) {
-                    btn_again.setVisibility(View.VISIBLE);
-                }
                 break;
             default:
                 carSearch(context, inflater);
@@ -2124,17 +1557,14 @@ public class FinishSeparateFragment extends Fragment {
         // Инициализация ViewModel
         cancel_btn_click = false;
         // Наблюдение за статусом транзакции
+
         viewModel.getTransactionStatus().observe(getViewLifecycleOwner(), status -> {
-            Logger.d(context, TAG, "1 LiveData status update received: " + status);
-            if (status != null) {
-                FinishSeparateFragment.handleTransactionStatusDeclined(
-                        status,
-                        context
-                );
-            } else {
-                Logger.d(context, TAG, "Received null status in observer");
+            if ("Declined".equals(status)) {
+                handleTransactionStatusDeclined(status, context);
             }
         });
+
+
 
         // Наблюдение за OrderResponse
         viewModel.getOrderResponse().observe(getViewLifecycleOwner(), response -> {
@@ -2171,15 +1601,6 @@ public class FinishSeparateFragment extends Fragment {
         timeUtils.startTimer();
 
         viewModelReviewer();
-
-
-
-        if(sharedPreferencesHelperMain.getValue("pay_error", "**").equals("pay_error")) {
-            callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
-            MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", FinishSeparateFragment.messageFondy, amount, context);
-            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-        }
-
 
         pay_method = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(4);
         if(pay_method.equals("nal_payment")) {
@@ -2689,4 +2110,32 @@ public class FinishSeparateFragment extends Fragment {
         btn_options.setText(mes);
 
     }
- }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        logMemoryState();
+    }
+
+    private void logMemoryState() {
+        ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
+        ActivityManager activityManager = (ActivityManager) requireContext().getSystemService(Context.ACTIVITY_SERVICE);
+        activityManager.getMemoryInfo(memoryInfo);
+
+        // Формирование отчета о состоянии памяти
+        String memoryReport = context.getString(R.string.low_memory_2) +
+                context.getString(R.string.low_memory_3) + memoryInfo.availMem + context.getString(R.string.low_memory_6) +
+                context.getString(R.string.low_memory_4) + memoryInfo.threshold + context.getString(R.string.low_memory_6) +
+                context.getString(R.string.low_memory_5) + memoryInfo.lowMemory;
+
+        // Логирование отчета
+        Logger.d(context, "MemoryReport", memoryReport);
+
+        if (memoryInfo.lowMemory) {
+                Toast.makeText(context, memoryReport, Toast.LENGTH_LONG).show();
+        }
+
+    }
+
+
+}

@@ -31,7 +31,6 @@ import com.taxi_pas_4.R;
 import com.taxi_pas_4.databinding.FragmentCancelBinding;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.RouteResponseCancel;
-import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.utils.connect.NetworkChangeReceiver;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.db.DatabaseHelper;
@@ -203,8 +202,9 @@ public class CancelFragment extends Fragment {
                         textUid.setText(R.string.no_routs);
                     }
                 } else {
-                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(context.getString(R.string.verify_internet));
-                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                    MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                            .setPopUpTo(R.id.nav_restart, true)
+                            .build());
 
                 }
             }

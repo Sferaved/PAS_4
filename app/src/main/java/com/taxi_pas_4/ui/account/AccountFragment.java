@@ -37,6 +37,7 @@ import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.RouteResponseCancel;
 import com.taxi_pas_4.ui.keyboard.KeyboardUtils;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
+import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.db.DatabaseHelper;
 import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.log.Logger;
@@ -188,6 +189,12 @@ public class AccountFragment extends Fragment {
 
         btnOrder = binding.btnOrder;
         btnOrder.setOnClickListener(v -> {
+            if (!NetworkUtils.isNetworkAvailable(requireContext())) {
+
+                MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_restart, true)
+                        .build());
+            }
             SharedPreferencesHelper sharedPreferencesHelper = new SharedPreferencesHelper(context);
             sharedPreferencesHelper.saveValue("gps_upd", true);
             sharedPreferencesHelper.saveValue("gps_upd_address", true);
@@ -271,8 +278,9 @@ public class AccountFragment extends Fragment {
 
                     }
                 } else {
-                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(context.getString(R.string.verify_internet));
-                    bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+                    MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                            .setPopUpTo(R.id.nav_restart, true)
+                            .build());
 
                 }
             }

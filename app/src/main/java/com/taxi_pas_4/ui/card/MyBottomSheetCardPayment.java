@@ -528,11 +528,6 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
 
             @Override
             public void onFailure(@NonNull Call<StatusResponse> call, @NonNull Throwable t) {
-                MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-                callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
-
-                MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", FinishSeparateFragment.messageFondy, amount, context);
-                bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                 Logger.d(context, TAG, "Request failed:"+ t.getMessage());
             }
         });

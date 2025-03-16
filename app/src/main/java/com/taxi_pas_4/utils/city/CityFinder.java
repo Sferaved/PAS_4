@@ -591,7 +591,9 @@ public class CityFinder {
     private void cityMaxPay(String city) {
 
 
-        CityService cityService = CityApiClient.getClient().create(CityService.class);
+        String BASE_URL =sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
+        CityApiClient cityApiClient = new CityApiClient(BASE_URL);
+        CityService cityService = cityApiClient.getClient().create(CityService.class);
 
         // Замените "your_city" на фактическое название города
         Call<com.taxi_pas_4.ui.home.cities.api.CityResponse> call = cityService.getMaxPayValues(city, context.getString(R.string.application));

@@ -31,7 +31,6 @@ import com.taxi_pas_4.R;
 import com.taxi_pas_4.databinding.FragmentBonusBinding;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.BonusResponse;
-import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.utils.connect.NetworkChangeReceiver;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.log.Logger;
@@ -122,6 +121,12 @@ public class BonusFragment extends Fragment {
 
         btnOrder = binding.btnOrder;
         btnOrder.setOnClickListener(v -> {
+            if (!NetworkUtils.isNetworkAvailable(requireContext())) {
+
+                MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_restart, true)
+                        .build());
+            }
             // Удаляем последний фрагмент из стека навигации и переходим к новому фрагменту
             SharedPreferencesHelper sharedPreferencesHelper = new SharedPreferencesHelper(context);
             sharedPreferencesHelper.saveValue("gps_upd", true);
@@ -168,8 +173,9 @@ public class BonusFragment extends Fragment {
 
                     Logger.d(context, TAG, "onResponse: " + bonus);
                 } else {
-                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
-                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                    MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                            .setPopUpTo(R.id.nav_restart, true)
+                            .build());
                 }
                 btnOrder.setVisibility(View.VISIBLE);
             }

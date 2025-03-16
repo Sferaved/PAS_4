@@ -81,13 +81,10 @@ import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
 import com.taxi_pas_4.ui.payment_system.PayApi;
 import com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
 import com.taxi_pas_4.ui.visicom.visicom_search.ActivityVisicomOnePage;
-import com.taxi_pas_4.ui.wfp.checkStatus.StatusResponse;
-import com.taxi_pas_4.ui.wfp.checkStatus.StatusService;
 import com.taxi_pas_4.utils.animation.car.CarProgressBar;
 import com.taxi_pas_4.utils.blacklist.BlacklistManager;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetBonusFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
-import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorPaymentFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGPSFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGeoFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyPhoneDialogFragment;
@@ -101,7 +98,6 @@ import com.taxi_pas_4.utils.download.AppUpdater;
 import com.taxi_pas_4.utils.from_json_parser.FromJSONParserRetrofit;
 import com.taxi_pas_4.utils.ip.RetrofitClient;
 import com.taxi_pas_4.utils.log.Logger;
-import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 import com.taxi_pas_4.utils.ui.BackPressBlocker;
 import com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
@@ -230,6 +226,7 @@ public class VisicomFragment extends Fragment {
         constraintLayoutVisicomFinish = root.findViewById(R.id.visicomFinish);
 
         constraintLayoutVisicomFinish.setVisibility(View.GONE);
+
 
         text_full_message = root.findViewById(R.id.text_full_message);
         textCostMessage = root.findViewById(R.id.text_cost_message);
@@ -375,7 +372,7 @@ public class VisicomFragment extends Fragment {
 
 
     public void showUpdateDialog() {
-        new MaterialAlertDialogBuilder(requireContext())
+        new MaterialAlertDialogBuilder(context)
                 .setTitle(R.string.upd_available)
                 .setMessage(R.string.upd_available_promt)
                 .setCancelable(false) // Запрет закрытия диалога при нажатии вне его
@@ -449,12 +446,6 @@ public class VisicomFragment extends Fragment {
         super.onPause();
         if (alertDialog != null && alertDialog.isShowing()) {
             alertDialog.dismiss();
-        }
-        if (!NetworkUtils.isNetworkAvailable(requireContext())) {
-
-            MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-                    .setPopUpTo(R.id.nav_restart, true)
-                    .build());
         }
     }
 
@@ -616,7 +607,8 @@ public class VisicomFragment extends Fragment {
 
         boolean black_list_yes = verifyOrder(context);
 
-        if(!black_list_yes) {
+        Logger.d(context, TAG, "black_list_yes 1 " + black_list_yes);
+        if(black_list_yes) {
             payment_type = "wfp_payment";
             ContentValues cv = new ContentValues();
             cv.put("payment_type", payment_type);
@@ -669,7 +661,8 @@ public class VisicomFragment extends Fragment {
             String lastCharacter;
 
             String paramsUserArr = displayName + " (" + context.getString(R.string.version_code) + ") " + "*" + userEmail + "*" + payment_type;
-            if(!black_list_yes) {
+
+            if(black_list_yes) {
                 lastCharacter = phoneNumber.substring(phoneNumber.length() - 1); // Получаем последний знак
                 phoneNumber = phoneNumber.substring(0, phoneNumber.length() - 1); // Часть без последнего знака
                 phoneNumber = phoneNumber.replace(" ", ""); // удаляем пробелы
@@ -766,14 +759,6 @@ public class VisicomFragment extends Fragment {
         return result;
     }
 
-    private static void setNalPaymentNoCards(Context context) {
-        String rectoken = getCheckRectoken(MainActivity.TABLE_WFP_CARDS, context);
-        Logger.d(context, TAG, "payWfp: rectoken " + rectoken);
-
-        if (rectoken.isEmpty()) {
-             paymentType(context);
-        }
-    }
     private static String addCostBlackList(String addcost) {
 
         int cost = Integer.parseInt(addcost); // Преобразуем строку в целое число
@@ -966,16 +951,25 @@ public class VisicomFragment extends Fragment {
 
                     @Override
                     public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
-                        Map<String, String> sendUrlMap = response.body();
+                        if (response.isSuccessful()) {
+                            Map<String, String> sendUrlMap = response.body();
 
-                        assert sendUrlMap != null;
-                        handleOrderFinished(sendUrlMap, pay_method, context);
+                            assert sendUrlMap != null;
+                            handleOrderFinished(sendUrlMap, pay_method, context);
+                        } else {
+                            MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                                    .setPopUpTo(R.id.nav_restart, true)
+                                    .build());
+                        }
+
                     }
 
                     @Override
                     public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
-                        btnVisible(VISIBLE);
                         FirebaseCrashlytics.getInstance().recordException(t);
+                        MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                                .setPopUpTo(R.id.nav_restart, true)
+                                .build());
                     }
                 });
             }
@@ -993,15 +987,6 @@ public class VisicomFragment extends Fragment {
         boolean visicomBackPressed = (boolean) sharedPreferencesHelperMain.getValue("VisicomBackPressed", false);
 
         if (!"0".equals(orderWeb)) {
-            if (pay_method.equals("wfp_payment")) {
-                String rectoken = getCheckRectoken(MainActivity.TABLE_WFP_CARDS, context);
-                Logger.d(context, TAG, "payWfp: rectoken " + rectoken);
-
-                if (!rectoken.isEmpty()) {
-                    getStatusWfp();
-                }
-            }
-
             String to_name;
             if (Objects.equals(sendUrlMap.get("routefrom"), sendUrlMap.get("routeto"))) {
                 to_name = context.getString(R.string.on_city_tv);
@@ -1288,14 +1273,15 @@ public class VisicomFragment extends Fragment {
     }
 
     private static boolean verifyOrder(Context context) {
+
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
         Cursor cursor = database.query(MainActivity.TABLE_USER_INFO, null, null, null, null, null, null);
 
-        boolean verify = true;
+        boolean verify = false;
         if (cursor.getCount() == 1) {
 
             if (logCursor(MainActivity.TABLE_USER_INFO, context).get(1).equals("0")) {
-                verify = false;
+                verify = true;
                 Log.d(TAG, "verifyOrder:verify " + verify);
             }
             cursor.close();
@@ -1363,74 +1349,6 @@ public class VisicomFragment extends Fragment {
         alertDialog.show();
     }
 
-    private void getStatusWfp() {
-
-        Logger.d(context, TAG, "getStatusWfp: ");
-
-        String orderReferens = MainActivity.order_id;
-
-        List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
-        String city = stringList.get(1);
-
-        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
-        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-
-        OkHttpClient client = new OkHttpClient.Builder()
-                .addInterceptor(interceptor)
-                .build();
-
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(baseUrl)
-                .addConverterFactory(GsonConverterFactory.create())
-                .client(client)
-                .build();
-
-        StatusService service = retrofit.create(StatusService.class);
-
-        Call<StatusResponse> call = service.checkStatus(
-                context.getString(R.string.application),
-                city,
-                orderReferens
-        );
-
-        String messageFondy = context.getString(R.string.fondy_message);
-
-        String amount = text_view_cost.getText().toString().trim();
-
-        call.enqueue(new Callback<StatusResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<StatusResponse> call, @NonNull Response<StatusResponse> response) {
-
-                if (response.isSuccessful()) {
-                    StatusResponse statusResponse = response.body();
-                    assert statusResponse != null;
-                    String orderStatus = statusResponse.getTransactionStatus();
-                    Logger.d(context, TAG, "Transaction Status: " + orderStatus);
-                    switch (orderStatus) {
-                        case "Approved":
-                        case "WaitingAuthComplete":
-                            sharedPreferencesHelperMain.saveValue("pay_error", "**");
-                            break;
-                        default:
-                            NotificationHelper.sendPaymentErrorNotification(context, context.getString(R.string.pay_error_title), context.getString(R.string.try_again_pay) + MainActivity.order_id);
-                            sharedPreferencesHelperMain.saveValue("pay_error", "pay_error");
-                            if (!fragmentManager.isStateSaved()) {
-                                MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment =
-                                        new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
-                                bottomSheetDialogFragment.show(fragmentManager, "bottom_sheet_error");
-                            }
-
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<StatusResponse> call, @NonNull Throwable t) {
-            }
-        });
-
-    }
     private void changePayMethodToNal(String message) {
         // Инфлейтим макет для кастомного диалога
         LayoutInflater inflater = LayoutInflater.from(context);
@@ -1489,6 +1407,7 @@ public class VisicomFragment extends Fragment {
     public void onResume() {
         super.onResume();
         Logger.d(context, TAG, "onResume 1" );
+        new VerifyUserTask(context).execute();
 
         VisicomFragment.sendUrlMap = null;
         MainActivity.uid = null;
@@ -1496,7 +1415,7 @@ public class VisicomFragment extends Fragment {
 
         MainActivity.orderResponse = null;
         viewModel.updateOrderResponse(null);
-
+        viewModel.setTransactionStatus(null);
 
         textfrom = binding.textfrom;
 
@@ -1588,7 +1507,7 @@ public class VisicomFragment extends Fragment {
         baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
         new Thread(this::fetchRoutesCancel).start();
 
-        new VerifyUserTask(context).execute();
+
 
         List<String> listCity = logCursor(MainActivity.CITY_INFO, context);
         String city = listCity.get(1);
@@ -1754,6 +1673,12 @@ public class VisicomFragment extends Fragment {
 
         });
         btnOrder.setOnClickListener(v -> {
+            if (!NetworkUtils.isNetworkAvailable(requireContext())) {
+
+                MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_restart, true)
+                        .build());
+            }
             linearLayout.setVisibility(View.GONE);
             btnVisible(View.INVISIBLE);
             List<String> stringList1 = logCursor(MainActivity.CITY_INFO, context);
@@ -2455,7 +2380,9 @@ public class VisicomFragment extends Fragment {
                 textViewTo.setVisibility(VISIBLE);
 
                 boolean black_list_yes = verifyOrder(context);
+
                 String black_list_city = sharedPreferencesHelperMain.getValue("black_list", "cache").toString();
+                Log.d("black_list_city", "black_list_city 1 " + black_list_city);
 
                 Handler handler = new Handler(Looper.getMainLooper());
                 new Thread(() -> {
@@ -2492,7 +2419,7 @@ public class VisicomFragment extends Fragment {
 
                                     Log.d("black_list_city", "black_list_city." + black_list_city);
 
-                                    if (!black_list_yes) {
+                                    if(black_list_yes) {
                                         if (black_list_city.equals("cards only")) {
                                             orderCost = addCostBlackList(sendUrlMapCost.get("order_cost"));
                                         }
@@ -3035,8 +2962,9 @@ public class VisicomFragment extends Fragment {
             @Override
             public void onFailure(@NonNull Call<ResponsePaySystem> call, @NonNull Throwable t) {
                 if (isAdded()) { //
-                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(context.getString(R.string.verify_internet));
-                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                    MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                            .setPopUpTo(R.id.nav_restart, true)
+                            .build());
                 }
             }
         });

@@ -38,6 +38,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentManager;
+import androidx.navigation.NavOptions;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -857,8 +858,9 @@ public class OpenStreetMapVisicomActivity extends AppCompatActivity {
                         map.invalidate();
                     } catch (MalformedURLException | InterruptedException |
                              JSONException e) {
-                        MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
-                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                        MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                                .setPopUpTo(R.id.nav_restart, true)
+                                .build());
                     }
 
                 }

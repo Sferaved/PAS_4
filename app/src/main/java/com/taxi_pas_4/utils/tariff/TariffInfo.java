@@ -7,7 +7,6 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.ui.visicom.VisicomFragment;
 
 import java.util.List;
 
@@ -95,7 +94,7 @@ public class TariffInfo {
                             databaseHelperTariffs.close();
                         }
                     } catch (Exception ignored) {}
-                    VisicomFragment.readTariffInfo(context);
+//                    VisicomFragment.readTariffInfo(context);
                 } else {
                     // Обработка ошибки
                 }

@@ -14,8 +14,8 @@ android {
         minSdk 26
         //noinspection EditedTargetSdkVersion
         targetSdk 35
-        versionCode 4131
-        versionName '4.131'
+        versionCode 4132
+        versionName '4.132'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += ['ru', 'uk', 'en']
@@ -90,8 +90,8 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.8.7'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7'
-    implementation 'androidx.navigation:navigation-fragment:2.8.8'
-    implementation 'androidx.navigation:navigation-ui:2.8.8'
+    implementation 'androidx.navigation:navigation-fragment:2.8.7'
+    implementation 'androidx.navigation:navigation-ui:2.8.7'
 
     // Firebase UI для аутентификации
     implementation 'com.firebaseui:firebase-ui-auth:7.2.0'
@@ -118,3 +118,4 @@ dependencies {
     //Pusher
     implementation 'com.pusher:pusher-java-client:2.4.2'
 }
+

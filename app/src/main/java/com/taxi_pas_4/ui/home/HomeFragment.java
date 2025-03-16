@@ -6,6 +6,7 @@ import static android.graphics.Color.RED;
 import static android.view.View.GONE;
 import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
+import static com.taxi_pas_4.MainActivity.viewModel;
 import static com.taxi_pas_4.R.string.address_error_message;
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
@@ -86,14 +87,11 @@ import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
 import com.taxi_pas_4.ui.payment_system.PayApi;
 import com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
 import com.taxi_pas_4.ui.start.ResultSONParser;
-import com.taxi_pas_4.ui.wfp.checkStatus.StatusResponse;
-import com.taxi_pas_4.ui.wfp.checkStatus.StatusService;
 import com.taxi_pas_4.utils.animation.car.CarProgressBar;
 import com.taxi_pas_4.utils.blacklist.BlacklistManager;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetBonusFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetDialogFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
-import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorPaymentFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGPSFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyPhoneDialogFragment;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
@@ -102,7 +100,6 @@ import com.taxi_pas_4.utils.data.DataArr;
 import com.taxi_pas_4.utils.db.DatabaseHelper;
 import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.log.Logger;
-import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 import com.taxi_pas_4.utils.ui.BackPressBlocker;
 import com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
@@ -396,9 +393,16 @@ public class HomeFragment extends Fragment {
         btn_order = binding.btnOrder;
 
         btn_order.setOnClickListener(new View.OnClickListener() {
+
             @SuppressLint("UseRequireInsteadOfGet")
             @Override
             public void onClick(View v) {
+                if (!NetworkUtils.isNetworkAvailable(requireContext())) {
+
+                    MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                            .setPopUpTo(R.id.nav_restart, true)
+                            .build());
+                }
                 btnVisible(VISIBLE);
                 if(connected()) {
                     List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
@@ -474,8 +478,9 @@ public class HomeFragment extends Fragment {
                         }
 
                 } else {
-                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
-                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                    MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                            .setPopUpTo(R.id.nav_restart, true)
+                            .build());
                 }
             }
         });
@@ -490,8 +495,22 @@ public class HomeFragment extends Fragment {
             List<String> stringList1 = logCursor(MainActivity.CITY_INFO, context);
             String api =  stringList1.get(2);
             updateAddCost("0");
+            // Внутри метода onCreateView или обработчика onClick
+            String costText = text_view_cost.getText().toString().trim(); // Убираем лишние пробелы
+            long costValue = 0; // Значение по умолчанию, если текст пустой или некорректный
+
+            if (!costText.isEmpty()) {
+                try {
+                    costValue = Long.parseLong(costText);
+                } catch (NumberFormatException e) {
+                    // Логируем ошибку или показываем сообщение пользователю
+                    Log.e("HomeFragment", "Некорректное значение в text_view_cost: " + costText, e);
+                    // Можно оставить costValue = 0 или задать другое значение по умолчанию
+                }
+            }
+
             MyBottomSheetBonusFragment bottomSheetDialogFragment = new MyBottomSheetBonusFragment(
-                    Long.parseLong(text_view_cost.getText().toString()),
+                    costValue,
                     "home",
                     api,
                     text_view_cost
@@ -638,12 +657,7 @@ public class HomeFragment extends Fragment {
                     assert orderWeb != null;
 
                     if (!orderWeb.equals("0")) {
-                        String rectoken = getCheckRectoken(MainActivity.TABLE_WFP_CARDS);
-                        Logger.d(context, TAG, "payWfp: rectoken " + rectoken);
 
-                        if (!rectoken.isEmpty()) {
-                            getStatusWfp();
-                        }
                         String from_name = sendUrlMap.get("routefrom");
                         String to_name = sendUrlMap.get("routeto");
 
@@ -651,7 +665,7 @@ public class HomeFragment extends Fragment {
 
                         String required_time = sendUrlMap.get("required_time");
                         Logger.d(context, TAG, "orderFinished: required_time " + required_time);
-                        if (required_time != null && !required_time.contains("1970-01-01")) {
+                        if (required_time != null && !required_time.contains("1970-01-01")&& !required_time.contains("01.01.1970")) {
                                 required_time = context.getString(R.string.time_order) + " " + required_time + ".";
                         } else {
                             required_time = "";
@@ -745,7 +759,6 @@ public class HomeFragment extends Fragment {
                             sharedPreferencesHelperMain.saveValue("doubleOrderPrefHome", true);
                             showAddCostDoubleDialog(addType);
                         } else if (message.equals("cash") || message.equals("cards only")) {
-                            boolean black_list_yes = verifyOrder(requireContext());
                                  if(message.equals("cards only")) {
 
                                     addType ="45";
@@ -784,71 +797,6 @@ public class HomeFragment extends Fragment {
                 }
             });
         }
-    }
-
-    private void getStatusWfp() {
-
-        Logger.d(context, TAG, "getStatusWfp: ");
-
-        String orderReferens = MainActivity.order_id;
-
-        List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
-        String city = stringList.get(1);
-
-        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
-        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-
-        OkHttpClient client = new OkHttpClient.Builder()
-                .addInterceptor(interceptor)
-                .build();
-
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(baseUrl)
-                .addConverterFactory(GsonConverterFactory.create())
-                .client(client)
-                .build();
-
-        StatusService service = retrofit.create(StatusService.class);
-
-        Call<StatusResponse> call = service.checkStatus(
-                context.getString(R.string.application),
-                city,
-                orderReferens
-        );
-
-        String messageFondy = context.getString(R.string.fondy_message);
-
-        String amount = text_view_cost.getText().toString().trim();
-
-        call.enqueue(new Callback<StatusResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<StatusResponse> call, @NonNull Response<StatusResponse> response) {
-
-                if (response.isSuccessful()) {
-                    StatusResponse statusResponse = response.body();
-                    assert statusResponse != null;
-                    String orderStatus = statusResponse.getTransactionStatus();
-                    Logger.d(context, TAG, "Transaction Status: " + orderStatus);
-                    switch (orderStatus) {
-                        case "Approved":
-                        case "WaitingAuthComplete":
-                            sharedPreferencesHelperMain.saveValue("pay_error", "**");
-                            break;
-                        default:
-                            NotificationHelper.sendPaymentErrorNotification(context, context.getString(R.string.pay_error_title), context.getString(R.string.try_again_pay) + MainActivity.order_id);
-                            sharedPreferencesHelperMain.saveValue("pay_error", "pay_error");
-                            MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
-                            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<StatusResponse> call, @NonNull Throwable t) {
-            }
-        });
-
     }
 
     private void changePayMethodToNal() {
@@ -1073,6 +1021,7 @@ public class HomeFragment extends Fragment {
 
         databaseHelper = new DatabaseHelper(context);
         databaseHelperUid = new DatabaseHelperUid(context);
+        viewModel.setTransactionStatus(null);
 
         new Thread(this::fetchRoutesCancel).start();
 
@@ -1231,8 +1180,9 @@ public class HomeFragment extends Fragment {
 
                 } else {
                     progressBar.setVisibility(GONE);
-                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
-                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                    MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                            .setPopUpTo(R.id.nav_restart, true)
+                            .build());
                 }
 
             }
@@ -1322,8 +1272,9 @@ public class HomeFragment extends Fragment {
 
         }
             else {
-                bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
-                bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_restart, true)
+                        .build());
             }
     });
 
@@ -1397,8 +1348,9 @@ public class HomeFragment extends Fragment {
         } catch (MalformedURLException | UnsupportedEncodingException e) {
             resetRoutHome();
             FirebaseCrashlytics.getInstance().recordException(e);
-            MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.verify_internet));
-            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+            MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                    .setPopUpTo(R.id.nav_restart, true)
+                    .build());
         }
     }
 
@@ -1413,10 +1365,11 @@ public class HomeFragment extends Fragment {
 
         assert orderCostStr != null;
         long orderCostLong = Long.parseLong(orderCostStr);
-        boolean black_list_yes = verifyOrder(requireContext());
+
+        boolean black_list_yes = verifyOrder(context);
 
         String orderCost = String.valueOf(orderCostLong + addCost);
-        if(!black_list_yes) {
+        if(black_list_yes) {
             String black_list_city = sharedPreferencesHelperMain.getValue("black_list", "cache").toString();
             if(black_list_city.equals("cards only")) {
                 orderCost = addCostBlackList(orderCost);
@@ -1772,11 +1725,11 @@ public class HomeFragment extends Fragment {
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
         Cursor cursor = database.query(MainActivity.TABLE_USER_INFO, null, null, null, null, null, null);
 
-        boolean verify = true;
+        boolean verify = false;
         if (cursor.getCount() == 1) {
 
             if (logCursor(MainActivity.TABLE_USER_INFO, context).get(1).equals("0")) {
-                verify = false;
+                verify = true;
                 Logger.d(context, TAG, "verifyOrder:verify " +verify);
             }
             cursor.close();
@@ -1983,9 +1936,9 @@ public class HomeFragment extends Fragment {
         String phoneNumber = "no phone";
         String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
         String displayName = logCursor(MainActivity.TABLE_USER_INFO, context).get(4);
-        boolean black_list_yes = verifyOrder(requireContext());
+        boolean black_list_yes = verifyOrder(context);
 
-        if(!black_list_yes) {
+        if(black_list_yes) {
             payment_type = "wfp_payment";
             ContentValues cv = new ContentValues();
             cv.put("payment_type", payment_type);
@@ -2027,11 +1980,11 @@ public class HomeFragment extends Fragment {
             }
 
             phoneNumber = logCursor(MainActivity.TABLE_USER_INFO, context).get(2);
-            Logger.d(context, TAG, "black_list_yes: addCost11111" + black_list_yes);
+
 
             String paramsUserArr = displayName + " (" + context.getString(R.string.version_code) + ") " + "*" + userEmail + "*" + payment_type;
 
-            if(!black_list_yes) {
+            if(black_list_yes) {
                 String lastCharacter = phoneNumber.substring(phoneNumber.length() - 1); // Получаем последний знак
                 phoneNumber = phoneNumber.substring(0, phoneNumber.length() - 1); // Часть без последнего знака
                 phoneNumber = phoneNumber.replace(" ", ""); // удаляем пробелы
@@ -2689,7 +2642,7 @@ public class HomeFragment extends Fragment {
 
         PayApi apiService = retrofit.create(PayApi.class);
         Call<ResponsePaySystem> call = apiService.getPaySystem();
-        call.enqueue(new Callback<ResponsePaySystem>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<ResponsePaySystem> call, @NonNull Response<ResponsePaySystem> response) {
                 if (response.isSuccessful()) {
@@ -2708,13 +2661,13 @@ public class HomeFragment extends Fragment {
                             pay_method = "mono_payment";
                             break;
                     }
-                    if(isAdded()){
+                    if (isAdded()) {
                         ContentValues cv = new ContentValues();
                         cv.put("payment_type", pay_method);
                         // обновляем по id
                         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
                         database.update(MainActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
-                                new String[] { "1" });
+                                new String[]{"1"});
                         database.close();
 
                         try {
@@ -2728,8 +2681,9 @@ public class HomeFragment extends Fragment {
 
                 } else {
                     if (isAdded()) { //
-                        MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(context.getString(R.string.verify_internet));
-                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                        MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                                .setPopUpTo(R.id.nav_restart, true)
+                                .build());
                     }
 
                 }
@@ -2738,8 +2692,9 @@ public class HomeFragment extends Fragment {
             @Override
             public void onFailure(@NonNull Call<ResponsePaySystem> call, @NonNull Throwable t) {
                 if (isAdded()) { //
-                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(context.getString(R.string.verify_internet));
-                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                    MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+                            .setPopUpTo(R.id.nav_restart, true)
+                            .build());
                 }
             }
         });

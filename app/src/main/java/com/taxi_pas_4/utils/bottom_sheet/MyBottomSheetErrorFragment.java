@@ -158,9 +158,10 @@ public class MyBottomSheetErrorFragment extends BottomSheetDialogFragment {
                 });
             } else if (errorMessage.equals(getString(R.string.no_cards_info))){
                  textViewInfo.setOnClickListener(view2 -> {
-                     Intent intent = new Intent(getActivity(), MainActivity.class);
-                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                     startActivity(intent);
+                     dismiss();
+//                     Intent intent = new Intent(getActivity(), MainActivity.class);
+//                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+//                     startActivity(intent);
                  });
                 btn_ok.setText(getString(R.string.link_card));
                 btn_ok.setOnClickListener(v -> {
@@ -426,7 +427,9 @@ public class MyBottomSheetErrorFragment extends BottomSheetDialogFragment {
     private void cityMaxPay(String city) {
 
 
-        CityService cityService = CityApiClient.getClient().create(CityService.class);
+        String BASE_URL =sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
+        CityApiClient cityApiClient = new CityApiClient(BASE_URL);
+        CityService cityService = cityApiClient.getClient().create(CityService.class);
 
         // Замените "your_city" на фактическое название города
         Call<CityResponse> call = cityService.getMaxPayValues(city, getString(R.string.application));
