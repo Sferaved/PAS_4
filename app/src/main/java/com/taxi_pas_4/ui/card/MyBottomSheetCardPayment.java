@@ -38,7 +38,6 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.finish.ApiService;
-import com.taxi_pas_4.ui.finish.fragm.FinishSeparateFragment;
 import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureClient;
 import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureResponse;
 import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
@@ -82,6 +81,7 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
     private static String messageCarFoundOrderdriverPhone;
     private static String messageCarFoundRequiredTime;
     private static String def_status;
+    private static String messageFondy;
     private String order_id;
     private String invoiceId;
     private static String city;
@@ -134,7 +134,7 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
         def_status = context.getString(R.string.def_status);
         application = context.getString(R.string.application);
         comment = context.getString(R.string.fondy_revers_message) + context.getString(R.string.fondy_message);
-
+        messageFondy =  context.getString(R.string.fondy_message);
         List<String> listCity = logCursor(MainActivity.CITY_INFO, requireActivity());
         city = listCity.get(1);
         api = listCity.get(2);
@@ -502,7 +502,7 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
                                     MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
                                     callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
 
-                                    MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", FinishSeparateFragment.messageFondy, amount, context);
+                                    MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
                                     bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                                     dismiss();
                             }
@@ -512,14 +512,14 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
                         MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
                         callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
 
-                        MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", FinishSeparateFragment.messageFondy, amount, context);
+                        MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
                         bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                     }
                 } else {
                     MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
                     callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
 
-                    MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", FinishSeparateFragment.messageFondy, amount, context);
+                    MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
                     bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                     Logger.d(getActivity(), TAG, "Request failed:");
 

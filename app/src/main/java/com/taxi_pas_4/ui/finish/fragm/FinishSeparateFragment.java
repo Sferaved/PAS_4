@@ -18,8 +18,6 @@ import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Typeface;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -102,11 +100,11 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class FinishSeparateFragment extends Fragment {
 
-    private static final String TAG = "FinishSeparateFragment";
+    private  final String TAG = "FinishSeparateFragment";
 
     private FragmentFinishSeparateBinding binding;
     public Activity context;
-    static FragmentManager fragmentManager;
+    FragmentManager fragmentManager;
     View root;
     @SuppressLint("StaticFieldLeak")
     public static TextView text_status;
@@ -123,7 +121,7 @@ public class FinishSeparateFragment extends Fragment {
     public static TextView text_full_message, textCost, textCostMessage, textCarMessage, textStatus, textStatusCar;
     String messageResult;
     String messageResultCost;
-    public static String messageFondy;
+    String messageFondy;
     public static String uid_Double;
     @SuppressLint("StaticFieldLeak")
     public static AppCompatButton btn_reset_status;
@@ -132,50 +130,49 @@ public class FinishSeparateFragment extends Fragment {
     @SuppressLint("StaticFieldLeak")
     public static AppCompatButton btn_again;
 
-    public static Runnable myRunnable;
-    public static Runnable runnableBonusBtn;
+    public Runnable myRunnable;
+    public Runnable runnableBonusBtn;
     public static Handler handler, handlerBonusBtn,  handlerStatus;
     public static Runnable myTaskStatus;
 
+    String email;
 
-    @SuppressLint("StaticFieldLeak")
-    public static  String email;
-    @SuppressLint("StaticFieldLeak")
-    public static  String phoneNumber;
-    private static boolean cancel_btn_click = false;
-    static long delayMillisStatus;
-    private static boolean no_pay;
-    private static boolean canceled = false;
+    public static String phoneNumber;
+    boolean cancel_btn_click = false;
+    long delayMillisStatus;
+    boolean no_pay;
+    boolean canceled = false;
     @SuppressLint("StaticFieldLeak")
     public static  CarProgressBar carProgressBar;
     // Получаем доступ к кружочкам
-    static View step1;
-    static View step2;
-    static View step3;
-    static View step4;
-    private static TextView countdownTextView;
-    private static long timeToStartMillis;
+    View step1;
+    View step2;
+    View step3;
+    View step4;
+    TextView countdownTextView;
+    private long timeToStartMillis;
     @SuppressLint("StaticFieldLeak")
     public static LinearLayout progressSteps;
-    private static Animation blinkAnimation;
+    Animation blinkAnimation;
     public static AppCompatButton btn_open;
     public static AppCompatButton btn_options;
 
-    public static String flexible_tariff_name;
-    public static String comment_info;
-    public static  String extra_charge_codes;
+    String flexible_tariff_name;
+    String comment_info;
+    String extra_charge_codes;
 
     public static Handler handlerAddcost;
     public static Runnable showDialogAddcost;
 
     public static int timeCheckOutAddCost;
-    static boolean need_20_add;
+
+    boolean need_20_add;
     String required_time;
 
-    static Handler handlerCheckTask;
-    static Runnable checkTask;
+    Handler handlerCheckTask;
+    Runnable checkTask;
     private boolean isTaskRunning = false;
-    private static boolean isTaskCancelled = false;
+    private  boolean isTaskCancelled = false;
 
     TimeUtils timeUtils;
     private Observer<Boolean> observer;
@@ -367,53 +364,21 @@ public class FinishSeparateFragment extends Fragment {
             }
         };
 
-
-
-        // Запланируйте выполнение задачи
-
-//        if (pay_method.equals("fondy_payment") || pay_method.equals("mono_payment")|| pay_method.equals("wfp_payment")) {
-//
-//            myRunnable = () -> {
-//                MainActivity.order_id = null;
-//                String newStatus = text_status.getText().toString();
-//                if(!newStatus.contains( context.getString(R.string.time_out_text))
-//                        || !newStatus.contains( context.getString(R.string.error_payment_card))
-//                        || !newStatus.contains( context.getString(R.string.double_order_error))
-//                        || !newStatus.contains( context.getString(R.string.call_btn_cancel))
-//                        || !newStatus.contains( context.getString(R.string.ex_st_canceled))
-//                ) {
-//                    String cancelText = context.getString(R.string.status_checkout_message);
-//                    text_status.setText(cancelText);
-//
-//                } else {
-//                    text_status.setText(newStatus);
-//                }
-//
-//            };
-//            handler.postDelayed(myRunnable, delayMillis);
-//        }
         btn_cancel_order.setOnClickListener(v -> {
-        cancel_btn_click = true;
+            cancel_btn_click = true;
+            if(!uid_Double.equals(" ")) {
+                cancelOrderDouble(context);
 
-            if(connected()){
-//                orderCanceledStopUpdateUi();
-                if(!uid_Double.equals(" ")) {
-                    cancelOrderDouble(context);
-
-                } else{
-                    try {
-                        cancelOrder(MainActivity.uid, context);
-                    } catch (ParseException e) {
-                        throw new RuntimeException(e);
-                    }
-
+            } else{
+                try {
+                    cancelOrder(MainActivity.uid, context);
+                } catch (ParseException e) {
+                    throw new RuntimeException(e);
                 }
-                if (thread != null && thread.isAlive()) {
-                    thread.interrupt();
-                }
-            } else {
-                text_status.setText(R.string.verify_internet);
 
+            }
+            if (thread != null && thread.isAlive()) {
+                thread.interrupt();
             }
         });
 
@@ -424,15 +389,9 @@ public class FinishSeparateFragment extends Fragment {
             if (handlerStatus != null) {
                 handlerStatus.removeCallbacks(myTaskStatus);
             }
-            if(connected()){
-                MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
-                        .setPopUpTo(R.id.nav_visicom, true)
-                        .build());
-            } else {
-                MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-                        .setPopUpTo(R.id.nav_restart, true)
-                        .build());
-            }
+            MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                    .setPopUpTo(R.id.nav_visicom, true)
+                    .build());
         });
 
 
@@ -519,34 +478,18 @@ public class FinishSeparateFragment extends Fragment {
         }
 
     }
-    private static boolean isDialogShowing = false;
 
-    public static void handleTransactionStatusDeclined(
+    public  void handleTransactionStatusDeclined(
             String status,
             Context context
     ) {
         Logger.d(context, TAG, "Transaction Status: " + status);
 
-        if ("Declined".equals(status)) { // Проверяем статус
-            // Проверяем, существует ли уже фрагмент с определённым тегом
-            if (!isDialogShowing && fragmentManager.findFragmentByTag("MyBottomSheetTag") == null) {
-                isDialogShowing = true;
+        if ("Declined".equals(status)) {
 
-                MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment =
-                        new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
-
-                // Устанавливаем слушатель для сброса флага после закрытия диалога
-                bottomSheetDialogFragment.setDialogStateListener(() -> {
-                    Logger.d(context, TAG, "Dialog closed, resetting isDialogShowing flag.");
-                    isDialogShowing = false;
-                });
-
-                // Показываем диалог и задаём уникальный тег
-                bottomSheetDialogFragment.show(fragmentManager, "MyBottomSheetTag");
-                Logger.d(context, TAG, "onResponse: Showing error bottom sheet for declined transaction.");
-            } else {
-                Logger.d(context, TAG, "Dialog is already showing or exists, skipping...");
-            }
+            MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment =
+                    new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
+            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
         }
     }
 
@@ -610,7 +553,7 @@ public class FinishSeparateFragment extends Fragment {
         }
     }
 
-    private static void stopCycle() {
+    private void stopCycle() {
         isTaskCancelled = true; // Устанавливаем флаг
         if (handlerStatus != null) {
             handlerStatus.removeCallbacks(myTaskStatus);
@@ -926,7 +869,7 @@ public class FinishSeparateFragment extends Fragment {
     }
 
     public static void callOrderIdMemory(String orderId, String uid, String paySystem) {
-        if(!no_pay) {
+
             Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(baseUrl)
                     .addConverterFactory(GsonConverterFactory.create())
@@ -946,7 +889,7 @@ public class FinishSeparateFragment extends Fragment {
                     FirebaseCrashlytics.getInstance().recordException(t);
                 }
             });
-        }
+
 
     }
 
@@ -972,51 +915,29 @@ public class FinishSeparateFragment extends Fragment {
         });
     }
 
-    private boolean connected() {
 
-        boolean hasConnect = false;
-
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(
-                Context.CONNECTIVITY_SERVICE);
-        NetworkInfo wifiNetwork = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        if (wifiNetwork != null && wifiNetwork.isConnected()) {
-            hasConnect = true;
-        }
-        NetworkInfo mobileNetwork = cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
-        if (mobileNetwork != null && mobileNetwork.isConnected()) {
-            hasConnect = true;
-        }
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        if (activeNetwork != null && activeNetwork.isConnected()) {
-            hasConnect = true;
-        }
-
-        return hasConnect;
-    }
     @SuppressLint("Range")
-    private static List<String> logCursor(String table, Context context) {
+    private List<String> logCursor(String table, Context context) {
         List<String> list = new ArrayList<>();
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
         Cursor c = database.query(table, null, null, null, null, null, null);
-        if (c != null) {
-            if (c.moveToFirst()) {
-                String str;
-                do {
-                    str = "";
-                    for (String cn : c.getColumnNames()) {
-                        str = str.concat(cn + " = " + c.getString(c.getColumnIndex(cn)) + "; ");
-                        list.add(c.getString(c.getColumnIndex(cn)));
+        if (c.moveToFirst()) {
+            String str;
+            do {
+                str = "";
+                for (String cn : c.getColumnNames()) {
+                    str = str.concat(cn + " = " + c.getString(c.getColumnIndex(cn)) + "; ");
+                    list.add(c.getString(c.getColumnIndex(cn)));
 
-                    }
+                }
 
-                } while (c.moveToNext());
-            }
+            } while (c.moveToNext());
         }
         database.close();
         c.close();
         return list;
     }
-    private static void cancelOrder(String value, Context context) throws ParseException {
+    private void cancelOrder(String value, Context context) throws ParseException {
 
         if (handlerAddcost != null) {
             handlerAddcost.removeCallbacks(showDialogAddcost);
@@ -1047,7 +968,7 @@ public class FinishSeparateFragment extends Fragment {
         });
 
     }
-    private static void cancelOrderDouble(Context context) {
+    private void cancelOrderDouble(Context context) {
         if (handlerAddcost != null) {
             handlerAddcost.removeCallbacks(showDialogAddcost);
         }
@@ -1161,7 +1082,7 @@ public class FinishSeparateFragment extends Fragment {
     }
 
 
-    private static void orderComplete(Context context) {
+    private void orderComplete(Context context) {
         // Выполнено
         stopCycle();
 
@@ -1200,14 +1121,9 @@ public class FinishSeparateFragment extends Fragment {
     }
 
 
-    private static void carSearch(Context context, LayoutInflater inflater) {
+    private void carSearch(Context context, LayoutInflater inflater) {
         Logger.d(context, TAG, "carSearch() started");
 
-//        if (!isTenMinutesRemainingBlock && isTenMinutesRemaining) {
-//            Logger.d(context, TAG, "Triggering isTenMinutesRemainingAction()");
-//
-//            isTenMinutesRemainingAction(inflater, context);
-//        }
 
         if (cancel_btn_click) {
             Logger.d(context, TAG, "Order cancellation detected, stopping search...");
@@ -1237,7 +1153,7 @@ public class FinishSeparateFragment extends Fragment {
     }
 
     // Вспомогательный метод для отмены всех обработчиков
-    private static void cancelAllHandlers(Context context) {
+    private  void cancelAllHandlers(Context context) {
         if (handler != null) {
             Logger.d(context, TAG, "Removing myRunnable handler");
             handler.removeCallbacks(myRunnable);
@@ -1258,14 +1174,14 @@ public class FinishSeparateFragment extends Fragment {
 
 
 
-    private static void setVisibility(int visibility, View... views) {
+    private void setVisibility(int visibility, View... views) {
         for (View view : views) {
             view.setVisibility(visibility);
         }
     }
 
 
-    private static void carFound(
+    private void carFound(
             int closeReason,
             String driverPhone,
             String time_to_start_point,
@@ -1329,7 +1245,7 @@ public class FinishSeparateFragment extends Fragment {
         }
     }
 
-    private static void orderCanceled(String message, Context context) {
+    private void orderCanceled(String message, Context context) {
         text_status.clearAnimation();
         canceled = true;
         MainActivity.action = null;
@@ -1381,6 +1297,7 @@ public class FinishSeparateFragment extends Fragment {
                 switch (executionStatus) {
                     case "CarFound": //Найдено авто
                     case "Running": //Найдено авто
+                        MainActivity.action = "Авто найдено";
                         carFound (
                             closeReason,
                             driverPhone,
@@ -1390,9 +1307,11 @@ public class FinishSeparateFragment extends Fragment {
                         );
                         break;
                     case "Executed": //Выполнено
+                        MainActivity.action = "Заказ выполнен";
                         orderComplete(context);
                         break;
                     default: //Поиск авто
+                        MainActivity.action = "Поиск авто";
                         carSearch(context, inflater);
                 }
                 break;
@@ -1406,10 +1325,12 @@ public class FinishSeparateFragment extends Fragment {
             case 9:
                 if(executionStatus != null) {
                     // все статусы Отказ клиента
+                    MainActivity.action = "Заказ снят";
                     String message = context.getString(R.string.ex_st_canceled);
                     orderCanceled(message, context);
                 } else {
                     // Поиск авто
+                    MainActivity.action = "Поиск авто";
                     carSearch(context, inflater);
                 }
                 break;
@@ -1417,9 +1338,11 @@ public class FinishSeparateFragment extends Fragment {
             case 8:
                 if(executionStatus != null) {
                     // все статусы Выполнено
+                    MainActivity.action = "Заказ выполнен";
                     orderComplete(context);
                 } else {
                     // Поиск авто
+                    MainActivity.action = "Поиск авто";
                     carSearch(context, inflater);
                 }
                 break;
@@ -1450,12 +1373,13 @@ public class FinishSeparateFragment extends Fragment {
                 orderCanceled(message, context);
                 break;
             default:
+                MainActivity.action = "Поиск авто";
                 carSearch(context, inflater);
                 break;
         }
     }
 
-    static void drivercarposition(String value, String city, String api,  Context context) {
+    void drivercarposition(String value, String city, String api,  Context context) {
 
         String url = baseUrl  + api + "/android/drivercarposition/" + value + "/" + city  + "/" +  context.getString(R.string.application);
 
@@ -1475,7 +1399,7 @@ public class FinishSeparateFragment extends Fragment {
         });
     }
 
-    static void calculateTimeToStart(String value, String api, Context context) {
+    void calculateTimeToStart(String value, String api, Context context) {
 
         String url = baseUrl  + api + "/android/calculateTimeToStart/" + value;
 
@@ -1496,7 +1420,7 @@ public class FinishSeparateFragment extends Fragment {
     }
 
 
-    private static void startCountdown(Context context) {
+    private void startCountdown(Context context) {
         long currentTimeMillis = System.currentTimeMillis();
         long remainingTime = timeToStartMillis - currentTimeMillis; // Вычисляем оставшееся время
         Logger.d(context, TAG, "remainingTime: " + remainingTime);
@@ -1507,7 +1431,7 @@ public class FinishSeparateFragment extends Fragment {
         }
     }
 
-    private static void updateCountdownText(long millisUntilFinished, Context context) {
+    private void updateCountdownText(long millisUntilFinished, Context context) {
 
         int minutes = (int) ((millisUntilFinished / (1000 * 60)));
         Logger.d(context, TAG, "minutes " + minutes);
@@ -1518,7 +1442,7 @@ public class FinishSeparateFragment extends Fragment {
 
 
 
-    private static String formatDate2(String requiredTime) {
+    private String formatDate2(String requiredTime) {
         SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", new Locale("uk", "UA"));
         SimpleDateFormat outputFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm", new Locale("uk", "UA"));
         Date date = null;
@@ -1531,7 +1455,7 @@ public class FinishSeparateFragment extends Fragment {
         return outputFormat.format(date);
     }
 
-    private static void updateProgress(int step) {
+    private void updateProgress(int step) {
         // Сбрасываем все шаги на неактивные
         step1.setBackgroundResource(R.drawable.circle_step_inactive);
         step2.setBackgroundResource(R.drawable.circle_step_inactive);
@@ -1637,16 +1561,20 @@ public class FinishSeparateFragment extends Fragment {
     public void onStart() {
         super.onStart();
         // Повторный запуск Runnable при возвращении активности
-        if (handler != null && myRunnable != null) {
-            handler.postDelayed(myRunnable, 10000); // Устанавливаем нужную задержку
-        }
+        if(MainActivity.action != null) {
+            if( MainActivity.action.equals("Поиск авто")) {
+                if (handler != null && myRunnable != null) {
+                    handler.postDelayed(myRunnable, 10000); // Устанавливаем нужную задержку
+                }
 
-        isTaskRunning = false;
-        isTaskCancelled = false;
-        startCycle();
+                isTaskRunning = false;
+                isTaskCancelled = false;
+                startCycle();
 
-        if (handlerBonusBtn != null && runnableBonusBtn != null) {
-            handlerBonusBtn.postDelayed(runnableBonusBtn, 10000); // Устанавливаем нужную задержку
+                if (handlerBonusBtn != null && runnableBonusBtn != null) {
+                    handlerBonusBtn.postDelayed(runnableBonusBtn, 10000); // Устанавливаем нужную задержку
+                }
+            }
         }
     }
     private void startAddCostDialog (int timeCheckout) {
@@ -1896,7 +1824,7 @@ public class FinishSeparateFragment extends Fragment {
             Logger.d(context, TAG, "URL запроса nal_payment: " + url);
 
 
-            call.enqueue(new Callback<Status>() {
+            call.enqueue(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<Status> call, @NonNull Response<Status> response) {
                     if (response.isSuccessful()) {
@@ -1904,7 +1832,7 @@ public class FinishSeparateFragment extends Fragment {
                         assert status != null;
                         String responseStatus = status.getResponse();
                         Logger.d(context, TAG, "startAddCostUpdate  nal_payment: " + responseStatus);
-                        if(!responseStatus.equals("200")) {
+                        if (!responseStatus.equals("200")) {
                             // Обработка неуспешного ответа
                             text_status.setText(R.string.verify_internet);
                         }

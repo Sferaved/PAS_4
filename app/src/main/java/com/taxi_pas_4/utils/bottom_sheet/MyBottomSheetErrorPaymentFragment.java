@@ -259,7 +259,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
                 MainActivity.order_id,
                 Integer.parseInt(amount),
                 LocaleHelper.getLocale(),
-                FinishSeparateFragment.messageFondy,
+                messageFondy,
                 userEmail,
                 phone_number
         );
