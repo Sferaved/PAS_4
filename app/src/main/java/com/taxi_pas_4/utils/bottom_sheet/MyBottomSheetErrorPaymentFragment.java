@@ -68,6 +68,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
@@ -235,6 +236,9 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
         baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
         OkHttpClient client = new OkHttpClient.Builder()
                 .addInterceptor(interceptor)
+                .connectTimeout(30, TimeUnit.SECONDS) // Тайм-аут на соединение
+                .readTimeout(30, TimeUnit.SECONDS)    // Тайм-аут на чтение данных
+                .writeTimeout(30, TimeUnit.SECONDS)   // Тайм-аут на запись данных
                 .build();
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl + "/")
@@ -317,6 +321,9 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
         baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
         OkHttpClient client = new OkHttpClient.Builder()
                 .addInterceptor(interceptor)
+                .connectTimeout(30, TimeUnit.SECONDS) // Тайм-аут на соединение
+                .readTimeout(30, TimeUnit.SECONDS)    // Тайм-аут на чтение данных
+                .writeTimeout(30, TimeUnit.SECONDS)   // Тайм-аут на запись данных
                 .build();
 
         Retrofit retrofit = new Retrofit.Builder()
@@ -358,7 +365,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
 
     }
 
-    public static void callOrderIdMemory(String orderId, String uid, String paySystem) {
+    void callOrderIdMemory(String orderId, String uid, String paySystem) {
         String baseUrl = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl)
@@ -588,7 +595,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(requireActivity());
-        FinishSeparateFragment.callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
+        callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
 
         PaymentApiToken paymentApi = retrofit.create(PaymentApiToken.class);
 

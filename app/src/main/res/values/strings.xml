@@ -1,8 +1,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.133</string>
-    <string name="version">Версия: 4.133</string>
+    <string name="version_code">4.134</string>
+    <string name="version">Версия: 4.134</string>
 
     <string name="app_name">Такси Дюк Попутчик</string>
 
@@ -500,4 +500,5 @@
     <string name="low_memory_4">"Порог нехватки памяти: "</string>
     <string name="low_memory_5">"Состояние нехватки памяти: "</string>
     <string name="low_memory_6">" байт\n"</string>
+    <string name="low_connect">Слабое интернет соединение</string>
 </resources>

@@ -64,5 +64,7 @@ public interface ApiService {
             @Path("addCost") String addCost
     );
 
+    @GET("api/check")
+    Call<Status> check();
 }
 

@@ -23,6 +23,7 @@ import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.helpers.TelegramUtils;
+import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 import com.taxi_pas_4.utils.time_ut.IdleTimeoutManager;
 
@@ -52,6 +53,7 @@ public class MyApplication extends Application {
     private IdleTimeoutManager idleTimeoutManager;
     private long backgroundStartTime = 0;
     private long lastMemoryWarningTime = 0;
+    private long lastInternetWarningTime = 0;
 
     @Override
     public void onCreate() {
@@ -117,7 +119,7 @@ public class MyApplication extends Application {
                 Toast.makeText(getApplicationContext(), R.string.anr_message, Toast.LENGTH_LONG).show();
             });
             // Log the error
-            Log.d(TAG, "ANR occurred: " + error.toString());
+            Logger.e(getApplicationContext(),TAG, "ANR occurred: " + error.toString());
 
             // Log the ANR event to Firebase Crashlytics
             FirebaseCrashlytics.getInstance().recordException(error);
@@ -148,6 +150,8 @@ public class MyApplication extends Application {
                     }
                     return;
                 }
+
+
 // Проверка длительного времени в фоне
                 if (backgroundStartTime > 0) {
                     long timeInBackground = System.currentTimeMillis() - backgroundStartTime;
@@ -231,8 +235,38 @@ public class MyApplication extends Application {
 
         }
 
-        Log.d("MemoryMonitor", "Свободная память: " + memoryInfo.availMem + " байт");
-        Log.d("MemoryMonitor", "Состояние нехватки памяти: " + memoryInfo.lowMemory);
+
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastInternetWarningTime > 30 * 1000) { // Уведомление раз в 30 секунд
+            NetworkUtils.isInternetStable(new NetworkUtils.ApiCallback() {
+                @Override
+                public void onSuccess(boolean isStable) {
+                    if (isStable) {
+                        Logger.d(activity,"NetworkCheck", "Internet is stable.");
+                    } else {
+                        activity.runOnUiThread(() ->
+                                Toast.makeText(activity, R.string.low_connect, Toast.LENGTH_SHORT).show()
+                        );
+                        Logger.d(activity,"NetworkCheck", "Internet is unstable.");
+                    }
+
+                    // Запуск Toast в основном потоке
+
+
+                    lastInternetWarningTime = currentTime;
+                }
+
+                @Override
+                public void onFailure(Throwable t) {
+                    Logger.e(activity,"NetworkCheck", "Error checking internet stability." + t);
+                }
+            });
+
+        }
+
+
+        Logger.d(activity,"MemoryMonitor", "Свободная память: " + memoryInfo.availMem + " байт");
+        Logger.d(activity,"MemoryMonitor", "Состояние нехватки памяти: " + memoryInfo.lowMemory);
     }
 
     private void restartApplication(Activity activity) {
@@ -255,7 +289,7 @@ public class MyApplication extends Application {
         @Override
         public void uncaughtException(@NonNull Thread thread, @NonNull Throwable throwable) {
             // Логирование исключений
-            Log.e("MyExceptionHandler", "Uncaught Exception occurred: " + throwable.getMessage(), throwable);
+            Logger.d(currentActivity,"MyExceptionHandler", "Uncaught Exception occurred: " + throwable.getMessage() + throwable);
 
             // Запись ошибки в Firebase Crashlytics
             FirebaseCrashlytics.getInstance().recordException(throwable);
@@ -300,12 +334,12 @@ public class MyApplication extends Application {
                 osw.write(sdf.format(new Date()) + " - " + log);
                 osw.write("\n");
 
-                Log.d(TAG, "Log written to " + logFile.getAbsolutePath());
+                Logger.e(getApplicationContext(),TAG, "Log written to " + logFile.getAbsolutePath());
             } catch (IOException e) {
-                Log.e("MyAppLogger", "Failed to write log", e);
+                Logger.d(getApplicationContext(),"MyAppLogger", "Failed to write log" + e);
             }
         } else {
-            Log.e("MyAppLogger", "External storage is not writable");
+            Logger.d(getApplicationContext(),"MyAppLogger", "External storage is not writable");
         }
     }
 

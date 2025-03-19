@@ -61,23 +61,70 @@ public class PusherManager {
         pusher = new Pusher(PUSHER_APP_KEY, options);
     }
 
-    // Подключение к Pusher
+    // Подключение к Pusher с улучшенным логированием и обработкой ошибок
+    private final boolean isShuttingDown = false; // Флаг завершения работы приложения
+
     public void connect() {
+        if (pusher == null) {
+            Log.e("Pusher", "Pusher instance is not initialized!");
+            return;
+        }
+
         pusher.connect(new ConnectionEventListener() {
             @Override
             public void onConnectionStateChange(ConnectionStateChange change) {
                 Log.i("Pusher", "State changed from " + change.getPreviousState() + " to " + change.getCurrentState());
+
+                // Обработка успешного подключения
                 if (change.getCurrentState() == ConnectionState.CONNECTED) {
                     Log.i("Pusher", "Successfully connected to Pusher");
+                }
+
+                // Логика повторного подключения
+                if (change.getCurrentState() == ConnectionState.DISCONNECTED) {
+                    Log.w("Pusher", "Disconnected from Pusher. Attempting reconnection...");
+
+                    // Предотвращаем попытки подключения во время завершения приложения
+                    if (!isShuttingDown) {
+                        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                            try {
+                                Log.i("Pusher", "Attempting reconnection...");
+                                pusher.connect(new ConnectionEventListener() {
+                                    @Override
+                                    public void onConnectionStateChange(ConnectionStateChange innerChange) {
+                                        Log.i("Pusher", "Reconnect: State changed from " +
+                                                innerChange.getPreviousState() + " to " +
+                                                innerChange.getCurrentState());
+                                    }
+
+                                    @Override
+                                    public void onError(String message, String code, Exception e) {
+                                        Log.e("Pusher", "Reconnect error: " + message + " (Code: " + code + ")", e);
+                                    }
+                                }, ConnectionState.ALL);
+
+                            } catch (Exception e) {
+                                Log.e("Pusher", "Reconnect attempt failed: ", e);
+                            }
+                        }, 5000); // Задержка перед попыткой повторного подключения
+                    } else {
+                        Log.w("Pusher", "Reconnect skipped: Application is shutting down");
+                    }
                 }
             }
 
             @Override
             public void onError(String message, String code, Exception e) {
                 Log.e("Pusher", "Error connecting: " + message + " (Code: " + code + ")", e);
+                if (e != null) {
+                    e.printStackTrace();
+                }
             }
         }, ConnectionState.ALL);
     }
+
+
+
 
 
     // Приватный метод для проверки, привязано ли событие

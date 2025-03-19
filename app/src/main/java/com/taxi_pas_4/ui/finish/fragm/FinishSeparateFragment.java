@@ -53,15 +53,11 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.databinding.FragmentFinishSeparateBinding;
-import com.taxi_pas_4.ui.card.MyBottomSheetCardPayment;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.ApiService;
 import com.taxi_pas_4.ui.finish.BonusResponse;
 import com.taxi_pas_4.ui.finish.OrderResponse;
 import com.taxi_pas_4.ui.finish.Status;
-import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
-import com.taxi_pas_4.ui.wfp.invoice.InvoiceResponse;
-import com.taxi_pas_4.ui.wfp.invoice.InvoiceService;
 import com.taxi_pas_4.ui.wfp.purchase.PurchaseResponse;
 import com.taxi_pas_4.ui.wfp.purchase.PurchaseService;
 import com.taxi_pas_4.utils.animation.car.CarProgressBar;
@@ -70,12 +66,11 @@ import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorPaymentFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetFinishOptionFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetMessageFragment;
 import com.taxi_pas_4.utils.data.DataArr;
-import com.taxi_pas_4.utils.helpers.LocaleHelper;
+import com.taxi_pas_4.utils.helpers.TelegramUtils;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.time_ut.TimeUtils;
 import com.taxi_pas_4.utils.ui.BackPressBlocker;
 
-import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -102,8 +97,7 @@ public class FinishSeparateFragment extends Fragment {
 
     private  final String TAG = "FinishSeparateFragment";
 
-    private FragmentFinishSeparateBinding binding;
-    public Activity context;
+    Activity context;
     FragmentManager fragmentManager;
     View root;
     @SuppressLint("StaticFieldLeak")
@@ -177,17 +171,16 @@ public class FinishSeparateFragment extends Fragment {
     TimeUtils timeUtils;
     private Observer<Boolean> observer;
 
-    public static LayoutInflater inflater;
-    
     @SuppressLint("SourceLockedOrientationActivity")
+    @SuppressWarnings("unchecked")
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
-        binding = FragmentFinishSeparateBinding.inflate(inflater, container, false);
+        FragmentFinishSeparateBinding binding = FragmentFinishSeparateBinding.inflate(inflater, container, false);
         root = binding.getRoot();
 
         context = requireActivity();
-        inflater = context.getLayoutInflater();
+
         // Включаем блокировку кнопки "Назад" Применяем блокировку кнопки "Назад"
         BackPressBlocker backPressBlocker = new BackPressBlocker();
         backPressBlocker.setBackButtonBlocked(true);
@@ -242,11 +235,10 @@ public class FinishSeparateFragment extends Fragment {
         no_pay = no_pay_key != null && no_pay_key.equals("no");
         Logger.d(context, TAG, "no_pay: " + no_pay);
 
+
         receivedMap = (HashMap<String, String>) arguments.getSerializable("sendUrlMap");
 
         assert receivedMap != null;
-
-
 
         flexible_tariff_name = receivedMap.get("flexible_tariff_name");
 
@@ -435,9 +427,7 @@ public class FinishSeparateFragment extends Fragment {
 
 
      void updateUICardPayStatus(
-            OrderResponse orderResponse,
-            Context context,
-            LayoutInflater inflater
+            OrderResponse orderResponse
     ) {
         assert orderResponse != null;
 
@@ -471,9 +461,7 @@ public class FinishSeparateFragment extends Fragment {
                     driverPhone,
                     time_to_start_point,
                     orderCarInfo,
-                    MainActivity.action,
-                    context,
-                    inflater
+                    MainActivity.action
             );
         }
 
@@ -518,18 +506,12 @@ public class FinishSeparateFragment extends Fragment {
 //        int currentColor = btn_open.getCurrentTextColor();
         int colorPressed = ContextCompat.getColor(context, R.color.colorDefault); // Цвет текста при нажатии
         int colorDefault = ContextCompat.getColor(context, R.color.colorAccent); // Исходный цвет текста
-//        if (currentColor == colorDefault) {
-//            btn_open.setTextColor(colorPressed);
-//        } else {
-//            btn_open.setTextColor(colorDefault);
-//        }
+
         if (btn_reset_status.getVisibility() == View.VISIBLE) {
             // Анимация исчезновения кнопок
             btn_open.setTextColor(colorPressed);
             btn_reset_status.animate().alpha(0f).setDuration(300).withEndAction(() -> btn_reset_status.setVisibility(GONE));
-//            if(btn_cancel_order.getVisibility() == View.VISIBLE) {
-//                btn_cancel_order.animate().alpha(0f).setDuration(300).withEndAction(() -> btn_cancel_order.setVisibility(View.GONE));
-//            }
+
             btn_again.animate().alpha(0f).setDuration(300).withEndAction(() -> btn_again.setVisibility(GONE));
         } else {
             // Анимация появления кнопок
@@ -538,12 +520,6 @@ public class FinishSeparateFragment extends Fragment {
             btn_reset_status.setVisibility(View.VISIBLE);
             btn_reset_status.setAlpha(0f);
             btn_reset_status.animate().alpha(1f).setDuration(300);
-
-
-//            btn_cancel_order.setVisibility(View.VISIBLE);
-//            btn_cancel_order.setAlpha(0f);
-//            btn_cancel_order.animate().alpha(1f).setDuration(300);
-
 
             if (btn_again.getVisibility() != View.VISIBLE || btn_again.getVisibility() != GONE) {
                 btn_again.setVisibility(View.VISIBLE);
@@ -567,10 +543,39 @@ public class FinishSeparateFragment extends Fragment {
         }
     }
 
+
+    public String generateEmailBody(String errorMessage) {
+
+        List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
+        List<String> userList = logCursor(MainActivity.TABLE_USER_INFO, requireActivity());
+
+
+        // Определение города
+
+        String city = switch (stringList.get(1)) {
+            case "Dnipropetrovsk Oblast" -> getString(R.string.Dnipro_city);
+            case "Zaporizhzhia" -> getString(R.string.Zaporizhzhia);
+            case "Cherkasy Oblast" -> getString(R.string.Cherkasy);
+            case "Odessa" -> getString(R.string.Odessa);
+            case "OdessaTest" -> getString(R.string.OdessaTest);
+            default -> getString(R.string.Kyiv_city);
+        };
+
+        // Формирование тела сообщения
+
+        return errorMessage + "\n"+
+                getString(R.string.SA_info_pas) + "\n" +
+                getString(R.string.SA_info_city) + " " + city + "\n" +
+                getString(R.string.SA_pas_text) + " " + getString(R.string.version) + "\n" +
+                getString(R.string.SA_user_text) + " " + userList.get(4) + "\n" +
+                getString(R.string.SA_email) + " " + userList.get(3) + "\n" +
+                getString(R.string.SA_phone_text) + " " + userList.get(2) + "\n" + "\n";
+    }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        // Отменяем выполнение Runnable, если активити остановлена
+        timeUtils.stopTimer();
         stopCycle();
         if (handlerAddcost != null ) {
             handlerAddcost.removeCallbacks(showDialogAddcost);
@@ -579,45 +584,29 @@ public class FinishSeparateFragment extends Fragment {
             handlerCheckTask.removeCallbacks(checkTask);
         }
         viewModel.clearOrderResponse();
+        viewModel.getTransactionStatus().removeObservers(getViewLifecycleOwner());
+        viewModel.getOrderResponse().removeObservers(getViewLifecycleOwner());
+        viewModel.isTenMinutesRemaining.removeObservers(getViewLifecycleOwner());
+        String logFilePath = requireActivity().getExternalFilesDir(null) + "/app_log.txt"; // Путь к лог-файлу
+
+        String errorMessage ="onDestroyView";
+        TelegramUtils.sendErrorToTelegram(generateEmailBody(errorMessage), logFilePath);
+
+
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        stopCycle();
-        if (handlerAddcost != null) {
-            handlerAddcost.removeCallbacks(showDialogAddcost);
-        }
-        if (handlerCheckTask != null) {
-            handlerCheckTask.removeCallbacks(checkTask);
-        }
-    }
+        String logFilePath = requireActivity().getExternalFilesDir(null) + "/app_log.txt"; // Путь к лог-файлу
 
-    /**
-     * Wfp
-     */
-    @SuppressLint("Range")
-    private void payWfp() throws UnsupportedEncodingException {
-//        String rectoken = getCheckRectoken(MainActivity.TABLE_WFP_CARDS);
-//        Logger.d(context, TAG, "payWfp: rectoken " + rectoken);
-//
-//        if (rectoken.isEmpty()) {
-//            if (handlerAddcost != null) {
-//                handlerAddcost.removeCallbacks(showDialogAddcost);
-//            }
-//
-//            MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-//            Logger.d(context, TAG, "payWfp: MainActivity.order_id " + MainActivity.order_id);
-//            callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
-//
-//            getUrlToPaymentWfp(amount, MainActivity.order_id);
-//            getStatusWfp(MainActivity.order_id, "0");
-//        } else {
-////            Logger.d(context, TAG, "payWfp: 1 MainActivity.order_id " + MainActivity.order_id);
-////            getStatusWfp(MainActivity.order_id, amount);
-//        }
+        String errorMessage ="onDetach";
+        TelegramUtils.sendErrorToTelegram(generateEmailBody(errorMessage), logFilePath);
+
 
     }
+
+
 
 
     @Override
@@ -625,83 +614,21 @@ public class FinishSeparateFragment extends Fragment {
         super.onPause();
         // Отменяем выполнение Runnable, если активити остановлена
 
-        if (handlerAddcost != null) {
+        stopCycle();
+        if (handlerAddcost != null ) {
             handlerAddcost.removeCallbacks(showDialogAddcost);
         }
-    }
-
-    //"transactionStatus":"InProcessing"
-    private void getUrlToPaymentWfp(String amount, String order_id) {
-        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
-        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-
-        OkHttpClient client = new OkHttpClient.Builder()
-                .addInterceptor(interceptor)
-                .build();
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(baseUrl)
-                .addConverterFactory(GsonConverterFactory.create())
-                .client(client)
-                .build();
-
-        InvoiceService service = retrofit.create(InvoiceService.class);
-        List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
-        String city = stringList.get(1);
-
-        stringList = logCursor(TABLE_USER_INFO, context);
-        String userEmail = stringList.get(3);
-        String phone_number = stringList.get(2);
-
-        Call<InvoiceResponse> call = service.createInvoice(
-                context.getString(R.string.application),
-                city,
-                order_id,
-                Integer.parseInt(amount),
-                LocaleHelper.getLocale(),
-                messageFondy,
-                userEmail,
-                phone_number
-        );
-
-        call.enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<InvoiceResponse> call, @NonNull Response<InvoiceResponse> response) {
-                Logger.d(context, TAG, "onResponse: 1111" + response.code());
-
-                if (response.isSuccessful()) {
-                    InvoiceResponse invoiceResponse = response.body();
-
-                    if (invoiceResponse != null) {
-                        String checkoutUrl = invoiceResponse.getInvoiceUrl();
-                        Logger.d(context, TAG, "onResponse: Invoice URL: " + checkoutUrl);
-                        if (checkoutUrl != null) {
-
-                            MyBottomSheetCardPayment bottomSheetDialogFragment = new MyBottomSheetCardPayment(
-                                    checkoutUrl,
-                                    amount,
-                                    MainActivity.uid,
-                                    uid_Double,
-                                    context,
-                                    order_id
-                            );
-                            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<InvoiceResponse> call, @NonNull Throwable t) {
-                Logger.d(context, TAG, "Request failed: " + t.getMessage());
-            }
-        });
-
+        if (handlerCheckTask != null) {
+            handlerCheckTask.removeCallbacks(checkTask);
+        }
+        viewModel.clearOrderResponse();
+        viewModel.getTransactionStatus().removeObservers(getViewLifecycleOwner());
+        viewModel.getOrderResponse().removeObservers(getViewLifecycleOwner());
+        viewModel.isTenMinutesRemaining.removeObservers(getViewLifecycleOwner());
     }
 
     private void paymentByTokenWfp(
             String orderDescription,
-            String amount,
             String order_id
     ) {
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
@@ -709,6 +636,9 @@ public class FinishSeparateFragment extends Fragment {
 
         OkHttpClient client = new OkHttpClient.Builder()
                 .addInterceptor(interceptor)
+                .connectTimeout(30, TimeUnit.SECONDS) // Тайм-аут на соединение
+                .readTimeout(30, TimeUnit.SECONDS)    // Тайм-аут на чтение данных
+                .writeTimeout(30, TimeUnit.SECONDS)   // Тайм-аут на запись данных
                 .build();
 
         Retrofit retrofit = new Retrofit.Builder()
@@ -725,7 +655,7 @@ public class FinishSeparateFragment extends Fragment {
                 context.getString(R.string.application),
                 city,
                 order_id,
-                amount,
+                "20",
                 orderDescription,
                 email,
                 phoneNumber
@@ -773,56 +703,6 @@ public class FinishSeparateFragment extends Fragment {
 
     }
 
-    @SuppressLint("Range")
-    private String getCheckRectoken(String table) {
-        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-
-        String[] columns = {"rectoken"}; // Указываем нужное поле
-        String selection = "rectoken_check = ?";
-        String[] selectionArgs = {"1"};
-        String result = "";
-
-        Cursor cursor = database.query(table, columns, selection, selectionArgs, null, null, null);
-
-        if (cursor.moveToFirst()) {
-            do {
-                result = cursor.getString(cursor.getColumnIndex("rectoken"));
-                Logger.d(context, TAG, "Found rectoken with rectoken_check = 1" + ": " + result);
-                return result;
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-
-        database.close();
-
-        logTableContent(table);
-
-        return result;
-    }
-    private void logTableContent(String table) {
-        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-
-        String[] columns = {"rectoken_check", "merchant", "rectoken"}; // Укажите все необходимые поля
-        String selection = null;
-        String[] selectionArgs = null;
-
-        Cursor cursor = database.query(table, columns, selection, selectionArgs, null, null, null);
-
-        if (cursor.moveToFirst()) {
-            do {
-                @SuppressLint("Range") String rectokenCheck = cursor.getString(cursor.getColumnIndex("rectoken_check"));
-                @SuppressLint("Range") String merchant = cursor.getString(cursor.getColumnIndex("merchant"));
-                @SuppressLint("Range") String rectoken = cursor.getString(cursor.getColumnIndex("rectoken"));
-
-                Logger.d(context, TAG, "rectoken_check: " + rectokenCheck + ", merchant: " + merchant + ", rectoken: " + rectoken);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-
-        database.close();
-    }
-
-
     private void updateAddCost(String addCost) {
         ContentValues cv = new ContentValues();
         Logger.d(context, TAG, "updateAddCost: addCost" + addCost);
@@ -840,7 +720,7 @@ public class FinishSeparateFragment extends Fragment {
         String url = baseUrl + "bonusBalance/recordsBloke/" + MainActivity.uid + "/" +  context.getString(R.string.application);
         Call<BonusResponse> call = ApiClient.getApiService().getBonus(url);
         Logger.d(context, TAG, "fetchBonus: " + url);
-        call.enqueue(new Callback<BonusResponse>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<BonusResponse> call, @NonNull Response<BonusResponse> response) {
                 BonusResponse bonusResponse = response.body();
@@ -848,7 +728,7 @@ public class FinishSeparateFragment extends Fragment {
 
                     assert bonusResponse != null;
                     String bonus = String.valueOf(bonusResponse.getBonus());
-                    String message =  context.getString(R.string.block_mes) + " " + bonus + " " +  context.getString(R.string.bon);
+                    String message = context.getString(R.string.block_mes) + " " + bonus + " " + context.getString(R.string.bon);
 
                     MyBottomSheetMessageFragment bottomSheetDialogFragment = new MyBottomSheetMessageFragment(message);
                     bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
@@ -868,54 +748,6 @@ public class FinishSeparateFragment extends Fragment {
         });
     }
 
-    public static void callOrderIdMemory(String orderId, String uid, String paySystem) {
-
-            Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl(baseUrl)
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build();
-
-            ApiService apiService = retrofit.create(ApiService.class);
-            Call<Void> call = apiService.orderIdMemory(orderId, uid, paySystem);
-
-            call.enqueue(new Callback<Void>() {
-                @Override
-                public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
-                }
-
-                @Override
-                public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
-                    // Обработка ошибки
-                    FirebaseCrashlytics.getInstance().recordException(t);
-                }
-            });
-
-
-    }
-
-    private void wfpInvoice(String orderId, String amount, String uid) {
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(baseUrl)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        ApiService apiService = retrofit.create(ApiService.class);
-        Call<Void> call = apiService.wfpInvoice(orderId, amount, uid);
-
-        call.enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
-                // Обработка ошибки
-                FirebaseCrashlytics.getInstance().recordException(t);
-            }
-        });
-    }
-
-
     @SuppressLint("Range")
     private List<String> logCursor(String table, Context context) {
         List<String> list = new ArrayList<>();
@@ -930,7 +762,6 @@ public class FinishSeparateFragment extends Fragment {
                     list.add(c.getString(c.getColumnIndex(cn)));
 
                 }
-
             } while (c.moveToNext());
         }
         database.close();
@@ -1039,8 +870,6 @@ public class FinishSeparateFragment extends Fragment {
                         String driverPhone = orderResponse.getDriverPhone();
 
                         String time_to_start_point = orderResponse.getTimeToStartPoint();
-                        String action = orderResponse.getAction();
-
 
                         int closeReason = orderResponse.getCloseReason();
 
@@ -1068,13 +897,36 @@ public class FinishSeparateFragment extends Fragment {
                                 time_to_start_point,
                                 orderCarInfo
                         );
-
-
+                    } else {
+                        int closeReason = -1;
+                        String executionStatus = "*";
+                        String driverPhone = "*";
+                        String time_to_start_point = "*";
+                        String orderCarInfo = "*";
+                        closeReasonReactNal(
+                                closeReason,
+                                executionStatus,
+                                driverPhone,
+                                time_to_start_point,
+                                orderCarInfo
+                        );
                     }
                 }
 
                 @Override
                 public void onFailure(@NonNull Call<OrderResponse> call, @NonNull Throwable t) {
+                    int closeReason = -1;
+                    String executionStatus = "*";
+                    String driverPhone = "*";
+                    String time_to_start_point = "*";
+                    String orderCarInfo = "*";
+                    closeReasonReactNal(
+                            closeReason,
+                            executionStatus,
+                            driverPhone,
+                            time_to_start_point,
+                            orderCarInfo
+                    );
                 }
             });
         }
@@ -1082,7 +934,7 @@ public class FinishSeparateFragment extends Fragment {
     }
 
 
-    private void orderComplete(Context context) {
+    private void orderComplete() {
         // Выполнено
         stopCycle();
 
@@ -1121,7 +973,7 @@ public class FinishSeparateFragment extends Fragment {
     }
 
 
-    private void carSearch(Context context, LayoutInflater inflater) {
+    private void carSearch() {
         Logger.d(context, TAG, "carSearch() started");
 
 
@@ -1185,8 +1037,7 @@ public class FinishSeparateFragment extends Fragment {
             int closeReason,
             String driverPhone,
             String time_to_start_point,
-            String orderCarInfo,
-            Context context
+            String orderCarInfo
     ) {
         text_status.clearAnimation();
         setVisibility(View.VISIBLE, textCost, textCostMessage);
@@ -1245,7 +1096,7 @@ public class FinishSeparateFragment extends Fragment {
         }
     }
 
-    private void orderCanceled(String message, Context context) {
+    private void orderCanceled(String message) {
         text_status.clearAnimation();
         canceled = true;
         MainActivity.action = null;
@@ -1302,17 +1153,16 @@ public class FinishSeparateFragment extends Fragment {
                             closeReason,
                             driverPhone,
                             time_to_start_point,
-                            orderCarInfo,
-                            context
+                            orderCarInfo
                         );
                         break;
                     case "Executed": //Выполнено
                         MainActivity.action = "Заказ выполнен";
-                        orderComplete(context);
+                        orderComplete();
                         break;
                     default: //Поиск авто
                         MainActivity.action = "Поиск авто";
-                        carSearch(context, inflater);
+                        carSearch();
                 }
                 break;
             case 1:
@@ -1327,11 +1177,11 @@ public class FinishSeparateFragment extends Fragment {
                     // все статусы Отказ клиента
                     MainActivity.action = "Заказ снят";
                     String message = context.getString(R.string.ex_st_canceled);
-                    orderCanceled(message, context);
+                    orderCanceled(message);
                 } else {
                     // Поиск авто
                     MainActivity.action = "Поиск авто";
-                    carSearch(context, inflater);
+                    carSearch();
                 }
                 break;
             case 0:
@@ -1339,11 +1189,11 @@ public class FinishSeparateFragment extends Fragment {
                 if(executionStatus != null) {
                     // все статусы Выполнено
                     MainActivity.action = "Заказ выполнен";
-                    orderComplete(context);
+                    orderComplete();
                 } else {
                     // Поиск авто
                     MainActivity.action = "Поиск авто";
-                    carSearch(context, inflater);
+                    carSearch();
                 }
                 break;
         }
@@ -1354,27 +1204,25 @@ public class FinishSeparateFragment extends Fragment {
             String driverPhone,
             String time_to_start_point,
             String orderCarInfo,
-            String action,
-            Context context,
-            LayoutInflater inflater
+            String action
     ) {
 
         String message;
         switch (action) {
             case "Авто найдено":
-                carFound(closeReason, driverPhone, time_to_start_point, orderCarInfo, context);
+                carFound(closeReason, driverPhone, time_to_start_point, orderCarInfo);
                 break;
             case "Заказ выполнен":
-                orderComplete(context);
+                orderComplete();
                 break;
             case "Заказ снят":
 
                 message = context.getString(R.string.ex_st_canceled);
-                orderCanceled(message, context);
+                orderCanceled(message);
                 break;
             default:
                 MainActivity.action = "Поиск авто";
-                carSearch(context, inflater);
+                carSearch();
                 break;
         }
     }
@@ -1387,7 +1235,7 @@ public class FinishSeparateFragment extends Fragment {
 
         Logger.d(context, TAG, "/android/drivercarposition/: " + url);
 
-        call.enqueue(new Callback<Void>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
             }
@@ -1407,7 +1255,7 @@ public class FinishSeparateFragment extends Fragment {
 
         Logger.d(context, TAG, "calculateTimeToStart: " + url);
 
-        call.enqueue(new Callback<Void>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
             }
@@ -1452,6 +1300,7 @@ public class FinishSeparateFragment extends Fragment {
             FirebaseCrashlytics.getInstance().recordException(e);            
         }
 
+        assert date != null;
         return outputFormat.format(date);
     }
 
@@ -1489,24 +1338,38 @@ public class FinishSeparateFragment extends Fragment {
         });
 
 
+        if(!paySystemStatus.equals("nal_payment")) {
+            // Наблюдение за OrderResponse
+            viewModel.getOrderResponse().observe(getViewLifecycleOwner(), response -> {
+                if (response != null) {
+                    Logger.d(context, TAG, "Order updated: " + response.getDispatchingOrderUid());
+                    // Обновляем UI на основе новых данных
+                    updateUICardPayStatus(response);
+                } else {
+                    MainActivity.action = "Поиск авто";
+                    int closeReason = 1;
+                    String driverPhone = "*";
+                    String time_to_start_point = "*";
+                    String orderCarInfo = "*";
+                    closeReasonReactCard(
+                            closeReason,
+                            driverPhone,
+                            time_to_start_point,
+                            orderCarInfo,
+                            MainActivity.action
+                    );
 
-        // Наблюдение за OrderResponse
-        viewModel.getOrderResponse().observe(getViewLifecycleOwner(), response -> {
-            if (response != null) {
-                Logger.d(context, TAG, "Order updated: " + response.getDispatchingOrderUid());
-                // Обновляем UI на основе новых данных
-                 updateUICardPayStatus(response, context, FinishSeparateFragment.inflater);
-            } else {
-                Logger.d(context, TAG, "Received null OrderResponse in observer");
-            }
-        });
+                    Logger.d(context, TAG, "Received null OrderResponse in observer");
+                }
+            });
+        }
 
         viewModel.setIsTenMinutesRemaining(false);
 
         observer = isTenMinutesRemaining -> {
             if (isTenMinutesRemaining != null) {
                 if (isTenMinutesRemaining) {
-                    isTenMinutesRemainingAction(inflater, context);
+                    isTenMinutesRemainingAction();
                 }
             }
         };
@@ -1526,6 +1389,7 @@ public class FinishSeparateFragment extends Fragment {
 
         viewModelReviewer();
 
+
         pay_method = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(4);
         if(pay_method.equals("nal_payment")) {
             timeCheckOutAddCost = 60*1000;
@@ -1540,9 +1404,7 @@ public class FinishSeparateFragment extends Fragment {
         isTaskCancelled = false;
         startCycle();
 
-        btn_open.setOnClickListener(v -> {
-            btnOpen();
-        });
+        btn_open.setOnClickListener(v -> btnOpen());
         startAddCostDialog (timeCheckOutAddCost);
     }
 
@@ -1557,9 +1419,12 @@ public class FinishSeparateFragment extends Fragment {
             handlerAddcost.removeCallbacks(showDialogAddcost);
         }
     }
+
+
     @Override
     public void onStart() {
         super.onStart();
+
         // Повторный запуск Runnable при возвращении активности
         if(MainActivity.action != null) {
             if( MainActivity.action.equals("Поиск авто")) {
@@ -1613,6 +1478,7 @@ public class FinishSeparateFragment extends Fragment {
                                 Date currentDate = new Date(); // Текущее время
 
                                 // Разница в миллисекундах
+                                assert requiredDate != null;
                                 long diffInMillis = requiredDate.getTime() - currentDate.getTime();
 
                                 // Конвертируем в минуты
@@ -1625,7 +1491,7 @@ public class FinishSeparateFragment extends Fragment {
                                 }
 
                             } catch (ParseException e) {
-                                e.printStackTrace();
+                                Logger.e(context, TAG, "requiredDate" +  e);
                             }
                         } else {
                             need_20_add = true; // Формат даты некорректен
@@ -1859,19 +1725,7 @@ public class FinishSeparateFragment extends Fragment {
 
     private void startAddCostCardUpdate() {
         Logger.d(context, TAG, "startAddCostCardUpdate: ");
-        String rectoken = getCheckRectoken(MainActivity.TABLE_WFP_CARDS);
-        Logger.d(context, TAG, "payWfp: rectoken " + rectoken);
-        MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
-
-        wfpInvoice(MainActivity.order_id , "20", MainActivity.uid);
-        text_status.setText(R.string.recounting_order);
-        stopCycle();
-        if (rectoken.isEmpty()) {
-            getUrlToPaymentWfp("20", MainActivity.order_id );
-        } else {
-            paymentByTokenWfp(messageFondy, "20", MainActivity.order_id );
-        }
-
+        paymentByTokenWfp(messageFondy, MainActivity.order_id );
     }
 
     private void newOrderCardPayAdd20 (String order_id) {
@@ -1920,7 +1774,7 @@ public class FinishSeparateFragment extends Fragment {
         btn_options.setVisibility(View.VISIBLE);
         btn_open.setVisibility(View.VISIBLE);
         delayMillisStatus = 20 * 1000;
-        call.enqueue(new Callback<Status>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<Status> call, @NonNull Response<Status> response) {
                 if (response.isSuccessful()) {
@@ -1949,15 +1803,15 @@ public class FinishSeparateFragment extends Fragment {
 
     }
 
-    private  void isTenMinutesRemainingAction(LayoutInflater inflater, Context context) {
+    private  void isTenMinutesRemainingAction() {
         timeUtils.stopTimer();
         viewModel.isTenMinutesRemaining.removeObserver(observer);
 
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context);
 
-        if (inflater == null) {
-            inflater = LayoutInflater.from(context); // Fallback if null
-        }
+
+        LayoutInflater inflater = LayoutInflater.from(context); // Fallback if null
+
         View dialogView = inflater.inflate(R.layout.dialog_add_cost, null);
 
         // Настройка текста с выделенным числом
@@ -1984,9 +1838,7 @@ public class FinishSeparateFragment extends Fragment {
 
 
                 })
-                .setNegativeButton(R.string.cancel_button, (dialog, which) -> {
-                    dialog.dismiss();
-                });
+                .setNegativeButton(R.string.cancel_button, (dialog, which) -> dialog.dismiss());
 
         AlertDialog dialog = builder.create();
 

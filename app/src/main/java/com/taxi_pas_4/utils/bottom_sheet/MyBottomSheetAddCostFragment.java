@@ -35,6 +35,7 @@ import com.taxi_pas_4.utils.log.Logger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -413,6 +414,9 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
 
         OkHttpClient client = new OkHttpClient.Builder()
                 .addInterceptor(interceptor)
+                .connectTimeout(30, TimeUnit.SECONDS) // Тайм-аут на соединение
+                .readTimeout(30, TimeUnit.SECONDS)    // Тайм-аут на чтение данных
+                .writeTimeout(30, TimeUnit.SECONDS)   // Тайм-аут на запись данных
                 .build();
 
         Retrofit retrofit = new Retrofit.Builder()
