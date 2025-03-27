@@ -203,43 +203,6 @@ public class PusherManager {
                 Log.i("Pusher", "Parsed Main uid: " + MainActivity.uid);
                 Log.i("Pusher", "Parsed transactionStatus: " + transactionStatus);
 
-                if (Objects.equals(MainActivity.uid, uid)) {
-                    new Handler(Looper.getMainLooper()).post(() -> {
-                        Log.d("Pusher", "Updating UI with status: " + transactionStatus);
-                        viewModel.setTransactionStatus(transactionStatus);
-
-                        if (FinishSeparateFragment.btn_cancel_order != null) {
-                            FinishSeparateFragment.btn_cancel_order.setVisibility(VISIBLE);
-                            FinishSeparateFragment.btn_cancel_order.setEnabled(true);
-                            FinishSeparateFragment.btn_cancel_order.setClickable(true);
-                            Log.d("Pusher", "Cancel button enabled successfully");
-                        } else {
-                            Log.e("Pusher", "btn_cancel_order is null when updating status: " + transactionStatus);
-                        }
-                    });
-                }
-            } catch (JSONException e) {
-                Log.e("Pusher", "JSON Parsing error for event: " + event.getData(), e);
-            } catch (Exception e) {
-                Log.e("Pusher", "Unexpected error processing Pusher event", e);
-            }
-        });
-
-
-
-        //Получение статуса холда
-//        channel.bind(eventTransactionStatus, event -> {
-        bindEvent(eventTransactionStatus, event -> {
-            Log.i("Pusher", "Received event: " + event.toString());
-
-            try {
-                JSONObject eventData = new JSONObject(event.getData());
-                String uid = eventData.getString("uid");
-                String transactionStatus = eventData.getString("transactionStatus");
-                Log.i("Pusher", "Parsed uid: " + uid);
-                Log.i("Pusher", "Parsed Main uid: " + MainActivity.uid);
-                Log.i("Pusher", "Parsed transactionStatus: " + transactionStatus);
-
                 if(Objects.equals(MainActivity.uid, uid)) {
                     // Проверка на null перед переключением на главный поток
                     new Handler(Looper.getMainLooper()).post(() -> {
@@ -358,32 +321,36 @@ public class PusherManager {
 
                 // Теперь распарсим результат в объект OrderResponse
                 MainActivity.orderResponse = gson.fromJson(jsonString, OrderResponse.class);
-                String uid = MainActivity.orderResponse.getUid();
-                String action = MainActivity.orderResponse.getAction();
 
-                Log.i("Pusher orderResponseEvent", "Received orderResponseEvent: " + MainActivity.orderResponse.getExecutionStatus());
-                Log.i("Pusher uid", "Received uid: " + uid);
-                Log.i("Pusher action", "Received action: " + action);
+                if(MainActivity.orderResponse != null) {
+                    String uid = MainActivity.orderResponse.getUid();
+                    String action = MainActivity.orderResponse.getAction();
 
-                // Проверка, что uid существует и не null
-                if (uid == null) {
-                    Log.w("Pusher", "UID is null in orderResponse: " + jsonString);
-                } else if (MainActivity.uid != null && MainActivity.uid.equals(uid)) {
-                    new Handler(Looper.getMainLooper()).post(() -> {
-                        Log.d("Pusher orderResponseEvent", "Updating UI with orderResponse");
+                    Log.i("Pusher orderResponseEvent", "Received orderResponseEvent: " + MainActivity.orderResponse.getExecutionStatus());
+                    Log.i("Pusher uid", "Received uid: " + uid);
+                    Log.i("Pusher action", "Received action: " + action);
 
-                        viewModel.updateOrderResponse(MainActivity.orderResponse);
-                        if (FinishSeparateFragment.btn_cancel_order != null) {
-                            FinishSeparateFragment.btn_cancel_order.setVisibility(View.VISIBLE);
-                            FinishSeparateFragment.btn_cancel_order.setEnabled(true);
-                            FinishSeparateFragment.btn_cancel_order.setClickable(true);
-                        } else {
-                            Log.e("Pusher", "btn_cancel_order is null!");
-                        }
-                    });
-                } else {
-                    Log.d("Pusher", "UIDs do not match or MainActivity.uid is null. MainActivity.uid: " + MainActivity.uid + ", Response uid: " + uid);
+                    // Проверка, что uid существует и не null
+                    if (uid == null) {
+                        Log.w("Pusher", "UID is null in orderResponse: " + jsonString);
+                    } else if (MainActivity.uid != null && MainActivity.uid.equals(uid)) {
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            Log.d("Pusher orderResponseEvent", "Updating UI with orderResponse");
+
+                            viewModel.updateOrderResponse(MainActivity.orderResponse);
+                            if (FinishSeparateFragment.btn_cancel_order != null) {
+                                FinishSeparateFragment.btn_cancel_order.setVisibility(View.VISIBLE);
+                                FinishSeparateFragment.btn_cancel_order.setEnabled(true);
+                                FinishSeparateFragment.btn_cancel_order.setClickable(true);
+                            } else {
+                                Log.e("Pusher", "btn_cancel_order is null!");
+                            }
+                        });
+                    } else {
+                        Log.d("Pusher", "UIDs do not match or MainActivity.uid is null. MainActivity.uid: " + MainActivity.uid + ", Response uid: " + uid);
+                    }
                 }
+
 
             } catch (JsonSyntaxException e) {
                 Log.e("Pusher", "JSON Parsing error for event: " + event.getData(), e);

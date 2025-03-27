@@ -1537,6 +1537,9 @@ public class MainActivity extends AppCompatActivity {
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         startActivity(intent);
                     }
+                    pusherManager = new PusherManager(getString(R.string.application), user.getEmail());
+                    pusherManager.connect();
+                    pusherManager.subscribeToChannel();
                 }
             } else {
                 handleSignInFailure(result);

@@ -44,7 +44,9 @@ public class MyApplication extends Application {
     private boolean isAppInForeground = false;
     private final String TAG = "MyApplication";
     private static final String LOG_FILE_NAME = "app_log.txt";
+    @SuppressLint("StaticFieldLeak")
     private static MyApplication instance;
+    @SuppressLint("StaticFieldLeak")
     private static Activity currentActivity = null;
 
     public static SharedPreferencesHelper sharedPreferencesHelperMain;
@@ -136,7 +138,8 @@ public class MyApplication extends Application {
             }
 
             @Override
-            public void onActivityStarted(@NonNull Activity activity) {}
+            public void onActivityStarted(@NonNull Activity activity) {
+            }
 
             @Override
             public void onActivityResumed(@NonNull Activity activity) {
@@ -152,14 +155,15 @@ public class MyApplication extends Application {
                 }
 
 
-// Проверка длительного времени в фоне
-                if (backgroundStartTime > 0) {
-                    long timeInBackground = System.currentTimeMillis() - backgroundStartTime;
-                    if (timeInBackground > 5 * 60 * 1000) { // 5 минут
-                        restartApplication(activity);
-                        return;
-                    }
-                }
+                // Проверка длительного времени в фоне
+//                if (backgroundStartTime > 0) {
+//                    long timeInBackground = System.currentTimeMillis() - backgroundStartTime;
+//                    if (timeInBackground > 30 * 60 * 1000) { // 30 минут
+//                        restartApplication(activity);
+//                        backgroundStartTime = 0;
+//                        return;
+//                    }
+//                }
                 isAppInForeground = true;
                 if (idleTimeoutManager != null) {
                     idleTimeoutManager.resetTimer();
@@ -170,16 +174,18 @@ public class MyApplication extends Application {
             @Override
             public void onActivityPaused(@NonNull Activity activity) {
                 isAppInForeground = false;
-                backgroundStartTime = System.currentTimeMillis();
+//                backgroundStartTime = System.currentTimeMillis();
                 stopMemoryMonitoring(); // Останавливаем мониторинг при паузе
                 currentActivity = null;
             }
 
             @Override
-            public void onActivityStopped(@NonNull Activity activity) {}
+            public void onActivityStopped(@NonNull Activity activity) {
+            }
 
             @Override
-            public void onActivitySaveInstanceState(@NonNull Activity activity, @NonNull Bundle outState) {}
+            public void onActivitySaveInstanceState(@NonNull Activity activity, @NonNull Bundle outState) {
+            }
 
             @Override
             public void onActivityDestroyed(@NonNull Activity activity) {
