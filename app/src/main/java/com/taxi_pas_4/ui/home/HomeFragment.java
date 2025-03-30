@@ -667,7 +667,7 @@ public class HomeFragment extends Fragment {
                         String required_time = sendUrlMap.get("required_time");
                         Logger.d(context, TAG, "orderFinished: required_time " + required_time);
                         if (required_time != null && !required_time.contains("1970-01-01")&& !required_time.contains("01.01.1970")) {
-                                required_time = context.getString(R.string.time_order) + " " + required_time + ".";
+                                required_time = " " + context.getString(R.string.time_order) + " " + required_time + ".";
                         } else {
                             required_time = "";
                         }
@@ -2442,7 +2442,7 @@ public class HomeFragment extends Fragment {
 
                     // Преобразуем Date в строку нужного формата
                     assert date != null;
-                    required_time_text = context.getString(R.string.time_order) + " " + outputFormat.format(date) + ".";
+                    required_time_text = " " + context.getString(R.string.time_order) + " " + outputFormat.format(date) + ".";
 
                 } catch (ParseException e) {
                     e.printStackTrace();

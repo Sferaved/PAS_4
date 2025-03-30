@@ -1053,7 +1053,7 @@ public class VisicomFragment extends Fragment {
                     }
 
                     if (date != null) {
-                        required_time = context.getString(R.string.time_order) + " " + outputFormat.format(date) + ".";
+                        required_time = " " + context.getString(R.string.time_order) + " " + outputFormat.format(date) + ".";
                     } else {
                         required_time = "";
                     }

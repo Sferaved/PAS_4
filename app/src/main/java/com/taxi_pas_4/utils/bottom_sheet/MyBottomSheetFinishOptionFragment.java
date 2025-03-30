@@ -225,7 +225,7 @@ public class MyBottomSheetFinishOptionFragment extends BottomSheetDialogFragment
 
         Logger.d(context, TAG, "commentInfo:" + commentInfo);
 
-        if(!options) {
+        if(!options || commentInfo.equals("no_comment")) {
 
             komenterinp.setVisibility(View.VISIBLE);
             komenterinp.setText(R.string.no_options);
