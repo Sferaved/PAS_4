@@ -1,8 +1,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.136</string>
-    <string name="version">Версия: 4.136</string>
+    <string name="version_code">4.137</string>
+    <string name="version">Версия: 4.137</string>
 
     <string name="app_name">Такси Дюк Попутчик</string>
 
@@ -501,5 +501,11 @@
     <string name="low_memory_5">"Состояние нехватки памяти: "</string>
     <string name="low_memory_6">" байт\n"</string>
     <string name="low_connect">Слабое интернет соединение</string>
-    <string name="add_cost_сancel">Хотите отменить заказ?</string>
+    <string name="add_cost_cancel">Хотите отменить заказ?</string>
+    <string name="google_verify_mes">Для продолжения работы приложения необходимо предоставить доступ к вашему Google аккаунту. Это позволит нам обеспечить корректную работу функций и персонализированный опыт. Пожалуйста, войдите в аккаунт Google и предоставьте необходимые разрешения.</string>
+    <string name="out_acсount">Вы вышли из системы</string>
+    <string name="account">Вы вошли в систему</string>
+    <string name="in_account">Войти в аккаунт</string>
+    <string name="out_account_btn">Выйти из аккаунта</string>
+    <string name="in_google_bonus">Для получения бонусов войдите в Google аккаунт</string>
 </resources>

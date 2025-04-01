@@ -91,7 +91,6 @@ import com.taxi_pas_4.utils.pusher.PusherManager;
 import com.taxi_pas_4.utils.user.save_firebase.FirebaseUserManager;
 import com.taxi_pas_4.utils.user.save_server.ApiServiceUser;
 import com.taxi_pas_4.utils.user.save_server.UserResponse;
-import com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
 
 import org.json.JSONException;
 
@@ -406,7 +405,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        new VerifyUserTask(this).execute();
+//        new VerifyUserTask(this).execute();
         sharedPreferencesHelperMain.saveValue("pay_error", "**");
 
         MainActivity.action = null;
@@ -1548,7 +1547,7 @@ public class MainActivity extends AppCompatActivity {
             handleException(e, cv);
         } finally {
             // Убедимся, что индикатор прогресса скрыт и данные обновлены в базе
-            hideProgressBarAndUpdateDatabase(cv);
+//            hideProgressBarAndUpdateDatabase(cv);
         }
     }
 

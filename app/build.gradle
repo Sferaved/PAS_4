@@ -14,8 +14,8 @@ android {
         minSdk 26
         //noinspection EditedTargetSdkVersion
         targetSdk 35
-        versionCode 4136
-        versionName '4.136'
+        versionCode 4137
+        versionName '4.137'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += ['ru', 'uk', 'en']
@@ -53,7 +53,7 @@ dependencies {
 
 
     // Firebase зависимости (с использованием BOM)
-    implementation platform('com.google.firebase:firebase-bom:33.11.0')
+    implementation platform('com.google.firebase:firebase-bom:33.12.0')
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'com.google.firebase:firebase-crashlytics'
     implementation 'com.google.firebase:firebase-messaging'
@@ -81,6 +81,7 @@ dependencies {
     implementation 'com.google.android.gms:play-services-wallet:19.4.0'
     implementation 'com.google.android.gms:play-services-location:21.3.0'
     implementation 'com.google.android.gms:play-services-base:18.6.0'
+
 
     // Parse SDK (для работы с Parse сервером)
     implementation "com.github.parse-community.Parse-SDK-Android:parse:4.2.0"

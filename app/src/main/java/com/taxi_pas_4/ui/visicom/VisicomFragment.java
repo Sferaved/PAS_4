@@ -82,6 +82,7 @@ import com.taxi_pas_4.ui.payment_system.PayApi;
 import com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
 import com.taxi_pas_4.ui.visicom.visicom_search.ActivityVisicomOnePage;
 import com.taxi_pas_4.utils.animation.car.CarProgressBar;
+import com.taxi_pas_4.utils.auth.FirebaseConsentManager;
 import com.taxi_pas_4.utils.blacklist.BlacklistManager;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetBonusFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
@@ -427,6 +428,8 @@ public class VisicomFragment extends Fragment {
         } else {
             progressBar.setVisibility(View.GONE);
         }
+
+
         linearLayout.setVisibility(visible);
 
         btnAdd.setVisibility(visible);
@@ -1329,14 +1332,10 @@ public class VisicomFragment extends Fragment {
                     break;
             }
 
-            try {
-                if (orderRout()) {
-                    orderFinished();
-                }
-            } catch (MalformedURLException e) {
-                FirebaseCrashlytics.getInstance().recordException(e);
-                throw new RuntimeException(e);
+            if (orderRout()) {
+                googleVerifyAccount();
             }
+
             progressBar.setVisibility(View.GONE);
             alertDialog.dismiss();
         });
@@ -1369,14 +1368,10 @@ public class VisicomFragment extends Fragment {
             progressBar.setVisibility(VISIBLE);
             paymentType(context);
 
-            try {
-                if (orderRout()) {
-                    orderFinished();
-                }
-            } catch (MalformedURLException e) {
-                FirebaseCrashlytics.getInstance().recordException(e);
-                throw new RuntimeException(e);
+            if (orderRout()) {
+                googleVerifyAccount();
             }
+
             progressBar.setVisibility(View.GONE);
             alertDialog.dismiss();
         });
@@ -1721,12 +1716,7 @@ public class VisicomFragment extends Fragment {
                         changePayMethodMax(text_view_cost.getText().toString(), pay_method);
                     } else {
                         if (orderRout()) {
-                            try {
-                                orderFinished();
-                            } catch (MalformedURLException e) {
-                                FirebaseCrashlytics.getInstance().recordException(e);
-                                throw new RuntimeException(e);
-                            }
+                            googleVerifyAccount();
                         }
                     }
                     break;
@@ -1738,23 +1728,13 @@ public class VisicomFragment extends Fragment {
                         changePayMethodMax(text_view_cost.getText().toString(), pay_method);
                     } else {
                         if (orderRout()) {
-                            try {
-                                orderFinished();
-                            } catch (MalformedURLException e) {
-                                FirebaseCrashlytics.getInstance().recordException(e);
-                                throw new RuntimeException(e);
-                            }
+                            googleVerifyAccount();
                         }
                     }
                     break;
                 default:
                     if (orderRout()) {
-                        try {
-                            orderFinished();
-                        } catch (MalformedURLException e) {
-                            FirebaseCrashlytics.getInstance().recordException(e);
-                            throw new RuntimeException(e);
-                        }
+                        googleVerifyAccount();
                     }
 
             }
@@ -2946,11 +2926,8 @@ public class VisicomFragment extends Fragment {
                         database.close();
 
                         orderRout();
-                        try {
-                            orderFinished();
-                        } catch (MalformedURLException e) {
-                            throw new RuntimeException(e);
-                        }
+
+                        googleVerifyAccount();
                     }
 
 
@@ -2987,12 +2964,34 @@ public class VisicomFragment extends Fragment {
         updateAddCost(addCost, context);
 
         orderRout();
-        try {
-            orderFinished();
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
+
+        googleVerifyAccount();
 
     }
 
+    private void googleVerifyAccount() {
+        FirebaseConsentManager consentManager = new FirebaseConsentManager(context);
+
+        consentManager.checkUserConsent(new FirebaseConsentManager.ConsentCallback() {
+            @Override
+            public void onConsentValid() {
+                Logger.d(context, TAG, "Согласие пользователя действительное.");
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    try {
+                        orderFinished();
+                    } catch (MalformedURLException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+
+            @Override
+            public void onConsentInvalid() {
+                Logger.d(context, TAG, "Согласие пользователя НЕ действительное.");
+                String message = getString(R.string.google_verify_mes);
+                MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
+                bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+            }
+        });
+    }
 }

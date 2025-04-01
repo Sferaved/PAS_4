@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.136</string>
-    <string name="version">Version: 4.136</string>
+    <string name="version_code">4.137</string>
+    <string name="version">Version: 4.137</string>
 
     <string name="app_name">Taxi Duke Fellow</string>
 
@@ -498,5 +498,11 @@
     <string name="low_memory_5">"Out of Memory State: "</string>
     <string name="low_memory_6">" bytes\n"</string>
     <string name="low_connect">Weak internet connection</string>
-    <string name="add_cost_сancel">Do you want to cancel your order?</string>
+    <string name="add_cost_cancel">Do you want to cancel your order?</string>
+    <string name="google_verify_mes">To continue using the app, you need to grant access to your Google account. This will allow us to ensure the correct functioning of the features and a personalized experience. Please sign in to your Google account and grant the necessary permissions.</string>
+    <string name="out_acсount">You are signed out</string>
+    <string name="account">You are logged in</string>
+    <string name="in_account">Sign in to your account</string>
+    <string name="out_account_btn">Sign out of your account</string>
+    <string name="in_google_bonus">To receive bonuses, log in to your Google account</string>
 </resources>

@@ -1,6 +1,7 @@
 package com.taxi_pas_4.ui.account;
 
 import static android.content.Context.MODE_PRIVATE;
+import static android.view.View.VISIBLE;
 import static com.taxi_pas_4.R.string.format_phone;
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
@@ -27,6 +28,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
@@ -36,6 +38,7 @@ import com.taxi_pas_4.databinding.FragmentAccountBinding;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.RouteResponseCancel;
 import com.taxi_pas_4.ui.keyboard.KeyboardUtils;
+import com.taxi_pas_4.utils.auth.FirebaseConsentManager;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.db.DatabaseHelper;
@@ -68,6 +71,8 @@ public class AccountFragment extends Fragment {
     ProgressBar progressBar;
     AppCompatButton upd_but;
     AppCompatButton del_but;
+    AppCompatButton out_but;
+    AppCompatButton in_but;
     AppCompatButton btnCallAdmin;
     AppCompatButton btnOrder;
     View root;
@@ -78,7 +83,7 @@ public class AccountFragment extends Fragment {
     private String[] array;
     private Context context;
     private List<RouteResponseCancel> routeList;
-
+    private FirebaseConsentManager consentManager;
 
     @SuppressLint("SourceLockedOrientationActivity")
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -113,9 +118,37 @@ public class AccountFragment extends Fragment {
         email.setText(userEmail);
 
 
+        out_but = binding.outBut;
+        consentManager = new FirebaseConsentManager(requireActivity());
+        out_but.setOnClickListener(v -> {
+            consentManager.revokeTokenAndSignOut();
+            Toast.makeText(context, R.string.out_acсount, Toast.LENGTH_SHORT).show();
+            NavController navController = MainActivity.navController;
+
+            navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                    .setPopUpTo(R.id.nav_visicom, true)
+                    .build());
+
+        });
+
+        in_but = binding.btnInAccount;
+        in_but.setOnClickListener(v -> {
+            SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+            ContentValues cv = new ContentValues();
+            cv.put("email", "email");
+            cv.put("verifyOrder", "1");
+            // обновляем по id
+            database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?",
+                    new String[] { "1" });
+            database.close();
+
+            Intent intent = new Intent(getActivity(), MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+
+        });
 
 
-        fetchRoutesCancel();
 
         userName.addTextChangedListener(new TextWatcher() {
             @Override
@@ -204,7 +237,47 @@ public class AccountFragment extends Fragment {
                         .setPopUpTo(R.id.nav_visicom, true) 
                         .build());
         });
+
+        googleVerifyAccount();
         return root;
+    }
+    private void googleVerifyAccount() {
+        FirebaseConsentManager consentManager = new FirebaseConsentManager(requireActivity());
+
+        consentManager.checkUserConsent(new FirebaseConsentManager.ConsentCallback() {
+            @Override
+            public void onConsentValid() {
+                Logger.d(context, TAG, "Согласие пользователя действительное.");
+                visibility (View.VISIBLE);
+                fetchRoutesCancel();
+            }
+
+            @Override
+            public void onConsentInvalid() {
+                Logger.d(context, TAG, "Согласие пользователя НЕ действительное.");
+                visibility (View.INVISIBLE);
+            }
+        });
+    }
+
+    private void visibility (int visible) {
+        if (visible == View.INVISIBLE) {
+            in_but.setVisibility(VISIBLE);
+        } else {
+            in_but.setVisibility(View.GONE);
+        }
+        phoneNumber.setVisibility(visible);
+        userName.setVisibility(visible);
+        email.setVisibility(visible);
+        upd_but.setVisibility(visible);
+        del_but.setVisibility(visible);
+        out_but.setVisibility(visible);
+        btnOrder.setVisibility(visible);
+        del_but.setVisibility(visible);
+
+        root.findViewById(R.id.text_name).setVisibility(visible);
+        root.findViewById(R.id.text_phone).setVisibility(visible);
+        root.findViewById(R.id.text_email).setVisibility(visible);
     }
     private String formatPhoneNumber(String phoneNumber) {
         String input = phoneNumber.replaceAll("[^+\\d]", "");

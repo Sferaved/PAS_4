@@ -32,6 +32,8 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.telephony.TelephonyManager;
 import android.text.InputType;
 import android.text.Spannable;
@@ -88,6 +90,7 @@ import com.taxi_pas_4.ui.payment_system.PayApi;
 import com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
 import com.taxi_pas_4.ui.start.ResultSONParser;
 import com.taxi_pas_4.utils.animation.car.CarProgressBar;
+import com.taxi_pas_4.utils.auth.FirebaseConsentManager;
 import com.taxi_pas_4.utils.blacklist.BlacklistManager;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetBonusFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetDialogFragment;
@@ -273,7 +276,6 @@ public class HomeFragment extends Fragment {
         context.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         progressBar = binding.progressBar;
-        progressBar.setVisibility(GONE);
         buttonBonus = binding.btnBonus;
 
         addCost = 0;
@@ -440,7 +442,7 @@ public class HomeFragment extends Fragment {
                                 } else {
                                     try {
                                         if (orderRout()) {
-                                            orderFinished();
+                                            googleVerifyAccount();
                                         }
                                     } catch (UnsupportedEncodingException e) {
                                         FirebaseCrashlytics.getInstance().recordException(e);
@@ -459,7 +461,7 @@ public class HomeFragment extends Fragment {
                                 } else {
                                     try {
                                         if (orderRout()) {
-                                            orderFinished();
+                                            googleVerifyAccount();
                                         }
                                     } catch (UnsupportedEncodingException e) {
                                         FirebaseCrashlytics.getInstance().recordException(e);
@@ -470,7 +472,7 @@ public class HomeFragment extends Fragment {
                             default:
                                 try {
                                     if (orderRout()) {
-                                        orderFinished();
+                                        googleVerifyAccount();
                                     }
                                 } catch (UnsupportedEncodingException e) {
                                     FirebaseCrashlytics.getInstance().recordException(e);
@@ -493,6 +495,7 @@ public class HomeFragment extends Fragment {
             bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
         });
         buttonBonus.setOnClickListener(v -> {
+            HomeFragment.btnVisible(INVISIBLE);
             List<String> stringList1 = logCursor(MainActivity.CITY_INFO, context);
             String api =  stringList1.get(2);
             updateAddCost("0");
@@ -821,7 +824,7 @@ public class HomeFragment extends Fragment {
 
             try {
                 if(orderRout()){
-                    orderFinished();
+                    googleVerifyAccount();
                 }
             } catch (UnsupportedEncodingException e) {
                 FirebaseCrashlytics.getInstance().recordException(e);
@@ -979,6 +982,11 @@ public class HomeFragment extends Fragment {
         buttonBonus.setVisibility(visible);
         btn_clear.setVisibility(visible);
         btn_order.setVisibility(visible);
+        if (visible == View.INVISIBLE) {
+            progressBar.setVisibility(VISIBLE);
+        } else {
+            progressBar.setVisibility(View.GONE);
+        }
 
     }
 
@@ -1288,6 +1296,8 @@ public class HomeFragment extends Fragment {
         binding.textwhere.setVisibility(VISIBLE);
         binding.num2.setVisibility(VISIBLE);
         btn_clear.setVisibility(VISIBLE);
+
+
         from = textViewFrom.getText().toString();
 
         if (numberFlagFrom.equals("1") && from_number.getText().toString().equals(" ")) {
@@ -1378,13 +1388,13 @@ public class HomeFragment extends Fragment {
         }
         if (!orderCost.equals("0")) {
             scheduleUpdate();
-
-            text_view_cost.setVisibility(VISIBLE);
-            btn_minus.setVisibility(VISIBLE);
-            btn_plus.setVisibility(VISIBLE);
-            buttonAddServices.setVisibility(VISIBLE);
-            buttonBonus.setVisibility(VISIBLE);
-            btn_order.setVisibility(VISIBLE);
+//
+//            text_view_cost.setVisibility(VISIBLE);
+//            btn_minus.setVisibility(VISIBLE);
+//            btn_plus.setVisibility(VISIBLE);
+//            buttonAddServices.setVisibility(VISIBLE);
+//            buttonBonus.setVisibility(VISIBLE);
+//            btn_order.setVisibility(VISIBLE);
 
             String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(3);
             long discountInt = Integer.parseInt(discountText);
@@ -1403,6 +1413,7 @@ public class HomeFragment extends Fragment {
             Logger.d(context, TAG, "cost: MIN_COST_VALUE "  + MIN_COST_VALUE);
 
             insertRouteCostToDatabase();
+            btnVisible(VISIBLE);
 
         } else {
             resetRoutHome();
@@ -1511,7 +1522,7 @@ public class HomeFragment extends Fragment {
 
     @SuppressLint({"SetTextI18n", "StaticFieldLeak"})
     private void costRoutHome(final List<String> stringListRoutHome) {
-        progressBar.setVisibility(VISIBLE);
+       btnVisible(INVISIBLE);
 
       new AsyncTask<Integer, Void, RouteCost>() {
             @Override
@@ -1538,16 +1549,16 @@ public class HomeFragment extends Fragment {
 //                    text_view_cost.setText(retrievedRouteCost.text_view_cost);
 //                    updateAddCost(retrievedRouteCost.addCost);
 
-                    textViewTo.setVisibility(VISIBLE);
-                    binding.textwhere.setVisibility(VISIBLE);
-                    binding.num2.setVisibility(VISIBLE);
-
-                    text_view_cost.setVisibility(VISIBLE);
-                    btn_minus.setVisibility(VISIBLE);
-                    btn_plus.setVisibility(VISIBLE);
-                    buttonAddServices.setVisibility(VISIBLE);
-                    buttonBonus.setVisibility(VISIBLE);
-                    btn_clear.setVisibility(VISIBLE);
+//                    textViewTo.setVisibility(VISIBLE);
+//                    binding.textwhere.setVisibility(VISIBLE);
+//                    binding.num2.setVisibility(VISIBLE);
+//
+//                    text_view_cost.setVisibility(VISIBLE);
+//                    btn_minus.setVisibility(VISIBLE);
+//                    btn_plus.setVisibility(VISIBLE);
+//                    buttonAddServices.setVisibility(VISIBLE);
+//                    buttonBonus.setVisibility(VISIBLE);
+//                    btn_clear.setVisibility(VISIBLE);
                     Logger.d(context, TAG, "onPostExecute: from_number.getText().toString()" + from_number.getText().toString());
                     if (!from_number.getText().toString().equals(" ")) {
                         from_number.setVisibility(VISIBLE);
@@ -1572,7 +1583,8 @@ public class HomeFragment extends Fragment {
                     Logger.d(context, TAG, "onPostExecute: addCostforMin" + addCostforMin);
                     MIN_COST_VALUE = (long) ((Long.parseLong(retrievedRouteCost.text_view_cost) - addCostforMin) * 0.6);
                     Logger.d(context, TAG, "onPostExecute: MIN_COST_VALUE" + MIN_COST_VALUE);
-                    btn_order.setVisibility(VISIBLE);
+//                    btn_order.setVisibility(VISIBLE);
+                    btnVisible(VISIBLE);
                 }
                 updateAddCost("0");
                 updateUIFromList(stringListRoutHome);
@@ -1682,13 +1694,13 @@ public class HomeFragment extends Fragment {
                         }
                     } else  {
                         scheduleUpdate();
-                        text_view_cost.setVisibility(VISIBLE);
-                        btn_minus.setVisibility(VISIBLE);
-                        btn_plus.setVisibility(VISIBLE);
-                        buttonAddServices.setVisibility(VISIBLE);
-                        buttonBonus.setVisibility(VISIBLE);
-                        btn_order.setVisibility(VISIBLE);
-                        btn_clear.setVisibility(VISIBLE);
+//                        text_view_cost.setVisibility(VISIBLE);
+//                        btn_minus.setVisibility(VISIBLE);
+//                        btn_plus.setVisibility(VISIBLE);
+//                        buttonAddServices.setVisibility(VISIBLE);
+//                        buttonBonus.setVisibility(VISIBLE);
+//                        btn_order.setVisibility(VISIBLE);
+//                        btn_clear.setVisibility(VISIBLE);
 
 
                         long discountInt = Integer.parseInt(discountText);
@@ -1702,6 +1714,7 @@ public class HomeFragment extends Fragment {
                         Logger.d(context, TAG, "costRoutHome:Long.toString(cost) " + cost);
                         costFirstForMin = cost;
                         MIN_COST_VALUE = (long) (cost * 0.6);
+                        btnVisible(VISIBLE);
                     }
                 }
 
@@ -2141,7 +2154,7 @@ public class HomeFragment extends Fragment {
 
                 try {
                     if (orderRout()) {
-                        orderFinished();
+                        googleVerifyAccount();
                     }
                 } catch (UnsupportedEncodingException e) {
                     FirebaseCrashlytics.getInstance().recordException(e);
@@ -2679,7 +2692,7 @@ public class HomeFragment extends Fragment {
                         } catch (UnsupportedEncodingException e) {
                             throw new RuntimeException(e);
                         }
-                        orderFinished();
+                        googleVerifyAccount();
                     }
 
 
@@ -2723,6 +2736,29 @@ public class HomeFragment extends Fragment {
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
-        orderFinished();
+        googleVerifyAccount();
     }
+
+    private void googleVerifyAccount() {
+        FirebaseConsentManager consentManager = new FirebaseConsentManager(context);
+
+        consentManager.checkUserConsent(new FirebaseConsentManager.ConsentCallback() {
+            @Override
+            public void onConsentValid() {
+                Logger.d(context, TAG, "Согласие пользователя действительное.");
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    orderFinished();
+                });
+            }
+
+            @Override
+            public void onConsentInvalid() {
+                Logger.d(context, TAG, "Согласие пользователя НЕ действительное.");
+                String message = getString(R.string.google_verify_mes);
+                MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
+                bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+            }
+        });
+    }
+
 }

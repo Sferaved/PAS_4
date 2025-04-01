@@ -13,6 +13,8 @@ import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -497,12 +499,13 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
             VisicomFragment.setBtnBonusName(context);
         }
         UserPermissions.getPermissions(email, context);
-        VisicomFragment.btnVisible(View.VISIBLE);
+//        VisicomFragment.btnVisible(View.VISIBLE);
     }
 
     public void reCount() throws UnsupportedEncodingException, MalformedURLException {
         Log.d(TAG, "onDismiss: rout " + rout);
         if (rout != null && rout.equals("home")) {
+            textView.setText("");
             String urlCost = getTaxiUrlSearch("costSearch", context);
             String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO).get(3);
 
@@ -515,25 +518,30 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
                     String orderCost = sendUrlMapCost.get("order_cost");
 
                     assert orderCost != null;
-                    if (!orderCost.equals("0")) {
-                        long discountInt = Integer.parseInt(discountText);
-                        long discount;
-                        long firstCost = Long.parseLong(orderCost);
-                        discount = firstCost * discountInt / 100;
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        if (!orderCost.equals("0")) {
+                            long discountInt = Integer.parseInt(discountText);
+                            long discount;
+                            long firstCost = Long.parseLong(orderCost);
+                            discount = firstCost * discountInt / 100;
 
-                        firstCost = firstCost + discount;
-//                        updateAddCost(String.valueOf(discount));
+                            firstCost = firstCost + discount;
+                            //                        updateAddCost(String.valueOf(discount));
 
 
-                        HomeFragment.costFirstForMin = firstCost;
-                        String costUpdate = String.valueOf(firstCost);
-                        textView.setText(costUpdate);
-                    } else {
-                        progressBar.setVisibility(View.INVISIBLE);
-                        if (pos == 1 || pos == 2) {
-                            changePayMethodToNal();
+                            HomeFragment.costFirstForMin = firstCost;
+                            String costUpdate = String.valueOf(firstCost);
+                            textView.setText(costUpdate);
+                            HomeFragment.btnVisible(View.VISIBLE);
+                        } else {
+                            progressBar.setVisibility(View.INVISIBLE);
+                            if (pos == 1 || pos == 2) {
+                                changePayMethodToNal();
+                            }
                         }
-                    }
+                    });
+
+
                 }
 
                 @Override
@@ -580,6 +588,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
                                 costUpdate = String.valueOf(firstCost);
                                 Log.d(TAG, "onResponse:costUpdate " + costUpdate);
                                 textView.setText(costUpdate);
+                                VisicomFragment.btnVisible(View.VISIBLE);
                             } else {
                                 progressBar.setVisibility(View.INVISIBLE);
                                 if (pos == 1 || pos == 2) {

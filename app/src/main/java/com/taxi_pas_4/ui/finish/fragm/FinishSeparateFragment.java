@@ -50,12 +50,9 @@ import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.databinding.FragmentFinishSeparateBinding;
 import com.taxi_pas_4.ui.finish.ApiClient;
-import com.taxi_pas_4.ui.finish.ApiService;
 import com.taxi_pas_4.ui.finish.BonusResponse;
 import com.taxi_pas_4.ui.finish.OrderResponse;
 import com.taxi_pas_4.ui.finish.Status;
-import com.taxi_pas_4.ui.wfp.purchase.PurchaseResponse;
-import com.taxi_pas_4.ui.wfp.purchase.PurchaseService;
 import com.taxi_pas_4.utils.animation.car.CarProgressBar;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetAddCostFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorPaymentFragment;
@@ -76,7 +73,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -104,7 +100,7 @@ public class FinishSeparateFragment extends Fragment {
     public static String baseUrl;
     Map<String, String> receivedMap;
 
-    Thread thread;
+
     public static String pay_method;
 
     public static String amount;
@@ -564,83 +560,6 @@ public class FinishSeparateFragment extends Fragment {
         viewModel.getTransactionStatus().removeObservers(getViewLifecycleOwner());
         viewModel.getOrderResponse().removeObservers(getViewLifecycleOwner());
         viewModel.isTenMinutesRemaining.removeObservers(getViewLifecycleOwner());
-    }
-
-    private void paymentByTokenWfp(
-            String orderDescription,
-            String order_id
-    ) {
-        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
-        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-
-        OkHttpClient client = new OkHttpClient.Builder()
-                .addInterceptor(interceptor)
-                .connectTimeout(30, TimeUnit.SECONDS) // Тайм-аут на соединение
-                .readTimeout(30, TimeUnit.SECONDS)    // Тайм-аут на чтение данных
-                .writeTimeout(30, TimeUnit.SECONDS)   // Тайм-аут на запись данных
-                .build();
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(baseUrl)
-                .addConverterFactory(GsonConverterFactory.create())
-                .client(client)
-                .build();
-
-        PurchaseService service = retrofit.create(PurchaseService.class);
-        List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
-        String city = stringList.get(1);
-
-        Call<PurchaseResponse> call = service.purchase(
-                context.getString(R.string.application),
-                city,
-                order_id,
-                "20",
-                orderDescription,
-                email,
-                phoneNumber
-        );
-        call.enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<PurchaseResponse> call, @NonNull Response<PurchaseResponse> response) {
-                if (response.isSuccessful()) {
-                    PurchaseResponse statusResponse = response.body();
-                    if (statusResponse == null) {
-                        Logger.e(context, TAG, "onResponse: StatusResponse is null");
-                        return;
-                    }
-
-                    String orderStatus = statusResponse.getTransactionStatus();
-                    Logger.d(context, TAG, "1 Transaction Status: " + orderStatus);
-                    switch (orderStatus) {
-                        case "Approved":
-                        case "WaitingAuthComplete":
-                            Logger.d(context, TAG, "onResponse: Positive status received: " + orderStatus);
-                            sharedPreferencesHelperMain.saveValue("pay_error", "**");
-                            newOrderCardPayAdd20(order_id);
-                            break;
-//                        case "Declined":
-//                            MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment =
-//                                    new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, "20", context);
-//                            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-//                            Logger.d(context, TAG, "onResponse: Showing error bottom sheet for declined transaction");
-                        default:
-                            Toast.makeText(context, context.getString(R.string.pay_failure_mes), Toast.LENGTH_SHORT).show();
-                            Logger.d(context, TAG, "onResponse: Unexpected status: " + orderStatus);
-                    }
-
-
-                } else {
-                    Logger.e(context, TAG, "onResponse: Unsuccessful response, code=" + response.code());
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<PurchaseResponse> call, @NonNull Throwable t) {
-                // Ошибка при выполнении запроса
-                Logger.d(context, TAG, "Ошибка при выполнении запроса");
-            }
-        });
-
     }
 
     private void updateAddCost(String addCost) {
@@ -1346,9 +1265,7 @@ public class FinishSeparateFragment extends Fragment {
         timeUtils.startTimer();
 
         viewModelReviewer();
-        btn_cancel_order.setOnClickListener(v -> {
-            showCancelDialog();
-        });
+        btn_cancel_order.setOnClickListener(v -> showCancelDialog());
 
         pay_method = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(4);
         if(pay_method.equals("nal_payment")) {
@@ -1592,17 +1509,13 @@ public class FinishSeparateFragment extends Fragment {
                             });
 
                         } else {
-                            new Handler(Looper.getMainLooper()).post(() -> {
-                                text_status.setText(R.string.recounting_order);
-                            });
+                            new Handler(Looper.getMainLooper()).post(() -> text_status.setText(R.string.recounting_order));
 
                         }
 
                     } else {
                         // Обработка неуспешного ответа
-                        new Handler(Looper.getMainLooper()).post(() -> {
-                            text_status.setText(R.string.recounting_order);
-                        });
+                        new Handler(Looper.getMainLooper()).post(() -> text_status.setText(R.string.recounting_order));
                     }
                 }
 
@@ -1632,15 +1545,6 @@ public class FinishSeparateFragment extends Fragment {
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context);
         LayoutInflater inflater = requireActivity().getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.dialog_add_cost, null);
-
-        // Настройка текста с выделенным числом
-//        TextView messageView = dialogView.findViewById(R.id.dialogMessage);
-//        String messageText = getString(R.string.add_cost_fin_20); // "Вам нужно добавить 20 единиц"
-//        SpannableStringBuilder spannable = new SpannableStringBuilder(messageText);
-//        int numberIndex = messageText.indexOf("20");
-//        spannable.setSpan(new StyleSpan(Typeface.BOLD), numberIndex, numberIndex + 2, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-//        messageView.setText(spannable);
-
 
         builder.setView(dialogView)
                 .setCancelable(false)
@@ -1720,17 +1624,18 @@ public class FinishSeparateFragment extends Fragment {
     }
 
     private void showCancelDialog() {
-        cancel_btn_click = true;
+
 
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context);
         LayoutInflater inflater = requireActivity().getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.dialog_add_cost, null);
         TextView dialogTitle = dialogView.findViewById(R.id.dialogTitle);
-        dialogTitle.setText(context.getString(R.string.add_cost_сancel));
+        dialogTitle.setText(context.getString(R.string.add_cost_cancel));
         builder.setView(dialogView)
                 .setCancelable(false)
                 .setPositiveButton(R.string.ok_button, (dialog, which) -> {
                     // Действие для кнопки "OK"
+                    cancel_btn_click = true;
                     if(!uid_Double.equals(" ")) {
                         cancelOrderDouble(context);
 
@@ -1742,10 +1647,6 @@ public class FinishSeparateFragment extends Fragment {
                         }
 
                     }
-                    if (thread != null && thread.isAlive()) {
-                        thread.interrupt();
-                    }
-
                     dialog.dismiss();
 
 
@@ -1779,167 +1680,6 @@ public class FinishSeparateFragment extends Fragment {
         }
     }
 
-    private void startAddCostUpdate() {
-
-        String cost = textCostMessage.getText().toString();
-        pay_method = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(4);
-
-
-        if ("nal_payment".equals(pay_method)) {
-            Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl(baseUrl) // Замените BASE_URL на ваш базовый URL сервера
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build();
-
-            ApiService apiService = retrofit.create(ApiService.class);
-
-            Pattern pattern = Pattern.compile("(\\d+)");
-            Matcher matcher = pattern.matcher(cost);
-            if (matcher.find()) {
-                // Преобразуем найденное число в целое, добавляем 20
-                int originalNumber = Integer.parseInt(Objects.requireNonNull(matcher.group(1)));
-                int updatedNumber = originalNumber + 20;
-
-                // Заменяем старое значение на новое
-                String updatedCost = matcher.replaceFirst(String.valueOf(updatedNumber));
-                textCost.setVisibility(View.VISIBLE);
-                textCostMessage.setVisibility(View.VISIBLE);
-                carProgressBar.setVisibility(View.VISIBLE);
-//                                progressBar.setVisibility(View.VISIBLE);
-                progressSteps.setVisibility(View.VISIBLE);
-
-                btn_options.setVisibility(View.VISIBLE);
-                btn_open.setVisibility(View.VISIBLE);
-
-
-                textCostMessage.setText(updatedCost);
-                Log.d("UpdatedCost", "Обновленная строка: " + updatedCost);
-            } else {
-                Log.e("UpdatedCost", "Число не найдено в строке: " + cost);
-            }
-
-            Call<Status> call = apiService.startAddCostWithAddBottomUpdate(
-                    MainActivity.uid,
-                    "20"
-            );
-
-            String url = call.request().url().toString();
-            Logger.d(context, TAG, "URL запроса nal_payment: " + url);
-
-
-            call.enqueue(new Callback<>() {
-                @Override
-                public void onResponse(@NonNull Call<Status> call, @NonNull Response<Status> response) {
-                    if (response.isSuccessful()) {
-                        Status status = response.body();
-                        assert status != null;
-                        String responseStatus = status.getResponse();
-                        Logger.d(context, TAG, "startAddCostUpdate  nal_payment: " + responseStatus);
-                        if (!responseStatus.equals("200")) {
-                            // Обработка неуспешного ответа
-                            text_status.setText(R.string.verify_internet);
-                        }
-
-                    } else {
-                        // Обработка неуспешного ответа
-                        text_status.setText(R.string.verify_internet);
-                    }
-                }
-
-                @Override
-                public void onFailure(@NonNull Call<Status> call, @NonNull Throwable t) {
-                    // Обработайте ошибку при выполнении запроса
-                    handlerStatus.post(myTaskStatus);
-                    FirebaseCrashlytics.getInstance().recordException(t);
-                }
-            });
-            handlerStatus.postDelayed(myTaskStatus,delayMillisStatus);
-        }
-        if ("wfp_payment".equals(pay_method)) {
-            startAddCostCardUpdate();
-        }
-    }
-
-    private void startAddCostCardUpdate() {
-        Logger.d(context, TAG, "startAddCostCardUpdate: ");
-        paymentByTokenWfp(messageFondy, MainActivity.order_id );
-    }
-
-    private void newOrderCardPayAdd20 (String order_id) {
-        String baseUrl = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
-
-        Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl(baseUrl)
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build();
-        ApiService apiService = retrofit.create(ApiService.class);
-        List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
-        String city = stringList.get(1);
-        Call<Status> call = apiService.startAddCostCardBottomUpdate(
-                MainActivity.uid,
-                uid_Double,
-                pay_method,
-                order_id,
-                city,
-                "20"
-        );
-        String url = call.request().url().toString();
-        Logger.d(context, TAG, "URL запроса wfp_payment: " + url);
-
-        String cost = textCostMessage.getText().toString();
-
-        Pattern pattern = Pattern.compile("(\\d+)");
-        Matcher matcher = pattern.matcher(cost);
-
-        if (matcher.find()) {
-            // Преобразуем найденное число в целое, добавляем 20
-            int originalNumber = Integer.parseInt(Objects.requireNonNull(matcher.group(1)));
-            int updatedNumber = originalNumber + 20;
-
-            // Заменяем старое значение на новое
-            String updatedCost = matcher.replaceFirst(String.valueOf(updatedNumber));
-            textCostMessage.setText(updatedCost);
-            Log.d("UpdatedCost", "Обновленная строка: " + updatedCost);
-
-        } else {
-            Log.e("UpdatedCost", "Число не найдено в строке: " + cost);
-        }
-        textCost.setVisibility(View.VISIBLE);
-        textCostMessage.setVisibility(View.VISIBLE);
-        carProgressBar.setVisibility(View.VISIBLE);
-        progressSteps.setVisibility(View.VISIBLE);
-        btn_options.setVisibility(View.VISIBLE);
-        btn_open.setVisibility(View.VISIBLE);
-        delayMillisStatus = 20 * 1000;
-        call.enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<Status> call, @NonNull Response<Status> response) {
-                if (response.isSuccessful()) {
-                    Status status = response.body();
-                    assert status != null;
-                    String responseStatus = status.getResponse();
-                    Logger.d(context, TAG, "startAddCostUpdate wfp_payment status: " + responseStatus);
-
-
-                } else {
-                    // Обработка неуспешного ответа
-                    text_status.setText(R.string.verify_internet);
-                }
-
-                startCycle();
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<Status> call, @NonNull Throwable t) {
-                // Обработайте ошибку при выполнении запроса
-                startCycle();
-                FirebaseCrashlytics.getInstance().recordException(t);
-            }
-        });
-        handlerStatus.postDelayed(myTaskStatus,delayMillisStatus);
-
-    }
-
     private  void isTenMinutesRemainingAction() {
         timeUtils.stopTimer();
         viewModel.isTenMinutesRemaining.removeObserver(observer);
@@ -1954,6 +1694,7 @@ public class FinishSeparateFragment extends Fragment {
         // Настройка текста с выделенным числом
         TextView dialogTitle = dialogView.findViewById(R.id.dialogTitle);
         dialogTitle.setText(R.string.time_car_found);
+        @SuppressLint({"MissingInflatedId", "LocalSuppress"})
         TextView messageView = dialogView.findViewById(R.id.dialogMessage);
         String messageText = context.getString(R.string.cancel_car_found_time);
         messageView.setText(messageText);
