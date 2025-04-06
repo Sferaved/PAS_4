@@ -28,6 +28,7 @@ import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.app.ActivityCompat;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.redmadrobot.inputmask.MaskedTextChangedListener;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.home.HomeFragment;
@@ -39,7 +40,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
-
 
 public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
 
@@ -102,6 +102,14 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
             }
         });
 
+        MaskedTextChangedListener listener = new MaskedTextChangedListener(
+                "+38 [000] [000] [00] [00]",
+                phoneNumber,
+                null
+        );
+
+        phoneNumber.addTextChangedListener(listener);
+        phoneNumber.setOnFocusChangeListener(listener);
 
         return view;
     }
@@ -215,7 +223,7 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
     private void phoneFull (Context context) {
         String phone = logCursor(MainActivity.TABLE_USER_INFO).get(2);
         phoneNumber.setText(phone);
-        if (phone.equals("+380") || phone.isEmpty()) {
+        if (phone.equals("+38") || phone.isEmpty()) {
             getPhoneNumber(context);
         }
     }

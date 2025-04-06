@@ -81,6 +81,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
     private static String email;
     String city;
     Activity context;
+    int fistItem, finishItem;
 
     public MyBottomSheetBonusFragment() {
     }
@@ -104,6 +105,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.bonus_list_layout, container, false);
         context = requireActivity();
+
         try {
             database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
         } catch (Exception e) {
@@ -180,6 +182,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
             btn_ok.setVisibility(View.GONE);
 
             pos = position;
+            finishItem = pos;
             Log.d(TAG, "onItemClick: pos " + pos);
             if (pos == 2) {
                 String rectoken = getCheckRectoken(MainActivity.TABLE_WFP_CARDS, context);
@@ -236,7 +239,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
         // Замените "your_city" на фактическое название города
         Call<CityResponse> call = cityService.getMaxPayValues($city, getString(R.string.application));
 
-        call.enqueue(new Callback<CityResponse>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<CityResponse> call, @NonNull Response<CityResponse> response) {
                 if (response.isSuccessful()) {
@@ -252,7 +255,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
                         sharedPreferencesHelperMain.saveValue("black_list", black_list);
 
                         database.update(MainActivity.CITY_INFO, cv, "id = ?",
-                                    new String[]{"1"});
+                                new String[]{"1"});
 
                     }
                 } else {
@@ -409,6 +412,8 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
 
                 break;
         }
+        fistItem = pos;
+        finishItem = pos;
    }
 
     @SuppressLint("Range")
@@ -499,7 +504,13 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
             VisicomFragment.setBtnBonusName(context);
         }
         UserPermissions.getPermissions(email, context);
-//        VisicomFragment.btnVisible(View.VISIBLE);
+        if(fistItem == finishItem) {
+            try {
+                reCount();
+            } catch (UnsupportedEncodingException | MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public void reCount() throws UnsupportedEncodingException, MalformedURLException {

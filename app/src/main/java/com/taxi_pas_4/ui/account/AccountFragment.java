@@ -32,6 +32,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
+import com.redmadrobot.inputmask.MaskedTextChangedListener;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.databinding.FragmentAccountBinding;
@@ -122,7 +123,7 @@ public class AccountFragment extends Fragment {
         consentManager = new FirebaseConsentManager(requireActivity());
         out_but.setOnClickListener(v -> {
             consentManager.revokeTokenAndSignOut();
-            Toast.makeText(context, R.string.out_acсount, Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, R.string.out_account, Toast.LENGTH_SHORT).show();
             NavController navController = MainActivity.navController;
 
             navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
@@ -239,6 +240,16 @@ public class AccountFragment extends Fragment {
         });
 
         googleVerifyAccount();
+
+        MaskedTextChangedListener listener = new MaskedTextChangedListener(
+                "+38 [000] [000] [00] [00]",
+                phoneNumber,
+                null
+        );
+
+        phoneNumber.addTextChangedListener(listener);
+        phoneNumber.setOnFocusChangeListener(listener);
+
         return root;
     }
     private void googleVerifyAccount() {
@@ -606,7 +617,7 @@ public class AccountFragment extends Fragment {
 
             updateStatement.clearBindings();
             updateStatement.bindString(1, "0");
-            updateStatement.bindString(2, "+380");
+            updateStatement.bindString(2, "+38");
             updateStatement.bindString(3, "email");
             updateStatement.bindString(4, "username");
             updateStatement.bindString(5, "0");

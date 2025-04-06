@@ -903,7 +903,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             statement.clearBindings();
             statement.bindString(2, "0");
-            statement.bindString(3, "+380");
+            statement.bindString(3, "+38");
             statement.bindString(4, "email");
             statement.bindString(5, "username");
             statement.bindString(6, "0");

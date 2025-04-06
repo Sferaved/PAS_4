@@ -178,13 +178,13 @@ public class PusherManager {
 
                     MainActivity.paySystemStatus = paySystemStatus;
 
-                    if (FinishSeparateFragment.btn_cancel_order != null ) {
-                        FinishSeparateFragment.btn_cancel_order.setVisibility(VISIBLE);
-                        FinishSeparateFragment.btn_cancel_order.setEnabled(true);
-                        FinishSeparateFragment.btn_cancel_order.setClickable(true);
-                    } else {
-                        Log.e("Pusher", "btn_cancel_order is null!");
-                    }
+//                    if (FinishSeparateFragment.btn_cancel_order != null ) {
+//                        FinishSeparateFragment.btn_cancel_order.setVisibility(VISIBLE);
+//                        FinishSeparateFragment.btn_cancel_order.setEnabled(true);
+//                        FinishSeparateFragment.btn_cancel_order.setClickable(true);
+//                    } else {
+//                        Log.e("Pusher", "btn_cancel_order is null!");
+//                    }
                 });
 
             } catch (JSONException e) {
