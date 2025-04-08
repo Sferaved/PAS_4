@@ -45,7 +45,7 @@ public class ExecutionStatusViewModel extends ViewModel {
         Log.i("ViewModel", "Updating order response: " + response.getDispatchingOrderUid());
 
         // Обновляем LiveData
-        orderResponse.postValue(response);
+        orderResponse.setValue(response);
     }
     public void clearOrderResponse() {
         orderResponse.setValue(null); // Сбрасываем в null

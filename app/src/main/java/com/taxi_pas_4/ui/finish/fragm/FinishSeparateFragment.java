@@ -556,10 +556,10 @@ public class FinishSeparateFragment extends Fragment {
         if (handlerCheckTask != null) {
             handlerCheckTask.removeCallbacks(checkTask);
         }
-        viewModel.clearOrderResponse();
-        viewModel.getTransactionStatus().removeObservers(getViewLifecycleOwner());
-        viewModel.getOrderResponse().removeObservers(getViewLifecycleOwner());
-        viewModel.isTenMinutesRemaining.removeObservers(getViewLifecycleOwner());
+//        viewModel.clearOrderResponse();
+//        viewModel.getTransactionStatus().removeObservers(getViewLifecycleOwner());
+//        viewModel.getOrderResponse().removeObservers(getViewLifecycleOwner());
+//        viewModel.isTenMinutesRemaining.removeObservers(getViewLifecycleOwner());
     }
 
     private void updateAddCost(String addCost) {
@@ -915,9 +915,9 @@ public class FinishSeparateFragment extends Fragment {
                 handlerAddcost.removeCallbacks(showDialogAddcost);
             }
 
-            if (btn_cancel_order.getVisibility() == View.VISIBLE) {
-                btn_cancel_order.setVisibility(GONE);
-            }
+//            if (btn_cancel_order.getVisibility() == View.VISIBLE) {
+//                btn_cancel_order.setVisibility(GONE);
+//            }
 
             List<String> listCity = logCursor(MainActivity.CITY_INFO, context);
             String city = listCity.get(1);
@@ -1203,7 +1203,7 @@ public class FinishSeparateFragment extends Fragment {
         }
     }
 
-    private void viewModelReviewer() {
+    public void viewModelReviewer() {
         // Инициализация ViewModel
         cancel_btn_click = false;
         // Наблюдение за статусом транзакции
@@ -1625,58 +1625,61 @@ public class FinishSeparateFragment extends Fragment {
 
     private void showCancelDialog() {
 
+        if (!btn_cancel_order.isEnabled()) {
+            Toast.makeText(context, R.string.cancel_btn_enable, Toast.LENGTH_LONG).show();
+        } else {
+            MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context);
+            LayoutInflater inflater = requireActivity().getLayoutInflater();
+            View dialogView = inflater.inflate(R.layout.dialog_add_cost, null);
+            TextView dialogTitle = dialogView.findViewById(R.id.dialogTitle);
+            dialogTitle.setText(context.getString(R.string.add_cost_cancel));
+            builder.setView(dialogView)
+                    .setCancelable(false)
+                    .setPositiveButton(R.string.ok_button, (dialog, which) -> {
+                        // Действие для кнопки "OK"
+                        cancel_btn_click = true;
+                        if(!uid_Double.equals(" ")) {
+                            cancelOrderDouble(context);
 
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context);
-        LayoutInflater inflater = requireActivity().getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.dialog_add_cost, null);
-        TextView dialogTitle = dialogView.findViewById(R.id.dialogTitle);
-        dialogTitle.setText(context.getString(R.string.add_cost_cancel));
-        builder.setView(dialogView)
-                .setCancelable(false)
-                .setPositiveButton(R.string.ok_button, (dialog, which) -> {
-                    // Действие для кнопки "OK"
-                    cancel_btn_click = true;
-                    if(!uid_Double.equals(" ")) {
-                        cancelOrderDouble(context);
+                        } else{
+                            try {
+                                cancelOrder(MainActivity.uid, context);
+                            } catch (ParseException e) {
+                                throw new RuntimeException(e);
+                            }
 
-                    } else{
-                        try {
-                            cancelOrder(MainActivity.uid, context);
-                        } catch (ParseException e) {
-                            throw new RuntimeException(e);
                         }
-
-                    }
-                    dialog.dismiss();
+                        dialog.dismiss();
 
 
-                })
-                .setNegativeButton(R.string.cancel_button, (dialog, which) -> {
-                    // Действие для кнопки "Отмена"
-                    dialog.dismiss();
-                });
+                    })
+                    .setNegativeButton(R.string.cancel_button, (dialog, which) -> {
+                        // Действие для кнопки "Отмена"
+                        dialog.dismiss();
+                    });
 
-        AlertDialog dialog = builder.create();
+            AlertDialog dialog = builder.create();
 
-        dialog.show();
+            dialog.show();
 
-        // Настройка цветов кнопок
-        Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
-        Button negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+            // Настройка цветов кнопок
+            Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            Button negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
 
-        if (positiveButton != null) {
-            positiveButton.setBackgroundColor(ContextCompat.getColor(context, R.color.selected_text_color));
-            positiveButton.setTextColor(ContextCompat.getColor(context, android.R.color.white));
-            ViewParent buttonPanel = positiveButton.getParent();
-            if (buttonPanel instanceof ViewGroup) {
-                ((ViewGroup) buttonPanel).setBackgroundColor(ContextCompat.getColor(context, R.color.background_color_new));
+            if (positiveButton != null) {
+                positiveButton.setBackgroundColor(ContextCompat.getColor(context, R.color.selected_text_color));
+                positiveButton.setTextColor(ContextCompat.getColor(context, android.R.color.white));
+                ViewParent buttonPanel = positiveButton.getParent();
+                if (buttonPanel instanceof ViewGroup) {
+                    ((ViewGroup) buttonPanel).setBackgroundColor(ContextCompat.getColor(context, R.color.background_color_new));
+                }
+
             }
+            if (negativeButton != null) {
+                negativeButton.setBackgroundColor(ContextCompat.getColor(context, R.color.colorAccent));
+                negativeButton.setTextColor(ContextCompat.getColor(context, android.R.color.white));
 
-        }
-        if (negativeButton != null) {
-            negativeButton.setBackgroundColor(ContextCompat.getColor(context, R.color.colorAccent));
-            negativeButton.setTextColor(ContextCompat.getColor(context, android.R.color.white));
-
+            }
         }
     }
 
