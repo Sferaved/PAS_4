@@ -622,7 +622,7 @@ public class CityCheckActivity extends AppCompatActivity {
         call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<CityResponse> call, @NonNull Response<CityResponse> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     CityResponse cityResponse = response.body();
                     if (cityResponse != null) {
                         int cardMaxPay = cityResponse.getCardMaxPay();
@@ -690,7 +690,7 @@ public class CityCheckActivity extends AppCompatActivity {
         call.enqueue(new Callback<CountryResponse>() {
             @Override
             public void onResponse(@NonNull Call<CountryResponse> call, @NonNull Response<CountryResponse> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     CountryResponse countryResponse = response.body();
                     assert countryResponse != null;
                     Logger.d(getApplicationContext(), TAG, "onResponse:countryResponse.getCountry(); " + countryResponse.getCountry());
@@ -766,7 +766,7 @@ public class CityCheckActivity extends AppCompatActivity {
         call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<CityLastAddressResponse> call, @NonNull Response<CityLastAddressResponse> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     CityLastAddressResponse cityResponse = response.body();
                     Logger.d(getApplicationContext(), TAG, "onResponse: cityResponse" + cityResponse);
                     if (cityResponse != null) {

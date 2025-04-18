@@ -955,7 +955,7 @@ public class VisicomFragment extends Fragment {
 
                     @Override
                     public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
-                        if (response.isSuccessful()) {
+                        if (response.isSuccessful() && response.body() != null) {
                             Map<String, String> sendUrlMap = response.body();
 
                             assert sendUrlMap != null;
@@ -2580,7 +2580,7 @@ public class VisicomFragment extends Fragment {
             call.enqueue(new Callback<List<RouteResponseCancel>>() {
                 @Override
                 public void onResponse(@NonNull Call<List<RouteResponseCancel>> call, @NonNull Response<List<RouteResponseCancel>> response) {
-                    if (response.isSuccessful()) {
+                    if (response.isSuccessful() && response.body() != null) {
                         List<RouteResponseCancel> routes = response.body();
                         assert routes != null;
                         Logger.d(context, TAG, "onResponse: " + routes.toString());
@@ -2896,7 +2896,7 @@ public class VisicomFragment extends Fragment {
         call.enqueue(new Callback<ResponsePaySystem>() {
             @Override
             public void onResponse(@NonNull Call<ResponsePaySystem> call, @NonNull Response<ResponsePaySystem> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     // Обработка успешного ответа
                     ResponsePaySystem responsePaySystem = response.body();
                     assert responsePaySystem != null;

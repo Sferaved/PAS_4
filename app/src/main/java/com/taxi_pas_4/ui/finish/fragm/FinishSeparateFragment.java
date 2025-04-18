@@ -588,7 +588,7 @@ public class FinishSeparateFragment extends Fragment {
             @Override
             public void onResponse(@NonNull Call<BonusResponse> call, @NonNull Response<BonusResponse> response) {
                 BonusResponse bonusResponse = response.body();
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
 
                     assert bonusResponse != null;
                     String bonus = String.valueOf(bonusResponse.getBonus());
@@ -722,7 +722,7 @@ public class FinishSeparateFragment extends Fragment {
             call.enqueue(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<OrderResponse> call, @NonNull Response<OrderResponse> response) {
-                    if (response.isSuccessful()) {
+                    if (response.isSuccessful() && response.body() != null) {
                         // Получаем объект OrderResponse из успешного ответа
                         OrderResponse orderResponse = response.body();
 
@@ -805,7 +805,7 @@ public class FinishSeparateFragment extends Fragment {
             call.enqueue(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<OrderResponse> call, @NonNull Response<OrderResponse> response) {
-                    if (response.isSuccessful()) {
+                    if (response.isSuccessful() && response.body() != null) {
                         // Получаем объект OrderResponse из успешного ответа
                         OrderResponse orderResponse = response.body();
                         assert orderResponse != null;
@@ -1640,7 +1640,7 @@ public class FinishSeparateFragment extends Fragment {
             call.enqueue(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<HoldResponse> call, @NonNull Response<HoldResponse> response) {
-                    if (response.isSuccessful()) {
+                    if (response.isSuccessful() && response.body() != null) {
                         HoldResponse holdResponse = response.body();
                         assert holdResponse != null;
                         String result = holdResponse.getResult();

@@ -213,7 +213,7 @@ public class MyBottomSheetCardVerificationWithOneUah extends BottomSheetDialogFr
             public void onResponse(@NonNull Call<InvoiceResponse> call, @NonNull Response<InvoiceResponse> response) {
                 Logger.d(context, TAG, "onResponse: 1111" + response.code());
 
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     InvoiceResponse invoiceResponse = response.body();
 
                     if (invoiceResponse != null) {
@@ -303,7 +303,7 @@ public class MyBottomSheetCardVerificationWithOneUah extends BottomSheetDialogFr
             @Override
             public void onResponse(@NonNull Call<StatusResponse> call, @NonNull Response<StatusResponse> response) {
 
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     StatusResponse statusResponse = response.body();
                     if (statusResponse != null) {
                         String orderStatus = statusResponse.getTransactionStatus();
@@ -375,7 +375,7 @@ public class MyBottomSheetCardVerificationWithOneUah extends BottomSheetDialogFr
             @Override
             public void onResponse(@NonNull Call<CallbackResponseWfp> call, @NonNull Response<CallbackResponseWfp> response) {
                 Logger.d(context, TAG, "onResponse: " + response.body());
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     CallbackResponseWfp callbackResponse = response.body();
                     if (callbackResponse != null) {
                         List<CardInfo> cards = callbackResponse.getCards();

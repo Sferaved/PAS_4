@@ -328,7 +328,7 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
 //        call.enqueue(new Callback<ResponsePaySystem>() {
 //            @Override
 //            public void onResponse(@NonNull Call<ResponsePaySystem> call, @NonNull Response<ResponsePaySystem> response) {
-//                if (response.isSuccessful()) {
+//                if (response.isSuccessful() && response.body() != null) {
 //                    // Обработка успешного ответа
 //                    ResponsePaySystem responsePaySystem = response.body();
 //                    assert responsePaySystem != null;
@@ -487,7 +487,7 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
             @Override
             public void onResponse(@NonNull Call<StatusResponse> call, @NonNull Response<StatusResponse> response) {
 
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     StatusResponse statusResponse = response.body();
                     if (statusResponse != null) {
                         String orderStatus = statusResponse.getTransactionStatus();
@@ -597,7 +597,7 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
             @Override
             public void onResponse(@NonNull Call<CallbackResponseWfp> call, @NonNull Response<CallbackResponseWfp> response) {
                 Logger.d(context, TAG, "onResponse: " + response.body());
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     CallbackResponseWfp callbackResponse = response.body();
                     if (callbackResponse != null) {
                         List<CardInfo> cards = callbackResponse.getCards();
@@ -674,7 +674,7 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
 //            @Override
 //            public void onResponse(@NonNull Call<CallbackResponseWfp> call, @NonNull Response<CallbackResponseWfp> response) {
 //
-//                if (response.isSuccessful()) {
+//                if (response.isSuccessful() && response.body() != null) {
 //                    CallbackResponseWfp callbackResponse = response.body();
 //                    if (callbackResponse != null) {
 //                        List<CardInfo> cards = callbackResponse.getCards();

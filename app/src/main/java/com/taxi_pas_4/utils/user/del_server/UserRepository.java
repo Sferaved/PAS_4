@@ -21,7 +21,7 @@ public class UserRepository {
         call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<ServerResponse> call, @NonNull Response<ServerResponse> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     ServerResponse serverResponse = response.body();
                     if (serverResponse != null) {
                         if (serverResponse.getMessage() != null) {

@@ -176,7 +176,7 @@ public class BonusFragment extends Fragment {
             public void onResponse(@NonNull Call<BonusResponse> call, @NonNull Response<BonusResponse> response) {
 
                 BonusResponse bonusResponse = Objects.requireNonNull(response).body();
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     progressBar.setVisibility(View.INVISIBLE);
                     assert bonusResponse != null;
                     String bonus = String.valueOf(bonusResponse.getBonus());

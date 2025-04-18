@@ -272,7 +272,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
             @Override
             public void onResponse(@NonNull Call<InvoiceResponse> call, @NonNull Response<InvoiceResponse> response) {
                 Logger.d(context, TAG, "onResponse: 1111" + response.code());
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     InvoiceResponse invoiceResponse = response.body();
 
                     if (invoiceResponse != null) {
@@ -660,7 +660,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
                     @Override
                     public void onResponse(@NonNull Call<ApiResponseToken<SuccessResponseDataToken>> call, Response<ApiResponseToken<SuccessResponseDataToken>> response) {
                         Logger.d(context, TAG, "onResponse: 1111" + response.code());
-                        if (response.isSuccessful()) {
+                        if (response.isSuccessful() && response.body() != null) {
                             ApiResponseToken<SuccessResponseDataToken> apiResponse = response.body();
 
                             Logger.d(context, TAG, "onResponse: " + new Gson().toJson(apiResponse));
@@ -749,7 +749,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
             @Override
             public void onResponse(@NonNull Call<ApiResponsePay<SuccessResponseDataPay>> call, Response<ApiResponsePay<SuccessResponseDataPay>> response) {
                 Logger.d(context, TAG, "onResponse: 1111" + response.code());
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     ApiResponsePay<SuccessResponseDataPay> apiResponse = response.body();
 
                     Logger.d(context, TAG, "onResponse: " + new Gson().toJson(apiResponse));
@@ -828,7 +828,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
         call.enqueue(new Callback<Status>() {
             @Override
             public void onResponse(@NonNull Call<Status> call, @NonNull Response<Status> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     Logger.d(context, TAG, "cancelOrderDouble response: " + response.toString());
 
 
@@ -872,7 +872,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
         call.enqueue(new Callback<Status>() {
             @Override
             public void onResponse(@NonNull Call<Status> call, @NonNull Response<Status> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     Logger.d(context, TAG, "cancelOrderDouble response: " + response.toString());
 
                     paymentType();

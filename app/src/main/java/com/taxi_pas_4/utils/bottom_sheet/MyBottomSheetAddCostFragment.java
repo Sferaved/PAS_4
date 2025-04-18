@@ -204,7 +204,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
             call.enqueue(new Callback<Status>() {
                 @Override
                 public void onResponse(@NonNull Call<Status> call, @NonNull Response<Status> response) {
-                    if (response.isSuccessful()) {
+                    if (response.isSuccessful() && response.body() != null) {
                         Status status = response.body();
                         assert status != null;
                         String responseStatus = status.getResponse();
@@ -428,7 +428,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
         call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<Status> call, @NonNull Response<Status> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     Status status = response.body();
                     assert status != null;
                     String responseStatus = status.getResponse();
@@ -495,7 +495,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
         call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<PurchaseResponse> call, @NonNull Response<PurchaseResponse> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     PurchaseResponse statusResponse = response.body();
                     if (statusResponse == null) {
                         Logger.e(context, TAG, "onResponse: StatusResponse is null");

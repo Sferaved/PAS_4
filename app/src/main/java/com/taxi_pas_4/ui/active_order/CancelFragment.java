@@ -175,7 +175,7 @@ public class CancelFragment extends Fragment {
             @Override
             public void onResponse(@NonNull Call<List<RouteResponseCancel>> call, @NonNull Response<List<RouteResponseCancel>> response) {
                 progressBar.setVisibility(View.GONE);
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     List<RouteResponseCancel> routes = response.body();
                     Logger.d(context, TAG, "onResponse: " + routes);
                     if (routes != null && !routes.isEmpty()) {

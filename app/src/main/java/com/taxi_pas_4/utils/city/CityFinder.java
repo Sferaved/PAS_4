@@ -455,7 +455,7 @@ public class CityFinder {
         call.enqueue(new Callback<ResponsePaySystem>() {
             @Override
             public void onResponse(@NonNull Call<ResponsePaySystem> call, @NonNull Response<ResponsePaySystem> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     // Обработка успешного ответа
                     ResponsePaySystem responsePaySystem = response.body();
                     assert responsePaySystem != null;
@@ -539,7 +539,7 @@ public class CityFinder {
             @Override
             public void onResponse(@NonNull Call<CallbackResponseWfp> call, @NonNull Response<CallbackResponseWfp> response) {
                 Logger.d(context, TAG, "onResponse: " + response.body());
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     CallbackResponseWfp callbackResponse = response.body();
                     if (callbackResponse != null) {
                         List<CardInfo> cards = callbackResponse.getCards();
@@ -605,7 +605,7 @@ public class CityFinder {
         call.enqueue(new Callback<com.taxi_pas_4.ui.home.cities.api.CityResponse>() {
             @Override
             public void onResponse(@NonNull Call<com.taxi_pas_4.ui.home.cities.api.CityResponse> call, @NonNull Response<com.taxi_pas_4.ui.home.cities.api.CityResponse> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     com.taxi_pas_4.ui.home.cities.api.CityResponse cityResponse = response.body();
                     if (cityResponse != null) {
                         int cardMaxPay = cityResponse.getCardMaxPay();
@@ -646,7 +646,7 @@ public class CityFinder {
         call.enqueue(new Callback<CountryResponse>() {
             @Override
             public void onResponse(@NonNull Call<CountryResponse> call, @NonNull Response<CountryResponse> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     CountryResponse countryResponse = response.body();
                     assert countryResponse != null;
                     Logger.d(context, TAG, "onResponse:countryResponse.getCountry(); " + countryResponse.getCountry());

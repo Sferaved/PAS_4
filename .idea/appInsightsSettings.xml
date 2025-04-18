@@ -34,8 +34,18 @@
                   <option name="projectNumber" value="10844390327" />
                 </ConnectionSetting>
               </option>
+              <option name="devices">
+                <list>
+                  <DeviceSetting>
+                    <option name="deviceType" value="Phone" />
+                    <option name="displayName" value="DOOGEE (Y9Plus)" />
+                    <option name="manufacturer" value="DOOGEE" />
+                    <option name="model" value="Y9Plus" />
+                  </DeviceSetting>
+                </list>
+              </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
-              <option name="timeIntervalDays" value="THIRTY_DAYS" />
+              <option name="timeIntervalDays" value="ONE_DAY" />
               <option name="visibilityType" value="ALL" />
             </InsightsFilterSettings>
           </value>

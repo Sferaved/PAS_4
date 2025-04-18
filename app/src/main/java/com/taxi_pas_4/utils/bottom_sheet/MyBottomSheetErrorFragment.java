@@ -159,14 +159,12 @@ public class MyBottomSheetErrorFragment extends BottomSheetDialogFragment {
             } else if (errorMessage.equals(getString(R.string.no_cards_info))){
                  textViewInfo.setOnClickListener(view2 -> {
                      dismiss();
-//                     Intent intent = new Intent(getActivity(), MainActivity.class);
-//                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-//                     startActivity(intent);
+                     navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder().build());
                  });
                 btn_ok.setText(getString(R.string.link_card));
                 btn_ok.setOnClickListener(v -> {
-                        navController.navigate(R.id.nav_card, null, new NavOptions.Builder().build());
-                    dismiss();
+                     navController.navigate(R.id.nav_card, null, new NavOptions.Builder().build());
+                     dismiss();
 
                 });
             } else if (errorMessage.equals(getString(R.string.google_verify_mes))){
@@ -504,7 +502,7 @@ public class MyBottomSheetErrorFragment extends BottomSheetDialogFragment {
         call.enqueue(new Callback<CityResponse>() {
             @Override
             public void onResponse(@NonNull Call<CityResponse> call, @NonNull Response<CityResponse> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     CityResponse cityResponse = response.body();
                     if (cityResponse != null) {
                         int cardMaxPay = cityResponse.getCardMaxPay();

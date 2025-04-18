@@ -242,7 +242,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
         call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<CityResponse> call, @NonNull Response<CityResponse> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     CityResponse cityResponse = response.body();
                     if (cityResponse != null) {
                         int cardMaxPay = cityResponse.getCardMaxPay();
@@ -282,7 +282,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
         call.enqueue(new Callback<CityResponseMerchantFondy>() {
             @Override
             public void onResponse(@NonNull Call<CityResponseMerchantFondy> call, @NonNull Response<CityResponseMerchantFondy> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     CityResponseMerchantFondy cityResponse = response.body();
                     Log.d(TAG, "onResponse: cityResponse" + cityResponse);
                     if (cityResponse != null) {
@@ -453,7 +453,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
         call.enqueue(new Callback<ResponsePaySystem>() {
             @Override
             public void onResponse(@NonNull Call<ResponsePaySystem> call, @NonNull Response<ResponsePaySystem> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     // Обработка успешного ответа
                     ResponsePaySystem responsePaySystem = response.body();
                     assert responsePaySystem != null;

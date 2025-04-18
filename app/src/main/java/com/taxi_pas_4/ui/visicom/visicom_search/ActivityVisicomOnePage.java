@@ -2288,7 +2288,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
         call.enqueue(new Callback<MapboxResponse>() {
             @Override
             public void onResponse(Call<MapboxResponse> call, Response<MapboxResponse> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     // Обработка успешного ответа
                     MapboxResponse mapboxResponse = response.body();
                     processAddressDataMapBox(mapboxResponse, point);
@@ -2526,7 +2526,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
         com.taxi_pas_4.ui.visicom.visicom_search.key_visicom.ApiClient.getVisicomKeyInfo(new Callback<ApiResponse>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     ApiResponse apiResponse = response.body();
                     if (apiResponse != null) {
                         String keyVisicom = apiResponse.getKeyVisicom();
@@ -2552,7 +2552,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
         ApiClientMapbox.getMapboxKeyInfo(new Callback<ApiResponseMapbox>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponseMapbox> call, @NonNull Response<ApiResponseMapbox> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     ApiResponseMapbox apiResponse = response.body();
                     if (apiResponse != null) {
                         String keyMaxbox = apiResponse.getKeyMapbox();

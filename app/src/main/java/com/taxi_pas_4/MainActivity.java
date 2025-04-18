@@ -726,7 +726,7 @@ public class MainActivity extends AppCompatActivity {
         call.enqueue(new Callback<CityResponse>() {
             @Override
             public void onResponse(@NonNull Call<CityResponse> call, @NonNull Response<CityResponse> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     CityResponse cityResponse = response.body();
                     if (cityResponse != null) {
                         int cardMaxPay = cityResponse.getCardMaxPay();
@@ -1356,7 +1356,7 @@ public class MainActivity extends AppCompatActivity {
         call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<UserFindResponse> call, @NonNull Response<UserFindResponse> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     UserFindResponse serverResponse = response.body();
                     if (serverResponse != null && serverResponse.getCheckUser() != null) {
                         // Возвращаем значение checkUser через callback
@@ -1418,7 +1418,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(@NonNull Call<CallbackResponseWfp> call, @NonNull Response<CallbackResponseWfp> response) {
                 Logger.d(MainActivity.this, TAG, "onResponse: " + response.body());
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     CallbackResponseWfp callbackResponse = response.body();
                     if (callbackResponse != null) {
                         List<CardInfo> cards = callbackResponse.getCards();
@@ -1490,7 +1490,7 @@ public class MainActivity extends AppCompatActivity {
 //            @Override
 //            public void onResponse(@NonNull Call<CallbackResponseWfp> call, @NonNull Response<CallbackResponseWfp> response) {
 //                Logger.d(getApplicationContext(), TAG, "onResponse: " + response.body());
-//                if (response.isSuccessful()) {
+//                if (response.isSuccessful() && response.body() != null) {
 //                    CallbackResponseWfp callbackResponse = response.body();
 //                    if (callbackResponse != null) {
 //                        List<CardInfo> cards = callbackResponse.getCards();
@@ -1739,7 +1739,7 @@ public class MainActivity extends AppCompatActivity {
         call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     UserResponse userResponse = response.body();
                     if (userResponse != null) {
                         updateRecordsUserInfo("username", userResponse.getUserName(), context);
@@ -1953,7 +1953,7 @@ public class MainActivity extends AppCompatActivity {
             call.enqueue(new Callback<Void>() {
                 @Override
                 public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
-                    if (response.isSuccessful()) {
+                    if (response.isSuccessful() && response.body() != null) {
                         Logger.d(getApplicationContext(),TAG, "Токен " + token + "успешно отправлен на сервер");
                     } else {
                         Logger.e(getApplicationContext(),TAG, "Ошибка отправки токена на сервер: " + response.code());

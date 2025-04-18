@@ -2322,7 +2322,7 @@ public class HomeFragment extends Fragment {
             call.enqueue(new Callback<List<RouteResponseCancel>>() {
                 @Override
                 public void onResponse(@NonNull Call<List<RouteResponseCancel>> call, @NonNull Response<List<RouteResponseCancel>> response) {
-                    if (response.isSuccessful()) {
+                    if (response.isSuccessful() && response.body() != null) {
                         List<RouteResponseCancel> routes = response.body();
                         assert routes != null;
                         Logger.d(context, TAG, "onResponse: " + routes.toString());
@@ -2672,7 +2672,7 @@ public class HomeFragment extends Fragment {
         call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<ResponsePaySystem> call, @NonNull Response<ResponsePaySystem> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     // Обработка успешного ответа
                     ResponsePaySystem responsePaySystem = response.body();
                     assert responsePaySystem != null;
