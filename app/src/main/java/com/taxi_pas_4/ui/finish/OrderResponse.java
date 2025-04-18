@@ -294,5 +294,38 @@ public class OrderResponse {
     public String getAction() {
         return action;
     }
+
+    @Override
+    public String toString() {
+        return "OrderResponse{" +
+                "changeCostAllowed=" + changeCostAllowed +
+                ", changeCostNotAllowedReason=" + changeCostNotAllowedReason +
+                ", dispatchingOrderUid='" + dispatchingOrderUid + '\'' +
+                ", orderCost='" + orderCost + '\'' +
+                ", addCost='" + addCost + '\'' +
+                ", currency='" + currency + '\'' +
+                ", orderCarInfo='" + orderCarInfo + '\'' +
+                ", driverPhone='" + driverPhone + '\'' +
+                ", driverCarPosition='" + driverCarPosition + '\'' +
+                ", requiredTime='" + requiredTime + '\'' +
+                ", closeReason=" + closeReason +
+                ", cancelReasonComment='" + cancelReasonComment + '\'' +
+                ", orderIsArchive=" + orderIsArchive +
+                ", driverExecutionStatus=" + driverExecutionStatus +
+                ", createDateTime='" + createDateTime + '\'' +
+                ", findCarTimeout=" + findCarTimeout +
+                ", findCarDelay=" + findCarDelay +
+                ", executionStatus='" + executionStatus + '\'' +
+                ", cancellationReason=" + cancellationReason +
+                ", crewAverageRating='" + crewAverageRating + '\'' +
+                ", rating='" + rating + '\'' +
+                ", ratingComment='" + ratingComment + '\'' +
+                ", corporateAccountId=" + corporateAccountId +
+                ", pushType=" + pushType +
+                ", timeToStartPoint='" + timeToStartPoint + '\'' +
+                ", action='" + action + '\'' +
+                ", uid='" + uid + '\'' +
+                '}';
+    }
 }
 

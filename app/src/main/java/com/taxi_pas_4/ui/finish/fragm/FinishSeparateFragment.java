@@ -36,6 +36,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.content.ContextCompat;
@@ -62,8 +63,13 @@ import com.taxi_pas_4.utils.data.DataArr;
 import com.taxi_pas_4.utils.hold.APIHoldService;
 import com.taxi_pas_4.utils.hold.HoldResponse;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.pusher.events.CanceledStatusEvent;
 import com.taxi_pas_4.utils.time_ut.TimeUtils;
 import com.taxi_pas_4.utils.ui.BackPressBlocker;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -84,7 +90,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
-
 
 public class FinishSeparateFragment extends Fragment {
 
@@ -337,7 +342,7 @@ public class FinishSeparateFragment extends Fragment {
                 // Ваш код
                 isTaskRunning = true;
                 try {
-                    statusCacheOrder();
+                    statusOrder();
                 } catch (ParseException e) {
                     throw new RuntimeException(e);
                 }
@@ -393,7 +398,7 @@ public class FinishSeparateFragment extends Fragment {
             btnOptions();
         });
         try {
-            statusCacheOrder();
+            statusOrder();
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
@@ -530,10 +535,10 @@ public class FinishSeparateFragment extends Fragment {
         if (handlerCheckTask != null) {
             handlerCheckTask.removeCallbacks(checkTask);
         }
-        viewModel.clearOrderResponse();
-        viewModel.getTransactionStatus().removeObservers(getViewLifecycleOwner());
-        viewModel.getOrderResponse().removeObservers(getViewLifecycleOwner());
-        viewModel.isTenMinutesRemaining.removeObservers(getViewLifecycleOwner());
+//        viewModel.clearOrderResponse();
+//        viewModel.getTransactionStatus().removeObservers(getViewLifecycleOwner());
+//        viewModel.getOrderResponse().removeObservers(getViewLifecycleOwner());
+//        viewModel.isTenMinutesRemaining.removeObservers(getViewLifecycleOwner());
     }
 
     @Override
@@ -691,13 +696,14 @@ public class FinishSeparateFragment extends Fragment {
 
     }
 
-    public void statusCacheOrder() throws ParseException {
+    public void statusOrder() throws ParseException {
 
-        if(paySystemStatus.equals("nal_payment")) {
+        btn_cancel_order.setVisibility(VISIBLE);
+        btn_cancel_order.setEnabled(true);
+        btn_cancel_order.setClickable(true);
 
-            btn_cancel_order.setVisibility(VISIBLE);
-            btn_cancel_order.setEnabled(true);
-            btn_cancel_order.setClickable(true);
+        if(pay_method.equals("nal_payment")) {
+
 
             String value = MainActivity.uid;
             Logger.d(context, "Pusher", "statusCacheOrder: " + value);
@@ -786,6 +792,30 @@ public class FinishSeparateFragment extends Fragment {
                             time_to_start_point,
                             orderCarInfo
                     );
+                }
+            });
+        } else {
+            baseUrl = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
+            String url = baseUrl  + "getOrderStatusMessageResultPush/" + MainActivity.uid;
+
+            Call<OrderResponse> call = ApiClient.getApiService().getOrderStatusMessageResultPush(url);
+            Logger.d(context, TAG, "/getOrderStatusMessageResultPush/: " + url);
+
+            // Выполняем запрос асинхронно
+            call.enqueue(new Callback<>() {
+                @Override
+                public void onResponse(@NonNull Call<OrderResponse> call, @NonNull Response<OrderResponse> response) {
+                    if (response.isSuccessful()) {
+                        // Получаем объект OrderResponse из успешного ответа
+                        OrderResponse orderResponse = response.body();
+                        assert orderResponse != null;
+                        updateUICardPayStatus(orderResponse);
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<OrderResponse> call, @NonNull Throwable t) {
+
                 }
             });
         }
@@ -907,6 +937,9 @@ public class FinishSeparateFragment extends Fragment {
             String time_to_start_point,
             String orderCarInfo
     ) {
+
+
+
         new Handler(Looper.getMainLooper()).post(() -> {
             text_status.clearAnimation();
             setVisibility(View.VISIBLE, textCost, textCostMessage);
@@ -971,7 +1004,8 @@ public class FinishSeparateFragment extends Fragment {
     }
 
     private void orderCanceled(String message) {
-        new Handler(Looper.getMainLooper()).post(() -> {
+//        new Handler(Looper.getMainLooper()).post(() -> {
+
             text_status.setText(R.string.recounting_order);
 
             text_status.clearAnimation();
@@ -998,7 +1032,7 @@ public class FinishSeparateFragment extends Fragment {
             }
 
 
-            Logger.d(context, TAG, "orderCanceled " + canceled);
+            Logger.d(context, TAG, "orderCanceled !!!! orderCanceled " + canceled);
 
 
             stopCycle();
@@ -1007,10 +1041,74 @@ public class FinishSeparateFragment extends Fragment {
             if (btn_again.getVisibility() != View.VISIBLE || btn_again.getVisibility() != GONE) {
                 btn_again.setVisibility(View.VISIBLE);
             }
-        });
+//        });
     }
 
+    private void orderCanceledError() {
+        if(!text_status.getText().equals(context.getString(R.string.ex_st_canceled))) {
 
+            cancel_btn_click = true;
+            if(!uid_Double.equals(" ")) {
+                cancelOrderDouble(context);
+
+            } else{
+                try {
+                    cancelOrder(MainActivity.uid, context);
+                } catch (ParseException e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+        }
+        // Создание Handler
+        Handler handlerCancelErr = new Handler();
+
+        // Создание Runnable, который будет содержать метод
+        Runnable runnable = () -> {
+            // Запускаем метод
+            if(!text_status.getText().equals(context.getString(R.string.ex_st_canceled))) {
+                text_status.setText(R.string.cancel_error);
+
+                text_status.clearAnimation();
+                canceled = true;
+                MainActivity.action = null;
+
+                // Скрываем ненужные элементы
+                setVisibility(GONE, btn_reset_status, btn_open, btn_options, btn_cancel_order,
+                        textStatusCar, textCarMessage, textCost,
+                        textCostMessage, carProgressBar, progressSteps);
+
+                // Останавливаем все обработчики
+                if (handler != null) {
+                    handler.removeCallbacks(myRunnable);
+                }
+                if (handlerBonusBtn != null) {
+                    handlerBonusBtn.removeCallbacks(runnableBonusBtn);
+                }
+                if (handlerAddcost != null) {
+                    handlerAddcost.removeCallbacks(showDialogAddcost);
+                }
+                if (handlerCheckTask != null) {
+                    handlerCheckTask.removeCallbacks(checkTask);
+                }
+
+
+                Logger.d(context, TAG, "orderCanceledError orderCanceled " + canceled);
+
+
+                stopCycle();
+
+                if (btn_again.getVisibility() != View.VISIBLE || btn_again.getVisibility() != GONE) {
+                    btn_again.setVisibility(View.VISIBLE);
+                }
+            }
+        };
+
+        // Запускаем runnable через 60 секунд (60 000 миллисекунд)
+        handlerCancelErr.postDelayed(runnable, 60000);
+
+
+    }
 
     private void closeReasonReactNal(
             int closeReason,
@@ -1203,42 +1301,112 @@ public class FinishSeparateFragment extends Fragment {
         }
     }
 
+
+    @Subscribe(threadMode = ThreadMode.MAIN) // Обработка события в UI-потоке
+    public void onCanceledStatusEvent(CanceledStatusEvent event) {
+        String canceledStatus = event.getCanceledStatus();
+        Log.d("EventBus", "Received canceled status: " + canceledStatus);
+        // Обновление UI или выполнение действий
+        Logger.d(context,"Pusher eventCanceled", "Finish eventCanceled status set: " + canceledStatus);
+        if (canceledStatus != null) {
+            if ("canceled".equals(canceledStatus)) {
+                viewModel.getOrderResponse().removeObservers(getViewLifecycleOwner());
+                String message = context.getString(R.string.ex_st_canceled);
+                orderCanceled(message);
+            }
+        }
+    }
+
+
+//    @Subscribe(threadMode = ThreadMode.MAIN) // Выполнение в UI-потоке
+//    public void onOrderResponseEvent(OrderResponseEvent event) {
+//        OrderResponse response = event.getOrderResponse();
+//        updateUICardPayStatus(response);
+////        if (response != null) {
+////            Logger.d(context, "Pusher 1111", "Finish Order updated: " + response.toString());
+////            // Обновляем UI на основе новых данных
+////            updateUICardPayStatus(response);
+////        } else {
+////            MainActivity.action = "Поиск авто";
+////            int closeReason = 1;
+////            String driverPhone = "*";
+////            String time_to_start_point = "*";
+////            String orderCarInfo = "*";
+////
+////            closeReasonReactCard(
+////                    closeReason,
+////                    driverPhone,
+////                    time_to_start_point,
+////                    orderCarInfo,
+////                    MainActivity.action
+////            );
+////
+////            Logger.d(context, TAG, "Received null OrderResponse in EventBus observer");
+////        }
+//    }
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        viewModelReviewer();
+    }
     public void viewModelReviewer() {
         // Инициализация ViewModel
         cancel_btn_click = false;
         // Наблюдение за статусом транзакции
 
         if(!paySystemStatus.equals("nal_payment")) {
+            // Инициализация ViewModel
 
+            viewModel.getTransactionStatus().removeObservers(getViewLifecycleOwner());
             viewModel.getTransactionStatus().observe(getViewLifecycleOwner(), status -> {
-                if ("Declined".equals(status)) {
+                Logger.d(context,"Pusher eventTransactionStatus", "Finish transaction status set: " + status);
+                String declined_invoice = (String) sharedPreferencesHelperMain.getValue("declined_invoice", "**");
+                Logger.d(context,"Pusher eventTransactionStatus", "Finish declined_invoice: " + declined_invoice);
+                Logger.d(context,"Pusher eventTransactionStatus", "Finish MainActivity.order_id: " + MainActivity.order_id);
+                if ("Declined".equals(status) && !declined_invoice.equals(MainActivity.order_id)) {
+                    sharedPreferencesHelperMain.saveValue("declined_invoice", MainActivity.order_id);
                     handleTransactionStatusDeclined(status, context);
                 }
             });
 
-            // Наблюдение за OrderResponse
-            viewModel.getOrderResponse().observe(getViewLifecycleOwner(), response -> {
-                if (response != null) {
-                    Logger.d(context, TAG, "Order updated: " + response.getDispatchingOrderUid());
-                    // Обновляем UI на основе новых данных
-                    updateUICardPayStatus(response);
-                } else {
-                    MainActivity.action = "Поиск авто";
-                    int closeReason = 1;
-                    String driverPhone = "*";
-                    String time_to_start_point = "*";
-                    String orderCarInfo = "*";
-                    closeReasonReactCard(
-                            closeReason,
-                            driverPhone,
-                            time_to_start_point,
-                            orderCarInfo,
-                            MainActivity.action
-                    );
+            viewModel.getCanceledStatus().removeObservers(getViewLifecycleOwner());
+            viewModel.getCanceledStatus().observe(getViewLifecycleOwner(), status -> {
+                Logger.d(context,"Pusher eventCanceled", "Finish eventCanceled status set: " + status);
+                        if (status != null) {
+                            if ("canceled".equals(status)) {
 
-                    Logger.d(context, TAG, "Received null OrderResponse in observer");
-                }
+                                viewModel.getOrderResponse().removeObservers(getViewLifecycleOwner());
+                                String message = context.getString(R.string.ex_st_canceled);
+                                orderCanceled(message);
+                            }
+                        }
             });
+
+            // Наблюдение за OrderResponse
+//            viewModel.getOrderResponse().removeObservers(getViewLifecycleOwner());
+//
+//            viewModel.getOrderResponse().observe(getViewLifecycleOwner(), response -> {
+//                if (response != null) {
+//                    Logger.d(context, "Pusher 1111", "Finish Order updated: " + response.toString());
+//                    // Обновляем UI на основе новых данных
+//                    updateUICardPayStatus(response);
+//                } else {
+//                    MainActivity.action = "Поиск авто";
+//                    int closeReason = 1;
+//                    String driverPhone = "*";
+//                    String time_to_start_point = "*";
+//                    String orderCarInfo = "*";
+//                    closeReasonReactCard(
+//                            closeReason,
+//                            driverPhone,
+//                            time_to_start_point,
+//                            orderCarInfo,
+//                            MainActivity.action
+//                    );
+//
+//                    Logger.d(context, TAG, "Received null OrderResponse in observer");
+//                }
+//            });
         }
 
         viewModel.setIsTenMinutesRemaining(false);
@@ -1252,7 +1420,7 @@ public class FinishSeparateFragment extends Fragment {
         };
 
         // Начинаем наблюдение
-        viewModel.isTenMinutesRemaining.observe(this, observer);
+        viewModel.isTenMinutesRemaining.observe(getViewLifecycleOwner(), observer);
 
 
     }
@@ -1264,7 +1432,7 @@ public class FinishSeparateFragment extends Fragment {
         timeUtils = new TimeUtils(required_time);
         timeUtils.startTimer();
 
-        viewModelReviewer();
+//        viewModelReviewer();
         btn_cancel_order.setOnClickListener(v -> showCancelDialog());
 
         pay_method = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(4);
@@ -1289,7 +1457,7 @@ public class FinishSeparateFragment extends Fragment {
     public void onStop() {
         super.onStop();
         // Отменяем выполнение Runnable, если фрагмент уходит в фон
-
+        EventBus.getDefault().unregister(this); // Удаление подписчика
         stopCycle();
 
         if (handlerAddcost != null) {
@@ -1301,7 +1469,7 @@ public class FinishSeparateFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-
+        EventBus.getDefault().register(this); // Регистрация подписчика
         // Повторный запуск Runnable при возвращении активности
         if(MainActivity.action != null) {
             if( MainActivity.action.equals("Поиск авто")) {
@@ -1649,6 +1817,7 @@ public class FinishSeparateFragment extends Fragment {
                             }
 
                         }
+                        cancel_30();
                         dialog.dismiss();
 
 
@@ -1681,6 +1850,19 @@ public class FinishSeparateFragment extends Fragment {
 
             }
         }
+    }
+
+    private void cancel_30() {
+        // Создание Handler
+        Handler handlerErr = new Handler();
+
+        // Создание Runnable, который будет содержать метод
+        // Запускаем метод
+        Runnable runnable = this::orderCanceledError;
+
+        // Запускаем runnable через 30 секунд (30 000 миллисекунд)
+        handlerErr.postDelayed(runnable, 30000);
+
     }
 
     private  void isTenMinutesRemainingAction() {

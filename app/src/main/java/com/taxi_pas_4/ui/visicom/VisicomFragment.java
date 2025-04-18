@@ -199,7 +199,7 @@ public class VisicomFragment extends Fragment {
     DatabaseHelper databaseHelper;
     DatabaseHelperUid databaseHelperUid;
     public static Map<String, String> sendUrlMap;
-    ConstraintLayout constraintLayoutVisicomMain, constraintLayoutVisicomFinish;
+    public static ConstraintLayout constraintLayoutVisicomMain, constraintLayoutVisicomFinish;
     @SuppressLint("StaticFieldLeak")
     public static TextView text_full_message, textCostMessage, textStatusCar;
 
@@ -1412,6 +1412,7 @@ public class VisicomFragment extends Fragment {
         MainActivity.orderResponse = null;
         viewModel.updateOrderResponse(null);
         viewModel.setTransactionStatus(null);
+        viewModel.setCanceledStatus("no_canceled");
 
         textfrom = binding.textfrom;
 

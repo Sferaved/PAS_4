@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.139</string>
-    <string name="version">Версія: 4.139</string>
+    <string name="version_code">4.140</string>
+    <string name="version">Версія: 4.140</string>
 
     <string name="app_name">Таксі Дюк Попутник</string>
 
@@ -409,7 +409,7 @@
     <string name="pos_f">DW631 47, 00-514 Warszawa, Poland\t</string>
     <string name="check_city">Виберіть службу таксі у вашому місті</string>
     <string name="upd_account">Зберегти зміни</string>
-    <string name="del_account">Видалити обліковий запис</string>
+    <string name="del_account">Видалити акаунт</string>
     <string name="account_menu">Акаунт</string>
     <string name="email_upd">Зміни недоступні</string>
     <string name="info_upd">Інформацію оновлено</string>
@@ -510,4 +510,7 @@
     <string name="out_account_btn">Вийти з акаунту</string>
     <string name="in_google_bonus">Для отримання бонусів увійдіть до Google облікового запису</string>
     <string name="cancel_btn_enable">Скасування замовлення тимчасово недоступне</string>
+    <string name="cancel_error">Сталася помилка скасування замовлення. Зв\'яжіться з оператором.</string>
+    <string name="del_acc_mes">Всі Ваші персональні дані та налаштування будуть видалені з додатку та наших серверів. Додаток буде закрит.</string>
+    <string name="err_del_phone_fb">Помилка видалення облікового запису. Зверніться до оператора.</string>
 </resources>

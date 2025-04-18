@@ -34,7 +34,6 @@ import com.taxi_pas_4.databinding.FragmentCardBinding;
 import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
-import com.taxi_pas_4.utils.connect.NetworkChangeReceiver;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
@@ -58,14 +57,13 @@ public class CardFragment extends Fragment {
     private FragmentCardBinding binding;
     public static AppCompatButton btnCardLink, btnOrder;
 
-    private NetworkChangeReceiver networkChangeReceiver;
     private String baseUrl;
-    private String messageFondy;
+
     @SuppressLint("StaticFieldLeak")
     public static ProgressBar progressBar;
-    private final String TAG = "TAG_CARD";
+    private final String TAG = "CardFragment";
     String email;
-    String amount = "100";
+
     @SuppressLint("StaticFieldLeak")
     public static TextView textCard;
 
@@ -77,7 +75,6 @@ public class CardFragment extends Fragment {
     Activity context;
     WebView webView;
     FragmentManager fragmentManager;
-    private AppCompatButton btnCallAdmin;
     View root;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -96,7 +93,7 @@ public class CardFragment extends Fragment {
         textCard.setVisibility(View.VISIBLE);
         listView.setVisibility(View.VISIBLE);
         progressBar.setVisibility(View.VISIBLE);
-        networkChangeReceiver = new NetworkChangeReceiver();
+
         email = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
 
         Logger.d(context, TAG, "onResponse:pay_method "+pay_method);
@@ -158,10 +155,10 @@ public class CardFragment extends Fragment {
                         Logger.d(context, TAG, "onResponse: cards" + cards);
                         String tableName = MainActivity.TABLE_WFP_CARDS; // Например, "wfp_cards"
 
-// Открываем или создаем базу данных
+
                         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
 
-// Используем правильное имя таблицы в запросе
+
                         database.execSQL("DELETE FROM " + tableName + ";");
 
                         if (cards != null && !cards.isEmpty()) {
@@ -187,7 +184,9 @@ public class CardFragment extends Fragment {
                         database.close();
                     }
                     cardViews();
-
+//                    MainActivity.navController.navigate(R.id.nav_card, null, new NavOptions.Builder()
+//                            .setPopUpTo(R.id.nav_card, true)
+//                            .build());
                 }
             }
 
@@ -195,13 +194,17 @@ public class CardFragment extends Fragment {
             public void onFailure(@NonNull Call<CallbackResponseWfp> call, @NonNull Throwable t) {
                 // Обработка ошибки запроса
                 Logger.d(context, TAG, "onResponse: failure " + t);
-                cardViews();
             }
         });
         progressBar.setVisibility(View.INVISIBLE);
+        // Выполняем необходимое действие (например, запуск новой активности)
+//        MainActivity.navController.navigate(R.id.nav_card, null, new NavOptions.Builder()
+//                .setPopUpTo(R.id.nav_card, true)
+//                .build());
 
     }
 
+    @SuppressLint("SourceLockedOrientationActivity")
     @Override
     public void onResume() {
         super.onResume();
@@ -236,7 +239,7 @@ public class CardFragment extends Fragment {
                     .build());
         });
 
-        btnCallAdmin = binding.btnCallAdmin;
+        AppCompatButton btnCallAdmin = binding.btnCallAdmin;
         btnCallAdmin.setOnClickListener(v -> {
             Intent intent = new Intent(Intent.ACTION_DIAL);
             String phone = logCursor(MainActivity.CITY_INFO, requireActivity()).get(3);
@@ -248,11 +251,11 @@ public class CardFragment extends Fragment {
         swipeRefreshLayout.setOnRefreshListener(() -> {
             // Скрываем TextView (⬇️) сразу после появления индикатора свайпа
             svButton.setVisibility(View.GONE);
-
-            // Выполняем необходимое действие (например, запуск новой активности)
-            MainActivity.navController.navigate(R.id.nav_card, null, new NavOptions.Builder()
-                    .setPopUpTo(R.id.nav_card, true)
-                    .build());
+            getCardTokenWfp();
+//            // Выполняем необходимое действие (например, запуск новой активности)
+//            MainActivity.navController.navigate(R.id.nav_card, null, new NavOptions.Builder()
+//                    .setPopUpTo(R.id.nav_card, true)
+//                    .build());
             // Эмулируем окончание обновления с задержкой
             swipeRefreshLayout.postDelayed(() -> {
                 // Отключаем индикатор загрузки
@@ -285,15 +288,13 @@ public class CardFragment extends Fragment {
             } else {
                 MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(getActivity());
 
-                messageFondy = getString(R.string.fondy_message);
-
                 MyBottomSheetCardVerificationWithOneUah bottomSheetDialogFragment = new MyBottomSheetCardVerificationWithOneUah();
                 bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                 progressBar.setVisibility(View.GONE);
             }
         });
-
-        getCardTokenWfp();
+        cardViews();
+//        getCardTokenWfp();
 
     }
 

@@ -1121,6 +1121,7 @@ public class ActivityVisicomOnePage extends AppCompatActivity {
                         + ",poi_sports_complexe"
                         + ",poi_post_office"
                         + ",poi_underground_railway_station"
+                        + ",poi_hospital"
                         + ",adr_street"
                         + "&l=20"
                         + "&text=" + modifiedText + "&key=" + MainActivity.apiKey;

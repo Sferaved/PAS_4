@@ -89,6 +89,7 @@ import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
 import com.taxi_pas_4.ui.payment_system.PayApi;
 import com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
 import com.taxi_pas_4.ui.start.ResultSONParser;
+import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.animation.car.CarProgressBar;
 import com.taxi_pas_4.utils.auth.FirebaseConsentManager;
 import com.taxi_pas_4.utils.blacklist.BlacklistManager;
@@ -1024,6 +1025,15 @@ public class HomeFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+
+        VisicomFragment.sendUrlMap = null;
+        MainActivity.uid = null;
+        MainActivity.action = null;
+
+//        MainActivity.orderResponse = null;
+//        viewModel.updateOrderResponse(null);
+//        viewModel.setTransactionStatus(null);
+//        viewModel.setCanceledStatus(null);
 
         constraintLayoutHomeMain.setVisibility(VISIBLE);
         constraintLayoutHomeFinish.setVisibility(GONE);

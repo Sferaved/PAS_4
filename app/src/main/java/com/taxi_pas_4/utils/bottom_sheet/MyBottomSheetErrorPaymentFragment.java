@@ -268,7 +268,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
                 phone_number
         );
 
-        call.enqueue(new Callback<InvoiceResponse>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<InvoiceResponse> call, @NonNull Response<InvoiceResponse> response) {
                 Logger.d(context, TAG, "onResponse: 1111" + response.code());

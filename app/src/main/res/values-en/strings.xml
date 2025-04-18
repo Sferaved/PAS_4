@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.139</string>
-    <string name="version">Version: 4.139</string>
+    <string name="version_code">4.140</string>
+    <string name="version">Version: 4.140</string>
 
     <string name="app_name">Taxi Duke Fellow</string>
 
@@ -506,4 +506,7 @@
     <string name="out_account_btn">Sign out of your account</string>
     <string name="in_google_bonus">To receive bonuses, log in to your Google account</string>
     <string name="cancel_btn_enable">Order cancellation is temporarily unavailable</string>
+    <string name="cancel_error">An error occurred while canceling your order. Please contact the operator.</string>
+    <string name="del_acc_mes">All your personal data and settings will be deleted from the application and from our servers. The application will be closed.</string>
+    <string name="err_del_phone_fb">Error deleting account. Contact your operator.</string>
 </resources>

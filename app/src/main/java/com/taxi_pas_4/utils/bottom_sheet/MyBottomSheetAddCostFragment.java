@@ -362,7 +362,9 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
     private void newOrderCardPayAdd20 (
             String addCost
     ) {
+
         FinishSeparateFragment.btn_cancel_order.setVisibility(GONE);
+
         Pattern pattern = Pattern.compile("(\\d+)");
 
         Log.e("newOrderCardPayAdd20", "textCostMessage: " + FinishSeparateFragment.textCostMessage.getText().toString());
@@ -509,7 +511,9 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
                         case "WaitingAuthComplete":
                             Logger.d(context, TAG, "onResponse: Positive status received: " + orderStatus);
                             sharedPreferencesHelperMain.saveValue("pay_error", "**");
-                            newOrderCardPayAdd20(amount);
+                            new Handler(Looper.getMainLooper()).post(() -> {
+                                newOrderCardPayAdd20(amount);
+                            });
                             break;
                        default:
                            Toast.makeText(context, context.getString(R.string.pay_failure_mes), Toast.LENGTH_SHORT).show();

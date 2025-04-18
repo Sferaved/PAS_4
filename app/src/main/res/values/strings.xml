@@ -1,8 +1,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.139</string>
-    <string name="version">Версия: 4.139</string>
+    <string name="version_code">4.140</string>
+    <string name="version">Версия: 4.140</string>
 
     <string name="app_name">Такси Дюк Попутчик</string>
 
@@ -509,4 +509,7 @@
     <string name="out_account_btn">Выйти из аккаунта</string>
     <string name="in_google_bonus">Для получения бонусов войдите в Google аккаунт</string>
     <string name="cancel_btn_enable">Отмена заказа временно недоступна</string>
+    <string name="cancel_error">Произошла ошибка отмены заказа. Свяжитесь с оператором.</string>
+    <string name="del_acc_mes">Все Ваши персоналные данные и настройки будут удалены с приложения и с наших серверов. Приложение будт закрыто.</string>
+    <string name="err_del_phone_fb">Ошибка удаления аккаунта. Обратитесь к оператору.</string>
 </resources>

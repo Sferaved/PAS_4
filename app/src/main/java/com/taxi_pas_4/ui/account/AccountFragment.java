@@ -200,16 +200,22 @@ public class AccountFragment extends Fragment {
 
         del_but.setOnClickListener(v -> {
             Logger.d(context, TAG, "Delete button clicked");
-            del_but.setVisibility(View.GONE);
-            progressBar.setVisibility(View.VISIBLE);
-
-            // Запустить указанный код
-            KeyboardUtils.hideKeyboard(requireActivity(), root);
-            userManager.deleteUserPhone();
-            userRepository = new UserRepository();
-            userRepository.destroyEmail(userEmail);
-            resetUserInfo();
-            Toast.makeText(getActivity(), R.string.del_info, Toast.LENGTH_SHORT).show();
+//            del_but.setVisibility(View.GONE);
+//            progressBar.setVisibility(View.VISIBLE);
+//
+//            // Запустить указанный код
+//
+//            KeyboardUtils.hideKeyboard(requireActivity(), root);
+//            userManager.deleteUserPhone();
+//            userRepository = new UserRepository();
+//            userRepository.destroyEmail(userEmail);
+//
+//            sharedPreferencesHelperMain.saveValue("CityCheckActivity", "**");
+//            updateRecordsUserInfo("email", "email", context);
+//            resetUserInfo();
+//            consentManager.revokeTokenAndSignOut();
+//            Toast.makeText(context, R.string.out_account, Toast.LENGTH_SHORT).show();
+//            Toast.makeText(getActivity(), R.string.del_info, Toast.LENGTH_SHORT).show();
             startActivity(new Intent(getActivity(), ExitActivity.class));
         });
 
@@ -252,6 +258,7 @@ public class AccountFragment extends Fragment {
 
         return root;
     }
+
     private void googleVerifyAccount() {
         FirebaseConsentManager consentManager = new FirebaseConsentManager(requireActivity());
 

@@ -1,12 +1,17 @@
 package com.taxi_pas_4.androidx.startup;
 
+import static com.taxi_pas_4.ui.clear.AppDataUtils.clearAllSharedPreferences;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -14,6 +19,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.multidex.BuildConfig;
 import androidx.navigation.NavOptions;
 
 import com.github.anrwatchdog.ANRWatchDog;
@@ -61,8 +67,13 @@ public class MyApplication extends Application {
     public void onCreate() {
         super.onCreate();
         sharedPreferencesHelperMain = new SharedPreferencesHelper(this);
+
+
         instance = this;
 
+        applyLocale();
+
+//        checkAndClearPrefs(this);
         // Установка глобального обработчика исключений
         Thread.setDefaultUncaughtExceptionHandler(new MyUncaughtExceptionHandler(this));
 
@@ -72,7 +83,20 @@ public class MyApplication extends Application {
         registerActivityLifecycleCallbacks();
         initializeThreadPoolExecutor();
     }
+    private static final String PREFS_VERSION_KEY = "SharedPrefsVersion";
 
+    private void checkAndClearPrefs(Context context) {
+        SharedPreferences prefs = sharedPreferencesHelperMain.getSharedPreferences();
+        int savedVersion = prefs.getInt(PREFS_VERSION_KEY, -1);
+        int currentVersion = BuildConfig.VERSION_CODE;
+
+        // Очищаем SharedPreferences только при новой установке (ключ отсутствует)
+        if (savedVersion == -1) {
+            clearAllSharedPreferences(context);
+            // Сохраняем текущую версию после очистки
+            prefs.edit().putInt(PREFS_VERSION_KEY, currentVersion).apply();
+        }
+    }
     private void initializeThreadPoolExecutor() {
         // Настройка ThreadPoolExecutor
         threadPoolExecutor = new ThreadPoolExecutor(
@@ -273,6 +297,20 @@ public class MyApplication extends Application {
 
         Logger.d(activity,"MemoryMonitor", "Свободная память: " + memoryInfo.availMem + " байт");
         Logger.d(activity,"MemoryMonitor", "Состояние нехватки памяти: " + memoryInfo.lowMemory);
+    }
+
+
+    private void applyLocale() {
+        Log.d(TAG, "applyLocale: " + Locale.getDefault().toString());
+        String localeCode = (String) sharedPreferencesHelperMain.getValue("locale", Locale.getDefault().toString());
+        Locale locale = new Locale(localeCode.split("_")[0]);
+
+        Locale.setDefault(locale);
+
+        Resources resources = getResources();
+        Configuration config = resources.getConfiguration();
+        config.setLocale(locale);
+        resources.updateConfiguration(config, resources.getDisplayMetrics());
     }
 
     private void restartApplication(Activity activity) {
