@@ -66,10 +66,10 @@ import com.taxi_pas_4.ui.clear.AppDataUtils;
 import com.taxi_pas_4.ui.finish.OrderResponse;
 import com.taxi_pas_4.ui.finish.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.ui.home.HomeFragment;
-import com.taxi_pas_4.ui.home.cities.api.CityApiClient;
-import com.taxi_pas_4.ui.home.cities.api.CityResponse;
-import com.taxi_pas_4.ui.home.cities.api.CityService;
-import com.taxi_pas_4.ui.home.cities.check.CityCheckActivity;
+import com.taxi_pas_4.ui.cities.api.CityApiClient;
+import com.taxi_pas_4.ui.cities.api.CityResponse;
+import com.taxi_pas_4.ui.cities.api.CityService;
+import com.taxi_pas_4.ui.cities.check.CityCheckActivity;
 import com.taxi_pas_4.ui.settings.SettingsActivity;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
@@ -1285,6 +1285,15 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, R.string.checking, Toast.LENGTH_SHORT).show();
                 startFireBase();
             } else {
+                String sityCheckActivity = (String) sharedPreferencesHelperMain.getValue("CityCheckActivity", "**");
+                Logger.d(this, TAG, "CityCheckActivity: " + sityCheckActivity);
+
+                if (sityCheckActivity.equals("**")) {
+                    // Запускаем CityCheckActivity, если состояние страны не задано
+                    Intent intent = new Intent(this, CityCheckActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivity(intent);
+                }
                 firstStart = false;
 
                 // Инициализация и подключение к Pusher

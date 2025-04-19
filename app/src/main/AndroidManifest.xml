@@ -101,7 +101,7 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.PAS_4.NoActionBar"
             tools:ignore="Instantiatable" />
-        <activity android:name=".ui.home.cities.check.CityCheckActivity" />
+        <activity android:name=".ui.cities.check.CityCheckActivity" />
         <activity android:name=".ui.settings.SettingsActivity" />
 
         <activity
