@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.142</string>
-    <string name="version">Версія: 4.142</string>
+    <string name="version_code">4.143</string>
+    <string name="version">Версія: 4.143</string>
 
     <string name="app_name">Таксі Дюк Попутник</string>
 
@@ -153,7 +153,7 @@
     <string name="change_message">"Зміна бази адрес. "</string>
     <string name="server_error_connected">Сервер не прийняв запит. Наберіть оператора через "ДОПОМОГУ"</string>
     <string name="GDPR">GDPR</string>
-    <string name="ok_GDPR">Погодитись</string>
+    <string name="ok_GDPR">Погодитись  -> </string>
     <string name="Dnipro_city">Дніпро</string>
     <string name="city_change">Виберіть місто</string>
     <string name="Zaporizhzhia">Запоріжжя</string>
@@ -513,4 +513,5 @@
     <string name="cancel_error">Сталася помилка скасування замовлення. Зв\'яжіться з оператором.</string>
     <string name="del_acc_mes">Всі Ваші персональні дані та налаштування будуть видалені з додатку та наших серверів. Додаток буде закрит.</string>
     <string name="err_del_phone_fb">Помилка видалення облікового запису. Зверніться до оператора.</string>
+    <string name="anr_mes">Упс... Щось пішло не так 😓. Спробуйте ще раз чи трохи згодом 🔄</string>
 </resources>

@@ -33,13 +33,13 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.card.CardFragment;
-import com.taxi_pas_4.ui.gallery.GalleryFragment;
-import com.taxi_pas_4.ui.home.CustomArrayAdapter;
-import com.taxi_pas_4.ui.home.HomeFragment;
 import com.taxi_pas_4.ui.cities.api.CityApiClient;
 import com.taxi_pas_4.ui.cities.api.CityResponse;
 import com.taxi_pas_4.ui.cities.api.CityResponseMerchantFondy;
 import com.taxi_pas_4.ui.cities.api.CityService;
+import com.taxi_pas_4.ui.gallery.GalleryFragment;
+import com.taxi_pas_4.ui.home.CustomArrayAdapter;
+import com.taxi_pas_4.ui.home.HomeFragment;
 import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
 import com.taxi_pas_4.ui.payment_system.PayApi;
 import com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
@@ -47,6 +47,7 @@ import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.permissions.UserPermissions;
+import com.uxcam.UXCam;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -103,6 +104,9 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+
+        UXCam.tagScreenName(TAG);
+
         View view = inflater.inflate(R.layout.bonus_list_layout, container, false);
         context = requireActivity();
 

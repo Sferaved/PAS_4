@@ -102,6 +102,7 @@ import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 import com.taxi_pas_4.utils.ui.BackPressBlocker;
 import com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
+import com.uxcam.UXCam;
 
 import java.net.MalformedURLException;
 import java.text.ParseException;
@@ -216,6 +217,9 @@ public class VisicomFragment extends Fragment {
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
+
+        UXCam.tagScreenName(TAG);
+
         binding = FragmentVisicomBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
@@ -422,27 +426,28 @@ public class VisicomFragment extends Fragment {
 
 
     public static void btnVisible(int visible) {
-        
-        if (visible == View.INVISIBLE) {
-            progressBar.setVisibility(VISIBLE);
-        } else {
-            progressBar.setVisibility(View.GONE);
+        if (text_view_cost != null) {
+            if (visible == View.INVISIBLE) {
+                progressBar.setVisibility(VISIBLE);
+            } else {
+                progressBar.setVisibility(View.GONE);
+            }
+
+
+            linearLayout.setVisibility(visible);
+
+            btnAdd.setVisibility(visible);
+
+            buttonBonus.setVisibility(visible);
+            btn_minus.setVisibility(visible);
+            text_view_cost.setVisibility(visible);
+            btn_plus.setVisibility(visible);
+            btnOrder.setVisibility(visible);
+
+            schedule.setVisibility(visible);
+
+            shed_down.setVisibility(visible);
         }
-
-
-        linearLayout.setVisibility(visible);
-
-        btnAdd.setVisibility(visible);
-
-        buttonBonus.setVisibility(visible);
-        btn_minus.setVisibility(visible);
-        text_view_cost.setVisibility(visible);
-        btn_plus.setVisibility(visible);
-        btnOrder.setVisibility(visible);
-
-        schedule.setVisibility(visible);
-
-        shed_down.setVisibility(visible);
     }
 
     @Override

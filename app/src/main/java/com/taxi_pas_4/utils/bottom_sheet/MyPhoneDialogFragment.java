@@ -35,6 +35,7 @@ import com.taxi_pas_4.ui.home.HomeFragment;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.user.save_firebase.FirebaseUserManager;
+import com.uxcam.UXCam;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,6 +65,9 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+
+        UXCam.tagScreenName(TAG);
+
         View view = inflater.inflate(R.layout.phone_verify_layout, container, false);
         phoneNumber = view.findViewById(R.id.phoneNumber);
         button = view.findViewById(R.id.ok_button);

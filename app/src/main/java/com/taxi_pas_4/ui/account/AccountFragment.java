@@ -36,6 +36,7 @@ import com.redmadrobot.inputmask.MaskedTextChangedListener;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.databinding.FragmentAccountBinding;
+import com.taxi_pas_4.ui.exit.ExitActivity;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.RouteResponseCancel;
 import com.taxi_pas_4.ui.keyboard.KeyboardUtils;
@@ -48,6 +49,7 @@ import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 import com.taxi_pas_4.utils.user.del_server.UserRepository;
 import com.taxi_pas_4.utils.user.save_firebase.FirebaseUserManager;
+import com.uxcam.UXCam;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -89,7 +91,12 @@ public class AccountFragment extends Fragment {
     @SuppressLint("SourceLockedOrientationActivity")
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
+
+        UXCam.tagScreenName(TAG);
+
         binding = FragmentAccountBinding.inflate(inflater, container, false);
+
+
         root = binding.getRoot();
         context = requireActivity();
         userManager = new FirebaseUserManager();

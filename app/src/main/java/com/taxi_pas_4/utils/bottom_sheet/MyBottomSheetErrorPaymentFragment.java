@@ -57,6 +57,7 @@ import com.taxi_pas_4.ui.wfp.purchase.PurchaseService;
 import com.taxi_pas_4.utils.helpers.LocaleHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
+import com.uxcam.UXCam;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -131,6 +132,9 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+
+        UXCam.tagScreenName(TAG);
+
         View view = inflater.inflate(R.layout.error_payment_layout, container, false);
         arrayList = logCursor(MainActivity.CITY_INFO, requireContext());
         MERCHANT_ID = arrayList.get(6);

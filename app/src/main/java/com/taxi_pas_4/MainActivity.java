@@ -62,14 +62,14 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.databinding.ActivityMainBinding;
 import com.taxi_pas_4.ui.card.CardInfo;
-import com.taxi_pas_4.ui.clear.AppDataUtils;
-import com.taxi_pas_4.ui.finish.OrderResponse;
-import com.taxi_pas_4.ui.finish.model.ExecutionStatusViewModel;
-import com.taxi_pas_4.ui.home.HomeFragment;
 import com.taxi_pas_4.ui.cities.api.CityApiClient;
 import com.taxi_pas_4.ui.cities.api.CityResponse;
 import com.taxi_pas_4.ui.cities.api.CityService;
 import com.taxi_pas_4.ui.cities.check.CityCheckActivity;
+import com.taxi_pas_4.ui.clear.AppDataUtils;
+import com.taxi_pas_4.ui.finish.OrderResponse;
+import com.taxi_pas_4.ui.finish.model.ExecutionStatusViewModel;
+import com.taxi_pas_4.ui.home.HomeFragment;
 import com.taxi_pas_4.ui.settings.SettingsActivity;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
@@ -83,7 +83,6 @@ import com.taxi_pas_4.utils.download.AppUpdater;
 import com.taxi_pas_4.utils.fcm.token_send.ApiServiceToken;
 import com.taxi_pas_4.utils.fcm.token_send.RetrofitClientToken;
 import com.taxi_pas_4.utils.helpers.LocaleHelper;
-import com.taxi_pas_4.utils.keys.FirestoreHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.utils.permissions.UserPermissions;
@@ -211,18 +210,29 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Установка локали перед вызовом super.onCreate()
-
+        applyLocale();
         super.onCreate(savedInstanceState);
+//
+//
+//
+//        if (!isTaskRoot()) {
+//            finish();
+//            return;
+//        }
 
         // Инициализация View Binding
         ActivityMainBinding binding = ActivityMainBinding.inflate(getLayoutInflater());
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(binding.getRoot());
 
-
+//        try {
+//            Thread.sleep(10000); // Блокировка основного потока на 10 секунд
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
         // Логирование и очистка старых логов
-        deleteOldLogFile();
+//        deleteOldLogFile();
         Logger.i(this, TAG, "MainActivity started");
         Logger.i(this, TAG, getString(R.string.application));
         Logger.i(this, TAG, getString(R.string.version));
@@ -408,16 +418,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         VisicomFragment.constraintLayoutVisicomMain.setVisibility(View.GONE);
-//        new VerifyUserTask(this).execute();
+
         sharedPreferencesHelperMain.saveValue("pay_error", "**");
 
         MainActivity.action = null;
         viewModel = new ViewModelProvider(this).get(ExecutionStatusViewModel.class);
-
-//        viewModel.updateOrderResponse(null);
-//        viewModel.setTransactionStatus(null);
-//        viewModel.setCanceledStatus(null);
-
 
         // Устанавливаем Action Bar, если он доступен
         if (getSupportActionBar() != null) {
@@ -472,8 +477,7 @@ public class MainActivity extends AppCompatActivity {
                     .build());
 
         } else  {
-            visicomKeyFromFb();
-            mapboxKeyFromFb ();
+
             newUser();
 
             baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
@@ -1877,67 +1881,24 @@ public class MainActivity extends AppCompatActivity {
 
         if (currentUser != null) {
             String userId = currentUser.getUid();
-            userManager.getUserPhoneById(userId, new FirebaseUserManager.UserPhoneCallback() {
-                @Override
-                public void onUserPhoneRetrieved(String phone) {
-                    if (phone != null) {
-                        // Используйте phone по своему усмотрению
-                        Logger.d(getApplicationContext(), TAG, "User phone: " + phone);
-                        String PHONE_PATTERN = "\\+38 \\d{3} \\d{3} \\d{2} \\d{2}";
-                        boolean val = Pattern.compile(PHONE_PATTERN).matcher(phone).matches();
+            userManager.getUserPhoneById(userId, phone -> {
+                if (phone != null) {
+                    // Используйте phone по своему усмотрению
+                    Logger.d(getApplicationContext(), TAG, "User phone: " + phone);
+                    String PHONE_PATTERN = "\\+38 \\d{3} \\d{3} \\d{2} \\d{2}";
+                    boolean val = Pattern.compile(PHONE_PATTERN).matcher(phone).matches();
 
-                        if (val) {
-                            updateRecordsUser("phone_number", phone);
-                        } else {
-                            // Handle case where phone doesn't match the pattern
-                            Logger.d(getApplicationContext(), TAG, "Phone does not match pattern");
-                        }
+                    if (val) {
+                        updateRecordsUser("phone_number", phone);
                     } else {
-                        Logger.d(getApplicationContext(), TAG, "Phone is null");
+                        // Handle case where phone doesn't match the pattern
+                        Logger.d(getApplicationContext(), TAG, "Phone does not match pattern");
                     }
+                } else {
+                    Logger.d(getApplicationContext(), TAG, "Phone is null");
                 }
             });
         }
-    }
-
-    private void visicomKeyFromFb()
-    {
-        FirestoreHelper firestoreHelper = new FirestoreHelper();
-        firestoreHelper.getVisicomKey(new FirestoreHelper.OnVisicomKeyFetchedListener() {
-            @Override
-            public void onSuccess(String vKey) {
-                // Обработка успешного получения ключа
-                MainActivity.apiKey = vKey;
-                Logger.d(getApplicationContext(),TAG, "Visicom Key: " + vKey);
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-                // Обработка ошибок
-                Logger.e(getApplicationContext(),TAG, "Ошибка: " + e.getMessage());
-            }
-        });
-
-    }
-
-    private void mapboxKeyFromFb()
-    {
-        FirestoreHelper firestoreHelper = new FirestoreHelper();
-        firestoreHelper.getMapboxKey(new FirestoreHelper.OnMapboxKeyFetchedListener() {
-            @Override
-            public void onSuccess(String mKey) {
-                // Обработка успешного получения ключа
-                MainActivity.apiKeyMapBox = mKey;
-                Logger.d(getApplicationContext(),TAG, "Mapbox Key: " + apiKeyMapBox);
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-                // Обработка ошибок
-                Logger.e(getApplicationContext(),TAG, "Ошибка: " + e.getMessage());
-            }
-        });
-
     }
 
     private void sendToken (String email) {
@@ -1962,11 +1923,7 @@ public class MainActivity extends AppCompatActivity {
             call.enqueue(new Callback<Void>() {
                 @Override
                 public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
-                    if (response.isSuccessful() && response.body() != null) {
-                        Logger.d(getApplicationContext(),TAG, "Токен " + token + "успешно отправлен на сервер");
-                    } else {
-                        Logger.e(getApplicationContext(),TAG, "Ошибка отправки токена на сервер: " + response.code());
-                    }
+                    Logger.e(getApplicationContext(), TAG, "response.code: " + response.code());
                 }
 
                 @Override
@@ -2019,4 +1976,30 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+
+    private void applyLocale() {
+        Log.d(TAG, "applyLocale: " + Locale.getDefault().toString());
+
+        Locale previousLocale = new Locale(Locale.getDefault().toString().split("_")[0]);
+        Log.d(TAG, "applyLocale:  previousLocale " + previousLocale);
+
+        String localeCode = (String) sharedPreferencesHelperMain.getValue("locale", Locale.getDefault().toString());
+        Log.d(TAG, "applyLocale sharedPreferencesHelperMain: " + localeCode);
+
+        Locale locale = new Locale(localeCode);
+
+        Log.d(TAG, "applyLocale locale: " + locale);
+
+        if (!locale.equals(previousLocale)) {
+
+            Locale.setDefault(locale);
+
+            Resources resources = getResources();
+            Configuration config = resources.getConfiguration();
+            config.setLocale(locale);
+            resources.updateConfiguration(config, resources.getDisplayMetrics());
+         }
+
+    }
+
 }

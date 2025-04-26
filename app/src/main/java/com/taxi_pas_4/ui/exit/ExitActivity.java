@@ -1,4 +1,4 @@
-package com.taxi_pas_4.ui.account;
+package com.taxi_pas_4.ui.exit;
 
 
 import android.annotation.SuppressLint;

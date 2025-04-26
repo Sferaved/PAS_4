@@ -31,15 +31,15 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.card.CardInfo;
-import com.taxi_pas_4.ui.finish.ApiClient;
-import com.taxi_pas_4.ui.finish.RouteResponse;
-import com.taxi_pas_4.ui.fondy.callback.CallbackResponse;
-import com.taxi_pas_4.ui.fondy.callback.CallbackService;
 import com.taxi_pas_4.ui.cities.api.CityApiClient;
 import com.taxi_pas_4.ui.cities.api.CityLastAddressResponse;
 import com.taxi_pas_4.ui.cities.api.CityResponse;
 import com.taxi_pas_4.ui.cities.api.CityResponseMerchantFondy;
 import com.taxi_pas_4.ui.cities.api.CityService;
+import com.taxi_pas_4.ui.finish.ApiClient;
+import com.taxi_pas_4.ui.finish.RouteResponse;
+import com.taxi_pas_4.ui.fondy.callback.CallbackResponse;
+import com.taxi_pas_4.ui.fondy.callback.CallbackService;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
@@ -49,6 +49,7 @@ import com.taxi_pas_4.utils.ip.ApiServiceCountry;
 import com.taxi_pas_4.utils.ip.CountryResponse;
 import com.taxi_pas_4.utils.ip.RetrofitClient;
 import com.taxi_pas_4.utils.log.Logger;
+import com.uxcam.UXCam;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -136,6 +137,9 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
     @Override
 
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+
+        UXCam.tagScreenName(TAG);
+
         View view = inflater.inflate(R.layout.cities_list_layout, container, false);
 
         fragmentManager = getParentFragmentManager();

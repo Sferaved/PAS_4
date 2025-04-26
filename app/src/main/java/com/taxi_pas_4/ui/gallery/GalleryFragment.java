@@ -48,6 +48,7 @@ import com.taxi_pas_4.utils.data.DataArr;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 import com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
+import com.uxcam.UXCam;
 
 import org.json.JSONException;
 
@@ -101,8 +102,8 @@ public class GalleryFragment extends Fragment {
     String baseUrl;
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        
-       
+
+        UXCam.tagScreenName(TAG);
 
         binding = FragmentGalleryBinding.inflate(inflater, container, false);
         View root = binding.getRoot();

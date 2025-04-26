@@ -111,6 +111,8 @@
             android:theme="@android:style/Theme.NoDisplay"
             android:launchMode="singleTask" />
 
+        <activity android:name=".ui.exit.AnrActivity" />
+
         <receiver android:name=".utils.connect.NetworkChangeReceiver" />
 
         <provider
@@ -138,6 +140,15 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+        <receiver
+            android:name=".utils.download.AppUpdateReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
     </application>
 

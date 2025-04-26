@@ -47,6 +47,7 @@ import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
 import com.taxi_pas_4.utils.helpers.LocaleHelper;
 import com.taxi_pas_4.utils.log.Logger;
+import com.uxcam.UXCam;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -78,6 +79,9 @@ public class MyBottomSheetCardVerificationWithOneUah extends BottomSheetDialogFr
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+
+        UXCam.tagScreenName(TAG);
+
         View view = inflater.inflate(R.layout.activity_fondy_payment, container, false);
         context = requireActivity();
         webView = view.findViewById(R.id.webView);

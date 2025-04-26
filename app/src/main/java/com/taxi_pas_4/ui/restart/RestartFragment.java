@@ -21,6 +21,7 @@ import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.databinding.FragmentRestartBinding;
 import com.taxi_pas_4.utils.ui.BackPressBlocker;
+import com.uxcam.UXCam;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,10 +30,13 @@ public class RestartFragment extends Fragment {
 
     private FragmentRestartBinding binding;
     AppCompatButton btn_restart, btn_help;
-
+    private static final String TAG = "RestartFragment";
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
+
+        UXCam.tagScreenName(TAG);
+
         binding = FragmentRestartBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 

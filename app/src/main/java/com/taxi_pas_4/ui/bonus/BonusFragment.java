@@ -36,6 +36,7 @@ import com.taxi_pas_4.utils.auth.FirebaseConsentManager;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
+import com.uxcam.UXCam;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +63,9 @@ public class BonusFragment extends Fragment {
     @SuppressLint("SourceLockedOrientationActivity")
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
+
+        UXCam.tagScreenName(TAG);
+
         binding = FragmentBonusBinding.inflate(inflater, container, false);
         root = binding.getRoot();
         context = requireActivity();

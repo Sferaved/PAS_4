@@ -73,15 +73,15 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.databinding.FragmentHomeBinding;
-import com.taxi_pas_4.ui.finish.ApiClient;
-import com.taxi_pas_4.ui.finish.RouteResponseCancel;
-import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
 import com.taxi_pas_4.ui.cities.Cherkasy.Cherkasy;
 import com.taxi_pas_4.ui.cities.Dnipro.DniproCity;
 import com.taxi_pas_4.ui.cities.Kyiv.KyivCity;
 import com.taxi_pas_4.ui.cities.Odessa.Odessa;
 import com.taxi_pas_4.ui.cities.Odessa.OdessaTest;
 import com.taxi_pas_4.ui.cities.Zaporizhzhia.Zaporizhzhia;
+import com.taxi_pas_4.ui.finish.ApiClient;
+import com.taxi_pas_4.ui.finish.RouteResponseCancel;
+import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
 import com.taxi_pas_4.ui.home.room.AppDatabase;
 import com.taxi_pas_4.ui.home.room.RouteCost;
 import com.taxi_pas_4.ui.home.room.RouteCostDao;
@@ -107,6 +107,7 @@ import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 import com.taxi_pas_4.utils.ui.BackPressBlocker;
 import com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
+import com.uxcam.UXCam;
 
 import org.json.JSONException;
 
@@ -218,6 +219,9 @@ public class HomeFragment extends Fragment {
     @SuppressLint("SourceLockedOrientationActivity")
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
+
+        UXCam.tagScreenName(TAG);
+
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
         baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
@@ -975,20 +979,22 @@ public class HomeFragment extends Fragment {
         }
     }
     public static void btnVisible(int visible) {
-        text_view_cost.setVisibility(visible);
-        btn_clear.setVisibility(visible);
-        btn_minus.setVisibility(visible);
-        btn_plus.setVisibility(visible);
-        buttonAddServices.setVisibility(visible);
-        buttonBonus.setVisibility(visible);
-        btn_clear.setVisibility(visible);
-        btn_order.setVisibility(visible);
-        if (visible == View.INVISIBLE) {
-            progressBar.setVisibility(VISIBLE);
-        } else {
-            progressBar.setVisibility(View.GONE);
-        }
 
+        if (text_view_cost != null) {
+            text_view_cost.setVisibility(visible);
+            btn_clear.setVisibility(visible);
+            btn_minus.setVisibility(visible);
+            btn_plus.setVisibility(visible);
+            buttonAddServices.setVisibility(visible);
+            buttonBonus.setVisibility(visible);
+            btn_clear.setVisibility(visible);
+            btn_order.setVisibility(visible);
+            if (visible == View.INVISIBLE) {
+                progressBar.setVisibility(VISIBLE);
+            } else {
+                progressBar.setVisibility(View.GONE);
+            }
+        }
     }
 
     // Метод для сохранения количества запросов разрешений в SharedPreferences

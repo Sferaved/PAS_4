@@ -37,6 +37,7 @@ import com.taxi_pas_4.utils.db.DatabaseHelper;
 import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.ui.BackPressBlocker;
+import com.uxcam.UXCam;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -83,6 +84,9 @@ public class CancelFragment extends Fragment {
     @SuppressLint("SourceLockedOrientationActivity")
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
+
+        UXCam.tagScreenName(TAG);
+
         binding = FragmentCancelBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
         context = requireActivity();

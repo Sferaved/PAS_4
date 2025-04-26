@@ -37,6 +37,7 @@ import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
+import com.uxcam.UXCam;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -81,6 +82,9 @@ public class CardFragment extends Fragment {
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
+
+        UXCam.tagScreenName(TAG);
+
         binding = FragmentCardBinding.inflate(inflater, container, false);
         root = binding.getRoot();
 

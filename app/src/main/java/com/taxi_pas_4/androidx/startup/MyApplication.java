@@ -1,7 +1,5 @@
 package com.taxi_pas_4.androidx.startup;
 
-import static com.taxi_pas_4.ui.clear.AppDataUtils.clearAllSharedPreferences;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -10,16 +8,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
-import android.content.res.Configuration;
-import android.content.res.Resources;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.multidex.BuildConfig;
 import androidx.navigation.NavOptions;
 
 import com.github.anrwatchdog.ANRWatchDog;
@@ -27,20 +23,18 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.ui.exit.AnrActivity;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
-import com.taxi_pas_4.utils.helpers.TelegramUtils;
+import com.taxi_pas_4.utils.keys.FirestoreHelper;
+import com.taxi_pas_4.utils.keys.SecurePrefs;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 import com.taxi_pas_4.utils.time_ut.IdleTimeoutManager;
+import com.uxcam.UXCam;
+import com.uxcam.datamodel.UXConfig;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
+import java.security.GeneralSecurityException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -59,44 +53,164 @@ public class MyApplication extends Application {
 
     private ThreadPoolExecutor threadPoolExecutor;
     private IdleTimeoutManager idleTimeoutManager;
-    private long backgroundStartTime = 0;
+
     private long lastMemoryWarningTime = 0;
     private long lastInternetWarningTime = 0;
+    private boolean isUXCamInitialized = false;
+    private static final int MAX_RETRY_ATTEMPTS = 2; // Максимум попыток загрузки ключа
+    FirestoreHelper firestoreHelper;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        sharedPreferencesHelperMain = new SharedPreferencesHelper(this);
 
+        try {
+
+            initializeFirebaseAndCrashlytics();
+            setDefaultOrientation();
+
+            sharedPreferencesHelperMain = new SharedPreferencesHelper(this);
+
+            firestoreHelper = new FirestoreHelper(this);
+            firestoreHelper.listenForResponseChanges();
+
+
+
+            registerActivityLifecycleCallbacks();
+
+            Thread.setDefaultUncaughtExceptionHandler(new MyExceptionHandler());
+            setupANRWatchDog();
+
+            fetchUXCamKey(1);
+//            initializeThreadPoolExecutor();
+
+            visicomKeyFromFb();
+            mapboxKeyFromFb ();
+
+        } catch (Exception e) {
+            Logger.e(this, TAG, "Initialization failed: " + e);
+            FirebaseCrashlytics.getInstance().recordException(e);
+        }
 
         instance = this;
-
-        applyLocale();
-
-//        checkAndClearPrefs(this);
-        // Установка глобального обработчика исключений
-        Thread.setDefaultUncaughtExceptionHandler(new MyUncaughtExceptionHandler(this));
-
-        initializeFirebaseAndCrashlytics();
-        setupANRWatchDog();
-        setDefaultOrientation();
-        registerActivityLifecycleCallbacks();
-        initializeThreadPoolExecutor();
     }
-    private static final String PREFS_VERSION_KEY = "SharedPrefsVersion";
 
-    private void checkAndClearPrefs(Context context) {
-        SharedPreferences prefs = sharedPreferencesHelperMain.getSharedPreferences();
-        int savedVersion = prefs.getInt(PREFS_VERSION_KEY, -1);
-        int currentVersion = BuildConfig.VERSION_CODE;
 
-        // Очищаем SharedPreferences только при новой установке (ключ отсутствует)
-        if (savedVersion == -1) {
-            clearAllSharedPreferences(context);
-            // Сохраняем текущую версию после очистки
-            prefs.edit().putInt(PREFS_VERSION_KEY, currentVersion).apply();
+
+    private void fetchUXCamKey(int attempt) {
+        if (attempt >= MAX_RETRY_ATTEMPTS) {
+            Logger.e(this, TAG, "Max retry attempts reached for fetching UXCam key");
+            return;
+        }
+
+        try {
+            String apiKey = SecurePrefs.getKey(this);
+            Context context = getApplicationContext();
+
+            if (apiKey != null && !isUXCamInitialized) {
+                Logger.d(this, TAG, "Using cached UXCam key");
+                UXConfig config = new UXConfig.Builder(apiKey)
+                        .enableAutomaticScreenNameTagging(true)
+                        .enableImprovedScreenCapture(true)
+                        .build();
+
+                UXCam.startWithConfiguration(config);
+
+                // Проверяем успешность инициализации через тестовое событие
+                try {
+                    UXCam.logEvent("TestUXCamInit");
+                    Logger.d(this, TAG, "Test event logged, assuming UXCam initialized");
+                    isUXCamInitialized = true;
+                } catch (Exception e) {
+                    Logger.e(this, TAG, "Failed to log test event, cached key may be invalid: " + e.getMessage());
+                    // Ключ, вероятно, неверный, пробуем загрузить новый
+                    fetchUXCamKeyFromFirestore(context, attempt + 1);
+                }
+            } else {
+                fetchUXCamKeyFromFirestore(context, attempt);
+            }
+        } catch (GeneralSecurityException | IOException e) {
+            Logger.e(this, TAG, "Error accessing SecurePrefs: " + e.getMessage());
+            fetchUXCamKeyFromFirestore(getApplicationContext(), attempt + 1);
         }
     }
+
+    private void fetchUXCamKeyFromFirestore(Context context, int attempt) {
+
+        firestoreHelper.getUixCamKey(new FirestoreHelper.OnVisicomKeyFetchedListener() {
+            @Override
+            public void onSuccess(String uKey) {
+                if (uKey == null || uKey.isEmpty()) {
+                    Logger.e(context, TAG, "Received invalid UXCam key");
+                    fetchUXCamKey(attempt + 1); // Пробуем ещё раз
+                    return;
+                }
+
+                try {
+                    SecurePrefs.saveKey(context, uKey);
+                    Logger.d(context, TAG, "UXCam key saved successfully");
+
+                    if (!isUXCamInitialized) {
+                        UXConfig config = new UXConfig.Builder(uKey)
+                                .enableAutomaticScreenNameTagging(true)
+                                .enableImprovedScreenCapture(true)
+                                .build();
+
+                        UXCam.startWithConfiguration(config);
+
+                        // Проверяем успешность инициализации
+                        try {
+                            UXCam.logEvent("TestUXCamInit");
+                            Logger.d(context, TAG, "Test event logged, UXCam initialized with new key");
+                            isUXCamInitialized = true;
+                        } catch (Exception e) {
+                            Logger.e(context, TAG, "Failed to log test event with new key: " + e.getMessage());
+                            fetchUXCamKey(attempt + 1); // Пробуем ещё раз
+                        }
+                    }
+                } catch (GeneralSecurityException | IOException e) {
+                    Logger.e(context, TAG, "Error initializing UXCam or saving key: " + e.getMessage());
+                    fetchUXCamKey(attempt + 1);
+                } catch (Exception e) {
+                    Logger.e(context, TAG, "Unexpected error: " + e.getMessage());
+                    fetchUXCamKey(attempt + 1);
+                }
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Logger.e(context, TAG, "Failed to fetch UXCam key: " + e.getMessage());
+                try {
+                    String cachedKey = SecurePrefs.getKey(context);
+                    if (cachedKey != null && !isUXCamInitialized) {
+                        Logger.d(context, TAG, "Using cached UXCam key after Firestore failure");
+                        UXConfig config = new UXConfig.Builder(cachedKey)
+                                .enableAutomaticScreenNameTagging(true)
+                                .enableImprovedScreenCapture(true)
+                                .build();
+
+                        UXCam.startWithConfiguration(config);
+
+                        try {
+                            UXCam.logEvent("TestUXCamInit");
+                            Logger.d(context, TAG, "Test event logged, UXCam initialized with cached key");
+                            isUXCamInitialized = true;
+                        } catch (Exception ex) {
+                            Logger.e(context, TAG, "Failed to log test event with cached key: " + ex.getMessage());
+                            fetchUXCamKey(attempt + 1);
+                        }
+                    } else {
+                        fetchUXCamKey(attempt + 1);
+                    }
+                } catch (GeneralSecurityException | IOException ex) {
+                    Logger.e(context, TAG, "Error using cached key: " + ex.getMessage());
+                    fetchUXCamKey(attempt + 1);
+                }
+            }
+        });
+    }
+
+
     private void initializeThreadPoolExecutor() {
         // Настройка ThreadPoolExecutor
         threadPoolExecutor = new ThreadPoolExecutor(
@@ -118,7 +232,7 @@ public class MyApplication extends Application {
     }
 
     // Для получения текущей активити (необходимый метод, чтобы использовать его в setDefaultOrientation)
-    private Activity getCurrentActivity() {
+    public static Activity getCurrentActivity() {
         return currentActivity;
     }
 
@@ -135,21 +249,43 @@ public class MyApplication extends Application {
     }
 
     private void setupANRWatchDog() {
-        // Set default uncaught exception handler
-        Thread.setDefaultUncaughtExceptionHandler(new MyExceptionHandler());
+        // Проверяем, было ли обновление приложения
+        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        String savedVersion = prefs.getString("app_version", "");
+        String currentVersion;
 
-        // Configure ANRWatchDog for ANR detection
-        new ANRWatchDog().setANRListener(error -> {
-            // Use Handler to show Toast on the main thread
-            new Handler(Looper.getMainLooper()).post(() -> {
-                Toast.makeText(getApplicationContext(), R.string.anr_message, Toast.LENGTH_LONG).show();
-            });
-            // Log the error
-            Logger.e(getApplicationContext(),TAG, "ANR occurred: " + error.toString());
+        try {
+            PackageInfo packageInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            currentVersion = packageInfo.versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            currentVersion = "";
+            Logger.e(getApplicationContext(), TAG, "Failed to get package info: " + e.getMessage());
+        }
 
-            // Log the ANR event to Firebase Crashlytics
-            FirebaseCrashlytics.getInstance().recordException(error);
-        }).start();
+        // Если версия изменилась, сохраняем новую и откладываем запуск ANRWatchDog
+        if (!currentVersion.equals(savedVersion)) {
+            prefs.edit().putString("app_version", currentVersion).apply();
+            // Откладываем запуск ANRWatchDog на 10 секунд
+            new Handler(Looper.getMainLooper()).postDelayed(this::startANRWatchDog, 10_000);
+        } else {
+            // Если обновления не было, запускаем сразу
+            startANRWatchDog();
+        }
+    }
+
+    private void startANRWatchDog() {
+        new ANRWatchDog(4000)
+                .setANRListener(error -> {
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        Toast.makeText(getApplicationContext(), R.string.anr_message, Toast.LENGTH_LONG).show();
+                        Intent intent = new Intent(getApplicationContext(), AnrActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(intent);
+                    });
+                    Logger.e(getApplicationContext(), TAG, "ANR occurred: " + error.toString());
+                    FirebaseCrashlytics.getInstance().recordException(error);
+                })
+                .start();
     }
 
     private void registerActivityLifecycleCallbacks() {
@@ -213,6 +349,7 @@ public class MyApplication extends Application {
 
             @Override
             public void onActivityDestroyed(@NonNull Activity activity) {
+                firestoreHelper.stopListening();
                 if (currentActivity == activity) {
                     currentActivity = null;
                 }
@@ -299,104 +436,68 @@ public class MyApplication extends Application {
         Logger.d(activity,"MemoryMonitor", "Состояние нехватки памяти: " + memoryInfo.lowMemory);
     }
 
-
-    private void applyLocale() {
-        Log.d(TAG, "applyLocale: " + Locale.getDefault().toString());
-        String localeCode = (String) sharedPreferencesHelperMain.getValue("locale", Locale.getDefault().toString());
-        Locale locale = new Locale(localeCode.split("_")[0]);
-
-        Locale.setDefault(locale);
-
-        Resources resources = getResources();
-        Configuration config = resources.getConfiguration();
-        config.setLocale(locale);
-        resources.updateConfiguration(config, resources.getDisplayMetrics());
-    }
-
-    private void restartApplication(Activity activity) {
-        Intent intent = activity.getBaseContext().getPackageManager()
-                .getLaunchIntentForPackage(activity.getBaseContext().getPackageName());
-        if (intent != null) {
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-            activity.startActivity(intent);
-            activity.finish(); // Завершаем текущую активность
-            Runtime.getRuntime().exit(0); // Полный выход
-        }
-    }
-
-    public boolean isAppInForeground() {
-        return isAppInForeground;
-    }
-
     // Новый обработчик необработанных исключений для записи логов и Firebase Crashlytics
-    private static class MyExceptionHandler implements Thread.UncaughtExceptionHandler {
+    private class MyExceptionHandler implements Thread.UncaughtExceptionHandler {
+        private final Thread.UncaughtExceptionHandler defaultHandler;
+
+        public MyExceptionHandler() {
+            defaultHandler = Thread.getDefaultUncaughtExceptionHandler();
+        }
+
         @Override
         public void uncaughtException(@NonNull Thread thread, @NonNull Throwable throwable) {
-            // Логирование исключений
-            Logger.d(currentActivity,"MyExceptionHandler", "Uncaught Exception occurred: " + throwable.getMessage() + throwable);
-
-            // Запись ошибки в Firebase Crashlytics
+            String message = throwable.getMessage() != null ? throwable.getMessage() : "No message";
+            Logger.e(instance, "MyExceptionHandler", "Uncaught Exception: " + message + ", " + throwable.toString());
             FirebaseCrashlytics.getInstance().recordException(throwable);
 
-            // Возможная перезагрузка или очистка данных
-        }
-    }
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                Intent intent = new Intent(instance, AnrActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                System.exit(1); // Завершение процесса
+            }, 500);
 
-    private class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
-
-        public MyUncaughtExceptionHandler(MyApplication myApplication) {
-        }
-
-        @Override
-        public void uncaughtException(Thread t, @NonNull Throwable e) {
-            // Запись лога
-            writeLog(Log.getStackTraceString(e));
-
-            // Сообщение об ошибке
-            String errorMessage = "Uncaught exception in thread " + t.getName() + ": " + e.getMessage();
-
-            // Отправка ошибки в Telegram
-
-            String logFilePath = getExternalFilesDir(null) + "/app_log.txt"; // Путь к лог-файлу
-            TelegramUtils.sendErrorToTelegram(errorMessage, logFilePath);
-            // Перезапуск приложения или завершение работы
-            System.exit(1); // Завершаем приложение
-        }
-    }
-
-
-    public void writeLog(String log) {
-        if (isExternalStorageWritable()) {
-            File logFile = new File(getExternalFilesDir(null), LOG_FILE_NAME);
-            try (FileOutputStream fos = new FileOutputStream(logFile, true);
-                 OutputStreamWriter osw = new OutputStreamWriter(fos)) {
-
-                // Установка украинского времени
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-                sdf.setTimeZone(TimeZone.getTimeZone("Europe/Kiev"));
-
-                osw.write(sdf.format(new Date()) + " - " + log);
-                osw.write("\n");
-
-                Logger.e(getApplicationContext(),TAG, "Log written to " + logFile.getAbsolutePath());
-            } catch (IOException e) {
-                Logger.d(getApplicationContext(),"MyAppLogger", "Failed to write log" + e);
+            if (defaultHandler != null) {
+                defaultHandler.uncaughtException(thread, throwable);
             }
-        } else {
-            Logger.d(getApplicationContext(),"MyAppLogger", "External storage is not writable");
         }
     }
+    private void visicomKeyFromFb()
+    {
 
-    // Метод для проверки доступности внешнего хранилища
-    private boolean isExternalStorageWritable() {
-        String state = android.os.Environment.getExternalStorageState();
-        return android.os.Environment.MEDIA_MOUNTED.equals(state);
+        firestoreHelper.getVisicomKey(new FirestoreHelper.OnVisicomKeyFetchedListener() {
+            @Override
+            public void onSuccess(String vKey) {
+                // Обработка успешного получения ключа
+                MainActivity.apiKey = vKey;
+                Logger.d(getApplicationContext(),TAG, "Visicom Key: " + vKey);
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                // Обработка ошибок
+                Logger.e(getApplicationContext(),TAG, "Ошибка: " + e.getMessage());
+            }
+        });
+
     }
 
-    // Пример использования ThreadPoolExecutor для асинхронных задач
-    public void executeBackgroundTask(Runnable task) {
-        if (threadPoolExecutor != null) {
-            threadPoolExecutor.execute(task);
-        }
+    private void mapboxKeyFromFb()
+    {
+        firestoreHelper.getMapboxKey(new FirestoreHelper.OnMapboxKeyFetchedListener() {
+            @Override
+            public void onSuccess(String mKey) {
+                // Обработка успешного получения ключа
+                MainActivity.apiKeyMapBox = mKey;
+                Logger.d(getApplicationContext(),TAG, "Mapbox Key: " + MainActivity.apiKeyMapBox);
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                // Обработка ошибок
+                Logger.e(getApplicationContext(),TAG, "Ошибка: " + e.getMessage());
+            }
+        });
+
     }
 }

@@ -28,6 +28,7 @@ import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.finish.fragm.CustomListFinishAdapter;
 import com.taxi_pas_4.ui.finish.fragm.FinishSeparateFragment;
 import com.taxi_pas_4.utils.log.Logger;
+import com.uxcam.UXCam;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +48,9 @@ public class MyBottomSheetFinishOptionFragment extends BottomSheetDialogFragment
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+
+        UXCam.tagScreenName(TAG);
+
         View view = inflater.inflate(R.layout.settings_finish_layout, container, false);
 
         context = requireActivity();

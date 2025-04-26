@@ -38,6 +38,7 @@ import com.taxi_pas_4.ui.home.CustomListAdapter;
 import com.taxi_pas_4.utils.data.DataArr;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
+import com.uxcam.UXCam;
 
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
@@ -78,6 +79,9 @@ public class MyBottomSheetGalleryFragment extends BottomSheetDialogFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+
+        UXCam.tagScreenName(TAG);
+
         View view = inflater.inflate(R.layout.settings_layout, container, false);
         context = requireActivity();
         

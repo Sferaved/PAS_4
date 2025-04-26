@@ -39,6 +39,7 @@ import com.taxi_pas_4.utils.db.DatabaseHelper;
 import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.db.RouteInfo;
 import com.taxi_pas_4.utils.log.Logger;
+import com.uxcam.UXCam;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -70,8 +71,7 @@ public class UIDFragment extends Fragment {
     private AppCompatButton btnCallAdmin;
     private ImageButton scrollButtonDown, scrollButtonUp;
     private TextView textUid;
-    private String email;
-    private FragmentManager fragmentManager;
+
     private int desiredHeight;
     Context context;
     View root;
@@ -79,10 +79,13 @@ public class UIDFragment extends Fragment {
     @SuppressLint("SourceLockedOrientationActivity")
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
+
+        UXCam.tagScreenName(TAG);
+
         binding = FragmentUidBinding.inflate(inflater, container, false);
         root = binding.getRoot();
 
-        fragmentManager = getParentFragmentManager();
+        FragmentManager fragmentManager = getParentFragmentManager();
 
         context = requireActivity();
         requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);

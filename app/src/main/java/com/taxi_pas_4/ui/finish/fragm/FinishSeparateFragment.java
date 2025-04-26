@@ -66,6 +66,7 @@ import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.pusher.events.CanceledStatusEvent;
 import com.taxi_pas_4.utils.time_ut.TimeUtils;
 import com.taxi_pas_4.utils.ui.BackPressBlocker;
+import com.uxcam.UXCam;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -172,6 +173,7 @@ public class FinishSeparateFragment extends Fragment {
     @SuppressLint("SourceLockedOrientationActivity")
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
+        UXCam.tagScreenName(TAG);
 
         FragmentFinishSeparateBinding binding = FragmentFinishSeparateBinding.inflate(inflater, container, false);
         root = binding.getRoot();

@@ -35,9 +35,12 @@ import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.cities.api.CityApiClient;
 import com.taxi_pas_4.ui.cities.api.CityResponse;
 import com.taxi_pas_4.ui.cities.api.CityService;
+import com.taxi_pas_4.ui.home.HomeFragment;
+import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.helpers.TelegramUtils;
 import com.taxi_pas_4.utils.log.Logger;
+import com.uxcam.UXCam;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -72,6 +75,9 @@ public class MyBottomSheetErrorFragment extends BottomSheetDialogFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+
+        UXCam.tagScreenName(TAG);
+
         View view = inflater.inflate(R.layout.error_list_layout, container, false);
 
         setCancelable(false);
@@ -159,7 +165,9 @@ public class MyBottomSheetErrorFragment extends BottomSheetDialogFragment {
             } else if (errorMessage.equals(getString(R.string.no_cards_info))){
                  textViewInfo.setOnClickListener(view2 -> {
                      dismiss();
-                     navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder().build());
+//                     navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder().build());
+                     VisicomFragment.btnVisible(View.VISIBLE);
+                     HomeFragment.btnVisible(View.VISIBLE);
                  });
                 btn_ok.setText(getString(R.string.link_card));
                 btn_ok.setOnClickListener(v -> {

@@ -43,25 +43,29 @@
         android:layout_width="wrap_content"
         android:layout_height="32dp"
         android:layout_margin="10sp"
-        android:layout_marginTop="8sp"
+        android:layout_marginStart="16dp"
+
         android:gravity="left|fill_horizontal"
         android:text="@string/ok_GDPR"
         android:textColor="@color/white"
-        android:textSize="16sp"
+        android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView7"
+        app:layout_constraintTop_toBottomOf="@+id/textView6"
         tools:ignore="MissingConstraints" />
 
     <CheckBox
         android:id="@+id/checkbox"
-        android:layout_width="32sp"
-        android:layout_height="32sp"
-        android:layout_marginTop="8sp"
+        android:layout_width="40sp"
+        android:layout_height="40sp"
+        android:layout_marginTop="4dp"
         android:layout_marginEnd="16sp"
+        android:buttonTint="#00FF00"
+        android:scaleX="1.2"
+        android:scaleY="1.2"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.047"
+        app:layout_constraintHorizontal_bias="0.035"
         app:layout_constraintStart_toEndOf="@+id/textView8"
-        app:layout_constraintTop_toBottomOf="@+id/textView7" />
+        app:layout_constraintTop_toBottomOf="@+id/textView6" />
 
     <EditText
         android:id="@+id/phoneNumber"
