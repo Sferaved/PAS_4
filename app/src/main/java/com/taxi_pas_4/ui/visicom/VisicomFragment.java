@@ -81,7 +81,6 @@ import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
 import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
 import com.taxi_pas_4.ui.payment_system.PayApi;
 import com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
-import com.taxi_pas_4.ui.visicom.visicom_search.ActivityVisicomOnePage;
 import com.taxi_pas_4.utils.animation.car.CarProgressBar;
 import com.taxi_pas_4.utils.auth.FirebaseConsentManager;
 import com.taxi_pas_4.utils.blacklist.BlacklistManager;
@@ -1569,10 +1568,20 @@ public class VisicomFragment extends Fragment {
                 gpsbut.setText(R.string.change);
             }
             sharedPreferencesHelperMain.saveValue("gps_upd", false);
-            Intent intent = new Intent(getContext(), ActivityVisicomOnePage.class);
-            intent.putExtra("start", "ok");
-            intent.putExtra("end", "no");
-            startActivity(intent);
+
+            Bundle bundle = new Bundle();
+            bundle.putString("start", "ok");
+            bundle.putString("end", "no");
+            MainActivity.navController.navigate(R.id.nav_search, bundle, new NavOptions.Builder()
+                    .setPopUpTo(R.id.nav_search, true)
+                    .build());
+//
+//            Intent intent = new Intent(getContext(), ActivityVisicomOnePage.class);
+//            intent.putExtra("start", "ok");
+//            intent.putExtra("end", "no");
+//            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+//            startActivity(intent);
+//            requireActivity().finish();
         });
 
        
@@ -1598,10 +1607,22 @@ public class VisicomFragment extends Fragment {
         textViewTo = binding.textTo;
         textViewTo.setOnClickListener(v -> {
             textViewTo.setText("");
-            Intent intent = new Intent(getContext(), ActivityVisicomOnePage.class);
-            intent.putExtra("start", "no");
-            intent.putExtra("end", "ok");
-            startActivity(intent);
+
+            Bundle bundle = new Bundle();
+            bundle.putString("start", "no");
+            bundle.putString("end", "ok");
+            MainActivity.navController.navigate(R.id.nav_search, bundle, new NavOptions.Builder()
+                    .setPopUpTo(R.id.nav_search, true)
+                    .build());
+
+//
+//            Intent intent = new Intent(getContext(), ActivityVisicomOnePage.class);
+//            intent.putExtra("start", "no");
+//            intent.putExtra("end", "ok");
+//
+//            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+//            startActivity(intent);
+//            requireActivity().finish();
         });
 
 

@@ -38,7 +38,11 @@
         android:name="com.taxi_pas_4.ui.bonus.BonusFragment"
         android:label="@string/my_bonus_menu"
         tools:layout="@layout/fragment_bonus" />
-
+    <fragment
+        android:id="@+id/nav_search"
+        android:name="com.taxi_pas_4.ui.visicom.visicom_search.VisicomSearchFragment"
+        android:label="@string/search_address"
+        tools:layout="@layout/fragment_visicom_search" />
     <fragment
         android:id="@+id/nav_card"
         android:name="com.taxi_pas_4.ui.card.CardFragment"
