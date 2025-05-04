@@ -67,7 +67,7 @@
             android:name="androidx.room.RoomDatabase.VERSION"
             android:value="3" />
         <activity
-            android:name=".ui.account.ExitActivity"
+            android:name=".ui.exit.ExitActivity"
             android:exported="false"
             android:theme="@style/Theme.PAS_4.NoActionBar" />
 

@@ -14,11 +14,11 @@ android {
         minSdk 26
         //noinspection EditedTargetSdkVersion
         targetSdk 35
-        versionCode 4145
-        versionName '4.145'
+        versionCode 4146
+        versionName '4.146'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        resourceConfigurations += ['ru', 'uk', 'en']
+        resourceConfigurations += ['en', 'ru', 'uk']
         multiDexEnabled true
 
     }

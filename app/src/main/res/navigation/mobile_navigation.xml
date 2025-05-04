@@ -75,4 +75,6 @@
         android:name="com.taxi_pas_4.ui.restart.RestartFragment"
         android:label="@string/your_order"
         tools:layout="@layout/fragment_restart" />
+
+
 </navigation>
