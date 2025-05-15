@@ -1,12 +1,20 @@
 package com.taxi_pas_4.utils.pusher;
 
+import static android.content.Context.MODE_PRIVATE;
 import static android.view.View.VISIBLE;
 import static com.taxi_pas_4.MainActivity.viewModel;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+
+import androidx.navigation.NavOptions;
 
 import com.pusher.client.Pusher;
 import com.pusher.client.PusherOptions;
@@ -16,6 +24,7 @@ import com.pusher.client.connection.ConnectionEventListener;
 import com.pusher.client.connection.ConnectionState;
 import com.pusher.client.connection.ConnectionStateChange;
 import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.finish.fragm.FinishSeparateFragment;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.log.Logger;
@@ -23,8 +32,10 @@ import com.taxi_pas_4.utils.log.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -35,9 +46,12 @@ public class PusherManager {
     private static final String CHANNEL_NAME = "teal-towel-48"; // Канал
 
     private final String eventUid;
+    private final String eventUidDouble;
     private final String eventOrder;
     private final String eventTransactionStatus;
     private final String eventCanceled;
+    private final String eventBlackUserStatus;
+    private final String eventOrderCost;
 //    private final String orderResponseEvent;
 //    private final String eventStartExecution;
     private static Pusher pusher = null;
@@ -48,9 +62,12 @@ public class PusherManager {
     private final Set<String> boundEvents = new HashSet<>();
     public PusherManager(String eventSuffix, String userEmail, Activity context) {
         this.eventUid = "order-status-updated-" + eventSuffix + "-" + userEmail;
+        this.eventUidDouble = "orderDouble-status-updated-" + eventSuffix + "-" + userEmail;
         this.eventOrder = "order-" + eventSuffix + "-" + userEmail;
         this.eventTransactionStatus = "transactionStatus-" + eventSuffix + "-" + userEmail;
         this.eventCanceled = "eventCanceled-" + eventSuffix + "-" + userEmail;
+        this.eventBlackUserStatus = "black-user-status--" + userEmail;
+        this.eventOrderCost = "order-cost-" + eventSuffix + "-" + userEmail;
 //        this.orderResponseEvent = "orderResponseEvent-" + eventSuffix + "-" + userEmail;
         this.context = context;
 //        this.eventStartExecution = "orderStartExecution-" + eventSuffix + "-" + userEmail;
@@ -155,6 +172,7 @@ public class PusherManager {
         Logger.d(context,"Pusher", "Subscribing to eventOrder: " + eventOrder);
         Logger.d(context,"Pusher", "Subscribing to eventStatus: " + eventTransactionStatus);
         Logger.d(context,"Pusher", "Subscribing to eventCanceled: " + eventCanceled);
+        Logger.d(context,"Pusher", "Subscribing to eventBlackUserStatus: " + eventBlackUserStatus);
 //        Logger.d(context,"Pusher", "Subscribing to orderResponseEvent: " + orderResponseEvent);
 
         // Обработка события получения номера заказа после регистрации на сервере и определения нал/безнал для выбора способа опроса статусов
@@ -189,6 +207,41 @@ public class PusherManager {
 
             } catch (JSONException e) {
                 Logger.e(context,"Pusher", "JSON Parsing error" +  e);
+            }
+        });
+
+        bindEvent(eventUidDouble, event -> {
+            Logger.d(context,"Pusher Double", "Received eventUidDouble: " + event.toString());
+            try {
+                JSONObject eventData = new JSONObject(event.getData());
+                String orderUid = eventData.getString("order_uid");
+                String  paySystemStatus;
+                if (eventData.has("paySystemStatus")) {
+                    paySystemStatus = eventData.getString("paySystemStatus");
+                } else {
+                    paySystemStatus = "nal_payment";
+                }
+                Logger.d(context,"Pusher Double", "Order UID Double: " + orderUid);
+                Logger.d(context,"Pusher Double", "paySystemStatus: " + paySystemStatus);
+                // Переключаемся на главный поток для обновления UI и переменной
+                new Handler(Looper.getMainLooper()).post(() -> {
+
+                    MainActivity.uid_Double = orderUid;
+                    Logger.d(context,"Pusher Double", "MainActivity.uid_Double: " + MainActivity.uid_Double);
+
+                    MainActivity.paySystemStatus = paySystemStatus;
+
+//                    if (FinishSeparateFragment.btn_cancel_order != null ) {
+//                        FinishSeparateFragment.btn_cancel_order.setVisibility(VISIBLE);
+//                        FinishSeparateFragment.btn_cancel_order.setEnabled(true);
+//                        FinishSeparateFragment.btn_cancel_order.setClickable(true);
+//                    } else {
+//                        Logger.e(context,"Pusher", "btn_cancel_order is null!");
+//                    }
+                });
+
+            } catch (JSONException e) {
+                Logger.e(context,"Pusher Double", "JSON Parsing error" +  e);
             }
         });
 
@@ -292,7 +345,62 @@ public class PusherManager {
                 }
 
         });
+        // Получение стоимости
+//        channel.bind(eventCanceled, event -> {
+        bindEvent(eventOrderCost, event -> {
+            Logger.d(context,"Pusher eventOrderCost", "Received event: " + event.toString());
+            VisicomFragment.costMap = null;
+            try {
+                JSONObject eventData = new JSONObject(event.getData());
+                String order_cost = eventData.getString("order_cost");
+                Logger.d(context,"Pusher eventOrderCost", "order_cost: " + order_cost);
 
+                Map<String, String> eventValues = new HashMap<>();
+                // Добавляем данные в Map
+                eventValues.put("order_cost", eventData.optString("order_cost", "0"));
+
+                VisicomFragment.costMap = eventValues;
+
+            } catch(JSONException e){
+                    Logger.e(context,"Pusher eventOrderCost", "JSON Parsing error for event: " + event.getData() +  e);
+            }
+
+        });
+
+        bindEvent(eventBlackUserStatus, event -> {
+            Logger.d(context,"Pusher eventBlackUserStatus", "Received event: " + event.toString());
+
+            try {
+                JSONObject eventData = new JSONObject(event.getData());
+                String active = eventData.getString("active");
+                String email = eventData.getString("email");
+
+                Logger.d(context,"Pusher eventBlackUserStatus", "canceled: " + active);
+                Logger.d(context,"Pusher eventBlackUserStatus", "email: " + email);
+
+                String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
+                Logger.d(context,"Pusher eventCanceled", "userEmail: " + userEmail);
+
+                if (email.equals(userEmail)) {
+                    ContentValues cv = new ContentValues();
+                    cv.put("verifyOrder", active);
+                    SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+                    database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
+                    database.close();
+                }
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                            .setPopUpTo(R.id.nav_visicom, true)
+                            .build());
+                });
+
+            } catch(JSONException e){
+                Logger.e(context,"Pusher eventBlackUserStatus", "JSON Parsing error for event: " + event.getData() +  e);
+            } catch(Exception e){
+                Logger.e(context,"Pusher eventBlackUserStatus", "Unexpected error processing Pusher event" +  e);
+            }
+
+        });
 
         //Получение заказа из вилки с действием для отображения на фнинишной
 //        channel.bind(orderResponseEvent, event -> {
@@ -399,7 +507,27 @@ public class PusherManager {
         });
 
     }
+    @SuppressLint("Range")
+    private static List<String> logCursor(String table, Context context) {
+        List<String> list = new ArrayList<>();
+        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        Cursor c = database.query(table, null, null, null, null, null, null);
+        if (c.moveToFirst()) {
+            String str;
+            do {
+                str = "";
+                for (String cn : c.getColumnNames()) {
+                    str = str.concat(cn + " = " + c.getString(c.getColumnIndex(cn)) + "; ");
+                    list.add(c.getString(c.getColumnIndex(cn)));
 
+                }
+
+            } while (c.moveToNext());
+        }
+        database.close();
+        c.close();
+        return list;
+    }
     // Отключение
     public void disconnect() {
         if (pusher != null) {
