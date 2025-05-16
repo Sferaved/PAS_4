@@ -1,7 +1,6 @@
 package com.taxi_pas_4.utils.pusher;
 
 import static android.content.Context.MODE_PRIVATE;
-import static android.view.View.VISIBLE;
 import static com.taxi_pas_4.MainActivity.viewModel;
 
 import android.annotation.SuppressLint;
@@ -25,7 +24,6 @@ import com.pusher.client.connection.ConnectionState;
 import com.pusher.client.connection.ConnectionStateChange;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
-import com.taxi_pas_4.ui.finish.fragm.FinishSeparateFragment;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.log.Logger;
 
@@ -264,16 +262,7 @@ public class PusherManager {
                         // Установка начального статуса транзакции
                         viewModel.setTransactionStatus(transactionStatus);
                         Logger.d(context,"Pusher eventTransactionStatus", "Initial transaction status set: " + transactionStatus);
-
-                        // Проверка UI элемента перед взаимодействием
-                        if (FinishSeparateFragment.btn_cancel_order != null) {
-                            FinishSeparateFragment.btn_cancel_order.setVisibility(VISIBLE);
-                            FinishSeparateFragment.btn_cancel_order.setEnabled(true);
-                            FinishSeparateFragment.btn_cancel_order.setClickable(true);
-                            Logger.d(context,"Pusher eventTransactionStatus", "Cancel button enabled successfully");
-                        } else {
-                            Logger.e(context,"Pusher eventTransactionStatus", "btn_cancel_order is null when updating status: " + transactionStatus);
-                        }
+                        viewModel.setCancelStatus(true);
                     });
                 }
 

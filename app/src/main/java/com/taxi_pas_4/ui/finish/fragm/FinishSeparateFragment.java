@@ -1414,13 +1414,7 @@ public class FinishSeparateFragment extends Fragment {
                 if ("Declined".equals(status) && !declined_invoice.equals(MainActivity.order_id)) {
                     sharedPreferencesHelperMain.saveValue("declined_invoice", MainActivity.order_id);
                     handleTransactionStatusDeclined(status, context);
-                    if (FinishSeparateFragment.btn_cancel_order != null) {
-                        FinishSeparateFragment.btn_cancel_order.setVisibility(VISIBLE);
-                        FinishSeparateFragment.btn_cancel_order.setEnabled(true);
-                        FinishSeparateFragment.btn_cancel_order.setClickable(true);
-                        Logger.d(context,"Pusher eventTransactionStatus", "Cancel button enabled successfully");
-                    }
-
+                    viewModel.setCancelStatus(true);
                 }
             });
 
@@ -1478,11 +1472,8 @@ public class FinishSeparateFragment extends Fragment {
             textCostMessage.setText(updatedCost);
             text_status.setText(context.getString(R.string.ex_st_0));
             Logger.d(context, TAG, "Обновленная строка: " + updatedCost);
-            if (btn_cancel_order != null) {
-                btn_cancel_order.setEnabled(true);
-                btn_cancel_order.setClickable(true);
-                Logger.d(context,"Pusher eventTransactionStatus", "Cancel button enabled successfully");
-            }
+            viewModel.setCancelStatus(true);
+
             viewModel.setAddCostViewUpdate("0");
 
         } else {
@@ -1540,6 +1531,16 @@ public class FinishSeparateFragment extends Fragment {
             if (!addCost.equals("0")) {
 //                viewModel.getAddCostViewUpdate().removeObservers(getViewLifecycleOwner());
                 addCostView(addCost);
+            }
+        });
+
+        viewModel.getCancelStatus().observe(getViewLifecycleOwner(), status -> {
+            Logger.d(context,"Pusher getCancelStatus", "Finish getCancelStatus status set: " + status);
+            if (status != null) {
+                btn_cancel_order.setEnabled(status);
+                if (!status) {
+                    Toast.makeText(context, R.string.cancel_btn_enable, Toast.LENGTH_LONG).show();
+                }
             }
         });
 
@@ -1806,12 +1807,7 @@ public class FinishSeparateFragment extends Fragment {
                         verifyOldHold();
                     }
                     if ("nal_payment".equals(pay_method)) {
-                        if (FinishSeparateFragment.btn_cancel_order != null) {
-                            FinishSeparateFragment.btn_cancel_order.setEnabled(false);
-                            FinishSeparateFragment.btn_cancel_order.setClickable(false);
-                        } else {
-                            Log.e("Pusher", "btn_cancel_order is null!");
-                        }
+                        viewModel.setCancelStatus(false);
                         // Перезапускаем задачу
                         if (handlerAddcost != null) {
                             handlerAddcost.postDelayed(showDialogAddcost, timeCheckout);
@@ -1876,6 +1872,7 @@ public class FinishSeparateFragment extends Fragment {
     }
 
     private void showCancelDialog() {
+        Logger.d(context, TAG, "btn_cancel_order.isEnabled(): " + btn_cancel_order.isEnabled());
 
         if (!btn_cancel_order.isEnabled()) {
             Toast.makeText(context, R.string.cancel_btn_enable, Toast.LENGTH_LONG).show();

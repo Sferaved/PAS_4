@@ -55,6 +55,17 @@ public class ExecutionStatusViewModel extends ViewModel {
         }
     }
 
+    private final MutableLiveData<Boolean> cancelStatus = new MutableLiveData<>();
+    public LiveData<Boolean> getCancelStatus() {return cancelStatus;}
+    public void setCancelStatus(Boolean canceled) {
+        Log.e("Pusher canceled", "canceled:" + canceled);
+        if (Looper.getMainLooper().isCurrentThread()) {
+            cancelStatus.setValue(canceled);
+        } else {
+            cancelStatus.postValue(canceled);
+        }
+    }
+
     //Опрос вилки
     public LiveData<OrderResponse> getOrderResponse() {return orderResponse;}
     public void updateOrderResponse(OrderResponse response) {

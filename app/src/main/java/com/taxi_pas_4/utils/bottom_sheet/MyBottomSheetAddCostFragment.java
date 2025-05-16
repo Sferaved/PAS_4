@@ -125,8 +125,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
             Logger.d(getActivity(), TAG, "btn_ok: " + currentAddCost[0]);
             if(currentAddCost[0] > 0) {
                 // Выключить кнопку
-                FinishSeparateFragment.btn_cancel_order.setEnabled(false);
-                FinishSeparateFragment.btn_cancel_order.setClickable(false);
+                viewModel.setCancelStatus(false);
                 FinishSeparateFragment.text_status.setText(context.getString(R.string.recounting_order));
                 startAddCostUpdate(
                         uid,
@@ -147,9 +146,12 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
         FinishSeparateFragment.text_status.setText(context.getString(R.string.recounting_order));
         if ("nal_payment".equals(pay_method)) {
             viewModel.setAddCostViewUpdate(addCost);
+            viewModel.setCancelStatus(false);
+
             startAddCostWithUpdate(uid, addCost, baseUrl );
        }
         if ("wfp_payment".equals(pay_method)) {
+            viewModel.setCancelStatus(false);
             startAddCostCardUpdate(addCost);
         }
     }
@@ -174,7 +176,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
                         Status status = response.body();
                         String responseStatus = status.getResponse();
                         Logger.d(context, TAG, "startAddCostUpdate nal_payment: " + responseStatus);
-
+                        viewModel.setCancelStatus(true);
                     }
                 }
 
@@ -184,7 +186,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
                     Logger.d(context, TAG, "URL запроса nal_payment: " + t.getMessage());
                     // Обработать ошибку выполнения запроса
                     FirebaseCrashlytics.getInstance().recordException(t);
-
+                    viewModel.setCancelStatus(true);
                 }
             });
 
@@ -314,31 +316,13 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
         call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<Status> call, @NonNull Response<Status> response) {
-//                if (response.isSuccessful() && response.body() != null) {
-//                    Status status = response.body();
-//                    String responseStatus = status.getResponse();
-//                    Logger.d(context, TAG, "startAddCostUpdate wfp_payment status: " + responseStatus);
-//                    if (!responseStatus.equals("200")) {
-//                        // Обработка неуспешного ответа
-//                        FinishSeparateFragment.text_status.setText(responseStatus);
-//                    } else {
-//                        viewModel.setAddCostViewUpdate(addCost);
-//                    }
-//                } else {
-//                    // Обработка неуспешного ответа
-//                    FinishSeparateFragment.text_status.setText(R.string.verify_internet);
-//                }
+                viewModel.setCancelStatus(true);
             }
 
             @Override
             public void onFailure(@NonNull Call<Status> call, @NonNull Throwable t) {
                 FirebaseCrashlytics.getInstance().recordException(t);
-                if (FinishSeparateFragment.btn_cancel_order != null) {
-                    FinishSeparateFragment.btn_cancel_order.setVisibility(VISIBLE);
-                    FinishSeparateFragment.btn_cancel_order.setEnabled(true);
-                    FinishSeparateFragment.btn_cancel_order.setClickable(true);
-                    Logger.d(context,TAG, "Cancel button enabled successfully");
-                }
+                viewModel.setCancelStatus(true);
             }
         });
     }
@@ -425,12 +409,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
                 // Ошибка при выполнении запроса
                 FirebaseCrashlytics.getInstance().recordException(t);
                 Logger.d(context, TAG, "Ошибка при выполнении запроса");
-                if (FinishSeparateFragment.btn_cancel_order != null) {
-                    FinishSeparateFragment.btn_cancel_order.setVisibility(VISIBLE);
-                    FinishSeparateFragment.btn_cancel_order.setEnabled(true);
-                    FinishSeparateFragment.btn_cancel_order.setClickable(true);
-                    Logger.d(context,"Pusher eventTransactionStatus", "Cancel button enabled successfully");
-                }
+                viewModel.setCancelStatus(true);
             }
         });
 
