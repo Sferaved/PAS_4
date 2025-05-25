@@ -126,7 +126,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
             if(currentAddCost[0] > 0) {
                 // Выключить кнопку
                 viewModel.setCancelStatus(false);
-                FinishSeparateFragment.text_status.setText(context.getString(R.string.recounting_order));
+//                FinishSeparateFragment.text_status.setText(context.getString(R.string.recounting_order));
                 startAddCostUpdate(
                         uid,
                         String.valueOf(currentAddCost[0])
@@ -143,7 +143,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
     ) {
 
         String  baseUrl = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
-        FinishSeparateFragment.text_status.setText(context.getString(R.string.recounting_order));
+//        FinishSeparateFragment.text_status.setText(context.getString(R.string.recounting_order));
         if ("nal_payment".equals(pay_method)) {
             viewModel.setAddCostViewUpdate(addCost);
             viewModel.setCancelStatus(false);
@@ -197,7 +197,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
         String rectoken = getCheckRectoken(MainActivity.TABLE_WFP_CARDS);
         Logger.d(context, TAG, "payWfp: rectoken " + rectoken);
 
-        FinishSeparateFragment.text_status.setText(R.string.recounting_order);
+//        FinishSeparateFragment.text_status.setText(R.string.recounting_order);
 
         MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
 

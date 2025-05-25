@@ -12,7 +12,6 @@ import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHel
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -129,7 +128,7 @@ public class FinishSeparateFragment extends Fragment {
     public Runnable myRunnable;
     public Runnable runnableBonusBtn;
     public static Handler handler, handlerBonusBtn;
-    Handler handlerStatus;
+    public static Handler handlerStatus;
     public static Runnable myTaskStatus;
 
     String email;
@@ -475,6 +474,11 @@ public class FinishSeparateFragment extends Fragment {
     private void btnOptions() {
         // Создаем Bundle для передачи данных
         Bundle bundle = new Bundle();
+
+        Log.d("btnOptions", "flexible_tariff_name " + flexible_tariff_name);
+        Log.d("btnOptions", "comment_info " + comment_info);
+        Log.d("btnOptions", "extra_charge_codes " + extra_charge_codes);
+        
         bundle.putString("flexible_tariff_name", flexible_tariff_name);
         bundle.putString("comment_info", comment_info);
         bundle.putString("extra_charge_codes", extra_charge_codes);
@@ -1057,6 +1061,10 @@ public class FinishSeparateFragment extends Fragment {
                 if (!TextUtils.isEmpty(time_to_start_point)) {
                     messageBuilder.append(context.getString(R.string.ex_st_5))
                             .append(formatDate2(time_to_start_point));
+                    countdownTextView.setVisibility(View.VISIBLE);
+                    text_status.setText(messageBuilder.toString());
+                } else {
+                    countdownTextView.setVisibility(GONE);
                 }
 
                 if (!TextUtils.isEmpty(orderCarInfo)) {
@@ -1065,9 +1073,6 @@ public class FinishSeparateFragment extends Fragment {
                 } else {
                     setVisibility(GONE, textStatusCar, textCarMessage);
                 }
-
-                countdownTextView.setVisibility(View.VISIBLE);
-                text_status.setText(messageBuilder.toString());
 
             } else {
                 text_status.setText(context.getString(R.string.ex_st_canceled));
@@ -1539,7 +1544,8 @@ public class FinishSeparateFragment extends Fragment {
             if (status != null) {
                 btn_cancel_order.setEnabled(status);
                 if (!status) {
-                    Toast.makeText(context, R.string.cancel_btn_enable, Toast.LENGTH_LONG).show();
+                    String message = context.getString(R.string.recounting_order) + ". " + context.getString(R.string.cancel_btn_enable);
+                    text_status.setText(message);
                 }
             }
         });
@@ -2014,22 +2020,27 @@ public class FinishSeparateFragment extends Fragment {
 
         int newCheck = 0;
         List<String> services = logCursor(MainActivity.TABLE_SERVICE_INFO, context);
+        Log.d("addCheck", "services " + services);
         for (int i = 0; i < DataArr.arrayServiceCode().length; i++) {
             if (services.get(i + 1).equals("1")) {
                 newCheck++;
             }
         }
+        Log.d("addCheck", "newCheck 1: " + newCheck);
         List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, context);
         String tarif = stringListInfo.get(2);
+        Log.d("addCheck", "tarif " + tarif);
         if (!tarif.equals(" ")) {
+            flexible_tariff_name = tarif;
             newCheck++;
         }
-        Log.d("comment_info", "comment_info " + comment_info);
+        Log.d("addCheck", "newCheck 2: " + newCheck);
+        Log.d("addCheck", "comment_info " + "/" + comment_info + "/");
 
-        if (!comment_info.equals("no_comment") && !comment_info.isEmpty()) {
+        if (!comment_info.equals("no_comment") && !comment_info.isEmpty() && !comment_info.equals(" ")) {
             newCheck++;
         }
-
+        Log.d("addCheck", "newCheck 3: " + newCheck);
         String mes = context.getString(R.string.add_services);
         if (newCheck != 0) {
             mes = context.getString(R.string.add_services) + " (" + newCheck + ")";
@@ -2041,29 +2052,10 @@ public class FinishSeparateFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        logMemoryState();
         sharedPreferencesHelperMain.saveValue("carFound", false);
     }
 
-    private void logMemoryState() {
-        ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
-        ActivityManager activityManager = (ActivityManager) requireContext().getSystemService(Context.ACTIVITY_SERVICE);
-        activityManager.getMemoryInfo(memoryInfo);
 
-        // Формирование отчета о состоянии памяти
-        String memoryReport = context.getString(R.string.low_memory_2) +
-                context.getString(R.string.low_memory_3) + memoryInfo.availMem + context.getString(R.string.low_memory_6) +
-                context.getString(R.string.low_memory_4) + memoryInfo.threshold + context.getString(R.string.low_memory_6) +
-                context.getString(R.string.low_memory_5) + memoryInfo.lowMemory;
-
-        // Логирование отчета
-        Logger.d(context, "MemoryReport", memoryReport);
-
-        if (memoryInfo.lowMemory) {
-                Toast.makeText(context, memoryReport, Toast.LENGTH_LONG).show();
-        }
-
-    }
 
 
 }

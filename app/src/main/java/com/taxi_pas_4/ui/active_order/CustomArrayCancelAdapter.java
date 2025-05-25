@@ -168,6 +168,7 @@ public class CustomArrayCancelAdapter extends ArrayAdapter<String> {
         }
         costMap.put("pay_method", routeInfo.getToPay_method());
         costMap.put("orderWeb", routeInfo.getOrderCost());
+
         costMap.put("required_time", routeInfo.getRequired_time());
         costMap.put("flexible_tariff_name", routeInfo.getFlexible_tariff_name());
         costMap.put("comment_info", routeInfo.getComment_info());
