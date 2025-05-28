@@ -351,11 +351,11 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
         callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
 
 
-        Call<PurchaseResponse> call = service.purchase(
+        Call<PurchaseResponse> call = service.purchaseWithChangeToken(
                 getString(R.string.application),
                 city,
                 MainActivity.order_id,
-                amount,
+                MainActivity.uid,
                 orderDescription,
                 email,
                 FinishSeparateFragment.phoneNumber

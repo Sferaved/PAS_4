@@ -535,12 +535,7 @@ public class PusherManager {
 
                 Logger.d(context,"Pusher", "Received eventAutoOrder: " + eventValues.toString());
 
-                if (MainActivity.currentNavDestination != R.id.nav_finish_separate) {
-                    startFinishPage(eventValues);
-                }
-
-
-                // Логируем успешный случай
+                startFinishPage(eventValues);
 
             } catch (JSONException e) {
                 // Логируем ошибку при парсинге JSON

@@ -167,6 +167,8 @@ public class CustomArrayCancelAdapter extends ArrayAdapter<String> {
             costMap.put("dispatching_order_uid_Double", " ");
         }
         costMap.put("pay_method", routeInfo.getToPay_method());
+        Logger.d(context, TAG, "pay_method" + routeInfo.getToPay_method());
+
         costMap.put("orderWeb", routeInfo.getOrderCost());
 
         costMap.put("required_time", routeInfo.getRequired_time());

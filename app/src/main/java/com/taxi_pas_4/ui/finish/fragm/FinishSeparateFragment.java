@@ -73,6 +73,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.lang.ref.WeakReference;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -172,6 +173,8 @@ public class FinishSeparateFragment extends Fragment {
 
     TimeUtils timeUtils;
     private Observer<Boolean> observer;
+    private WeakReference<Activity> activityRef;
+    private Call<OrderResponse> retrofitCall;
 
     @SuppressLint("SourceLockedOrientationActivity")
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -205,7 +208,26 @@ public class FinishSeparateFragment extends Fragment {
         blinkAnimation = AnimationUtils.loadAnimation(context, R.anim.blink_animation);
 
         countdownTextView = root.findViewById(R.id.countdownTextView);
-        pay_method = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(4);
+
+        Bundle arguments = getArguments();
+        assert arguments != null;
+
+
+        String no_pay_key = arguments.getString("card_payment_key");
+
+        receivedMap = (HashMap<String, String>) arguments.getSerializable("sendUrlMap");
+
+        assert receivedMap != null;
+
+        flexible_tariff_name = receivedMap.get("flexible_tariff_name");
+
+        if(receivedMap.get("pay_method") != null) {
+            pay_method = receivedMap.get("pay_method");
+        } else {
+            pay_method = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(4);
+        }
+
+        assert pay_method != null;
         if(pay_method.equals("nal_payment")) {
             timeCheckOutAddCost = 60*1000;
         } else  {
@@ -226,11 +248,7 @@ public class FinishSeparateFragment extends Fragment {
         email = logCursor(TABLE_USER_INFO, context).get(3);
         phoneNumber = logCursor(TABLE_USER_INFO, context).get(2);
 
-        Bundle arguments = getArguments();
-        assert arguments != null;
 
-
-        String no_pay_key = arguments.getString("card_payment_key");
 
         Logger.d(context, TAG, "no_pay: key " + no_pay_key);
 
@@ -238,11 +256,7 @@ public class FinishSeparateFragment extends Fragment {
         Logger.d(context, TAG, "no_pay: " + no_pay);
 
 
-        receivedMap = (HashMap<String, String>) arguments.getSerializable("sendUrlMap");
 
-        assert receivedMap != null;
-
-        flexible_tariff_name = receivedMap.get("flexible_tariff_name");
 
         required_time = receivedMap.get("required_time");
         if (required_time == null || required_time.isEmpty()) {
@@ -415,6 +429,12 @@ public class FinishSeparateFragment extends Fragment {
 
 
 
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        activityRef = new WeakReference<>((Activity) context);
+    }
+
      void updateUICardPayStatus(
             OrderResponse orderResponse
     ) {
@@ -563,6 +583,7 @@ public class FinishSeparateFragment extends Fragment {
     @Override
     public void onDetach() {
         super.onDetach();
+        activityRef.clear();
     }
 
 
@@ -861,23 +882,29 @@ public class FinishSeparateFragment extends Fragment {
             baseUrl = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
             String url = baseUrl  + "getOrderStatusMessageResultPush/" + uid;
 
-            Call<OrderResponse> call = ApiClient.getApiService().getOrderStatusMessageResultPush(url);
+//            Call<OrderResponse> call = ApiClient.getApiService().getOrderStatusMessageResultPush(url);
+            retrofitCall = ApiClient.getApiService().getOrderStatusMessageResultPush(url);
             Logger.d(context, TAG, "/getOrderStatusMessageResultPush/: " + url);
 
             // Выполняем запрос асинхронно
-            call.enqueue(new Callback<>() {
+            retrofitCall.enqueue(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<OrderResponse> call, @NonNull Response<OrderResponse> response) {
                     if (response.isSuccessful() && response.body() != null) {
-                        // Получаем объект OrderResponse из успешного ответа
                         OrderResponse orderResponse = response.body();
-                        updateUICardPayStatus(orderResponse);
+                        Activity activity = activityRef.get();
+                        if (activity != null && isAdded()) {
+                            activity.runOnUiThread(() -> updateUICardPayStatus(orderResponse));
+                        }
                     }
                 }
 
                 @Override
                 public void onFailure(@NonNull Call<OrderResponse> call, @NonNull Throwable t) {
-                    FirebaseCrashlytics.getInstance().recordException(t);
+                    if (!call.isCanceled()) {
+                        // Обработка ошибки
+                        FirebaseCrashlytics.getInstance().recordException(t);
+                    }
                 }
             });
         }
@@ -887,7 +914,7 @@ public class FinishSeparateFragment extends Fragment {
 
     private void orderComplete() {
         sharedPreferencesHelperMain.saveValue("carFound", true);
-        new Handler(Looper.getMainLooper()).post(() -> {
+//        new Handler(Looper.getMainLooper()).post(() -> {
             // Выполнено
             stopCycle();
 
@@ -926,18 +953,21 @@ public class FinishSeparateFragment extends Fragment {
             Logger.d(context, TAG, "orderComplete " + canceled);
 
             stopCycle();
-        });
+//        });
     }
 
 
     private void carSearch() {
         sharedPreferencesHelperMain.saveValue("carFound", false);
-        new Handler(Looper.getMainLooper()).post(() -> {
+//        new Handler(Looper.getMainLooper()).post(() -> {
             Logger.d(context, TAG, "carSearch() started");
             if (btn_cancel_order.getVisibility() != View.VISIBLE) {
                 btn_cancel_order.setVisibility(VISIBLE);
             }
 
+            btnAddCost (timeCheckOutAddCost);
+
+        btn_add_cost.setVisibility(View.VISIBLE);
             if (cancel_btn_click) {
                 Logger.d(context, TAG, "Order cancellation detected, stopping search...");
                 if (handler != null) {
@@ -975,7 +1005,7 @@ public class FinishSeparateFragment extends Fragment {
             setVisibility(GONE, textStatusCar, textCarMessage);
             setVisibility(VISIBLE, carProgressBar);
             Logger.d(context, TAG, "carSearch() completed");
-        });
+//        });
     }
 
     // Вспомогательный метод для отмены всех обработчиков
@@ -1019,7 +1049,7 @@ public class FinishSeparateFragment extends Fragment {
             handlerAddcost.removeCallbacks(showDialogAddcost);
         }
 
-        new Handler(Looper.getMainLooper()).post(() -> {
+//        new Handler(Looper.getMainLooper()).post(() -> {
             text_status.clearAnimation();
             setVisibility(View.VISIBLE, textCost, textCostMessage);
 
@@ -1064,6 +1094,7 @@ public class FinishSeparateFragment extends Fragment {
                     countdownTextView.setVisibility(View.VISIBLE);
                     text_status.setText(messageBuilder.toString());
                 } else {
+                    text_status.setText(context.getString(R.string.ex_st_2));
                     countdownTextView.setVisibility(GONE);
                 }
 
@@ -1077,9 +1108,60 @@ public class FinishSeparateFragment extends Fragment {
             } else {
                 text_status.setText(context.getString(R.string.ex_st_canceled));
             }
-        });
+//        });
     }
+     private void btnAddCost (int timeCheckout) {
+         btn_add_cost.setText(context.getString(R.string.add_cost_btn));
+         btn_add_cost.setOnClickListener( view -> {
 
+             if ("nal_payment".equals(pay_method)) {
+
+                 // Запускаем выполнение через 1 минуты (60 000 миллисекунд)
+                 if (handlerAddcost != null) {
+                     handlerAddcost.postDelayed(showDialogAddcost, timeCheckout);
+                 }
+
+                 String text = textCostMessage.getText().toString();
+                 Logger.d(getActivity(), TAG, "textCostMessage.getText().toString() " + text);
+
+                 Pattern pattern = Pattern.compile("(\\d+)");
+                 Matcher matcher = pattern.matcher(text);
+
+                 if (matcher.find()) {
+                     Logger.d(context, TAG, "amount_to_add: " + matcher.group(1));
+                     stopCycle();
+                     MyBottomSheetAddCostFragment bottomSheetDialogFragment = new MyBottomSheetAddCostFragment(
+                             matcher.group(1),
+                             uid,
+                             uid_Double,
+                             pay_method,
+                             context,
+                             fragmentManager
+                     );
+    // Устанавливаем слушатель для обработки закрытия
+                     bottomSheetDialogFragment.setOnDismissListener(() -> {
+                         isTaskCancelled = false; // Сбрасываем флаг
+                         startCycle(); // Запускаем задачу после закрытия
+                     });
+                     bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                 } else {
+                     Logger.d(context, TAG, "No numeric value found in the text.");
+                 }
+             }  else if ("wfp_payment".equals(pay_method)) {
+
+                 verifyOldHold();
+
+
+             } else if ("bonus_payment".equals(pay_method)) {
+
+                 String message = context.getString(R.string.addCostBonusMessage);
+                 MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context, message);
+                 bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+
+
+             }
+         });
+     }
     private void orderCanceled(String message) {
 //        new Handler(Looper.getMainLooper()).post(() -> {
             sharedPreferencesHelperMain.saveValue("carFound", false);
@@ -1259,9 +1341,12 @@ public class FinishSeparateFragment extends Fragment {
             String orderCarInfo,
             String action
     ) {
-
+        Logger.d(context, TAG, "closeReasonReactCard: " + action);
         String message;
         switch (action) {
+            case "Поиск авто":
+                carSearch();
+                break;
             case "Авто найдено":
                 carFound(closeReason, driverPhone, time_to_start_point, orderCarInfo);
                 break;
@@ -1524,6 +1609,9 @@ public class FinishSeparateFragment extends Fragment {
         if (handlerAddcost != null) {
             handlerAddcost.removeCallbacks(showDialogAddcost);
         }
+        if (retrofitCall != null && !retrofitCall.isCanceled()) {
+            retrofitCall.cancel(); // Отмена вызова Retrofit
+        }
     }
 
 
@@ -1647,58 +1735,8 @@ public class FinishSeparateFragment extends Fragment {
                 }
             }
         }
-       
 
-
-        btn_add_cost.setOnClickListener( view -> {
-
-                if ("nal_payment".equals(pay_method)) {
-
-                    // Запускаем выполнение через 1 минуты (60 000 миллисекунд)
-                    if (handlerAddcost != null) {
-                        handlerAddcost.postDelayed(showDialogAddcost, timeCheckout);
-                    }
-
-                    String text = textCostMessage.getText().toString();
-                    Logger.d(getActivity(), TAG, "textCostMessage.getText().toString() " + text);
-
-                    Pattern pattern = Pattern.compile("(\\d+)");
-                    Matcher matcher = pattern.matcher(text);
-
-                    if (matcher.find()) {
-                        Logger.d(context, TAG, "amount_to_add: " + matcher.group(1));
-                        stopCycle();
-                        MyBottomSheetAddCostFragment bottomSheetDialogFragment = new MyBottomSheetAddCostFragment(
-                                matcher.group(1),
-                                uid,
-                                uid_Double,
-                                pay_method,
-                                context,
-                                fragmentManager
-                        );
-// Устанавливаем слушатель для обработки закрытия
-                        bottomSheetDialogFragment.setOnDismissListener(() -> {
-                            isTaskCancelled = false; // Сбрасываем флаг
-                            startCycle(); // Запускаем задачу после закрытия
-                        });
-                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-                    } else {
-                        Logger.d(context, TAG, "No numeric value found in the text.");
-                    }
-                }  else if ("wfp_payment".equals(pay_method)) {
-
-                     verifyOldHold();
-
-
-                } else if ("bonus_payment".equals(pay_method)) {
-
-                    String message = context.getString(R.string.addCostBonusMessage);
-                    MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context, message);
-                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-
-
-                }
-            });
+        btnAddCost (timeCheckOutAddCost);
     }
 
     private void verifyOldHold() {
