@@ -29,9 +29,9 @@
 
     <fragment
         android:id="@+id/nav_uid"
-        android:name="com.taxi_pas_4.ui.uid.UIDFragment"
+        android:name="com.taxi_pas_4.ui.history.HistoryFragment"
         android:label="@string/uid_menu"
-        tools:layout="@layout/fragment_uid" />
+        tools:layout="@layout/fragment_history" />
 
     <fragment
         android:id="@+id/nav_bonus"

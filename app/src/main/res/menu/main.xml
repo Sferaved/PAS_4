@@ -78,6 +78,14 @@
         android:paddingRight="0dp"
         android:paddingBottom="0dp" />
     <item
+        android:id="@+id/clearApp"
+        android:orderInCategory="100"
+        android:title="@string/clearApp"
+        android:paddingLeft="0dp"
+        android:paddingTop="0dp"
+        android:paddingRight="0dp"
+        android:paddingBottom="0dp" />
+    <item
         android:id="@+id/action_exit"
         android:orderInCategory="100"
         android:title="@string/action_exit"

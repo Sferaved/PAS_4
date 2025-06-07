@@ -1,4 +1,4 @@
-package com.taxi_pas_4.ui.uid;
+package com.taxi_pas_4.ui.history;
 
 
 import static android.content.Context.MODE_PRIVATE;
