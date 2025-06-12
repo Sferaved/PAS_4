@@ -10,7 +10,6 @@
         android:name="com.taxi_pas_4.ui.visicom.VisicomFragment"
 
         tools:layout="@layout/fragment_visicom" />
-
     <fragment
         android:id="@+id/nav_home"
         android:name="com.taxi_pas_4.ui.home.HomeFragment"
@@ -32,17 +31,12 @@
         android:name="com.taxi_pas_4.ui.history.HistoryFragment"
         android:label="@string/uid_menu"
         tools:layout="@layout/fragment_history" />
-
     <fragment
         android:id="@+id/nav_bonus"
         android:name="com.taxi_pas_4.ui.bonus.BonusFragment"
         android:label="@string/my_bonus_menu"
         tools:layout="@layout/fragment_bonus" />
-    <fragment
-        android:id="@+id/nav_search"
-        android:name="com.taxi_pas_4.ui.visicom.visicom_search.VisicomSearchFragment"
-        android:label="@string/search_address"
-        tools:layout="@layout/fragment_visicom_search" />
+
     <fragment
         android:id="@+id/nav_card"
         android:name="com.taxi_pas_4.ui.card.CardFragment"
@@ -59,26 +53,47 @@
         android:name="com.taxi_pas_4.ui.author.AuthorFragment"
         android:label="@string/author_about"
         tools:layout="@layout/fragment_about" />
+
     <fragment
         android:id="@+id/nav_account"
         android:name="com.taxi_pas_4.ui.account.AccountFragment"
         android:label="@string/account_menu"
         tools:layout="@layout/fragment_account" />
+
     <fragment
         android:id="@+id/nav_finish_separate"
         android:name="com.taxi_pas_4.ui.finish.fragm.FinishSeparateFragment"
         android:label="@string/your_order"
-        tools:layout="@layout/fragment_finish" />
+        tools:layout="@layout/fragment_finish_separate" />
 
     <fragment
         android:id="@+id/nav_restart"
         android:name="com.taxi_pas_4.ui.restart.RestartFragment"
         android:label="@string/your_order"
         tools:layout="@layout/fragment_restart" />
+
+    <fragment
+        android:id="@+id/nav_search"
+        android:name="com.taxi_pas_4.ui.visicom.visicom_search.VisicomSearchFragment"
+        android:label="@string/search_address"
+        tools:layout="@layout/fragment_visicom_search" />
+
     <fragment
         android:id="@+id/nav_cacheOrder"
         android:name="com.taxi_pas_4.ui.finish.fragm.CacheOrderFragment"
         android:label="@string/your_order"
         tools:layout="@layout/fragment_cache_order" />
+
+    <fragment
+        android:id="@+id/nav_map"
+        android:name="com.taxi_pas_4.ui.open_map.OpenStreetMapFragment"
+        android:label="@string/search_address"
+        tools:layout="@layout/fragment_openstreetmap" />
+
+    <fragment
+        android:id="@+id/nav_city"
+        android:name="com.taxi_pas_4.ui.cities.check.CityCheckFragment"
+        android:label="@string/search_address"
+        tools:layout="@layout/fragment_city_check" />
 
 </navigation>
