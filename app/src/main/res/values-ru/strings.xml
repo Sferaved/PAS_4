@@ -1,8 +1,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.152</string>
-    <string name="version">Версия: 4.152</string>
+    <string name="version_code">4.153</string>
+    <string name="version">Версия: 4.153</string>
 
     <string name="app_name">Такси Дюк Попутчик</string>
 
@@ -126,7 +126,7 @@
     <string name="from_text">Откуда</string>
     <string name="to_text">Куда</string>
     <string name="serve">Подача</string>
-    <string name="coment">Комментарий</string>
+    <string name="coment">Введите сообщение для водителя</string>
     <string name="services">УСЛУГИ</string>
     <string name="resettimetoorder">Проверьте дату или время для предварительного заказа</string>
     <string name="my_routs">Выберите маршрут</string>

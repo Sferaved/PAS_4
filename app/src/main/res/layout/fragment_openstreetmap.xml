@@ -19,8 +19,8 @@
 
     <ImageButton
         android:id="@+id/fab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:layout_marginStart="24dp"
         android:layout_marginTop="8dp"
         android:background="@drawable/btn_accents"
@@ -53,7 +53,8 @@
         android:text="GPS"
         android:layout_marginBottom="20sp"
         app:layout_constraintBottom_toTopOf="@+id/fab_open_marker"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:ignore="UseSwitchCompatOrMaterialXml" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_open_map"

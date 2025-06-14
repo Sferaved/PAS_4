@@ -37,11 +37,13 @@
             <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
                 android:id="@+id/swipeRefreshLayout"
                 android:layout_width="31dp"
-                android:layout_height="600dp"
+                android:layout_height="200dp"
 
+                android:layout_marginTop="12dp"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="1.0"
                 app:layout_constraintStart_toEndOf="@+id/text_to"
-                app:layout_constraintTop_toTopOf="@+id/gpsbut"
+                app:layout_constraintTop_toBottomOf="@+id/clearButtonTo"
                 tools:ignore="MissingConstraints">
 
                 <TextView
@@ -115,7 +117,7 @@
             <TextView
                 android:id="@+id/textGeo"
                 android:layout_width="0dp"
-            app:layout_constraintWidth_percent="@dimen/button_width"
+                app:layout_constraintWidth_percent="@dimen/button_width"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
                 android:layout_marginTop="20dp"
@@ -133,7 +135,22 @@
                 app:layout_constraintTop_toBottomOf="@+id/textfrom"
                 tools:ignore="MissingConstraints" />
 
-
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/clearButtonFrom"
+                android:layout_width="25dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="2dp"
+                android:layout_marginEnd="8dp"
+                app:icon="@drawable/baseline_cleaning_services_24"
+                app:iconGravity="top"
+                android:visibility="gone"
+                app:iconTint="#FFFFFF"
+                style="?attr/borderlessButtonStyle"
+                android:backgroundTint="@android:color/transparent"
+                android:contentDescription="clear_button_description"
+                app:layout_constraintStart_toEndOf="@+id/textGeo"
+                app:layout_constraintTop_toTopOf="@+id/textGeo"
+                app:layout_constraintBottom_toBottomOf="@+id/textGeo" />
 
 
 
@@ -172,6 +189,23 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textwhere"
             tools:ignore="MissingConstraints" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/clearButtonTo"
+                android:layout_width="25dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="2dp"
+                android:layout_marginEnd="8dp"
+                app:icon="@drawable/baseline_cleaning_services_24"
+                app:iconGravity="top"
+                app:iconTint="#FFFFFF"
+                android:visibility="gone"
+                style="?attr/borderlessButtonStyle"
+                android:backgroundTint="@android:color/transparent"
+                android:contentDescription="clear_button_description"
+                app:layout_constraintStart_toEndOf="@+id/text_to"
+                app:layout_constraintTop_toTopOf="@+id/text_to"
+                app:layout_constraintBottom_toBottomOf="@+id/text_to" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/constr_2"

@@ -21,13 +21,15 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
+import androidx.navigation.NavController;
+import androidx.navigation.NavOptions;
+import androidx.navigation.Navigation;
 
 import com.github.anrwatchdog.ANRWatchDog;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
-import com.taxi_pas_4.ui.exit.AnrActivity;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.keys.FirestoreHelper;
 import com.taxi_pas_4.utils.keys.SecurePrefs;
@@ -111,9 +113,10 @@ public class MyApplication extends Application {
             // Запускаем AnrActivity на главном потоке
 
             new Handler(Looper.getMainLooper()).post(() -> {
-                Intent intent = new Intent(getApplicationContext(), AnrActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
+                NavController navController = Navigation.findNavController(getCurrentActivity(), R.id.nav_host_fragment_content_main);
+                navController.navigate(R.id.nav_anr, null, new NavOptions.Builder()
+                        .build());
+
             });
 
             // Завершаем процесс через 1 секунду, чтобы успела запуститься активность
@@ -300,9 +303,12 @@ public class MyApplication extends Application {
                     // Проверяем, можно ли запустить AnrActivity
                     if (context instanceof Activity && !((Activity) context).isFinishing()) {
                         try {
-                            Intent intent = new Intent(context, AnrActivity.class);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // Для запуска из неактивного контекста
-                            context.startActivity(intent);
+                            NavController navController = Navigation.findNavController(getCurrentActivity(), R.id.nav_host_fragment_content_main);
+                            navController.navigate(R.id.nav_anr, null, new NavOptions.Builder()
+                                    .build());
+//                            Intent intent = new Intent(context, AnrActivity.class);
+//                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // Для запуска из неактивного контекста
+//                            context.startActivity(intent);
                         } catch (Exception e) {
                             Logger.e(context, TAG, "Failed to start AnrActivity: " + e.getMessage());
                             FirebaseCrashlytics.getInstance().recordException(e); // Записываем ошибку в Crashlytics
