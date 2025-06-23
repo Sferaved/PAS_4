@@ -51,7 +51,6 @@ import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.Status;
 import com.taxi_pas_4.ui.finish.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
-import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
 import com.taxi_pas_4.ui.payment_system.PayApi;
 import com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
 import com.taxi_pas_4.utils.animation.car.CarProgressBar;
@@ -59,6 +58,7 @@ import com.taxi_pas_4.utils.auth.FirebaseConsentManager;
 import com.taxi_pas_4.utils.blacklist.BlacklistManager;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
+import com.taxi_pas_4.utils.data.DataArr;
 import com.taxi_pas_4.utils.ip.RetrofitClient;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
@@ -444,9 +444,9 @@ public class CacheOrderFragment extends Fragment {
             }
         }
         if (servicesVer) {
-            for (int i = 0; i < OpenStreetMapActivity.arrayServiceCode().length; i++) {
+            for (int i = 0; i < DataArr.arrayServiceCode().length; i++) {
                 if (services.get(i + 1).equals("1")) {
-                    servicesChecked.add(OpenStreetMapActivity.arrayServiceCode()[i]);
+                    servicesChecked.add(DataArr.arrayServiceCode()[i]);
                 }
             }
             for (int i = 0; i < servicesChecked.size(); i++) {
@@ -711,9 +711,9 @@ public class CacheOrderFragment extends Fragment {
                 }
             }
             if (servicesVer) {
-                for (int i = 0; i < OpenStreetMapActivity.arrayServiceCode().length; i++) {
+                for (int i = 0; i < DataArr.arrayServiceCode().length; i++) {
                     if (services.get(i + 1).equals("1")) {
-                        servicesChecked.add(OpenStreetMapActivity.arrayServiceCode()[i]);
+                        servicesChecked.add(DataArr.arrayServiceCode()[i]);
                     }
                 }
                 for (int i = 0; i < servicesChecked.size(); i++) {
@@ -738,6 +738,7 @@ public class CacheOrderFragment extends Fragment {
             bundle.putSerializable("sendUrlMap", new HashMap<>(sendUrlMap));
             bundle.putString("UID_key", Objects.requireNonNull(sendUrlMap.get("dispatching_order_uid")));
 
+            viewModel.setStatusNalUpdate(true); //наюлюдение за опросом статусом нала
             new Handler(Looper.getMainLooper()).post (() -> {
                 MainActivity.navController.navigate(
                         R.id.nav_finish_separate,

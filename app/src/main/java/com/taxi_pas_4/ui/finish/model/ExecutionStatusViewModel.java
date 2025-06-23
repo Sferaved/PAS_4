@@ -7,6 +7,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.ui.finish.OrderResponse;
 import com.taxi_pas_4.utils.pusher.events.CanceledStatusEvent;
 import com.taxi_pas_4.utils.pusher.events.OrderResponseEvent;
@@ -106,4 +107,43 @@ public class ExecutionStatusViewModel extends ViewModel {
     }
 
 
+    private final MutableLiveData<String> uidLiveData = new MutableLiveData<>();
+    private final MutableLiveData<String> paySystemStatusLiveData = new MutableLiveData<>();
+
+    public ExecutionStatusViewModel() {
+        // Initialize with current values
+        uidLiveData.setValue(MainActivity.uid);
+        paySystemStatusLiveData.setValue(MainActivity.paySystemStatus);
+    }
+
+    // Expose LiveData to observe uid changes
+    public LiveData<String> getUid() {
+        return uidLiveData;
+    }
+
+    // Expose LiveData to observe paySystemStatus changes
+    public LiveData<String> getPaySystemStatus() {
+        return paySystemStatusLiveData;
+    }
+
+    // Method to update uid
+    public void updateUid(String newUid) {
+        uidLiveData.setValue(newUid);
+    }
+
+    // Method to update paySystemStatus
+    public void updatePaySystemStatus(String newPaySystemStatus) {
+        paySystemStatusLiveData.setValue(newPaySystemStatus);
+    }
+
+    private final MutableLiveData<Boolean> statusNalUpdate = new MutableLiveData<>();
+    public LiveData<Boolean> getStatusNalUpdate() {return statusNalUpdate;}
+    public void setStatusNalUpdate(Boolean canceled) {
+        Log.e("startFinishPage", "StatusNalUpdate:" + canceled);
+        if (Looper.getMainLooper().isCurrentThread()) {
+            statusNalUpdate.setValue(canceled);
+        } else {
+            statusNalUpdate.postValue(canceled);
+        }
+    }
 }

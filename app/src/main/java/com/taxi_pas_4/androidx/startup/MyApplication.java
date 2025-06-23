@@ -2,7 +2,6 @@ package com.taxi_pas_4.androidx.startup;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.app.Application;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -17,7 +16,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
@@ -30,7 +28,6 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
-import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.keys.FirestoreHelper;
 import com.taxi_pas_4.utils.keys.SecurePrefs;
 import com.taxi_pas_4.utils.log.Logger;
@@ -45,9 +42,8 @@ import java.util.Locale;
 
 public class MyApplication extends Application {
 
-    private boolean isAppInForeground = false;
+
     private final String TAG = "MyApplication";
-    private static final String LOG_FILE_NAME = "app_log.txt";
     @SuppressLint("StaticFieldLeak")
     private static MyApplication instance;
     @SuppressLint("StaticFieldLeak")
@@ -57,8 +53,6 @@ public class MyApplication extends Application {
 
     private IdleTimeoutManager idleTimeoutManager;
 
-    private long lastMemoryWarningTime = 0;
-    private long lastInternetWarningTime = 0;
     private boolean isUXCamInitialized = false;
     private static final int MAX_RETRY_ATTEMPTS = 2; // Максимум попыток загрузки ключа
     FirestoreHelper firestoreHelper;
@@ -306,9 +300,7 @@ public class MyApplication extends Application {
                             NavController navController = Navigation.findNavController(getCurrentActivity(), R.id.nav_host_fragment_content_main);
                             navController.navigate(R.id.nav_anr, null, new NavOptions.Builder()
                                     .build());
-//                            Intent intent = new Intent(context, AnrActivity.class);
-//                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // Для запуска из неактивного контекста
-//                            context.startActivity(intent);
+
                         } catch (Exception e) {
                             Logger.e(context, TAG, "Failed to start AnrActivity: " + e.getMessage());
                             FirebaseCrashlytics.getInstance().recordException(e); // Записываем ошибку в Crashlytics
@@ -356,9 +348,8 @@ public class MyApplication extends Application {
 
             @Override
             public void onActivityResumed(@NonNull Activity activity) {
-                startMemoryMonitoring();
 
-                isAppInForeground = true;
+
                 if (idleTimeoutManager != null) {
                     idleTimeoutManager.resetTimer();
                 }
@@ -367,10 +358,7 @@ public class MyApplication extends Application {
 
             @Override
             public void onActivityPaused(@NonNull Activity activity) {
-                isAppInForeground = false;
-//                backgroundStartTime = System.currentTimeMillis();
-                stopMemoryMonitoring(); // Останавливаем мониторинг при паузе
-                currentActivity = null;
+
             }
 
             @Override
@@ -391,87 +379,6 @@ public class MyApplication extends Application {
         });
     }
 
-    private final Handler memoryCheckHandler = new Handler(Looper.getMainLooper());
-
-    private final Runnable memoryCheckRunnable = new Runnable() {
-        @Override
-        public void run() {
-            // Выполняем проверку памяти
-            if (currentActivity != null) {
-                checkMemoryUsage(currentActivity);
-            }
-            // Повторяем выполнение через 5 секунд (5000 миллисекунд)
-            memoryCheckHandler.postDelayed(this, 5000);
-        }
-    };
-
-    // Запуск мониторинга
-    public void startMemoryMonitoring() {
-        memoryCheckHandler.post(memoryCheckRunnable);
-    }
-
-    // Остановка мониторинга
-    public void stopMemoryMonitoring() {
-        memoryCheckHandler.removeCallbacks(memoryCheckRunnable);
-    }
-
-
-
-    private void checkMemoryUsage(Activity activity) {
-        ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
-        ActivityManager activityManager = (ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE);
-        activityManager.getMemoryInfo(memoryInfo);
-
-        if (memoryInfo.lowMemory) {
-            long currentTime = System.currentTimeMillis();
-            if (currentTime - lastMemoryWarningTime > 60 * 1000) { // Уведомление раз в 60 секунд
-                // Отобразите уведомление пользователю
-
-                String message = getString(R.string.low_memory_0) + memoryInfo.availMem + getString(R.string.low_memory_1) + memoryInfo.lowMemory;
-                Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
-
-                lastMemoryWarningTime = currentTime;
-
-            }
-
-
-        }
-
-
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastInternetWarningTime > 30 * 1000) { // Уведомление раз в 30 секунд
-            NetworkUtils.isInternetStable(new NetworkUtils.ApiCallback() {
-                @Override
-                public void onSuccess(boolean isStable) {
-                    if (isStable) {
-                        Logger.d(activity,"NetworkCheck", "Internet is stable.");
-                    } else {
-                        activity.runOnUiThread(() ->
-                                Toast.makeText(activity, R.string.low_connect, Toast.LENGTH_SHORT).show()
-                        );
-                        Logger.d(activity,"NetworkCheck", "Internet is unstable.");
-                    }
-
-                    // Запуск Toast в основном потоке
-
-
-                    lastInternetWarningTime = currentTime;
-                }
-
-                @Override
-                public void onFailure(Throwable t) {
-                    FirebaseCrashlytics.getInstance().recordException(t);
-                    
-                    Logger.e(activity,"NetworkCheck", "Error checking internet stability." + t);
-                }
-            });
-
-        }
-
-
-        Logger.d(activity,"MemoryMonitor", "Свободная память: " + memoryInfo.availMem + " байт");
-        Logger.d(activity,"MemoryMonitor", "Состояние нехватки памяти: " + memoryInfo.lowMemory);
-    }
 
 
     private void visicomKeyFromFb()

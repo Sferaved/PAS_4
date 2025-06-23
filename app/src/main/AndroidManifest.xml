@@ -92,18 +92,7 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".ui.open_map.OpenStreetMapActivity"
-            android:exported="true"
-            android:screenOrientation="portrait"
-            tools:ignore="DiscouragedApi,Instantiatable,LockedOrientationActivity"
-            android:theme="@style/Theme.PAS_4.NoActionBar" />
 
-        <activity android:name=".ui.open_map.OpenStreetMapVisicomActivity"
-            android:exported="true"
-            android:screenOrientation="portrait"
-            tools:ignore="DiscouragedApi,Instantiatable,LockedOrientationActivity"
-            android:theme="@style/Theme.PAS_4.NoActionBar" />
 
         <activity android:name=".ui.visicom.visicom_search.ActivityVisicomOnePage"
             android:exported="true"

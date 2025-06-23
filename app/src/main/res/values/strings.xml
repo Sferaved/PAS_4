@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.154</string>
-    <string name="version">Версія: 4.154</string>
+    <string name="version_code">4.155</string>
+    <string name="version">Версія: 4.155</string>
 
     <string name="app_name">Таксі Дюк Попутник</string>
 
@@ -153,7 +153,7 @@
     <string name="change_message">"Зміна бази адрес. "</string>
     <string name="server_error_connected">Сервер не прийняв запит. Наберіть оператора через "ДОПОМОГУ"</string>
     <string name="GDPR">GDPR</string>
-    <string name="ok_GDPR">Погодитись  -> </string>
+    <string name="ok_GDPR">Погодитись</string>
     <string name="Dnipro_city">Дніпро</string>
     <string name="city_change">Виберіть місто</string>
     <string name="Zaporizhzhia">Запоріжжя</string>
@@ -526,4 +526,7 @@
     <string name="SA_message_history">Прошу прислати мені історію моїх поїздок за період з ..... по .....</string>
     <string name="anr_detected">Виявлена помілка</string>
     <string name="application_is_not_responding">Додаток не відповідає.</string>
+    <string name="check_permition">Будь ласка, увімкніть геолокацію або надайте дозвіл на доступ до місцеположення.</string>
+    <string name="map_loading">Мапа ще завантажується...</string>
+    <string name="cost_error">Помилка створення замовлення. Спробуйте змінити адресу або наберіть оператора</string>
 </resources>

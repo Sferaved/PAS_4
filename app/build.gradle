@@ -14,8 +14,8 @@ android {
         minSdk 26
         //noinspection EditedTargetSdkVersion
         targetSdk 35
-        versionCode 4154
-        versionName '4.154'
+        versionCode 4155
+        versionName '4.155'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += ['en', 'ru', 'uk']
@@ -110,8 +110,8 @@ dependencies {
     implementation 'com.squareup.picasso:picasso:2.71828'
 
     // Room для работы с локальной базой данных
-    implementation "androidx.room:room-runtime:2.7.1"
-    annotationProcessor "androidx.room:room-compiler:2.7.1"
+    implementation "androidx.room:room-runtime:2.7.2"
+    annotationProcessor "androidx.room:room-compiler:2.7.2"
 
     // Стартовые зависимости
     implementation 'androidx.startup:startup-runtime:1.2.0'

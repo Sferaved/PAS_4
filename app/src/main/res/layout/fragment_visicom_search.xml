@@ -143,7 +143,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="24sp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="16dp"
         android:fontFamily="@font/light"
         android:text="@string/from_text"
         android:textColor="#9DA0A8"
@@ -151,19 +151,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btn_on_map" />
 
+
     <TextView
         android:id="@+id/textwhere"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="24sp"
 
+        android:layout_marginTop="16dp"
         android:fontFamily="@font/light"
         android:text="@string/to_edit"
         android:textColor="#9DA0A8"
         android:textSize="14sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textGeoError" />
-
 
     <TextView
         android:id="@+id/textGeoError"
@@ -191,9 +192,9 @@
 
     <ImageButton
         android:id="@+id/btn_no"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
+         android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:background="@drawable/btn_accents"
         android:scaleType="centerInside"

@@ -90,7 +90,6 @@ import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
 import com.taxi_pas_4.ui.home.room.AppDatabase;
 import com.taxi_pas_4.ui.home.room.RouteCost;
 import com.taxi_pas_4.ui.home.room.RouteCostDao;
-import com.taxi_pas_4.ui.open_map.OpenStreetMapActivity;
 import com.taxi_pas_4.ui.payment_system.PayApi;
 import com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
 import com.taxi_pas_4.ui.start.ResultSONParser;
@@ -768,9 +767,9 @@ public class HomeFragment extends Fragment {
                             }
                         }
                         if (servicesVer) {
-                            for (int i = 0; i < OpenStreetMapActivity.arrayServiceCode().length; i++) {
+                            for (int i = 0; i < DataArr.arrayServiceCode().length; i++) {
                                 if (services.get(i + 1).equals("1")) {
-                                    servicesChecked.add(OpenStreetMapActivity.arrayServiceCode()[i]);
+                                    servicesChecked.add(DataArr.arrayServiceCode()[i]);
                                 }
                             }
                             for (int i = 0; i < servicesChecked.size(); i++) {

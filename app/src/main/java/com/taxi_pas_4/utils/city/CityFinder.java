@@ -25,6 +25,7 @@ import com.taxi_pas_4.ui.payment_system.ResponsePaySystem;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
+import com.taxi_pas_4.utils.data.DataArr;
 import com.taxi_pas_4.utils.ip.ApiServiceCountry;
 import com.taxi_pas_4.utils.ip.CountryResponse;
 import com.taxi_pas_4.utils.log.Logger;
@@ -78,12 +79,13 @@ public class CityFinder {
         CityApiService apiService = RetrofitClient.getClient().create(CityApiService.class);
         Call<CityResponse> call = apiService.findCity(latitude, longitude);
 
-        call.enqueue(new Callback<CityResponse>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<CityResponse> call, @NonNull Response<CityResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     String city = response.body().getCity();
                     Log.d(TAG, "City: " + city);
+
                     cityVerify(city);
                 } else {
                     Log.e(TAG, "Request failed: " + response.code());
@@ -108,7 +110,7 @@ public class CityFinder {
                 cityResult = "Cherkasy Oblast";
                 break;
             case "city_odessa":
-                cityResult = "OdessaTest";
+                cityResult = "Odessa";
                 break;
             case "city_zaporizhzhia":
                 cityResult = "Zaporizhzhia";
@@ -175,7 +177,7 @@ public class CityFinder {
             Log.d(TAG, "cityResult: " + cityResult);
 
             String newTitle;
-            int positionFirst;
+
 
             String Kyiv_City_phone = "tel:0674443804";
             String Dnipropetrovsk_Oblast_phone = "tel:0667257070";
@@ -241,7 +243,7 @@ public class CityFinder {
                     countryState = "UA";
                     break;
                 case "Sumy":
-                    positionFirst = 9;
+
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_sumy);
                     countryState = "UA";
@@ -265,61 +267,61 @@ public class CityFinder {
                     countryState = "UA";
                     break;
                 case "Ternopil":
-                    positionFirst = 13;
+
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_ternopil);
                     countryState = "UA";
                     break;
                 case "Khmelnytskyi":
-                    positionFirst = 14;
+
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_khmelnytskyi);
                     countryState = "UA";
                     break;
                 case "Zakarpattya":
-                    positionFirst = 15;
+
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_zakarpattya);
                     countryState = "UA";
                     break;
                 case "Zhytomyr":
-                    positionFirst = 16;
+
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_zhytomyr);
                     countryState = "UA";
                     break;
                 case "Kropyvnytskyi":
-                    positionFirst = 17;
+
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_kropyvnytskyi);
                     countryState = "UA";
                     break;
                 case "Mykolaiv":
-                    positionFirst = 18;
+
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_mykolaiv);
                     countryState = "UA";
                     break;
                 case "Chernivtsi":
-                    positionFirst = 19;
+
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_chernivtsi);
                     countryState = "UA";
                     break;
                 case "Lutsk":
-                    positionFirst = 20;
+
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_chernivtsi);
                     countryState = "UA";
                     break;
                 case "OdessaTest":
-                    positionFirst = 21;
+
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = "Test";
                     countryState = "UA";
                     break;
                 case "foreign countries":
-                    positionFirst = 22;
+
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.foreign_countries);
                     break;
@@ -391,7 +393,7 @@ public class CityFinder {
         }
 
 
-        pay_system(city);
+//        pay_system(city);
 
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
 
@@ -420,13 +422,42 @@ public class CityFinder {
                 new String[] { "1" });
         database.close();
 
+        List<String> settings = new ArrayList<>();
+
+        settings.add(Double.toString(startLat));
+        settings.add(Double.toString(startLan));
+        settings.add(Double.toString(startLat));
+        settings.add(Double.toString(startLan));
+        settings.add(position);
+        settings.add("");
+
+        updateRoutMarker(settings);
+        clearTABLE_SERVICE_INFO();
+        sharedPreferencesHelperMain.saveValue("time", "no_time");
+        sharedPreferencesHelperMain.saveValue("date", "no_date");
+        sharedPreferencesHelperMain.saveValue("comment", "no_comment");
+        sharedPreferencesHelperMain.saveValue("tarif", " ");
+        sharedPreferencesHelperMain.saveValue("CityCheckActivity", "run");
 
         Intent intent = new Intent(context, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         context.startActivity(intent);
-
+//        NavController navController = Navigation.findNavController(getCurrentActivity(), R.id.nav_host_fragment_content_main);
+//        navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+//                .setPopUpTo(R.id.nav_visicom, true)
+//                .build());
     }
-
+    private void clearTABLE_SERVICE_INFO () {
+        String[] arrayServiceCode = DataArr.arrayServiceCode();
+        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        for (int i = 0; i < arrayServiceCode.length; i++) {
+            ContentValues cv = new ContentValues();
+            cv.put(arrayServiceCode[i], "0");
+            database.update(MainActivity.TABLE_SERVICE_INFO, cv, "id = ?",
+                    new String[] { "1" });
+        }
+        database.close();
+    }
 
     private void updateRoutMarker(List<String> settings) {
         Logger.d(context, TAG, "updateRoutMarker: " + settings.toString());

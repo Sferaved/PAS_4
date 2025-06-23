@@ -1,8 +1,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.154</string>
-    <string name="version">Версия: 4.154</string>
+    <string name="version_code">4.155</string>
+    <string name="version">Версия: 4.155</string>
 
     <string name="app_name">Такси Дюк Попутчик</string>
 
@@ -152,7 +152,7 @@
     <string name="change_message">"Изменение базы адресов."</string>
     <string name="server_error_connected">Сервер не принял запрос. Наберите оператора через "ПОМОЩЬ"</string>
     <string name="GDPR">GDPR</string>
-    <string name="ok_GDPR">Согласиться -> </string>
+    <string name="ok_GDPR">Согласиться</string>
     <string name="Dnipro_city">Днепр</string>
     <string name="city_change">Выберите город</string>
     <string name="Zaporizhzhia">Запорожье</string>
@@ -301,7 +301,7 @@
     <string name="city_ivano_frankivsk">Ивано-Франковск</string>
     <string name="city_vinnytsia">Винница</string>
     <string name="city_poltava">Полтава</string>
-    <string name="city_sumy">Суммы</string>
+    <string name="city_sumy">Сумы</string>
     <string name="city_kharkiv">Харьков</string>
     <string name="city_chernihiv">Чернигов</string>
     <string name="city_rivne">Ровно</string>
@@ -524,5 +524,8 @@
     <string name="SA_message_history">Прошу прислать мне историю моих поездок за период с ..... по .....</string>
     <string name="anr_detected">Обнаружена ошибка</string>
     <string name="application_is_not_responding">Приложение не отвечает.</string>
+    <string name="check_permition">Пожалуйста, включите геолокацию или предоставьте разрешение на доступ к местоположению.</string>
+    <string name="map_loading">Карта всё ещё загружается...</string>
+    <string name="cost_error">Ошибка создания заказа. Попробуйте изменить адрес или наберите оператора</string>
 
 </resources>
