@@ -53,6 +53,7 @@ public class CityFinder {
     double startLat;
     double startLan;
     String position;
+
     public CityFinder() {
         // Пустой конструктор без аргументов
     }
@@ -173,6 +174,7 @@ public class CityFinder {
         city = stringList.get(1);
 
         if(!city.equals(cityResult)) {
+
             Log.d(TAG, "City: " + city);
             Log.d(TAG, "cityResult: " + cityResult);
 

@@ -25,17 +25,15 @@
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/gpsbut"
-                android:layout_width="84dp"
-                android:layout_height="33dp"
+                android:layout_width="105dp"
+                android:layout_height="37dp"
                 android:layout_marginTop="4dp"
-                android:layout_marginBottom="4dp"
                 android:background="@drawable/buttons"
-                android:text="@string/change"
 
+                android:text="@string/change"
                 android:textColor="#D9D9D9"
                 app:layout_constraintEnd_toEndOf="@+id/textGeo"
                 app:layout_constraintTop_toTopOf="parent" />
-
             <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
                 android:id="@+id/swipeRefreshLayout"
                 android:layout_width="39dp"

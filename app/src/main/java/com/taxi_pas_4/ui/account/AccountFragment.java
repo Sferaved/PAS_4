@@ -47,7 +47,6 @@ import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.db.DatabaseHelper;
 import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.log.Logger;
-import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 import com.taxi_pas_4.utils.user.del_server.UserRepository;
 import com.taxi_pas_4.utils.user.save_firebase.FirebaseUserManager;
 import com.uxcam.UXCam;
@@ -251,9 +250,8 @@ public class AccountFragment extends Fragment {
 //                        .setPopUpTo(R.id.nav_restart, true)
 //                        .build());
 //            }
-            SharedPreferencesHelper sharedPreferencesHelper = new SharedPreferencesHelper(context);
-            sharedPreferencesHelper.saveValue("gps_upd", true);
-            sharedPreferencesHelper.saveValue("gps_upd_address", true);
+
+            sharedPreferencesHelperMain.saveValue("gps_upd", true);
             // Удаляем последний фрагмент из стека навигации и переходим к новому фрагменту
             
             MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()

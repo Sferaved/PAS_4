@@ -1,8 +1,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.155</string>
-    <string name="version">Версия: 4.155</string>
+    <string name="version_code">4.156</string>
+    <string name="version">Версия: 4.156</string>
 
     <string name="app_name">Такси Дюк Попутчик</string>
 
@@ -158,7 +158,7 @@
     <string name="Zaporizhzhia">Запорожье</string>
     <string name="Cherkasy">Черкассы</string>
     <string name="OdessaTest">Одесса (Тест)</string>
-    <string name="disc_text">Изменить стоимость на</string>
+    <string name="disc_text">% к стоимости </string>
     <string name="email_sent">Сообщение отправлено</string>
     <string name="send_like">Оценить приложение</string>
     <string name="send_email_admin">Сообщить о проблеме</string>
@@ -253,7 +253,7 @@
     <string name="e_google_pay_canceled">GooglePay отменен</string>
     <string name="update_count">Проверить баланс</string>
     <string name="pay_count">Пополнить счет</string>
-    <string name="my_card_pay">Платежная карта</string>
+    <string name="my_card_pay">Оплата</string>
     <string name="my_site">Посетите наш сайт</string>
     <!-- <string name="fondy_message">Оплата по услуге такси.</string>-->
     <string name="fondy_message">Другая вспомогательная деятельность в сфере транспорта</string>

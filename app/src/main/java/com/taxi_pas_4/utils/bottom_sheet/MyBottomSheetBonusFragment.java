@@ -92,6 +92,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
     Activity context;
     int fistItem, finishItem;
     private TextView tvSelectedTime, tvSelectedDate;
+    View view;
 
     public MyBottomSheetBonusFragment() {
     }
@@ -116,7 +117,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
 
         UXCam.tagScreenName(TAG);
 
-        View view = inflater.inflate(R.layout.bonus_list_layout, container, false);
+        view = inflater.inflate(R.layout.bonus_list_layout, container, false);
         context = requireActivity();
 
         try {
@@ -264,15 +265,19 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
         Logger.d(context, TAG, "Сохраненные значения -> время: " + time + ", дата: " + date);
 
         // Если дата не выбрана, используем текущую дату с экрана
-        if (date.equals("no_date")) {
-            date = tvSelectedDate.getText().toString();
-            Logger.d(context, TAG, "Дата не выбрана, взята с экрана: " + date);
-        }
+        tvSelectedDate = view.findViewById(R.id.tv_selected_date);
+        tvSelectedTime = view.findViewById(R.id.tv_selected_time);
+        if (tvSelectedDate != null && tvSelectedTime != null) {
+            if (date.equals("no_date")) {
+                date = tvSelectedDate.getText().toString();
+                Logger.d(context, TAG, "Дата не выбрана, взята с экрана: " + date);
+            }
 
-        // Если время не выбрано, используем время с экрана
-        if (time.equals("no_time")) {
-            time = tvSelectedTime.getText().toString();
-            Logger.d(context, TAG, "Время не выбрано, взято с экрана: " + time);
+            // Если время не выбрано, используем время с экрана
+            if (time.equals("no_time")) {
+                time = tvSelectedTime.getText().toString();
+                Logger.d(context, TAG, "Время не выбрано, взято с экрана: " + time);
+            }
         }
 
         try {

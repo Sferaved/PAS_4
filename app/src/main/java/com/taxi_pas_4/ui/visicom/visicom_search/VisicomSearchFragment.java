@@ -41,10 +41,12 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
@@ -62,6 +64,7 @@ import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.FragmentVisicomSearchBinding;
 import com.taxi_pas_4.ui.cities.Kyiv.KyivRegion;
 import com.taxi_pas_4.ui.cities.Kyiv.KyivRegionRu;
+import com.taxi_pas_4.ui.finish.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.ui.keyboard.KeyboardUtils;
 import com.taxi_pas_4.ui.open_map.mapbox.Feature;
 import com.taxi_pas_4.ui.open_map.mapbox.Geometry;
@@ -78,7 +81,6 @@ import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.from_json_parser.FromJSONParserRetrofit;
 import com.taxi_pas_4.utils.helpers.LocaleHelper;
 import com.taxi_pas_4.utils.log.Logger;
-import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -110,7 +112,7 @@ public class VisicomSearchFragment extends Fragment {
 
     ProgressBar progressBar;
     EditText fromEditAddress, toEditAddress;
-    private ImageButton btn_clear_from, btn_clear_to, btn_ok, btn_no;
+    private ImageButton  btn_ok, btn_no;
     private static List<double[]> coordinatesList;
     private static List<String[]> addresses;
     private OkHttpClient client;
@@ -144,10 +146,11 @@ public class VisicomSearchFragment extends Fragment {
     AppCompatButton btnCallAdmin;
     ViewGroup.LayoutParams layoutParams;
     String countryState;
-    private SharedPreferencesHelper sharedPreferencesHelper;
+
     View root;
     Context context;
     private ActivityResultLauncher<String[]> permissionLauncher;
+    private ExecutionStatusViewModel viewModel;
 
     @SuppressLint({"MissingInflatedId", "UseCompatLoadingForDrawables"})
     @Override
@@ -216,7 +219,13 @@ public class VisicomSearchFragment extends Fragment {
 
         }
     }
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        Log.d("LifecycleCheck 1", "Current lifecycle state: " + getViewLifecycleOwner().getLifecycle().getCurrentState());
+        viewModel = new ViewModelProvider(requireActivity()).get(ExecutionStatusViewModel.class);
 
+    }
     private void firstLocation() {
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
@@ -242,12 +251,12 @@ public class VisicomSearchFragment extends Fragment {
             public void onLocationResult(@NonNull LocationResult locationResult) {
                 // Обработка полученных местоположений
                 stopLocationUpdates();
-
+                viewModel.setStatusX(false);
                 // Обработка полученных местоположений
                 List<Location> locations = locationResult.getLocations();
                 Logger.d(context, TAG, "onLocationResult: locations 222222" + locations);
 
-                if (!locations.isEmpty() &&  (boolean) sharedPreferencesHelperMain.getValue("on_gps", false)) {
+                if (!locations.isEmpty()) {
                     Location firstLocation = locations.get(0);
 
                     double latitude = firstLocation.getLatitude();
@@ -280,7 +289,7 @@ public class VisicomSearchFragment extends Fragment {
                         assert FromAdressString != null;
                         fromEditAddress.setSelection(FromAdressString.length());
 
-                        btn_clear_from.setVisibility(View.VISIBLE);
+                        
 
 
 
@@ -408,7 +417,7 @@ public class VisicomSearchFragment extends Fragment {
         if(MainActivity.apiKeyMapBox == null) {
             mapboxKey();
         }
-        sharedPreferencesHelper = new SharedPreferencesHelper(context);
+
         countryState = (String) sharedPreferencesHelperMain.getValue("countryState", "**");
 
         switch (LocaleHelper.getLocale()) {
@@ -671,47 +680,8 @@ public class VisicomSearchFragment extends Fragment {
         scrollButtonDown = root.findViewById(R.id.scrollButtonDown);
 
         scrollSetVisibility();
-        btn_clear_from = root.findViewById(R.id.btn_clear_from);
-        btn_clear_from.setOnClickListener(v -> {
-            scrollButtonUp.setVisibility(View.GONE);
-            scrollButtonDown.setVisibility(View.GONE);
-            addresses = new ArrayList<>();
-            coordinatesList = new ArrayList<>();
-
-            addressesList = new ArrayList<>();
-            addressAdapter = new ArrayAdapter<>(context, R.layout.custom_list_item, addressesList);
-
-            addressListView.setAdapter(addressAdapter);
 
 
-            fromEditAddress.setText("");
-            btn_clear_from.setVisibility(View.INVISIBLE);
-            textGeoError.setVisibility(View.GONE);
-
-            fromEditAddress.requestFocus();
-            KeyboardUtils.showKeyboard(context, fromEditAddress);
-        });
-        btn_clear_to = root.findViewById(R.id.btn_clear_to);
-        btn_clear_to.setOnClickListener(v -> {
-            scrollButtonUp.setVisibility(View.GONE);
-            scrollButtonDown.setVisibility(View.GONE);
-
-            addresses = new ArrayList<>();
-            coordinatesList = new ArrayList<>();
-            addressesList = new ArrayList<>();
-            addressAdapter = new ArrayAdapter<>(context, R.layout.custom_list_item, addressesList);
-
-
-            addressListView.setAdapter(addressAdapter);
-
-            toEditAddress.setText("");
-            btn_clear_to.setVisibility(View.INVISIBLE);
-            text_toError.setVisibility(View.GONE);
-            toEditAddress.requestFocus();
-            KeyboardUtils.showKeyboard(context, toEditAddress);
-
-        });
- 
         gpsbut = root.findViewById(R.id.change);
 
         locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
@@ -730,17 +700,18 @@ public class VisicomSearchFragment extends Fragment {
         if(start.equals("ok")) {
             oldAddresses("start");
             toEditAddress.setVisibility(View.GONE);
-            btn_clear_to.setVisibility(View.GONE);
+            
             text_toError.setVisibility(View.GONE);
             root.findViewById(R.id.textwhere).setVisibility(View.GONE);
             root.findViewById(R.id.num2).setVisibility(View.GONE);
+            gpsbut.setVisibility(GONE);
         }
         if(end.equals("ok")) {
             oldAddresses("finish");
             root.findViewById(R.id.textfrom).setVisibility(View.GONE);
             root.findViewById(R.id.num1).setVisibility(View.GONE);
             fromEditAddress.setVisibility(View.GONE);
-            btn_clear_from.setVisibility(View.GONE);
+            
 
             textGeoError.setVisibility(View.GONE);
             gpsbut.setText(getString(R.string.on_city_tv));
@@ -789,8 +760,8 @@ public class VisicomSearchFragment extends Fragment {
 
         });
         btn_ok.setOnClickListener(v -> {
-            sharedPreferencesHelper.saveValue("gps_upd_address", false);
-            Logger.d(context, TAG, "sharedPreferencesHelper.getValue(\"gps_upd\", false)" +sharedPreferencesHelper.getValue("gps_upd", false));
+
+            viewModel.setStatusGpsUpdate(false);
 
             startActivity(new Intent(context, MainActivity.class));
         });
@@ -901,7 +872,7 @@ public class VisicomSearchFragment extends Fragment {
                     }
                     textGeoError.setVisibility(View.GONE);
                 }
-                btn_clear_from.setVisibility(View.VISIBLE);
+                
             }
 
             @Override
@@ -958,20 +929,21 @@ public class VisicomSearchFragment extends Fragment {
 
         if (fromEditAddress.getText().toString().isEmpty()) {
 
-            btn_clear_from.setVisibility(View.INVISIBLE);
+
             fromEditAddress.requestFocus();
 
             fromEditAddress.post(() -> KeyboardUtils.showKeyboard(context, fromEditAddress));
         } else if (toEditAddress.getText().toString().isEmpty()) {
             toEditAddress.requestFocus();
-            btn_clear_to.setVisibility(View.INVISIBLE);
+
 
             toEditAddress.post(() -> KeyboardUtils.showKeyboard(context, toEditAddress));
 
         }
     }
     private void gpsButSetOnClickListener (LocationManager locationManager) {
-        sharedPreferencesHelperMain.saveValue("on_gps", true);
+        viewModel.setStatusX(true);
+        viewModel.setStatusGpsUpdate(false);
         if (locationManager != null) {
             if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 
@@ -1715,6 +1687,9 @@ public class VisicomSearchFragment extends Fragment {
 
                 addressListView.setOnItemClickListener((parent, viewC, position, id) -> {
                     Logger.d(context, TAG, "processAddressData:position3333 " + position);
+                    viewModel.setStatusX(true);
+                    viewModel.setStatusGpsUpdate(false);
+
                     positionChecked = position;
                     startMarker = "ok";
                     finishMarker = "no";
@@ -1810,7 +1785,7 @@ public class VisicomSearchFragment extends Fragment {
                             finishPoint = addressesList.get(position);
                             toEditAddress.setText(finishPoint);
                             toEditAddress.setSelection(finishPoint.length());
-                            btn_clear_to.setVisibility(View.INVISIBLE);
+
 
 
                             List<String> settings = new ArrayList<>();
@@ -2123,7 +2098,7 @@ public class VisicomSearchFragment extends Fragment {
                     finishPoint = addressesList.get(position);
                     toEditAddress.setText(finishPoint);
                     toEditAddress.setSelection(finishPoint.length());
-                    btn_clear_to.setVisibility(View.INVISIBLE);
+
                     if (!verifyBuildingFinish) {
                          
                         List<String> settings = new ArrayList<>();
@@ -2391,7 +2366,7 @@ public class VisicomSearchFragment extends Fragment {
                         finishPoint = addressesList.get(position);
                         toEditAddress.setText(finishPoint);
                         toEditAddress.setSelection(finishPoint.length());
-                        btn_clear_to.setVisibility(View.INVISIBLE);
+
 
 
                         List<String> settings = new ArrayList<>();

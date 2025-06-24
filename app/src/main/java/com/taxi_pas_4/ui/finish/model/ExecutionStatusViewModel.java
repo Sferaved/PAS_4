@@ -146,4 +146,26 @@ public class ExecutionStatusViewModel extends ViewModel {
             statusNalUpdate.postValue(canceled);
         }
     }
+
+    private final MutableLiveData<Boolean> statusXUpdate = new MutableLiveData<>();
+    public LiveData<Boolean> getStatusX() {return statusXUpdate;}
+    public void setStatusX(Boolean statusX) {
+        Log.e("setStatusX", "setStatusXUpdate:" + statusX);
+        if (Looper.getMainLooper().isCurrentThread()) {
+            statusXUpdate.setValue(statusX);
+        } else {
+            statusXUpdate.postValue(statusX);
+        }
+    }
+
+    private final MutableLiveData<Boolean> statusGpsUpdate = new MutableLiveData<>();
+    public LiveData<Boolean> getStatusGpsUpdate() {return statusGpsUpdate;}
+    public void setStatusGpsUpdate(Boolean statusGps) {
+        Log.e("setStatusGps", "setStatusGpsUpdate:" + statusGps);
+        if (Looper.getMainLooper().isCurrentThread()) {
+            statusGpsUpdate.setValue(statusGps);
+        } else {
+            statusGpsUpdate.postValue(statusGps);
+        }
+    }
 }

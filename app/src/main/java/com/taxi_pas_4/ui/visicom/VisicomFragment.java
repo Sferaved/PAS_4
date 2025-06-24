@@ -20,7 +20,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
@@ -71,8 +70,6 @@ import androidx.work.WorkManager;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 import com.google.android.gms.tasks.Task;
@@ -148,7 +145,7 @@ public class VisicomFragment extends Fragment {
  
 
     @SuppressLint("StaticFieldLeak")
-    public static AppCompatButton btn_minus, btn_plus, btnOrder, buttonBonus, gpsbut, btnCallAdmin, btnCallAdminFin;
+    public static AppCompatButton btn_minus, btn_plus, btnOrder, buttonBonus, gpsBtn, btnCallAdmin, btnCallAdminFin;
     @SuppressLint("StaticFieldLeak")
     public static TextView geoText;
     static String api;
@@ -228,6 +225,7 @@ public class VisicomFragment extends Fragment {
     private ExecutionStatusViewModel viewModel;
     private ActivityResultLauncher<String[]> permissionLauncher;
     private boolean location_update;
+    LocationManager locationManager;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -335,7 +333,7 @@ public class VisicomFragment extends Fragment {
 
         linear_layout_buttons = binding.linearLayoutButtons;
 
-        gpsbut = binding.gpsbut;
+        gpsBtn = binding.gpsbut;
 
         schedule = binding.schedule;
 
@@ -367,8 +365,72 @@ public class VisicomFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         Log.d("LifecycleCheck 1", "Current lifecycle state: " + getViewLifecycleOwner().getLifecycle().getCurrentState());
+
+        locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+
         viewModel = new ViewModelProvider(requireActivity()).get(ExecutionStatusViewModel.class);
 
+
+
+        viewModel.getStatusX().observe(getViewLifecycleOwner(), aBoolean -> {
+            Logger.d(context, TAG,"StatusXUpdate changed: " + aBoolean);
+            updateGpsButtonDrawable(aBoolean);
+        });
+
+        viewModel.getStatusGpsUpdate().observe(getViewLifecycleOwner(), aBoolean -> {
+            Logger.d(context, TAG,"StatusGpsUpdate changed: " + aBoolean);
+            if (aBoolean) {
+                if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                    textfrom.setVisibility(VISIBLE);
+                    num1.setVisibility(VISIBLE);
+                    geoText.setVisibility(VISIBLE);
+                    binding.textwhere.setVisibility(VISIBLE);
+                    num2.setVisibility(VISIBLE);
+                    textViewTo.setVisibility(VISIBLE);
+                    Logger.d(context, TAG, "onResume: 3");
+                    firstLocation();
+                } else {
+                    try {
+                        String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
+                        if (!userEmail.equals("email")) {
+                            visicomCost();
+                            readTariffInfo();
+                        }
+
+                    } catch (MalformedURLException e) {
+                        FirebaseCrashlytics.getInstance().recordException(e);
+
+                        textfrom.setVisibility(VISIBLE);
+                        num1.setVisibility(VISIBLE);
+                        geoText.setVisibility(VISIBLE);
+
+                        binding.textwhere.setVisibility(VISIBLE);
+                        num2.setVisibility(VISIBLE);
+                        textViewTo.setVisibility(VISIBLE);
+                    }
+                }
+            }  else {
+                try {
+                    String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
+                    if (!userEmail.equals("email")) {
+                        visicomCost();
+                        readTariffInfo();
+                    }
+
+                } catch (MalformedURLException e) {
+                    FirebaseCrashlytics.getInstance().recordException(e);
+
+                    textfrom.setVisibility(VISIBLE);
+                    num1.setVisibility(VISIBLE);
+                    geoText.setVisibility(VISIBLE);
+
+                    binding.textwhere.setVisibility(VISIBLE);
+                    num2.setVisibility(VISIBLE);
+                    textViewTo.setVisibility(VISIBLE);
+                }
+            }
+
+        });
     }
     private void setupImages() {
         // Загрузка изображений с помощью Glide
@@ -1500,7 +1562,7 @@ public void requestPermissions() {
 
         VisicomFragment.sendUrlMap = null;
         MainActivity.uid = null;
-//        MainActivity.action = null;
+
 
         MainActivity.orderResponse = null;
         viewModel.updateOrderResponse(null);
@@ -1540,7 +1602,7 @@ public void requestPermissions() {
             schedule.setVisibility(View.INVISIBLE);
             shed_down.setVisibility(View.INVISIBLE);
 
-            gpsbut.setVisibility(View.INVISIBLE);
+            gpsBtn.setVisibility(View.INVISIBLE);
             binding.num1.setVisibility(View.INVISIBLE);
             binding.textfrom.setVisibility(View.INVISIBLE);
 
@@ -1578,7 +1640,7 @@ public void requestPermissions() {
                 Logger.d(context, TAG, "onResume 4" );
                 schedule.setVisibility(View.INVISIBLE);
                 shed_down.setVisibility(View.INVISIBLE);
-                gpsbut.setVisibility(View.INVISIBLE);
+                gpsBtn.setVisibility(View.INVISIBLE);
                 binding.num1.setVisibility(View.INVISIBLE);
                 binding.textfrom.setVisibility(View.INVISIBLE);
 
@@ -1705,9 +1767,9 @@ public void requestPermissions() {
         geoText.setOnClickListener(v -> {
             if (fusedLocationProviderClient != null && locationCallback != null) {
                 fusedLocationProviderClient.removeLocationUpdates(locationCallback);
-                gpsbut.setText(R.string.change);
+                gpsBtn.setText(R.string.change);
             }
-            sharedPreferencesHelperMain.saveValue("gps_upd", false);
+
 
             Bundle bundle = new Bundle();
             bundle.putString("start", "ok");
@@ -1721,9 +1783,9 @@ public void requestPermissions() {
         binding.clearButtonFrom.setOnClickListener(v -> {
             if (fusedLocationProviderClient != null && locationCallback != null) {
                 fusedLocationProviderClient.removeLocationUpdates(locationCallback);
-                gpsbut.setText(R.string.change);
+                gpsBtn.setText(R.string.change);
             }
-            sharedPreferencesHelperMain.saveValue("gps_upd", false);
+
 
             Bundle bundle = new Bundle();
             bundle.putString("start", "ok");
@@ -1855,18 +1917,9 @@ public void requestPermissions() {
                         .build());
             }
 
-//            if (!NetworkUtils.isNetworkAvailable(requireContext())) {
-//
-//                MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-//                        .setPopUpTo(R.id.nav_restart, true)
-//                        .build());
-//            }
             linearLayout.setVisibility(GONE);
             btnVisible(View.INVISIBLE);
             List<String> stringList1 = logCursor(MainActivity.CITY_INFO, context);
-
-            sharedPreferencesHelperMain.saveValue("gps_upd", true);
-            sharedPreferencesHelperMain.saveValue("gps_upd_address", true);
 
             pay_method = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(4);
 
@@ -1939,8 +1992,7 @@ public void requestPermissions() {
         } else location_update = ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
                 || ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
 
-        LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        gpsbut.setOnLongClickListener(v -> {
+        gpsBtn.setOnLongClickListener(v -> {
             Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             v.getContext().startActivity(intent);
@@ -1948,7 +2000,7 @@ public void requestPermissions() {
             return true; // сигнализирует, что обработка завершена
         });
 
-        gpsbut.setOnClickListener(v -> {
+        gpsBtn.setOnClickListener(v -> {
             gpsButSetOnClickListener (locationManager);
             schedule.setVisibility(VISIBLE);
             shed_down.setVisibility(VISIBLE);
@@ -1957,16 +2009,21 @@ public void requestPermissions() {
         if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                     || ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                gpsbut.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.btn_yellow));
+                gpsBtn.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.btn_yellow));
 
-                gpsbut.setTextColor(Color.BLACK);
+                gpsBtn.setTextColor(Color.BLACK);
+                viewModel.setStatusX(false);
             } else {
-                gpsbut.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.btn_green));
-                gpsbut.setTextColor(Color.WHITE);
+                gpsBtn.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.btn_green));
+                gpsBtn.setTextColor(Color.WHITE);
+                viewModel.setStatusX(true);
+
             }
         } else {
-            gpsbut.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.btn_red));
-            gpsbut.setTextColor(Color.WHITE);
+            gpsBtn.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.btn_red));
+            gpsBtn.setTextColor(Color.WHITE);
+            viewModel.setStatusX(false);
+            viewModel.setStatusGpsUpdate(false);
         }
 
 
@@ -1977,111 +2034,27 @@ public void requestPermissions() {
                 num1.setVisibility(View.INVISIBLE);
                 binding.textwhere.setVisibility(View.INVISIBLE);
             }
-
-            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                        || ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-                    Logger.d(context, TAG, "onResume: 1");
-                    progressBar.setVisibility(VISIBLE);
-                    try {
-                        String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
-                        if (!userEmail.equals("email")) {
-                            visicomCost();
-                            readTariffInfo();
-                        }
-
-                    } catch (MalformedURLException e) {
-                        FirebaseCrashlytics.getInstance().recordException(e);
-
-                        textfrom.setVisibility(VISIBLE);
-                        num1.setVisibility(VISIBLE);
-                        geoText.setVisibility(VISIBLE);
-
-                        binding.textwhere.setVisibility(VISIBLE);
-                        num2.setVisibility(VISIBLE);
-                        textViewTo.setVisibility(VISIBLE);
-                    }
-
-                } else {
-                    boolean gps_upd = (boolean) sharedPreferencesHelperMain.getValue("gps_upd", false);
-                    boolean gps_upd_address = (boolean) sharedPreferencesHelperMain.getValue("gps_upd_address", false);
-                    Logger.d(context, TAG, "gps_upd" + sharedPreferencesHelperMain.getValue("gps_upd", false));
-                    Logger.d(context, TAG, "gps_upd_address" + sharedPreferencesHelperMain.getValue("gps_upd_address", false));
-
-                    if (gps_upd && gps_upd_address) {
-                        textfrom.setVisibility(VISIBLE);
-                        num1.setVisibility(VISIBLE);
-                        geoText.setVisibility(VISIBLE);
-                        binding.textwhere.setVisibility(VISIBLE);
-                        num2.setVisibility(VISIBLE);
-                        textViewTo.setVisibility(VISIBLE);
-                        Logger.d(context, TAG, "onResume: 3");
-                        firstLocation();
-                    } else {
-                        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
-                                != PackageManager.PERMISSION_GRANTED) {
-                            gpsbut.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.btn_yellow));
-                            gpsbut.setTextColor(Color.BLACK);
-                        }
-
-                        Logger.d(context, TAG, "onResume: 4");
-                        progressBar.setVisibility(VISIBLE);
-                        try {
-                            String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
-                            if (!userEmail.equals("email")) {
-                                visicomCost();
-                                readTariffInfo();
-                            }
-
-                        } catch (MalformedURLException e) {
-                            FirebaseCrashlytics.getInstance().recordException(e);
-
-                            textfrom.setVisibility(VISIBLE);
-                            num1.setVisibility(VISIBLE);
-                            geoText.setVisibility(VISIBLE);
-
-                            binding.textwhere.setVisibility(VISIBLE);
-                            num2.setVisibility(VISIBLE);
-                            textViewTo.setVisibility(VISIBLE);
-                        }
-                    }
-
-                }
-            } else {
-                Logger.d(context, TAG, "onResume: 6");
-                try {
-                    String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
-                    if (!userEmail.equals("email")) {
-                        visicomCost();
-                        readTariffInfo();
-                    }
-                } catch (MalformedURLException e) {
-                    FirebaseCrashlytics.getInstance().recordException(e);
-                    Logger.d(context, TAG, "onResume: 7");
-
-
-                    textfrom.setVisibility(VISIBLE);
-                    num1.setVisibility(VISIBLE);
-                    geoText.setVisibility(VISIBLE);
-
-                    binding.textwhere.setVisibility(VISIBLE);
-                    num2.setVisibility(VISIBLE);
-                    textViewTo.setVisibility(VISIBLE);
-
-                    btnVisible(View.INVISIBLE);
+            try {
+                String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
+                if (!userEmail.equals("email")) {
+                    visicomCost();
+                    readTariffInfo();
                 }
 
+            } catch (MalformedURLException e) {
+                FirebaseCrashlytics.getInstance().recordException(e);
+
+                textfrom.setVisibility(VISIBLE);
+                num1.setVisibility(VISIBLE);
+                geoText.setVisibility(VISIBLE);
+
+                binding.textwhere.setVisibility(VISIBLE);
+                num2.setVisibility(VISIBLE);
+                textViewTo.setVisibility(VISIBLE);
             }
-
-
         } else {
-
             binding.textwhere.setVisibility(View.INVISIBLE);
-
             progressBar.setVisibility(GONE);
-
-
         }
 
         scheduleUpdate();
@@ -2092,7 +2065,7 @@ public void requestPermissions() {
     }
 
     private void gpsButSetOnClickListener (LocationManager locationManager) {
-        sharedPreferencesHelperMain.saveValue("on_gps", true);
+        viewModel.setStatusX(false);
         if (locationManager != null) {
             if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 
@@ -2183,144 +2156,247 @@ public void requestPermissions() {
     }
 
 
+//    private void firstLocation() {
+//        progressBar.setVisibility(VISIBLE);
+//        schedule.setVisibility(VISIBLE);
+//        shed_down.setVisibility(VISIBLE);
+//
+//        Toast.makeText(context, context.getString(R.string.search), Toast.LENGTH_SHORT).show();
+//
+//        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
+//
+//        btnVisible(View.INVISIBLE);
+//        gpsBtn.setOnClickListener(v -> {
+//
+//            if (fusedLocationProviderClient != null && locationCallback != null) {
+//                fusedLocationProviderClient.removeLocationUpdates(locationCallback);
+//            }
+//
+//            gpsBtn.setText(R.string.change);
+//            gpsBtn.setOnClickListener(v1 -> {
+//                LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+//                gpsButSetOnClickListener (locationManager);
+//            });
+//            schedule.setVisibility(VISIBLE);
+//            shed_down.setVisibility(VISIBLE);
+//        });
+//        locationCallback = new LocationCallback() {
+//
+//            @Override
+//            public void onLocationResult(@NonNull LocationResult locationResult) {
+//                // Обработка полученных местоположений
+//                stopLocationUpdates();
+//                viewModel.setStatusX(false);
+//                // Обработка полученных местоположений
+//                List<Location> locations = locationResult.getLocations();
+//                Logger.d(context, TAG, "onLocationResult: locations 222222" + locations);
+//
+//                if (!locations.isEmpty()) {
+//                    Location firstLocation = locations.get(0);
+//
+//                    double latitude = firstLocation.getLatitude();
+//                    double longitude = firstLocation.getLongitude();
+//
+//                    List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
+//                    String api = stringList.get(2);
+//
+//                    Locale locale = Locale.getDefault();
+//                    String language = locale.getLanguage(); // Получаем язык устройства
+//                    baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+//                    String urlFrom = baseUrl + "/" + api + "/android/fromSearchGeoLocal/" + latitude + "/" + longitude + "/" + language;
+//
+//                    FromJSONParserRetrofit.sendURL(urlFrom, result -> {
+//                        // Обработка результата в основном потоке
+//                        if (result != null) {
+//                            Logger.d(context, TAG, "Результат: " + result);
+//                            String FromAdressString = result.get("route_address_from");
+//
+//                            if (FromAdressString != null && FromAdressString.contains("Точка на карте")) {
+//                                FromAdressString = context.getString(R.string.startPoint);
+//                            }
+//                            CityFinder cityFinder = new CityFinder(context, latitude, longitude , FromAdressString);
+//                            cityFinder.findCity(latitude, longitude);
+//
+//                            updateMyPosition(latitude, longitude, FromAdressString, context);
+//
+//                            geoText.setText(FromAdressString);
+//                            progressBar.setVisibility(GONE);
+//                            String query = "SELECT * FROM " + MainActivity.ROUT_MARKER + " LIMIT 1";
+//                            SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+//                            @SuppressLint("Recycle") Cursor cursor = database.rawQuery(query, null);
+//
+//                            cursor.moveToFirst();
+//
+//                            // Получите значения полей из первой записи
+//                            @SuppressLint("Range") double originLatitude = cursor.getDouble(cursor.getColumnIndex("startLat"));
+//                            @SuppressLint("Range") double toLatitude = cursor.getDouble(cursor.getColumnIndex("to_lat"));
+//                            @SuppressLint("Range") String finish = cursor.getString(cursor.getColumnIndex("finish"));
+//
+//                            Logger.d(context, TAG, "onLocationResult:FromAdressString " + FromAdressString);
+//
+//                            List<String> settings = new ArrayList<>();
+//
+//                            if (originLatitude == toLatitude) {
+//                                textViewTo.setText("");
+//                                finish = "";
+//                            }
+//
+//                            settings.add(Double.toString(latitude));
+//                            settings.add(Double.toString(longitude));
+//                            settings.add(Double.toString(latitude));
+//                            settings.add(Double.toString(longitude));
+//                            settings.add(FromAdressString);
+//                            settings.add(finish);
+//                            updateRoutMarker(settings);
+//
+//                            gpsBtn.setText(R.string.change);
+//                            gpsBtn.setOnClickListener(v -> {
+//                                LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+//                                gpsButSetOnClickListener (locationManager);
+//                            });
+//
+//
+//
+//                            try {
+//                                String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
+//                                if (!userEmail.equals("email")) {
+//                                    visicomCost();
+//                                    readTariffInfo();
+//                                }
+//                            } catch (MalformedURLException e) {
+//                                FirebaseCrashlytics.getInstance().recordException(e);
+//                                throw new RuntimeException(e);
+//                            }
+//                        } else {
+//                            Logger.d(context, TAG, "Ошибка при выполнении запроса");
+//                        }
+//                    });
+//
+//
+//                }
+//            }
+//
+//        };
+//
+//        startLocationUpdates();
+//    }
+//
+//    private void startLocationUpdates() {
+//        LocationRequest locationRequest = createLocationRequest();
+//        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+//                || ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//
+//            return;
+//        }
+//        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
+//    }
+
+//    private LocationRequest createLocationRequest() {
+//        return new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 30_000) // интервал 30 сек
+//                .setMinUpdateIntervalMillis(30_000)  // минимум 30 сек между апдейтами
+//                .build();
+//    }
+
     private void firstLocation() {
-        progressBar.setVisibility(VISIBLE);
-        schedule.setVisibility(VISIBLE);
-        shed_down.setVisibility(VISIBLE);
+        progressBar.setVisibility(View.VISIBLE);
+        schedule.setVisibility(View.VISIBLE);
+        shed_down.setVisibility(View.VISIBLE);
 
         Toast.makeText(context, context.getString(R.string.search), Toast.LENGTH_SHORT).show();
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
 
-        btnVisible(View.INVISIBLE);
-        gpsbut.setOnClickListener(v -> {
-
-            if (fusedLocationProviderClient != null && locationCallback != null) {
-                fusedLocationProviderClient.removeLocationUpdates(locationCallback);
-            }
-
-            gpsbut.setText(R.string.change);
-            gpsbut.setOnClickListener(v1 -> {
-                LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-                gpsButSetOnClickListener (locationManager);
-            });
-            schedule.setVisibility(VISIBLE);
-            shed_down.setVisibility(VISIBLE);
+        gpsBtn.setText(R.string.change);
+        gpsBtn.setOnClickListener(v1 -> {
+            LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+            gpsButSetOnClickListener(locationManager);
         });
-        locationCallback = new LocationCallback() {
 
-            @Override
-            public void onLocationResult(@NonNull LocationResult locationResult) {
-                // Обработка полученных местоположений
-                stopLocationUpdates();
-
-                // Обработка полученных местоположений
-                List<Location> locations = locationResult.getLocations();
-                Logger.d(context, TAG, "onLocationResult: locations 222222" + locations);
-
-                if (!locations.isEmpty() &&  (boolean) sharedPreferencesHelperMain.getValue("on_gps", false)) {
-                    Location firstLocation = locations.get(0);
-
-                    double latitude = firstLocation.getLatitude();
-                    double longitude = firstLocation.getLongitude();
-
-                    List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
-                    String api = stringList.get(2);
-
-                    Locale locale = Locale.getDefault();
-                    String language = locale.getLanguage(); // Получаем язык устройства
-                    baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
-                    String urlFrom = baseUrl + "/" + api + "/android/fromSearchGeoLocal/" + latitude + "/" + longitude + "/" + language;
-
-                    FromJSONParserRetrofit.sendURL(urlFrom, result -> {
-                        // Обработка результата в основном потоке
-                        if (result != null) {
-                            Logger.d(context, TAG, "Результат: " + result);
-                            String FromAdressString = result.get("route_address_from");
-
-                            if (FromAdressString != null && FromAdressString.contains("Точка на карте")) {
-                                FromAdressString = context.getString(R.string.startPoint);
-                            }
-                            CityFinder cityFinder = new CityFinder(context, latitude, longitude , FromAdressString);
-                            cityFinder.findCity(latitude, longitude);
-                            updateMyPosition(latitude, longitude, FromAdressString, context);
-
-                            geoText.setText(FromAdressString);
-                            progressBar.setVisibility(GONE);
-                            String query = "SELECT * FROM " + MainActivity.ROUT_MARKER + " LIMIT 1";
-                            SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-                            @SuppressLint("Recycle") Cursor cursor = database.rawQuery(query, null);
-
-                            cursor.moveToFirst();
-
-                            // Получите значения полей из первой записи
-                            @SuppressLint("Range") double originLatitude = cursor.getDouble(cursor.getColumnIndex("startLat"));
-                            @SuppressLint("Range") double toLatitude = cursor.getDouble(cursor.getColumnIndex("to_lat"));
-                            @SuppressLint("Range") String finish = cursor.getString(cursor.getColumnIndex("finish"));
-
-                            Logger.d(context, TAG, "onLocationResult:FromAdressString " + FromAdressString);
-
-                            List<String> settings = new ArrayList<>();
-
-                            if (originLatitude == toLatitude) {
-                                textViewTo.setText("");
-                                finish = "";
-                            }
-
-                            settings.add(Double.toString(latitude));
-                            settings.add(Double.toString(longitude));
-                            settings.add(Double.toString(latitude));
-                            settings.add(Double.toString(longitude));
-                            settings.add(FromAdressString);
-                            settings.add(finish);
-                            updateRoutMarker(settings);
-
-                            gpsbut.setText(R.string.change);
-                            gpsbut.setOnClickListener(v -> {
-                                LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-                                gpsButSetOnClickListener (locationManager);
-                            });
-
-
-
-                            try {
-                                String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
-                                if (!userEmail.equals("email")) {
-                                    visicomCost();
-                                    readTariffInfo();
-                                }
-                            } catch (MalformedURLException e) {
-                                FirebaseCrashlytics.getInstance().recordException(e);
-                                throw new RuntimeException(e);
-                            }
-                        } else {
-                            Logger.d(context, TAG, "Ошибка при выполнении запроса");
-                        }
-                    });
-
-
-                }
-            }
-
-        };
-
-        startLocationUpdates();
-    }
-
-    private void startLocationUpdates() {
-        LocationRequest locationRequest = createLocationRequest();
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                || ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Logger.d(context, TAG, "Нет разрешения на геолокацию");
             return;
         }
-        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
-    }
 
-    private LocationRequest createLocationRequest() {
-        return new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000)  // приоритет и интервал обновления
-                .setMinUpdateIntervalMillis(100) // минимальный быстрый интервал
-                .build();
+        viewModel.setStatusX(false);
+
+        // ✅ Одноразовое получение текущей локации
+        fusedLocationProviderClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+                .addOnSuccessListener(location -> {
+                    if (location != null) {
+                        double latitude = location.getLatitude();
+                        double longitude = location.getLongitude();
+
+                        Logger.d(context, TAG, "getCurrentLocation: " + latitude + ", " + longitude);
+
+                        List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
+                        String api = stringList.get(2);
+                        String language = Locale.getDefault().getLanguage();
+
+                        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+                        String urlFrom = baseUrl + "/" + api + "/android/fromSearchGeoLocal/" + latitude + "/" + longitude + "/" + language;
+
+                        FromJSONParserRetrofit.sendURL(urlFrom, result -> {
+                            if (result != null) {
+                                String FromAdressString = result.get("route_address_from");
+                                if (FromAdressString != null && FromAdressString.contains("Точка на карте")) {
+                                    FromAdressString = context.getString(R.string.startPoint);
+                                }
+
+                                new CityFinder(context, latitude, longitude, FromAdressString).findCity(latitude, longitude);
+                                updateMyPosition(latitude, longitude, FromAdressString, context);
+                                geoText.setText(FromAdressString);
+                                progressBar.setVisibility(View.GONE);
+
+                                // Работа с базой
+                                String query = "SELECT * FROM " + MainActivity.ROUT_MARKER + " LIMIT 1";
+                                SQLiteDatabase db = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+                                Cursor cursor = db.rawQuery(query, null);
+
+                                if (cursor.moveToFirst()) {
+                                    @SuppressLint("Range") double originLat = cursor.getDouble(cursor.getColumnIndex("startLat"));
+                                    @SuppressLint("Range") double toLat = cursor.getDouble(cursor.getColumnIndex("to_lat"));
+                                    @SuppressLint("Range") String finish = cursor.getString(cursor.getColumnIndex("finish"));
+
+                                    List<String> settings = new ArrayList<>();
+                                    if (originLat == toLat) {
+                                        textViewTo.setText("");
+                                        finish = "";
+                                    }
+
+                                    settings.add(String.valueOf(latitude));
+                                    settings.add(String.valueOf(longitude));
+                                    settings.add(String.valueOf(latitude));
+                                    settings.add(String.valueOf(longitude));
+                                    settings.add(FromAdressString);
+                                    settings.add(finish);
+
+                                    updateRoutMarker(settings);
+                                }
+
+                                cursor.close();
+                                db.close();
+
+                                try {
+                                    String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
+                                    if (!userEmail.equals("email")) {
+                                        visicomCost();
+                                        readTariffInfo();
+                                    }
+                                } catch (MalformedURLException e) {
+                                    FirebaseCrashlytics.getInstance().recordException(e);
+                                    throw new RuntimeException(e);
+                                }
+
+                            } else {
+                                Logger.d(context, TAG, "Ошибка при получении адреса");
+                            }
+                        });
+
+                    } else {
+                        Logger.d(context, TAG, "Локация = null");
+                        progressBar.setVisibility(View.GONE);
+                    }
+                });
     }
 
 
@@ -2360,9 +2436,9 @@ public void requestPermissions() {
 
     }
 
-    private void stopLocationUpdates() {
-        fusedLocationProviderClient.removeLocationUpdates(locationCallback);
-    }
+//    private void stopLocationUpdates() {
+//        fusedLocationProviderClient.removeLocationUpdates(locationCallback);
+//    }
 
 
     private void visicomCost() throws MalformedURLException {
@@ -2387,7 +2463,7 @@ public void requestPermissions() {
             if (originLatitude != 0.0 && toLan != 0.0) {
                 progressBar.setVisibility(VISIBLE);
                 Toast.makeText(context, context.getString(R.string.check_cost_message), Toast.LENGTH_SHORT).show();
-                gpsbut.setVisibility(View.VISIBLE);
+                gpsBtn.setVisibility(View.VISIBLE);
                 svButton.setVisibility(View.VISIBLE);
                 btnCallAdmin.setVisibility(View.VISIBLE);
 
@@ -3178,4 +3254,15 @@ public void requestPermissions() {
 
 
     }
+
+    private void updateGpsButtonDrawable(boolean xShow) {
+        if (xShow) {
+            // Показываем крест
+            gpsBtn.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.x_image, 0);
+        } else {
+            // Убираем крест
+            gpsBtn.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+        }
+    }
+
 }

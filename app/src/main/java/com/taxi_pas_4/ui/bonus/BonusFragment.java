@@ -37,7 +37,6 @@ import com.taxi_pas_4.ui.finish.BonusResponse;
 import com.taxi_pas_4.utils.auth.FirebaseConsentManager;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.log.Logger;
-import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 import com.uxcam.UXCam;
 
 import java.util.ArrayList;
@@ -180,9 +179,8 @@ public class BonusFragment extends Fragment {
 //                        .build());
 //            }
             // Удаляем последний фрагмент из стека навигации и переходим к новому фрагменту
-            SharedPreferencesHelper sharedPreferencesHelper = new SharedPreferencesHelper(context);
-            sharedPreferencesHelper.saveValue("gps_upd", true);
-            sharedPreferencesHelper.saveValue("gps_upd_address", true);
+
+            sharedPreferencesHelperMain.saveValue("gps_upd", true);
             
             MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
                         .setPopUpTo(R.id.nav_visicom, true) 
