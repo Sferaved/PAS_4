@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.158</string>
-    <string name="version">Версія: 4.158</string>
+    <string name="version_code">4.159</string>
+    <string name="version">Версія: 4.159</string>
 
     <string name="app_name">Таксі Дюк Попутник</string>
 
@@ -529,4 +529,5 @@
     <string name="check_permition">Будь ласка, увімкніть геолокацію або надайте дозвіл на доступ до місцеположення.</string>
     <string name="map_loading">Мапа ще завантажується...</string>
     <string name="cost_error">Помилка створення замовлення. Спробуйте змінити адресу або наберіть оператора</string>
+    <string name="google_maps">Google Maps не встановлені</string>
 </resources>

@@ -7,30 +7,30 @@ plugins {
 
 android {
     namespace 'com.taxi_pas_4'
-    compileSdk 36
+    compileSdk = 36
 
     defaultConfig {
         applicationId "com.taxi_pas_4"
-        minSdk 26
+        minSdk = 26
         //noinspection EditedTargetSdkVersion
-        targetSdk 36
-        versionCode 4158
-        versionName '4.158'
+        targetSdk = 36
+        versionCode = 4159
+        versionName = '4.159'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += ['en', 'ru', 'uk']
-        multiDexEnabled true
+        multiDexEnabled  = true
 
     }
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled = false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
     compileOptions {
-        coreLibraryDesugaringEnabled true
+        coreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
@@ -152,4 +152,5 @@ dependencies {
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs += ["-Xlint:deprecation"]
 }
+
 

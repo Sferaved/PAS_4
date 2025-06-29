@@ -295,6 +295,8 @@ public class FinishSeparateFragment extends Fragment {
 
         Logger.d(context, TAG, "onCreate: receivedMap" + receivedMap.toString());
         text_full_message = root.findViewById(R.id.text_full_message);
+        text_full_message.setOnClickListener(view -> startPointShow());
+
         messageResult = arguments.getString("messageResult_key");
 
         assert messageResult != null;
@@ -2137,6 +2139,37 @@ public class FinishSeparateFragment extends Fragment {
     }
 
 
+    private void startPointShow () {
+        String query = "SELECT * FROM " + MainActivity.ROUT_MARKER + " LIMIT 1";
+        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        @SuppressLint("Recycle") Cursor cursor = database.rawQuery(query, null);
 
+        cursor.moveToFirst();
+
+        // Получите значения полей из первой записи
+
+        @SuppressLint("Range") double startLat = cursor.getDouble(cursor.getColumnIndex("startLat"));
+        @SuppressLint("Range") double startLan = cursor.getDouble(cursor.getColumnIndex("startLan"));
+        @SuppressLint("Range") String start = cursor.getString(cursor.getColumnIndex("start"));
+
+        cursor.close();
+        database.close();
+        Logger.d(context, TAG, "startPointShow:settings finish " + start);
+
+        // Формируем URI с координатами и названием точки
+        String uri = "geo:" + startLat + "," + startLan + "?q=" + startLat + "," + startLan + "(" + Uri.encode(start) + ")"+ "?z=21";
+
+// Создаем Intent
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+        intent.setPackage("com.google.android.apps.maps");
+
+// Проверка, установлен ли Google Maps
+        if (intent.resolveActivity(context.getPackageManager()) != null) {
+            context.startActivity(intent);
+        } else {
+            Toast.makeText(context, R.string.google_maps, Toast.LENGTH_SHORT).show();
+        }
+
+    }
 
 }
