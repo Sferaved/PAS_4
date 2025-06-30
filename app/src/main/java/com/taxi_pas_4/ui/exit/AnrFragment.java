@@ -2,6 +2,7 @@ package com.taxi_pas_4.ui.exit;
 
 
 import static android.content.Context.MODE_PRIVATE;
+import static com.taxi_pas_4.MainActivity.button1;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -47,7 +48,7 @@ public class AnrFragment extends Fragment {
                              ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentAnrBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
-        
+        button1.setVisibility(View.VISIBLE);
         btn_enter = binding.btnEnter;
         btnCallAdmin = binding.btnCallAdmin;
         btn_exit = binding.btnExit; 

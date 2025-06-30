@@ -2,6 +2,7 @@ package com.taxi_pas_4.ui.restart;
 
 
 import static android.content.Context.MODE_PRIVATE;
+import static com.taxi_pas_4.MainActivity.button1;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
@@ -36,7 +37,7 @@ public class RestartFragment extends Fragment {
                              ViewGroup container, Bundle savedInstanceState) {
 
         UXCam.tagScreenName(TAG);
-
+        button1.setVisibility(View.VISIBLE);
         binding = FragmentRestartBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 

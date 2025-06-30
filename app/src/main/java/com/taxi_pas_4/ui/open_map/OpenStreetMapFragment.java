@@ -3,6 +3,7 @@ package com.taxi_pas_4.ui.open_map;
 import static android.content.Context.MODE_PRIVATE;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
+import static com.taxi_pas_4.MainActivity.button1;
 import static com.taxi_pas_4.androidx.startup.MyApplication.getCurrentActivity;
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
@@ -163,7 +164,7 @@ public class OpenStreetMapFragment extends Fragment {
         map = binding.map;
         View root = binding.getRoot();
         ctx = requireContext();
-
+        button1.setVisibility(View.VISIBLE);
         // Настройка конфигурации OSMDroid
         try {
             File cacheDir = new File(ctx.getCacheDir(), "osmdroid");

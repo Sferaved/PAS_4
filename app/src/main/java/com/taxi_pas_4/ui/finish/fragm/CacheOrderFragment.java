@@ -3,6 +3,7 @@ package com.taxi_pas_4.ui.finish.fragm;
 
 import static android.content.Context.MODE_PRIVATE;
 import static com.taxi_pas_4.MainActivity.activeCalls;
+import static com.taxi_pas_4.MainActivity.button1;
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import android.annotation.SuppressLint;
@@ -148,7 +149,7 @@ public class CacheOrderFragment extends Fragment {
                              ViewGroup container, Bundle savedInstanceState) {
 
         UXCam.tagScreenName(TAG);
-
+        button1.setVisibility(View.VISIBLE);
         binding = FragmentCacheOrderBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
         context = requireActivity();

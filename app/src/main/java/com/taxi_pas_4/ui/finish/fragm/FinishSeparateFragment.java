@@ -4,6 +4,7 @@ import static android.content.Context.MODE_PRIVATE;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 import static com.taxi_pas_4.MainActivity.TABLE_USER_INFO;
+import static com.taxi_pas_4.MainActivity.button1;
 import static com.taxi_pas_4.MainActivity.paySystemStatus;
 import static com.taxi_pas_4.MainActivity.uid;
 import static com.taxi_pas_4.MainActivity.uid_Double;
@@ -202,6 +203,8 @@ public class FinishSeparateFragment extends Fragment {
         BackPressBlocker backPressBlocker = new BackPressBlocker();
         backPressBlocker.setBackButtonBlocked(true);
         backPressBlocker.blockBackButtonWithCallback(this);
+
+        button1.setVisibility(GONE);
 
         fragmentManager = getParentFragmentManager();
 

@@ -1,5 +1,6 @@
 package com.taxi_pas_4.ui.about;
 
+import static com.taxi_pas_4.MainActivity.button1;
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import android.annotation.SuppressLint;
@@ -36,7 +37,7 @@ public class AboutFragment extends Fragment {
                              ViewGroup container, Bundle savedInstanceState) {
 
         UXCam.tagScreenName(TAG);
-
+        button1.setVisibility(View.VISIBLE);
         AboutViewModel aboutViewModel =
                 new ViewModelProvider(this).get(AboutViewModel.class);
 

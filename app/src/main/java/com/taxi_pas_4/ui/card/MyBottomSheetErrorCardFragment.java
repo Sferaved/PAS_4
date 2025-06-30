@@ -1,6 +1,7 @@
 package com.taxi_pas_4.ui.card;
 
 import static android.content.Context.MODE_PRIVATE;
+import static com.taxi_pas_4.MainActivity.button1;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -42,7 +43,7 @@ public class MyBottomSheetErrorCardFragment extends BottomSheetDialogFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
         UXCam.tagScreenName(TAG);
-
+        button1.setVisibility(View.VISIBLE);
         View view = inflater.inflate(R.layout.error_list_layout, container, false);
 
         btn_help = view.findViewById(R.id.btn_help);

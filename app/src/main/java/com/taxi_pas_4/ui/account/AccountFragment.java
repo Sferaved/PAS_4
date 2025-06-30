@@ -2,6 +2,7 @@ package com.taxi_pas_4.ui.account;
 
 import static android.content.Context.MODE_PRIVATE;
 import static android.view.View.VISIBLE;
+import static com.taxi_pas_4.MainActivity.button1;
 import static com.taxi_pas_4.R.string.format_phone;
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
@@ -93,7 +94,7 @@ public class AccountFragment extends Fragment {
                              ViewGroup container, Bundle savedInstanceState) {
 
         UXCam.tagScreenName(TAG);
-
+        button1.setVisibility(View.VISIBLE);
         binding = FragmentAccountBinding.inflate(inflater, container, false);
 
 
