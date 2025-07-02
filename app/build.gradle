@@ -14,8 +14,8 @@ android {
         minSdk = 26
         //noinspection EditedTargetSdkVersion
         targetSdk = 36
-        versionCode = 4161
-        versionName = '4.161'
+        versionCode = 4162
+        versionName = '4.162'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += ['en', 'ru', 'uk']
@@ -152,6 +152,7 @@ dependencies {
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs += ["-Xlint:deprecation"]
 }
+
 
 
 

@@ -61,6 +61,7 @@ import com.taxi_pas_4.ui.wfp.purchase.PurchaseService;
 import com.taxi_pas_4.utils.data.DataArr;
 import com.taxi_pas_4.utils.helpers.LocaleHelper;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 import com.uxcam.UXCam;
 
@@ -251,6 +252,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
         baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
         OkHttpClient client = new OkHttpClient.Builder()
+                .addInterceptor(new RetryInterceptor())
                 .addInterceptor(interceptor)
                 .connectTimeout(30, TimeUnit.SECONDS) // Тайм-аут на соединение
                 .readTimeout(30, TimeUnit.SECONDS)    // Тайм-аут на чтение данных
@@ -331,6 +333,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
         baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
         OkHttpClient client = new OkHttpClient.Builder()
+                .addInterceptor(new RetryInterceptor())
                 .addInterceptor(interceptor)
                 .connectTimeout(30, TimeUnit.SECONDS) // Тайм-аут на соединение
                 .readTimeout(30, TimeUnit.SECONDS)    // Тайм-аут на чтение данных

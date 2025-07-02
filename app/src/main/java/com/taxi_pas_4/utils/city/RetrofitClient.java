@@ -2,6 +2,8 @@ package com.taxi_pas_4.utils.city;
 
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
+import com.taxi_pas_4.utils.network.RetryInterceptor;
+
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
@@ -20,6 +22,7 @@ public class RetrofitClient {
             loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
             OkHttpClient client = new OkHttpClient.Builder()
+                    .addInterceptor(new RetryInterceptor())
                     .addInterceptor(loggingInterceptor)
                     .connectTimeout(30, TimeUnit.SECONDS) // Тайм-аут на соединение
                     .readTimeout(30, TimeUnit.SECONDS)    // Тайм-аут на чтение данных

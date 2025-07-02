@@ -63,6 +63,7 @@ import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.uxcam.UXCam;
 
 import java.io.IOException;
@@ -166,6 +167,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
         OkHttpClient client = new OkHttpClient.Builder()
+                .addInterceptor(new RetryInterceptor()) // 3 попытки
                 .addInterceptor(interceptor)
                 .connectTimeout(30, TimeUnit.SECONDS) // Тайм-аут на соединение
                 .readTimeout(30, TimeUnit.SECONDS)    // Тайм-аут на чтение данных
@@ -260,6 +262,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
         OkHttpClient client = new OkHttpClient.Builder()
+                .addInterceptor(new RetryInterceptor()) // 3 попытки
                 .addInterceptor(interceptor)
                 .connectTimeout(30, TimeUnit.SECONDS) // Тайм-аут на соединение
                 .readTimeout(30, TimeUnit.SECONDS)    // Тайм-аут на чтение данных
@@ -361,6 +364,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
         baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
         OkHttpClient client = new OkHttpClient.Builder()
+                .addInterceptor(new RetryInterceptor()) // 3 попытки
                 .addInterceptor(interceptor)
                 .connectTimeout(30, TimeUnit.SECONDS) // Тайм-аут на соединение
                 .readTimeout(30, TimeUnit.SECONDS)    // Тайм-аут на чтение данных

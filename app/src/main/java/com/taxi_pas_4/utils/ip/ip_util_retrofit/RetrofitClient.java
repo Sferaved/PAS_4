@@ -1,5 +1,7 @@
 package com.taxi_pas_4.utils.ip.ip_util_retrofit;
 
+import com.taxi_pas_4.utils.network.RetryInterceptor;
+
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
@@ -18,6 +20,7 @@ public class RetrofitClient {
 
             // Создание клиента OkHttpClient с подключенным логгером и тайм-аутами
             OkHttpClient httpClient = new OkHttpClient.Builder()
+                    .addInterceptor(new RetryInterceptor())
                     .addInterceptor(loggingInterceptor)
                     .connectTimeout(60, TimeUnit.SECONDS) // Увеличиваем время ожидания подключения
                     .readTimeout(60, TimeUnit.SECONDS)    // Увеличиваем время ожидания чтения

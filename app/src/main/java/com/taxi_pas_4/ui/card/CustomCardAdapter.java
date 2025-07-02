@@ -29,6 +29,7 @@ import com.taxi_pas_4.ui.wfp.token.CallbackResponseSetActivCardWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.network.RetryInterceptor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -225,6 +226,7 @@ public class CustomCardAdapter extends ArrayAdapter<Map<String, String>> {
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
         OkHttpClient client = new OkHttpClient.Builder()
+                .addInterceptor(new RetryInterceptor()) // 3 попытки
                 .addInterceptor(interceptor)
                 .connectTimeout(30, TimeUnit.SECONDS) // Тайм-аут на соединение
                 .readTimeout(30, TimeUnit.SECONDS)    // Тайм-аут на чтение данных
@@ -337,6 +339,7 @@ public class CustomCardAdapter extends ArrayAdapter<Map<String, String>> {
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
         OkHttpClient client = new OkHttpClient.Builder()
+                .addInterceptor(new RetryInterceptor()) // 3 попытки
                 .addInterceptor(interceptor)
                 .connectTimeout(30, TimeUnit.SECONDS) // Тайм-аут на соединение
                 .readTimeout(30, TimeUnit.SECONDS)    // Тайм-аут на чтение данных

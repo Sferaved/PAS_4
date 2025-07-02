@@ -2,6 +2,8 @@ package com.taxi_pas_4.ui.cities.api;
 
 
 
+import com.taxi_pas_4.utils.network.RetryInterceptor;
+
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
@@ -22,6 +24,7 @@ public class CityApiTestClient {
             loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
             OkHttpClient client = new OkHttpClient.Builder()
+                    .addInterceptor(new RetryInterceptor()) // 3 попытки
                     .addInterceptor(loggingInterceptor)
                     .connectTimeout(30, TimeUnit.SECONDS) // Тайм-аут на соединение
                     .readTimeout(30, TimeUnit.SECONDS)    // Тайм-аут на чтение данных

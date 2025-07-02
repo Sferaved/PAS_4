@@ -88,6 +88,7 @@ import com.taxi_pas_4.utils.connect.NetworkMonitor;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.download.AppUpdater;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.utils.permissions.UserPermissions;
 import com.taxi_pas_4.utils.pusher.PusherManager;
@@ -1080,20 +1081,27 @@ public class MainActivity extends AppCompatActivity {
                     String message = getString(R.string.update_ok);
                     MyBottomSheetMessageFragment bottomSheetDialogFragment = new MyBottomSheetMessageFragment(message);
                     bottomSheetDialogFragment.show(getSupportFragmentManager(), bottomSheetDialogFragment.getTag());
-
+                } else {
+                    if (NetworkUtils.isNetworkAvailable(this)) {
+                        // 🛡️ Проверка статуса установки
+                        int status = appUpdateInfo.installStatus();
+                        if (status != InstallStatus.DOWNLOADING && status != InstallStatus.INSTALLING) {
+                            appUpdater = new AppUpdater(
+                                    this,
+                                    this.getExactAlarmLauncher(),
+                                    this.getBatteryOptimizationLauncher()
+                            );
+                            appUpdater.startUpdate();
+                        } else {
+                            Logger.d(MyApplication.getContext(), TAG, "Update already in progress. Skipping restart.");
+                        }
+                    }
                 }
             });
 
 
-            if (NetworkUtils.isNetworkAvailable(this)) {
-                appUpdater = new AppUpdater(
-                        this,
-                        this.getExactAlarmLauncher(),
-                        this.getBatteryOptimizationLauncher()
-                );
-                appUpdater.startUpdate();
 
-            }
+
         }
         if (item.getItemId() == R.id.nav_driver) {
             if (NetworkUtils.isNetworkAvailable(this)) {
@@ -1463,6 +1471,7 @@ public class MainActivity extends AppCompatActivity {
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
         OkHttpClient client = new OkHttpClient.Builder()
+                .addInterceptor(new RetryInterceptor()) // 3 попытки
                 .addInterceptor(interceptor)
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
@@ -1864,15 +1873,22 @@ public class MainActivity extends AppCompatActivity {
         Task<AppUpdateInfo> appUpdateInfoTask = appUpdateManager.getAppUpdateInfo();
         appUpdateInfoTask.addOnSuccessListener(appUpdateInfo -> {
             if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) {
-                // Доступны обновления
-                Logger.d(MyApplication.getContext(), TAG, "Available updates found");
-                String title = MyApplication.getContext().getString(R.string.new_version);
-                String messageNotif = MyApplication.getContext().getString(R.string.news_of_version);
+                // Проверяем, не идёт ли уже установка
+                int status = appUpdateInfo.installStatus();
+                if (status != InstallStatus.DOWNLOADING && status != InstallStatus.INSTALLING) {
+                    Logger.d(MyApplication.getContext(), TAG, "Available updates found");
 
-                String urlStr = "https://play.google.com/store/apps/details?id=com.taxi_pas_4";
-                NotificationHelper.showNotification(MyApplication.getContext(), title, messageNotif, urlStr);
+                    String title = MyApplication.getContext().getString(R.string.new_version);
+                    String messageNotif = MyApplication.getContext().getString(R.string.news_of_version);
+                    String urlStr = "https://play.google.com/store/apps/details?id=com.taxi_pas_4";
+
+                    NotificationHelper.showNotification(MyApplication.getContext(), title, messageNotif, urlStr);
+                } else {
+                    Logger.d(MyApplication.getContext(), TAG, "Update is already in progress. Notification skipped.");
+                }
             }
         });
+
     }
     @Override
     protected void onPause() {
