@@ -2,8 +2,8 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.162</string>
-    <string name="version">Version: 4.162</string>
+    <string name="version_code">4.163</string>
+    <string name="version">Version: 4.163</string>
 
     <string name="app_name">Taxi Duke Fellow</string>
 
@@ -157,7 +157,7 @@
     <string name="Zaporizhzhia">Zaporizhzhia</string>
     <string name="Cherkasy">Cherkasy</string>
     <string name="OdessaTest">Odesa (Test)</string>
-    <string name="disc_text">% to cost</string>
+    <string name="disc_text">% +/- 💰🧾</string>
     <string name="email_sent">Message sent</string>
     <string name="send_like">Rate the app</string>
     <string name="send_email_admin">Report a problem</string>

@@ -37,9 +37,9 @@ public class CostJSONParserRetrofit {
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
         httpClient.addInterceptor(new RetryInterceptor()); // 3 попытки
         httpClient.addInterceptor(loggingInterceptor);
-        httpClient.connectTimeout(60, TimeUnit.SECONDS); // Тайм-аут для соединения
-        httpClient.readTimeout(60, TimeUnit.SECONDS);    // Тайм-аут для чтения
-        httpClient.writeTimeout(60, TimeUnit.SECONDS);   // Тайм-аут для записи
+        httpClient.connectTimeout(10, TimeUnit.SECONDS); // Тайм-аут для соединения
+        httpClient.readTimeout(10, TimeUnit.SECONDS);    // Тайм-аут для чтения
+        httpClient.writeTimeout(10, TimeUnit.SECONDS);   // Тайм-аут для записи
         // httpClient.addInterceptor(loggingInterceptor);
         String baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
 
@@ -78,9 +78,12 @@ public class CostJSONParserRetrofit {
 
                         String orderCost = jsonResponse.get("order_cost");
                         String message = jsonResponse.getOrDefault("Message", "Нет сообщения от сервера");
-
+                        Log.e(TAG, "orderCost" + orderCost);
+                        Log.e(TAG, "message" + message);
                         if (!"0".equals(orderCost)) {
                             costMap.putAll(jsonResponse);
+                            String tarif = (String) sharedPreferencesHelperMain.getValue("tarif", " ");
+                            sharedPreferencesHelperMain.saveValue(tarif, orderCost);
                         } else {
                             costMap.put("order_cost", "0");
                             costMap.put("Message", message);
