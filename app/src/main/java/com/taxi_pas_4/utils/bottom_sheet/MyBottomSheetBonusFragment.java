@@ -29,14 +29,14 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatButton;
+import androidx.navigation.NavController;
+import androidx.navigation.NavOptions;
+import androidx.navigation.Navigation;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
-import com.taxi_pas_4.ui.cities.api.CityApiClient;
-import com.taxi_pas_4.ui.cities.api.CityResponse;
-import com.taxi_pas_4.ui.cities.api.CityService;
 import com.taxi_pas_4.ui.gallery.GalleryFragment;
 import com.taxi_pas_4.ui.home.CustomArrayAdapter;
 import com.taxi_pas_4.ui.home.HomeFragment;
@@ -178,6 +178,10 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
                 }
                 fistItem();
                 break;
+            default:
+                listView.setItemChecked(0, true);
+                adapter.setItemEnabled(1, false);
+                fistItem();
 
         }
 
@@ -215,7 +219,18 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
                     }
                 }
 
-            } else {
+            } else if ((boolean) sharedPreferencesHelperMain.getValue("verifyUserOrder", false)) {
+                String message = context.getString(R.string.black_list_message_err);
+
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+                try {
+                    reCount();
+                } catch (UnsupportedEncodingException | MalformedURLException e) {
+                    throw new RuntimeException(e);
+                }
+                dismiss();
+            }
+                else {
                 try {
                     Logger.d(context, TAG, "paymentType: 2 ");
                     paymentType(arrayCode [pos], context);
@@ -307,45 +322,6 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
             Logger.d(context, TAG, "База данных закрыта");
         }
     }
-    private void cityMaxPay(String $city) {
-
-
-        String BASE_URL =sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
-        CityApiClient cityApiClient = new CityApiClient(BASE_URL);
-        CityService cityService = cityApiClient.getClient().create(CityService.class);
-
-        // Замените "your_city" на фактическое название города
-        Call<CityResponse> call = cityService.getMaxPayValues($city, getString(R.string.application));
-
-        call.enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<CityResponse> call, @NonNull Response<CityResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    CityResponse cityResponse = response.body();
-                    int cardMaxPay = cityResponse.getCardMaxPay();
-                    int bonusMaxPay = cityResponse.getBonusMaxPay();
-                    String black_list = cityResponse.getBlack_list();
-
-                    ContentValues cv = new ContentValues();
-                    cv.put("card_max_pay", cardMaxPay);
-                    cv.put("bonus_max_pay", bonusMaxPay);
-                    sharedPreferencesHelperMain.saveValue("black_list", black_list);
-
-                    database.update(MainActivity.CITY_INFO, cv, "id = ?",
-                            new String[]{"1"});
-
-                } else {
-                    Logger.d(getActivity(), TAG, "Failed. Error code: " + response.code());
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<CityResponse> call, @NonNull Throwable t) {
-                FirebaseCrashlytics.getInstance().recordException(t);
-                Logger.d(getActivity(), TAG, "Failed. Error message: " + t.getMessage());
-            }
-        });
-    }
 
 
     private void paymentType(String paymentCode, Context context) throws MalformedURLException, UnsupportedEncodingException {
@@ -385,12 +361,6 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
                     listView.setItemChecked(1, true);
                     Logger.d(context, TAG, "paymentType: 3 ");
                     pos = 1;
-//                    try {
-////                        paymentType(arrayCode [pos], context);
-//                    } catch (MalformedURLException | UnsupportedEncodingException e) {
-//                        FirebaseCrashlytics.getInstance().recordException(e);
-//                        throw new RuntimeException(e);
-//                    }
                 }
 
                 adapter.setItemEnabled(2, !userPayPermissions[1].equals("0"));
@@ -531,69 +501,73 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
 
             timeVerify();
             Toast.makeText(context, context.getString(R.string.check_cost_message), Toast.LENGTH_SHORT).show();
-            try {
-
-                    String urlCost = getTaxiUrlSearchMarkers("costSearchMarkersTime", context);
-                    String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO).get(3);
-                    long discountInt = Integer.parseInt(discountText);
-
-                    CostJSONParserRetrofit parser = new CostJSONParserRetrofit();
-                    parser.sendURL(urlCost, new Callback<>() {
-                        @Override
-                        public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
-                            Map<String, String> sendUrlMapCost = response.body();
-                            if (sendUrlMapCost != null) {
-                                String orderCost = sendUrlMapCost.get("order_cost");
-                                Log.d(TAG, "onDismiss: orderCost " + orderCost);
-                                assert orderCost != null;
-                                if (!orderCost.equals("0")) {
-                                    new Handler(Looper.getMainLooper()).post(() -> {
-
-                                        String costUpdate;
-
-                                        long discount;
-                                        long firstCost = Long.parseLong(orderCost);
-                                        discount = firstCost * discountInt / 100;
-                                        firstCost = firstCost + discount;
-                                        //                                updateAddCost(String.valueOf(discount));
-
-                                        VisicomFragment.firstCostForMin = firstCost;
-
-                                        VisicomFragment.startCost = firstCost;
-                                        VisicomFragment.finalCost = firstCost;
-
-                                        Logger.d(context, TAG, "getTaxiUrlSearchMarkers cost: startCost " + VisicomFragment.startCost);
-                                        Logger.d(context, TAG, "getTaxiUrlSearchMarkers cost: finalCost " + VisicomFragment.finalCost);
-
-                                        costUpdate = String.valueOf(firstCost);
-                                        Log.d(TAG, "onResponse:costUpdate " + costUpdate);
-
-                                        VisicomFragment.text_view_cost.setText(costUpdate);
-                                        VisicomFragment.btnStaticVisible(View.VISIBLE);
-
-                                    });
-                                } else {
-                                    new Handler(Looper.getMainLooper()).post(() -> {
-                                        progressBar.setVisibility(View.INVISIBLE);
-                                        if (pos == 1 || pos == 2) {
-                                            changePayMethodToNal();
-                                        }
-                                    });
-
-                                }
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
-                            FirebaseCrashlytics.getInstance().recordException(t);
-                            Logger.d(getActivity(), TAG, " onFailure visicom" + t);
-                        }
-                    });
-
-            } catch (MalformedURLException e) {
-                FirebaseCrashlytics.getInstance().recordException(e);
-            }
+            NavController navController = Navigation.findNavController(context, R.id.nav_host_fragment_content_main);
+            navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                    .setPopUpTo(R.id.nav_visicom, true)
+                    .build());
+//            try {
+//
+//                    String urlCost = getTaxiUrlSearchMarkers("costSearchMarkersTime", context);
+//                    String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO).get(3);
+//                    long discountInt = Integer.parseInt(discountText);
+//
+//                    CostJSONParserRetrofit parser = new CostJSONParserRetrofit();
+//                    parser.sendURL(urlCost, new Callback<>() {
+//                        @Override
+//                        public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
+//                            Map<String, String> sendUrlMapCost = response.body();
+//                            if (sendUrlMapCost != null) {
+//                                String orderCost = sendUrlMapCost.get("order_cost");
+//                                Log.d(TAG, "onDismiss: orderCost " + orderCost);
+//                                assert orderCost != null;
+//                                if (!orderCost.equals("0")) {
+//                                    new Handler(Looper.getMainLooper()).post(() -> {
+//
+//                                        String costUpdate;
+//
+//                                        long discount;
+//                                        long firstCost = Long.parseLong(orderCost);
+//                                        discount = firstCost * discountInt / 100;
+//                                        firstCost = firstCost + discount;
+//                                        //                                updateAddCost(String.valueOf(discount));
+//
+//                                        VisicomFragment.firstCostForMin = firstCost;
+//
+//                                        VisicomFragment.startCost = firstCost;
+//                                        VisicomFragment.finalCost = firstCost;
+//
+//                                        Logger.d(context, TAG, "getTaxiUrlSearchMarkers cost: startCost " + VisicomFragment.startCost);
+//                                        Logger.d(context, TAG, "getTaxiUrlSearchMarkers cost: finalCost " + VisicomFragment.finalCost);
+//
+//                                        costUpdate = String.valueOf(firstCost);
+//                                        Log.d(TAG, "onResponse:costUpdate " + costUpdate);
+//
+//                                        VisicomFragment.text_view_cost.setText(costUpdate);
+//                                        VisicomFragment.btnStaticVisible(View.VISIBLE);
+//
+//                                    });
+//                                } else {
+//                                    new Handler(Looper.getMainLooper()).post(() -> {
+//                                        progressBar.setVisibility(View.INVISIBLE);
+//                                        if (pos == 1 || pos == 2) {
+//                                            changePayMethodToNal();
+//                                        }
+//                                    });
+//
+//                                }
+//                            }
+//                        }
+//
+//                        @Override
+//                        public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
+//                            FirebaseCrashlytics.getInstance().recordException(t);
+//                            Logger.d(getActivity(), TAG, " onFailure visicom" + t);
+//                        }
+//                    });
+//
+//            } catch (MalformedURLException e) {
+//                FirebaseCrashlytics.getInstance().recordException(e);
+//            }
 
         }
         if (rout != null && rout.equals("marker")) {
