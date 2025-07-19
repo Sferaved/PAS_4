@@ -35,9 +35,9 @@ import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.home.CustomListAdapter;
 import com.taxi_pas_4.ui.home.HomeFragment;
-import com.taxi_pas_4.utils.cost_json_parser.CostJSONParserRetrofit;
 import com.taxi_pas_4.utils.data.DataArr;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.retrofit.cost_json_parser.CostJSONParserRetrofit;
 import com.uxcam.UXCam;
 
 import java.io.UnsupportedEncodingException;

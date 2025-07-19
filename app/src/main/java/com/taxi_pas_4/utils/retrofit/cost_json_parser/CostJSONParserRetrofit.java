@@ -1,4 +1,4 @@
-package com.taxi_pas_4.utils.cost_json_parser;
+package com.taxi_pas_4.utils.retrofit.cost_json_parser;
 
 import static com.taxi_pas_4.MainActivity.costMap;
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
@@ -8,6 +8,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.taxi_pas_4.utils.network.RetryInterceptor;
+import com.taxi_pas_4.utils.retrofit.APIService;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
