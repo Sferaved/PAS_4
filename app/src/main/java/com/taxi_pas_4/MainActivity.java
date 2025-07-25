@@ -98,6 +98,7 @@ import com.taxi_pas_4.utils.user.del_server.RetrofitClient;
 import com.taxi_pas_4.utils.user.del_server.UserFindResponse;
 import com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
 import com.taxi_pas_4.utils.worker.AddUserNoNameWorker;
+import com.taxi_pas_4.utils.worker.CheckPushPermissionWorker;
 import com.taxi_pas_4.utils.worker.GetCardTokenWfpWorker;
 import com.taxi_pas_4.utils.worker.InsertPushDateWorker;
 import com.taxi_pas_4.utils.worker.SendTokenWorker;
@@ -227,7 +228,7 @@ public class MainActivity extends AppCompatActivity {
         String localeCode = (String) MyApplication.sharedPreferencesHelperMain.getValue("locale", Locale.getDefault().getLanguage());
         applyLocale(localeCode);
         super.onCreate(savedInstanceState);
-
+        NotificationHelper.cancelNotificationFromIntent(this, getIntent());
         // Инициализация View Binding
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -1407,6 +1408,9 @@ public class MainActivity extends AppCompatActivity {
                                 .putString("userEmail", userEmail)
                                 .build())
                         .build();
+                OneTimeWorkRequest immediatePushCheck =
+                        new OneTimeWorkRequest.Builder(CheckPushPermissionWorker.class)
+                                .build();
 
                 // Запуск задач через WorkManager
                 WorkManager.getInstance(this)
@@ -1415,6 +1419,7 @@ public class MainActivity extends AppCompatActivity {
                         .then(updatePushDateRequest)
                         .then(getCardTokenWfpRequest)
                         .then(sendTokenRequest)
+                        .then(immediatePushCheck)
                         .enqueue();
 
                 // Отслеживание завершения задач
@@ -1426,6 +1431,7 @@ public class MainActivity extends AppCompatActivity {
                         });
 
                 UserPermissions.getPermissions(userEmail, getApplicationContext());
+
             }
         });
 
@@ -2013,6 +2019,13 @@ public class MainActivity extends AppCompatActivity {
             success = false;
         }
         return success;
+    }
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        NotificationHelper.cancelNotificationFromIntent(this, intent);
+
     }
 
 

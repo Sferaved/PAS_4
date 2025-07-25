@@ -117,6 +117,19 @@
             tools:ignore="DiscouragedApi,Instantiatable,LockedOrientationActivity"
             android:launchMode="singleTask"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
+        <activity android:name="com.taxi_pas_4.utils.worker.utils.DialogHostActivity"
+            android:excludeFromRecents="true"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,Instantiatable,LockedOrientationActivity"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.AppCompat.NoActionBar"/>
+
+        <activity android:name="com.taxi_pas_4.utils.worker.utils.OrderStatusDialogActivity"
+            android:excludeFromRecents="true"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,Instantiatable,LockedOrientationActivity"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.AppCompat.NoActionBar"/>
 
 
         <provider
