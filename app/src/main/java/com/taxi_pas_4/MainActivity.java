@@ -2,6 +2,7 @@ package com.taxi_pas_4;
 
 import static android.view.View.GONE;
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
+import static com.taxi_pas_4.utils.notify.NotificationHelper.showNotificationMessage;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -228,7 +229,9 @@ public class MainActivity extends AppCompatActivity {
         String localeCode = (String) MyApplication.sharedPreferencesHelperMain.getValue("locale", Locale.getDefault().getLanguage());
         applyLocale(localeCode);
         super.onCreate(savedInstanceState);
-        NotificationHelper.cancelNotificationFromIntent(this, getIntent());
+//        new Handler().postDelayed(() -> {
+//            showNotificationMessage(this, "Test Title", "Test Message");
+//        }, 3000);
         // Инициализация View Binding
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);

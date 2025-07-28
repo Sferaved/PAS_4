@@ -512,4 +512,5 @@
     <string name="cost_error">Error creating order. Try changing the address or dial the operator</string>
     <string name="google_maps">Google Maps not installed</string>
     <string name="sentNotifyMessage">Allow the app to send you notifications</string>
+    <string name="no_start_point_message">Sending location not specified</string>
 </resources>

@@ -517,5 +517,5 @@
     <string name="cost_error">Ошибка создания заказа. Попробуйте изменить адрес или наберите оператора</string>
     <string name="google_maps">Google Maps не установлены</string>
     <string name="sentNotifyMessage">Разрешите приложению отправлять Вам уведомления</string>
-
+    <string name="no_start_point_message">Не указано место отправки</string>
 </resources>
