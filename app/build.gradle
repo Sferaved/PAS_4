@@ -14,8 +14,8 @@ android {
         minSdk = 26
         //noinspection EditedTargetSdkVersion
         targetSdk = 36
-        versionCode = 4169
-        versionName = '4.169'
+        versionCode = 4170
+        versionName = '4.170'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += ['en', 'ru', 'uk']
@@ -49,7 +49,7 @@ dependencies {
     implementation 'androidx.recyclerview:recyclerview:1.4.0'
     implementation 'androidx.datastore:datastore-preferences:1.1.7'
     implementation 'com.github.anrwatchdog:anrwatchdog:1.4.0'
-    implementation 'androidx.databinding:databinding-runtime:8.11.1'
+    implementation 'androidx.databinding:databinding-runtime:8.12.0'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
     implementation "androidx.preference:preference:1.2.1"
 
