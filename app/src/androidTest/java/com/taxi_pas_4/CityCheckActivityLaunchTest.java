@@ -18,13 +18,14 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @RunWith(AndroidJUnit4.class)
-public class MainActivityLaunchCityCheckTest {
+public class CityCheckActivityLaunchTest {
 
     @Mock
     private FirebaseAuthUIAuthenticationResult mockAuthResult;
 
     @Before
     public void setUp() {
+        System.out.println("Running CityCheckActivityLaunchTest test");
         MockitoAnnotations.openMocks(this);
         // Инициализируем Intents для проверки запуска активностей
         Intents.init();
@@ -51,12 +52,6 @@ public class MainActivityLaunchCityCheckTest {
                 cityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 activity.startActivity(cityIntent);
             });
-
-            // Можно подождать, чтобы Activity успела стартовать
-            Thread.sleep(20000);
-
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
         }
     }
 

@@ -15,13 +15,14 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @RunWith(AndroidJUnit4.class)
-public class MainActivityMockLoginTest {
+public class MainActivityLoginTest {
 
     @Mock
     private FirebaseAuthUIAuthenticationResult mockAuthResult;
 
     @Before
     public void setUp() {
+        System.out.println("Running MainActivityLoginTest test");
         MockitoAnnotations.openMocks(this);
     }
 
@@ -36,8 +37,8 @@ public class MainActivityMockLoginTest {
             scenario.onActivity(activity -> {
                 String userEmail = activity.getUserEmailForTest();
                 assertNotNull("Пользователь должен быть авторизован после mockLogin", userEmail);
-                assertEquals("Email должен быть 'test@example.com'",
-                        "test@example.com", userEmail);
+                assertEquals("Email должен быть 'andrey18051@gmail.com'",
+                        "andrey18051@gmail.com", userEmail);
 
                 String username = activity.getUsernameForTest();
                 assertEquals("username должен быть 'username'", "username", username);

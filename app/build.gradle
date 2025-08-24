@@ -14,8 +14,8 @@ android {
         minSdk = 26
         //noinspection EditedTargetSdkVersion
         targetSdk = 36
-        versionCode = 4171
-        versionName = '4.171'
+        versionCode = 4172
+        versionName = '4.172'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += ['en', 'ru', 'uk']
@@ -39,13 +39,7 @@ android {
         viewBinding = true
     }
     testOptions {
-        unitTests {
-            includeAndroidResources = true
-            all {
-                // Переопределяем targetSdkVersion для Robolectric
-                systemProperty 'robolectric.enabledSdks', '28,29,30,31,32,33,34,35'
-            }
-        }
+
     }
 }
 dependencies {
@@ -70,7 +64,8 @@ dependencies {
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'com.google.firebase:firebase-crashlytics'
     implementation 'com.google.firebase:firebase-messaging'
-    implementation "com.google.firebase:firebase-firestore-ktx:25.1.4"
+    // Firestore без версии
+    implementation 'com.google.firebase:firebase-firestore'
     implementation 'com.google.firebase:firebase-auth'
     implementation 'com.google.android.datatransport:transport-runtime:4.0.0'
 
@@ -138,6 +133,7 @@ dependencies {
     androidTestImplementation 'androidx.test:core:1.7.0'
     androidTestImplementation "androidx.test.espresso:espresso-intents:3.7.0"
 
+
     // Mockito для создания мок-объектов
     androidTestImplementation 'org.mockito:mockito-core:5.19.0'
     androidTestImplementation 'org.mockito:mockito-android:5.19.0'
@@ -168,8 +164,3 @@ dependencies {
 
 
 }
-
-
-
-
-
