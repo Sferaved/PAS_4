@@ -1,4 +1,4 @@
-package com.taxi_pas_4.ui.finish.model;
+package com.taxi_pas_4.utils.model;
 
 import android.os.Looper;
 import android.util.Log;

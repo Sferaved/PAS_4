@@ -64,7 +64,6 @@ import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.FragmentVisicomSearchBinding;
 import com.taxi_pas_4.ui.cities.Kyiv.KyivRegion;
 import com.taxi_pas_4.ui.cities.Kyiv.KyivRegionRu;
-import com.taxi_pas_4.ui.finish.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.ui.keyboard.KeyboardUtils;
 import com.taxi_pas_4.ui.open_map.mapbox.Feature;
 import com.taxi_pas_4.ui.open_map.mapbox.Geometry;
@@ -79,6 +78,7 @@ import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGPSFragment;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.helpers.LocaleHelper;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 
 import org.json.JSONArray;
 import org.json.JSONException;

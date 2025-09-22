@@ -1,5 +1,7 @@
 package com.taxi_pas_4.ui.finish;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.annotations.SerializedName;
 
 public class OrderResponse {
@@ -295,6 +297,7 @@ public class OrderResponse {
         return action;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "OrderResponse{" +

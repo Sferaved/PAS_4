@@ -36,7 +36,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.core.content.FileProvider;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
@@ -68,6 +67,8 @@ import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.ActivityMainBinding;
 import com.taxi_pas_4.ui.card.CardInfo;
@@ -77,7 +78,6 @@ import com.taxi_pas_4.ui.cities.api.CityService;
 import com.taxi_pas_4.ui.cities.check.CityCheckActivity;
 import com.taxi_pas_4.ui.clear.AppDataUtils;
 import com.taxi_pas_4.ui.finish.OrderResponse;
-import com.taxi_pas_4.ui.finish.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.ui.home.HomeFragment;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
@@ -88,10 +88,14 @@ import com.taxi_pas_4.utils.connect.NetworkMonitor;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.download.AppUpdater;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
+import com.taxi_pas_4.utils.model.OrderViewModel;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.utils.permissions.UserPermissions;
 import com.taxi_pas_4.utils.pusher.PusherManager;
+import com.taxi_pas_4.utils.up_load.UploadResponse;
+import com.taxi_pas_4.utils.up_load.UploadService;
 import com.taxi_pas_4.utils.user.del_server.ApiUserService;
 import com.taxi_pas_4.utils.user.del_server.CallbackUser;
 import com.taxi_pas_4.utils.user.del_server.RetrofitClient;
@@ -122,13 +126,19 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+
+// Java / Android
+
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -217,7 +227,7 @@ public class MainActivity extends AppCompatActivity {
     public ActivityResultLauncher<Intent> exactAlarmLauncher;
     public ActivityResultLauncher<Intent> batteryOptimizationLauncher;
     private NetworkMonitor networkMonitor;
-
+    public static OrderViewModel orderViewModel;
     //    ExecutorService executor;
     Constraints constraints;
     public static ImageButton button1;
@@ -229,6 +239,8 @@ public class MainActivity extends AppCompatActivity {
         String localeCode = (String) MyApplication.sharedPreferencesHelperMain.getValue("locale", Locale.getDefault().getLanguage());
         applyLocale(localeCode);
         super.onCreate(savedInstanceState);
+
+        orderViewModel = new ViewModelProvider(this).get(OrderViewModel.class);
 
         // Инициализация View Binding
         binding = ActivityMainBinding.inflate(getLayoutInflater());
@@ -1051,8 +1063,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (item.getItemId() == R.id.send_email_admin) {
-            sendEmailAdmin();
-
+            sendEmailAdminFS();
+//            sendEmailAdmin();
         }
 
         if (item.getItemId() == R.id.send_email) {
@@ -1155,69 +1167,217 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @SuppressLint("IntentReset")
-    private void sendEmailAdmin() {
+    private void sendEmailAdminFS() {
         List<String> stringList = logCursor(MainActivity.CITY_INFO);
-        String city;
-        switch (stringList.get(1)) {
-            case "Dnipropetrovsk Oblast":
-                city = getString(R.string.Dnipro_city);
-                break;
-            case "Zaporizhzhia":
-                city = getString(R.string.Zaporizhzhia);
-                break;
-            case "Cherkasy Oblast":
-                city = getString(R.string.Cherkasy);
-                break;
-            case "Odessa":
-                city = getString(R.string.Odessa);
-                break;
-            case "OdessaTest":
-                city = getString(R.string.OdessaTest);
-                break;
-            default:
-                city = getString(R.string.Kyiv_city);
-                break;
-        }
-
+        String city = stringList.get(1);
 
         List<String> userList = logCursor(MainActivity.TABLE_USER_INFO);
 
         String subject = getString(R.string.SA_subject) + generateRandomString(10);
 
-        String body = getString(R.string.SA_message_start) + "\n" + "\n" + "\n" + "\n" + "\n" + "\n" + "\n" + "\n" + "\n" + "\n" + "\n" + "\n" + "\n" + "\n" + "\n" + "\n" + "\n" + "\n" +
+        String body = getString(R.string.SA_message_start) + "\n\n\n" +
                 getString(R.string.SA_info_pas) + "\n" +
                 getString(R.string.SA_info_city) + " " + city + "\n" +
                 getString(R.string.SA_pas_text) + " " + getString(R.string.version) + "\n" +
                 getString(R.string.SA_user_text) + " " + userList.get(4) + "\n" +
                 getString(R.string.SA_email) + " " + userList.get(3) + "\n" +
-                getString(R.string.SA_phone_text) + " " + userList.get(2) + "\n" + "\n";
+                getString(R.string.SA_phone_text) + " " + userList.get(2) + "\n\n";
 
         String[] CC = {"cartaxi4@gmail.com"};
         String[] TO = {supportEmail};
 
         File logFile = new File(getExternalFilesDir(null), "app_log.txt");
 
-        Intent emailIntent = new Intent(Intent.ACTION_SEND);
-        emailIntent.setType("message/rfc822");
-        emailIntent.putExtra(Intent.EXTRA_EMAIL, TO);
-        emailIntent.putExtra(Intent.EXTRA_CC, CC);
-        emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
-        emailIntent.putExtra(Intent.EXTRA_TEXT, body);
-        if (logFile.exists()) {
-            Uri uri = FileProvider.getUriForFile(this, this.getPackageName() + ".fileprovider", logFile);
-            emailIntent.putExtra(Intent.EXTRA_STREAM, uri);
-            emailIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        } else {
+        if (!logFile.exists()) {
             Logger.e(this, "MainActivity", "Log file does not exist");
-        }
-        try {
-            startActivity(Intent.createChooser(emailIntent, subject));
-        } catch (android.content.ActivityNotFoundException e) {
-            FirebaseCrashlytics.getInstance().recordException(e);
+            return;
         }
 
+        // Firebase Storage reference
+        StorageReference storageRef = FirebaseStorage.getInstance().getReference();
+        StorageReference logRef = storageRef.child("logs/" + logFile.getName());
 
+        Uri fileUri = Uri.fromFile(logFile);
+        logRef.putFile(fileUri)
+                .addOnSuccessListener(taskSnapshot -> logRef.getDownloadUrl()
+                        .addOnSuccessListener(uri -> {
+                            // Добавляем ссылку на лог в тело письма
+                            String bodyWithLink = body + "\nDownload log: " + uri.toString();
+
+                            Intent emailIntent = new Intent(Intent.ACTION_SEND);
+                            emailIntent.setType("message/rfc822");
+                            emailIntent.putExtra(Intent.EXTRA_EMAIL, TO);
+                            emailIntent.putExtra(Intent.EXTRA_CC, CC);
+                            emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
+                            emailIntent.putExtra(Intent.EXTRA_TEXT, bodyWithLink);
+
+                            try {
+                                startActivity(Intent.createChooser(emailIntent, subject));
+                            } catch (android.content.ActivityNotFoundException e) {
+                                FirebaseCrashlytics.getInstance().recordException(e);
+                            }
+                        }))
+                .addOnFailureListener(e -> {
+                    Logger.e(this, "MainActivity", "Failed to upload log" + e);
+                    FirebaseCrashlytics.getInstance().recordException(e);
+                });
     }
+
+//    @SuppressLint("IntentReset")
+//    private void sendEmailAdmin() {
+//        List<String> stringList = logCursor(MainActivity.CITY_INFO);
+//        String city = stringList.get(1);
+//
+//        List<String> userList = logCursor(MainActivity.TABLE_USER_INFO);
+//
+//        String subject = getString(R.string.SA_subject) + generateRandomString(10);
+//
+//        String body = getString(R.string.SA_message_start) + "\n\n" +
+//                getString(R.string.SA_info_pas) + "\n" +
+//                getString(R.string.SA_info_city) + " " + city + "\n" +
+//                getString(R.string.SA_pas_text) + " " + getString(R.string.version) + "\n" +
+//                getString(R.string.SA_user_text) + " " + userList.get(4) + "\n" +
+//                getString(R.string.SA_email) + " " + userList.get(3) + "\n" +
+//                getString(R.string.SA_phone_text) + " " + userList.get(2) + "\n\n";
+//
+//        File logFile = new File(getExternalFilesDir(null), "app_log.txt");
+//
+//        if (!logFile.exists()) {
+//            Logger.e(this, "MainActivity", "Log file does not exist");
+//            return;
+//        }
+//
+//        // Создаем Retrofit
+//        Retrofit retrofit = new Retrofit.Builder()
+//                .baseUrl("https://t.easy-order-taxi.site/") // ваш сервер
+//                .addConverterFactory(ScalarsConverterFactory.create()) // для получения plain text
+//                .build();
+//
+//        UploadService service = retrofit.create(UploadService.class);
+//
+//        RequestBody requestFile = RequestBody.create(logFile, MediaType.parse("text/plain"));
+//        MultipartBody.Part bodyPart = MultipartBody.Part.createFormData("file", logFile.getName(), requestFile);
+//
+//        Call<String> call = service.uploadLog(bodyPart);
+//
+//        // Асинхронный вызов
+//        call.enqueue(new retrofit2.Callback<>() {
+//            @Override
+//            public void onResponse(@NonNull Call<String> call, @NonNull retrofit2.Response<String> response) {
+//                if (response.isSuccessful() && response.body() != null) {
+//                    String fileUrl = response.body().trim();
+//                    String bodyWithLink = body + "\nDownload log: " + fileUrl;
+//
+//                    String[] CC = {"cartaxi4@gmail.com"};
+//                    String[] TO = {supportEmail};
+//
+//                    Intent emailIntent = new Intent(Intent.ACTION_SEND);
+//                    emailIntent.setType("message/rfc822");
+//                    emailIntent.putExtra(Intent.EXTRA_EMAIL, TO);
+//                    emailIntent.putExtra(Intent.EXTRA_CC, CC);
+//                    emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
+//                    emailIntent.putExtra(Intent.EXTRA_TEXT, bodyWithLink);
+//
+//                    try {
+//                        startActivity(Intent.createChooser(emailIntent, subject));
+//                    } catch (android.content.ActivityNotFoundException e) {
+//                        FirebaseCrashlytics.getInstance().recordException(e);
+//                    }
+//                } else {
+//                    Logger.e(getApplicationContext(), TAG, "Upload failed: " + response.code());
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
+//                Logger.e(getApplicationContext(), "MainActivity", "Upload exception" + t);
+//            }
+//        });
+//    }
+
+    @SuppressLint("IntentReset")
+    private void sendEmailAdmin() {
+        // Получаем город напрямую из базы
+        List<String> stringList = logCursor(MainActivity.CITY_INFO);
+        String city = stringList.get(1);
+
+        // Получаем данные пользователя
+        List<String> userList = logCursor(MainActivity.TABLE_USER_INFO);
+
+        // Тема письма с случайной частью
+        String subject = getString(R.string.SA_subject) + generateRandomString(10);
+
+        // Тело письма
+        String body = getString(R.string.SA_message_start) + "\n\n" +
+                getString(R.string.SA_info_pas) + "\n" +
+                getString(R.string.SA_info_city) + " " + city + "\n" +
+                getString(R.string.SA_pas_text) + " " + getString(R.string.version) + "\n" +
+                getString(R.string.SA_user_text) + " " + userList.get(4) + "\n" +
+                getString(R.string.SA_email) + " " + userList.get(3) + "\n" +
+                getString(R.string.SA_phone_text) + " " + userList.get(2) + "\n\n";
+
+        // Файл логов
+        File logFile = new File(getExternalFilesDir(null), "app_log.txt");
+
+        if (!logFile.exists()) {
+            Logger.e(this, "MainActivity", "Log file does not exist");
+            return;
+        }
+
+        // Настройка Retrofit
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://t.easy-order-taxi.site/") // твой сервер
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        UploadService service = retrofit.create(UploadService.class);
+
+        // Подготовка файла для отправки
+        RequestBody requestFile = RequestBody.create(logFile, MediaType.parse("text/plain"));
+        MultipartBody.Part bodyPart = MultipartBody.Part.createFormData("file", logFile.getName(), requestFile);
+
+        Call<UploadResponse> call = service.uploadLog(bodyPart);
+
+        // Асинхронный вызов
+        call.enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<UploadResponse> call, @NonNull Response<UploadResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    String fileUrl = response.body().getUrl();
+
+                    // Добавляем ссылку на лог в тело письма
+                    String bodyWithLink = body + "\nDownload log: " + fileUrl;
+
+                    String[] CC = {"cartaxi4@gmail.com"};
+                    String[] TO = {supportEmail};
+
+                    // Создаём Intent для отправки Email
+                    Intent emailIntent = new Intent(Intent.ACTION_SEND);
+                    emailIntent.setType("message/rfc822");
+                    emailIntent.putExtra(Intent.EXTRA_EMAIL, TO);
+                    emailIntent.putExtra(Intent.EXTRA_CC, CC);
+                    emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
+                    emailIntent.putExtra(Intent.EXTRA_TEXT, bodyWithLink);
+
+                    try {
+                        startActivity(Intent.createChooser(emailIntent, subject));
+                    } catch (android.content.ActivityNotFoundException e) {
+                        FirebaseCrashlytics.getInstance().recordException(e);
+                    }
+
+                } else {
+                    Logger.e(getApplicationContext(), "MainActivity", "Upload failed: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<UploadResponse> call, @NonNull Throwable t) {
+                Logger.e(getApplicationContext(), "MainActivity", "Upload exception: " + t);
+            }
+        });
+    }
+
+
 
     private void deleteOldLogFile() {
         File logFile = new File(getExternalFilesDir(null), "app_log.txt");
@@ -1357,6 +1517,17 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, R.string.checking, Toast.LENGTH_SHORT).show();
                 startFireBase();
             } else {
+                // Инициализация и подключение к Pusher
+                pusherManager = new PusherManager(
+                        getString(R.string.application),
+                        userEmail,
+                        MainActivity.this,
+                        viewModel
+                );
+
+                pusherManager.connect();
+                pusherManager.subscribeToChannel();
+
                 new VerifyUserTask(this).execute();
                 String sityCheckActivity = (String) sharedPreferencesHelperMain.getValue("CityCheckActivity", "**");
                 Logger.d(this, TAG, "CityCheckActivity: " + sityCheckActivity);
@@ -1369,15 +1540,6 @@ public class MainActivity extends AppCompatActivity {
                 }
                 firstStart = false;
 
-                // Инициализация и подключение к Pusher
-                pusherManager = new PusherManager(
-                        getString(R.string.application),
-                        userEmail,
-                        MainActivity.this,
-                        viewModel
-                );
-                pusherManager.connect();
-                pusherManager.subscribeToChannel();
 
                 OneTimeWorkRequest versionFromMarketRequest = new OneTimeWorkRequest.Builder(VersionFromMarketWorker.class)
                         .setConstraints(constraints)

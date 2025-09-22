@@ -8,7 +8,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import com.taxi_pas_4.ui.finish.model.ExecutionStatusViewModel;
+import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
