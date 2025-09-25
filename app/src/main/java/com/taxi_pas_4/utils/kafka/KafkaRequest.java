@@ -76,12 +76,12 @@ public class KafkaRequest {
 
         client.newCall(request).enqueue(new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 Log.e("KafkaRequest", "Ошибка: " + e.getMessage());
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 Log.d("KafkaRequest", "Ответ: " + response.body().string());
             }
         });

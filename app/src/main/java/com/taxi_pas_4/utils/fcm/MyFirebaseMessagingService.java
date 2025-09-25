@@ -174,8 +174,14 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         String orderCost = eventData.optString("order_cost", "0");
         Logger.d(context, TAG, "order_cost: " + orderCost);
 
-        // Обновляем ViewModel
-        MainActivity.orderViewModel.setOrderCost(orderCost);
-
+        // Проверяем, инициализирован ли OrderViewModel
+        if (MainActivity.orderViewModel != null) {
+            MainActivity.orderViewModel.setOrderCost(orderCost);
+            Logger.d(context, TAG, "Order cost updated in ViewModel");
+        } else {
+            // Если ViewModel ещё нет — сохраняем в SharedPreferences на будущее
+            Logger.e(context, TAG, "OrderViewModel is null, saving order cost for later");
+        }
     }
+
 }

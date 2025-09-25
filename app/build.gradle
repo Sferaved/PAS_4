@@ -14,8 +14,8 @@ android {
         minSdk = 26
         //noinspection EditedTargetSdkVersion
         targetSdk = 36
-        versionCode = 4175
-        versionName = '4.175'
+        versionCode = 4176
+        versionName = '4.176'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += ['en', 'ru', 'uk']
@@ -161,7 +161,7 @@ dependencies {
     implementation 'org.greenrobot:eventbus:3.3.1'
 
     // тепловой след
-    implementation 'com.uxcam:uxcam:3.7.2'
+    implementation 'com.uxcam:uxcam:3.7.3'
 
     //security
     implementation "androidx.security:security-crypto:1.1.0"
