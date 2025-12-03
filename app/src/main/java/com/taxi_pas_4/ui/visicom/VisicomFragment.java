@@ -410,15 +410,15 @@ public class VisicomFragment extends Fragment {
 
                 }
             }  else {
-                String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
-                if (!userEmail.equals("email")) {
-                    try {
-                        visicomCost();
-                    } catch (MalformedURLException e) {
-                        throw new RuntimeException(e);
-                    }
-                    readTariffInfo();
-                }
+//                String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
+//                if (!userEmail.equals("email")) {
+//                    try {
+//                        visicomCost();
+//                    } catch (MalformedURLException e) {
+//                        throw new RuntimeException(e);
+//                    }
+//                    readTariffInfo();
+//                }
 
             }
 
@@ -937,7 +937,7 @@ public class VisicomFragment extends Fragment {
 
         pay_method = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(4);
 
-        if (urlAPI.equals("costSearchMarkersTime")) {
+        if (urlAPI.equals("costSearchMarkersTimeMyApi")) {
             boolean black_list_yes = verifyOrder();
             Logger.d(context, TAG, "getTaxiUrlSearchMarkers: black_list_yes " + black_list_yes);
 
@@ -971,7 +971,7 @@ public class VisicomFragment extends Fragment {
                     + time + "/" + date;
         }
 
-        if (urlAPI.equals("orderClientCost")) {
+        if (urlAPI.equals("orderClientCostMyApi")) {
             boolean black_list_yes = verifyOrder();
 
             Logger.d(context, TAG, "getTaxiUrlSearchMarkers cost: startCost " + startCost);
@@ -1063,14 +1063,14 @@ public class VisicomFragment extends Fragment {
 
         String url = "/" + api + "/android/" + urlAPI + "/"
                 + parameters + "/" + result + "/" + city + "/" + context.getString(R.string.application);
-        if (urlAPI.equals("costSearchMarkersTime")) {
+        if (urlAPI.equals("costSearchMarkersTimeMyApi")) {
             String urlKafka = "/" + parameters + "/" + result + "/" + city + "/" + context.getString(R.string.application);
 
             Log.e("KafkaRequest", "urlKafka: " + urlKafka);
             KafkaRequest costRequest = new KafkaRequest();
             costRequest.sendCostMessage(urlKafka);
         }
-//        btnVisible(GONE);
+        btnVisible(GONE);
 
         database.close();
         return url;
@@ -1221,7 +1221,7 @@ public class VisicomFragment extends Fragment {
 
     @SuppressLint("ResourceAsColor")
     public boolean orderRout() {
-        urlOrder = getTaxiUrlSearchMarkers("orderClientCost", context );
+        urlOrder = getTaxiUrlSearchMarkers("orderClientCostMyApi", context );
         Logger.d(context, TAG, "order: urlOrder " + urlOrder);
         if(urlOrder.equals("error")) {
             Toast.makeText(context, R.string.no_start_point_message, Toast.LENGTH_SHORT).show();
@@ -2556,7 +2556,7 @@ public class VisicomFragment extends Fragment {
     }
 
     private void requestCostFromServer(String start, String finish) throws MalformedURLException {
-        String urlCost = getTaxiUrlSearchMarkers("costSearchMarkersTime", context);
+        String urlCost = getTaxiUrlSearchMarkers("costSearchMarkersTimeMyApi", context);
         Logger.d(context, TAG, "Попытка #" + ( 1) + ", URL: " + urlCost);
 
         reserveCost(start, finish, urlCost);
@@ -2669,11 +2669,9 @@ public class VisicomFragment extends Fragment {
 
     private void applyDiscountAndUpdateUI(String orderCost, Context context) {
         Logger.d(context, TAG, "applyDiscountAndUpdateUI() start — orderCost = " + orderCost);
+        double costValue = Double.parseDouble(orderCost);
+        orderCost = String.valueOf(Math.round(costValue));
 
-        if (orderCost == null || !orderCost.matches("\\d+")) {
-            Logger.e(context, TAG, "Invalid orderCost: " + orderCost);
-            return;
-        }
 
         // Проверяем, не совпадает ли стоимость с предыдущей
 //        if (orderCost.equals(lastAppliedCost)) {
