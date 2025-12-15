@@ -1523,6 +1523,9 @@ public class FinishSeparateFragment extends Fragment {
                     action = "Заказ выполнен";
                     orderComplete();
                     break;
+                default:
+                    carSearch();
+                    break;
             }
         } else {
             sharedPreferencesHelperMain.saveValue("order_in_my_vod", false);
