@@ -14,8 +14,8 @@ android {
         minSdk = 26
         //noinspection EditedTargetSdkVersion
         targetSdk = 36
-        versionCode = 4186
-        versionName = '4.186'
+        versionCode = 4187
+        versionName = '4.187'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += ['en', 'ru', 'uk']
