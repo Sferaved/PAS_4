@@ -12,12 +12,15 @@ import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHel
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -49,6 +52,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavOptions;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
@@ -330,6 +334,53 @@ public class FinishSeparateFragment extends Fragment {
         textStatusCar.setVisibility(GONE);
 
         textCarMessage = root.findViewById(R.id.text_status_car);
+        textCarMessage.setOnClickListener(v -> {
+            TextView textView = (TextView) v;
+            String textToCopy = textView.getText().toString();
+
+            if (!textToCopy.isEmpty()) {
+                // Анимация нажатия
+                v.animate()
+                        .scaleX(0.95f)
+                        .scaleY(0.95f)
+                        .setDuration(100)
+                        .withEndAction(new Runnable() {
+                            @Override
+                            public void run() {
+                                v.animate()
+                                        .scaleX(1f)
+                                        .scaleY(1f)
+                                        .setDuration(100)
+                                        .start();
+                            }
+                        }).start();
+
+                // Копирование в буфер обмена
+                ClipboardManager clipboard = (ClipboardManager) requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData clip = ClipData.newPlainText("CarStatus", textToCopy);
+                clipboard.setPrimaryClip(clip);
+
+                // Показываем Snackbar (если используете)
+                if (root != null) {
+                    Snackbar.make(root, R.string.save_text, Snackbar.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(requireContext(), R.string.save_text, Toast.LENGTH_SHORT).show();
+                }
+
+                // Временно меняем цвет текста для обратной связи
+                int originalColor = textView.getCurrentTextColor();
+                textView.setTextColor(Color.parseColor("#4CAF50")); // Зеленый цвет
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        textView.setTextColor(originalColor);
+                    }
+                }, 200);
+
+            } else {
+                Toast.makeText(requireContext(), R.string.no_text_to_save, Toast.LENGTH_SHORT).show();
+            }
+        });
         textCarMessage.setVisibility(GONE);
 
         uid = arguments.getString("UID_key");
@@ -1849,8 +1900,8 @@ public class FinishSeparateFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        timeUtils = new TimeUtils(required_time, viewModel);
-        timeUtils.startTimer();
+//        timeUtils = new TimeUtils(required_time, viewModel);
+//        timeUtils.startTimer();
 
 //        btn_cancel_order.setOnClickListener(v ->
 //                showCancelDialog());
