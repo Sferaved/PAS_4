@@ -360,10 +360,10 @@ public class PusherManager {
                 Logger.d(context,"Pusher eventOrderCost", "order_cost: " + order_cost);
 
                 // Игнорируем если то же самое значение
-                if (order_cost.equals(lastProcessedCost)) {
-                    Logger.d(context,"Pusher eventOrderCost", "Дубликат, игнорируем: " + order_cost);
-                    return;
-                }
+//                if (order_cost.equals(lastProcessedCost)) {
+//                    Logger.d(context,"Pusher eventOrderCost", "Дубликат, игнорируем: " + order_cost);
+//                    return;
+//                }
 
                 lastProcessedCost = order_cost;
                 MainActivity.orderViewModel.setOrderCost(order_cost);
