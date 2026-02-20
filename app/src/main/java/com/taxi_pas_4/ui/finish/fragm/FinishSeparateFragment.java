@@ -1900,8 +1900,8 @@ public class FinishSeparateFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-//        timeUtils = new TimeUtils(required_time, viewModel);
-//        timeUtils.startTimer();
+        timeUtils = new TimeUtils(required_time, viewModel);
+        timeUtils.startTimer();
 
 //        btn_cancel_order.setOnClickListener(v ->
 //                showCancelDialog());
