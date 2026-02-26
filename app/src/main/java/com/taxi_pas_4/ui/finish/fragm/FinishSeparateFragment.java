@@ -1754,7 +1754,7 @@ public class FinishSeparateFragment extends Fragment {
         });
 
         // Наблюдение за статусом транзакции
-        viewModel.getTransactionStatus().removeObservers(getViewLifecycleOwner());
+//        viewModel.getTransactionStatus().removeObservers(getViewLifecycleOwner());
         viewModel.getTransactionStatus().observe(getViewLifecycleOwner(), status -> {
             if (status != null) {
                 Logger.d(context,"Pusher eventTransactionStatus", "Finish transaction status set: " + status);
