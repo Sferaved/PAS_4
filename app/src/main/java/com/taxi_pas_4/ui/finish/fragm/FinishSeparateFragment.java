@@ -47,6 +47,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.os.HandlerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavOptions;
@@ -75,6 +76,7 @@ import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.taxi_pas_4.utils.pusher.events.CanceledStatusEvent;
+import com.taxi_pas_4.utils.pusher.events.TransactionStatusEvent;
 import com.taxi_pas_4.utils.time_ut.TimeUtils;
 import com.taxi_pas_4.utils.ui.BackPressBlocker;
 import com.uxcam.UXCam;
@@ -1726,6 +1728,10 @@ public class FinishSeparateFragment extends Fragment {
         viewModelReviewer();
     }
     public void viewModelReviewer() {
+        Log.d("DEBUG", "=== FRAGMENT VIEWMODEL CHECK ===");
+        Log.d("DEBUG", "ViewModel hash code: " + viewModel.hashCode());
+        Log.d("DEBUG", "ViewModel class: " + viewModel.getClass().getName());
+
         if (viewModel == null) {
             Log.e("ViewModelError", "viewModel is null in viewModelReviewer");
             return;
@@ -1754,21 +1760,36 @@ public class FinishSeparateFragment extends Fragment {
         });
 
         // Наблюдение за статусом транзакции
-//        viewModel.getTransactionStatus().removeObservers(getViewLifecycleOwner());
-        viewModel.getTransactionStatus().observe(getViewLifecycleOwner(), status -> {
-            if (status != null) {
-                Logger.d(context,"Pusher eventTransactionStatus", "Finish transaction status set: " + status);
-                String declined_invoice = (String) sharedPreferencesHelperMain.getValue("declined_invoice", "**");
-                Logger.d(context,"Pusher eventTransactionStatus", "Finish declined_invoice: " + declined_invoice);
-                Logger.d(context,"Pusher eventTransactionStatus", "Finish MainActivity.order_id: " + MainActivity.order_id);
-                if ("Declined".equals(status) && !declined_invoice.equals(MainActivity.order_id)) {
-                    sharedPreferencesHelperMain.saveValue("declined_invoice", MainActivity.order_id);
-                    handleTransactionStatusDeclined(status, context);
-                    viewModel.setCancelStatus(true);
-                }
-            }
-
-        });
+// Проверяем текущее значение перед подпиской
+//        LiveData<String> currentLiveData = viewModel.getTransactionStatus();
+//        String currentValue = currentLiveData.getValue();
+//        Log.d("DEBUG", "Current LiveData value before observe: " + currentValue);
+//        viewModel.getTransactionStatus().observe(getViewLifecycleOwner(), status -> {
+//            Log.d("DEBUG", "🔔 OBSERVER TRIGGERED with status: '" + status + "'");
+//            Log.d("DEBUG", "Observer hash: " + this.hashCode());
+//            Log.d("DEBUG", "Fragment state: " + getLifecycle().getCurrentState());
+//            if (status == null) {
+//                Log.d("OBSERVER", "Status is null! This might be initial value");
+//                return; // Игнорируем null
+//            }
+//
+//            Log.d("OBSERVER", "Processing valid status: " + status);
+//
+//            if (!status.equals("null") && !status.isEmpty()) {
+//                Logger.d(context,"Pusher eventTransactionStatus", "Finish transaction status set: " + status);
+//                String declined_invoice = (String) sharedPreferencesHelperMain.getValue("declined_invoice", "**");
+//                Logger.d(context,"Pusher eventTransactionStatus", "Finish declined_invoice: " + declined_invoice);
+//                Logger.d(context,"Pusher eventTransactionStatus", "Finish MainActivity.order_id: " + MainActivity.order_id);
+//
+//                if ("Declined".equals(status) && !declined_invoice.equals(MainActivity.order_id)) {
+//                    sharedPreferencesHelperMain.saveValue("declined_invoice", MainActivity.order_id);
+//                    handleTransactionStatusDeclined(status, context);
+//                    viewModel.setCancelStatus(true);
+//                }
+//            } else {
+//                Log.d("OBSERVER", "Status is null!");
+//            }
+//        });
 
         if(!paySystemStatus.equals("nal_payment")) {
             // Инициализация ViewModel
@@ -1941,7 +1962,23 @@ public class FinishSeparateFragment extends Fragment {
         }
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onTransactionStatusEvent(TransactionStatusEvent event) {
+        Log.d("FRAGMENT", "🔔 EventBus received status: " + event.getStatus());
 
+        String status = event.getStatus();
+        // Ваша логика обработки статуса
+        if ("Declined".equals(status)) {
+            String declined_invoice = (String) sharedPreferencesHelperMain.getValue("declined_invoice", "**");
+            if (!declined_invoice.equals(MainActivity.order_id)) {
+                sharedPreferencesHelperMain.saveValue("declined_invoice", MainActivity.order_id);
+                handleTransactionStatusDeclined(status, getContext());
+                if (viewModel != null) {
+                    viewModel.setCancelStatus(true);
+                }
+            }
+        }
+    }
     @Override
     public void onStart() {
         super.onStart();
