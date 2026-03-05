@@ -4,8 +4,6 @@ build/
 */build/
 app/build/
 
-# Local configuration
-local.properties
 
 # IDE files - временные файлы
 .idea/caches/
