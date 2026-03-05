@@ -82,122 +82,56 @@ jobs:
       - name: Publish to Google Play
         run: |
           set -e
-
           PACKAGE_NAME="com.taxi_pas_4"
           AAB_PATH="${{ env.AAB_PATH }}"
           JSON_FILE="keystore/service-account.json"
-
-          echo "🔑 Getting access token..."
-
-          if [ ! -f "$JSON_FILE" ]; then
-            echo "❌ Service account file not found: $JSON_FILE"
-            ls -la keystore/
-            exit 1
-          fi
-
-          echo "✅ Service account file found"
-
+          
+          # Получение токена
           CLIENT_EMAIL=$(jq -r '.client_email' "$JSON_FILE")
-
-          echo "📧 Client email: $CLIENT_EMAIL"
+          PRIVATE_KEY=$(jq -r '.private_key' "$JSON_FILE")
           
-          python3 - << 'PY'
-          import json  
-          
-          with open("keystore/service-account.json") as f:
-              data = json.load(f)
-          
-          with open("/tmp/private-key.pem", "w") as f:
-              f.write(data["private_key"])
-          PY
-            
-          chmod 600 /tmp/private-key.pem
-            
-          echo "🔍 Key lines:"
-          wc -l /tmp/private-key.pem
-            
-          echo "🔍 First line:"
-          head -n1 /tmp/private-key.pem
-            
-          echo "🔍 Last line:"
-          tail -n1 /tmp/private-key.pem
-
           NOW=$(date +%s)
           EXP=$(($NOW + 3600))
-
+          
           JWT_HEADER='{"alg":"RS256","typ":"JWT"}'
           JWT_CLAIM="{\"iss\":\"$CLIENT_EMAIL\",\"scope\":\"https://www.googleapis.com/auth/androidpublisher\",\"aud\":\"https://oauth2.googleapis.com/token\",\"exp\":$EXP,\"iat\":$NOW}"
-
-          B64_HEADER=$(printf '%s' "$JWT_HEADER" | openssl base64 -A | tr '+/' '-_' | tr -d '=')
-          B64_CLAIM=$(printf '%s' "$JWT_CLAIM" | openssl base64 -A | tr '+/' '-_' | tr -d '=')
-
-          echo "📝 Creating signature..."
-
-          SIGNATURE=$(echo -n "$B64_HEADER.$B64_CLAIM" \
-            | openssl dgst -sha256 -sign /tmp/private-key.pem -binary \
-            | base64 -w 0 | tr '+/' '-_' | tr -d '=')
-
-          ASSERTION="$B64_HEADER.$B64_CLAIM.$SIGNATURE"
-
-          echo "📡 Requesting token from Google..."
-
-          RESPONSE=$(curl -s -X POST "https://oauth2.googleapis.com/token" \
+          
+          B64_HEADER=$(echo -n "$JWT_HEADER" | base64 -w 0 | tr '/+' '_-' | tr -d '=')
+          B64_CLAIM=$(echo -n "$JWT_CLAIM" | base64 -w 0 | tr '/+' '_-' | tr -d '=')
+          
+          echo "$PRIVATE_KEY" > /tmp/private-key.pem
+          SIGNATURE=$(echo -n "$B64_HEADER.$B64_CLAIM" | openssl dgst -sha256 -sign /tmp/private-key.pem | base64 -w 0 | tr '/+' '_-' | tr -d '=')
+          
+          ACCESS_TOKEN=$(curl -s -X POST "https://oauth2.googleapis.com/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
-            -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
-            -d "assertion=$ASSERTION")
-
-          ACCESS_TOKEN=$(echo "$RESPONSE" | jq -r '.access_token // empty')
-
-          if [ -z "$ACCESS_TOKEN" ]; then
-            echo "❌ Failed to get access token"
-            echo "Response:"
-            echo "$RESPONSE"
-            exit 1
-          fi
-
-          echo "✅ Access token obtained"
-
-          echo "📝 Creating edit..."
-
-          EDIT_RESPONSE=$(curl -s -X POST \
-            -H "Authorization: Bearer $ACCESS_TOKEN" \
-            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits")
-
-          EDIT_ID=$(echo "$EDIT_RESPONSE" | jq -r '.id // empty')
-
-          if [ -z "$EDIT_ID" ]; then
-            echo "❌ Failed to create edit"
-            echo "$EDIT_RESPONSE"
-            exit 1
-          fi
-
-          echo "✅ Edit created: $EDIT_ID"
-
-          echo "📦 Uploading AAB..."
-
-          UPLOAD_RESPONSE=$(curl -s -X POST \
+            -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=$B64_HEADER.$B64_CLAIM.$SIGNATURE" \
+            | jq -r '.access_token // empty')
+          
+          [ -z "$ACCESS_TOKEN" ] && { echo "❌ Failed to get access token"; exit 1; }
+          
+          # Создание edit и загрузка
+          EDIT_ID=$(curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits" \
+            | jq -r '.id // empty')
+          
+          [ -z "$EDIT_ID" ] && { echo "❌ Failed to create edit"; exit 1; }
+          
+          VERSION_CODE=$(curl -s -X POST \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
             -H "Content-Type: application/octet-stream" \
             --data-binary "@$AAB_PATH" \
-            "https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$EDIT_ID/bundles?uploadType=media")
-
-          VERSION_CODE=$(echo "$UPLOAD_RESPONSE" | jq -r '.versionCode // empty')
-
-          if [ -z "$VERSION_CODE" ]; then
-            echo "❌ Upload failed"
-            echo "$UPLOAD_RESPONSE"
-            exit 1
-          fi
-
-          echo "✅ Uploaded, version code: $VERSION_CODE"
-
-          EN_NOTES=$(jq -Rs . < "app/src/main/play/en-US/whatsnew.txt" 2>/dev/null || echo "\"Release\"")
-          RU_NOTES=$(jq -Rs . < "app/src/main/play/ru-RU/whatsnew.txt" 2>/dev/null || echo "\"Релиз\"")
-          UK_NOTES=$(jq -Rs . < "app/src/main/play/uk/whatsnew.txt" 2>/dev/null || echo "\"Реліз\"")
-
+            "https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$EDIT_ID/bundles?uploadType=media" \
+            | jq -r '.versionCode // empty')
+          
+          [ -z "$VERSION_CODE" ] && { echo "❌ Upload failed"; exit 1; }
+          
+          # Release notes
+          EN_NOTES=$(jq -Rs . < "app/src/main/play/en-US/whatsnew.txt" 2>/dev/null || echo "\"Release ${{ steps.build.outputs.version_name }}\"")
+          RU_NOTES=$(jq -Rs . < "app/src/main/play/ru-RU/whatsnew.txt" 2>/dev/null || echo "\"Релиз ${{ steps.build.outputs.version_name }}\"")
+          UK_NOTES=$(jq -Rs . < "app/src/main/play/uk/whatsnew.txt" 2>/dev/null || echo "\"Реліз ${{ steps.build.outputs.version_name }}\"")
+          
+          # Обновление треков
           for TRACK in internal alpha beta; do
-            echo "Updating track: $TRACK"
-
             curl -s -X PUT \
               -H "Authorization: Bearer $ACCESS_TOKEN" \
               -H "Content-Type: application/json" \
@@ -213,18 +147,14 @@ jobs:
                 }]
               }" \
               "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$EDIT_ID/tracks/$TRACK" > /dev/null
-
-            echo "  ✅ Track $TRACK updated"
           done
-
-          echo "💾 Committing changes..."
-
-          COMMIT_RESPONSE=$(curl -s -X POST \
+          
+          # Commit
+          curl -s -X POST \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
-            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$EDIT_ID:commit")
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$EDIT_ID:commit" \
+            | jq . && echo "✅ Published to internal, alpha, beta!"
 
-          echo "$COMMIT_RESPONSE" | jq .
-          echo "🎉 Successfully published to internal, alpha, beta!"
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
