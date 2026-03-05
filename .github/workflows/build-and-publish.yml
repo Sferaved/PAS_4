@@ -87,9 +87,10 @@ jobs:
           JSON_FILE="keystore/service-account.json"
           
           # Получение токена
-          CLIENT_EMAIL=$(jq -r '.client_email' "$JSON_FILE")
-          PRIVATE_KEY=$(jq -r '.private_key' "$JSON_FILE")
-          
+          CLIENT_EMAIL="my-app-backend@taxipas4.iam.gserviceaccount.com"
+          PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCeg31++rEJIJ6G\nnrI9nlbFI740bO0+y7Lo0i4Les4smhAgtWGSwthJUu+Ky33MVNcBvLgI7mQy3uwA\nd7G05o2ieVhoCIyySZuh3SeFfGp5P7KNAABLwYQ7Fkdq2BlyDpXP2+lFMyBAdttp\nFMgmJmZWkfuvHkFq4hBbT21rZZFZOxPA+hoe7O7LF7ymyCQSKJUKZ0nV/3AzOD/U\nsLgSPQwNVAoj6NWPX6I4Vs5ck4pHH4ZPUUpjiyejeeBKbwat94LP2ikQcaRgQ0g1\ncvT/PKK8lYhux+0m22DBB/6TPjZ+6bHuE+EDIHL6JgX75T/1SJYgP6RgePRvrOgj\nRJSq+iGVAgMBAAECggEABsg+p/P0fAeTWNRfRnp+S8WQJ2tAtGbf+GJjz3XD7rhx\nzQsjCgtAWKojLy0D7H31zBslxFYPifYBTYd8M5leFoVQISAP2wysth6Bs3kDuj0y\n4ncNTDB9u/nOTktBksspIaFkZ/j8czL9XM/jkhmjAnxmXdNdfllT/1V/lkXcfp+S\npIBzxdypOtVthl5jxq/yxUW5qsdUumo+Dain/XE0jN0XukOuzg8Zw3zvdfmObjnM\nlI+wRUSN+Cbj8L7mOuDcZICHiUUAFzAM40QfIy60ozJkqom6ShknAt5rmP2mQPVk\nqFCt9rvJQfGcN6s+HFcXSWoxvGZGVo+G0HVqlidrIQKBgQDQ2fCa+utNLSZMo0nK\nzUW5eDDHbRCyOM4HVKHMZLEZc+0wHKa18iqhDvZNH3nTQJo0NfkJVmhxfhguvnT+\npDVf4Tz/kbsy6EWsPq7zzqdfc7E+JkX6p/fQDOZIQba1eznCm+nmPq/F2tAzQhSG\no/0JZITNkXsQ09Y0bERI7K9k4QKBgQDCTGeHWAFRkQp1MrGHhqjEaFjEFNWeuZ7k\nuQ2bJ2p1SEfDzai3z9qtIZ0o/Ky7Z5uTkhDmNW+HueyqzSNiAdpdqauPeaCRY8Vl\nEQUToGN+KfpT5AgNnG+YR3stWl650CkO3gkt1Q5QWGJWtqtV8UmDsc2d8h3fwklR\n0x1DSNMfNQKBgDBrdqbXqZnY79owuTj1YkbfoJ97n7VSCiIU8vYKGi0GfWT8H4Jr\nRIrWhy/WLk5V2epk4PnTOJ+nVj/wE/u9Ykp6U8QEq1vgEdcfKTyJGrC8h8ka4np8\nWq23b+QsqAlnKjr+Hrosql+6nS5lEZEtj8qPrWJjah66nhzFRQeLKBbBAoGAW65J\nu6dfF+nkkWCWPGjiAatrFzrtgbP8sdhP/0IeDbFJi67jSbieastNqSVxLAy7cGqf\n5sCYG+czMXUSmRBexYtmFJFDntcBMatSReyMhd+w6xzSX/nM/oHcMY5O3EbI2OcU\nVbgOxQKvhFM1jZwJIEcpyrmQNyEqD54aVMFsPXECgYEAtpSr4+GIsr9jt4axTQzu\nmfOgdYnVYQElX+iCopb+9Ei1kpMeCt17jVDx/XjwZRR7cpubbpcoaWAccDUlK3D1\nmVNs9h64RqsSTjKWhZ/TmSuBYOY7v5LSCAmYqDy2f+PQej6LMJokRtp1iwQWHrja\nxiq2zaBC+1f6OZKRTF/aOvk=\n-----END PRIVATE KEY-----\n",
+          echo "$PRIVATE_KEY" > /tmp/private-key.pem
+          chmod 600 /tmp/private-key.pem
           NOW=$(date +%s)
           EXP=$(($NOW + 3600))
           
