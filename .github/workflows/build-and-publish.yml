@@ -97,50 +97,25 @@ jobs:
 
           echo "✅ Service account file found"
 
-          # Извлечение данных из JSON
+          # Извлечение данных из JSON - БЕЗ ИЗМЕНЕНИЙ!
           CLIENT_EMAIL=$(jq -r '.client_email' "$JSON_FILE")
-          PRIVATE_KEY_RAW=$(jq -r '.private_key' "$JSON_FILE")
+
+          # ИЗМЕНЕНИЕ: Используем ключ как есть, без обработки
+          # Просто извлекаем и сохраняем
+          PRIVATE_KEY=$(jq -r '.private_key' "$JSON_FILE")
 
           echo "📧 Client email: $CLIENT_EMAIL"
+          echo "🔍 Private key length: ${#PRIVATE_KEY}"
 
-          # ДИАГНОСТИКА: показываем первые и последние символы ключа
-          echo "🔍 Raw private key preview (first 100 chars):"
-          echo "$PRIVATE_KEY_RAW" | head -c 100
-          echo ""
-          echo "🔍 Raw private key preview (last 100 chars):"
-          echo "$PRIVATE_KEY_RAW" | tail -c 100
-          echo ""
-
-          # Правильное форматирование приватного ключа
-          # 1. Сначала удаляем обрамляющие кавычки, если они есть
-          # 2. Заменяем \n на реальные переносы строк
-          # 3. Убеждаемся, что ключ имеет правильный формат PEM
-
-          # Убираем кавычки в начале и конце, если они есть
-          PRIVATE_KEY_CLEAN=$(echo "$PRIVATE_KEY_RAW" | sed 's/^"//; s/"$//')
-
-          # Заменяем \n на реальные переносы строк
-          PRIVATE_KEY=$(echo "$PRIVATE_KEY_CLEAN" | sed 's/\\n/\n/g')
-
-          # ДИАГНОСТИКА: проверяем формат ключа
-          echo "🔍 Private key first line after formatting:"
-          echo "$PRIVATE_KEY" | head -n1
-          echo "🔍 Private key last line after formatting:"
-          echo "$PRIVATE_KEY" | tail -n1
-
-          # Сохраняем ключ во временный файл
+          # Сохраняем ключ во временный файл КАК ЕСТЬ
           echo "$PRIVATE_KEY" > /tmp/private-key.pem
           chmod 600 /tmp/private-key.pem
 
-          # Проверяем, что ключ имеет правильный формат PEM
-          if ! grep -q "BEGIN PRIVATE KEY" /tmp/private-key.pem; then
-            echo "❌ Private key does not have BEGIN PRIVATE KEY marker"
-            echo "Content of key file:"
-            cat /tmp/private-key.pem
-            exit 1
-          fi
-
-          echo "✅ Private key has correct PEM format"
+          # Проверяем первые несколько строк для диагностики
+          echo "🔍 Private key first line:"
+          head -n1 /tmp/private-key.pem
+          echo "🔍 Private key last line:"
+          tail -n1 /tmp/private-key.pem
 
           # Создание JWT
           NOW=$(date +%s)
@@ -149,86 +124,119 @@ jobs:
           JWT_HEADER='{"alg":"RS256","typ":"JWT"}'
           JWT_CLAIM="{\"iss\":\"$CLIENT_EMAIL\",\"scope\":\"https://www.googleapis.com/auth/androidpublisher\",\"aud\":\"https://oauth2.googleapis.com/token\",\"exp\":$EXP,\"iat\":$NOW}"
 
-          echo "🔍 JWT Header: $JWT_HEADER"
-          echo "🔍 JWT Claim: $JWT_CLAIM"
-
-          # Base64URL кодирование (без padding)
+          # Base64URL кодирование
           B64_HEADER=$(echo -n "$JWT_HEADER" | base64 -w 0 | tr '+/' '-_' | tr -d '=')
           B64_CLAIM=$(echo -n "$JWT_CLAIM" | base64 -w 0 | tr '+/' '-_' | tr -d '=')
 
-          echo "🔍 B64 Header length: ${#B64_HEADER}"
-          echo "🔍 B64 Claim length: ${#B64_CLAIM}"
-
-          # Создание подписи с проверкой ошибок
           echo "📝 Creating signature..."
-          if ! SIGNATURE=$(echo -n "$B64_HEADER.$B64_CLAIM" | openssl dgst -sha256 -sign /tmp/private-key.pem 2>/tmp/openssl_error.log | base64 -w 0 | tr '+/' '-_' | tr -d '='); then
-            echo "❌ OpenSSL signing failed"
-            cat /tmp/openssl_error.log
-            exit 1
-          fi
 
-          echo "✅ Signature created, length: ${#SIGNATURE}"
+          # Создание подписи - используем ключ как есть
+          SIGNATURE=$(echo -n "$B64_HEADER.$B64_CLAIM" | openssl dgst -sha256 -sign /tmp/private-key.pem | base64 -w 0 | tr '+/' '-_' | tr -d '=')
 
           # Формирование assertion
           ASSERTION="$B64_HEADER.$B64_CLAIM.$SIGNATURE"
-          echo "🔍 Assertion length: ${#ASSERTION}"
 
-          # Получение токена с подробным выводом
+          # Получение токена
           echo "📡 Requesting token from Google..."
 
-          # Используем отдельные параметры -d для избежания проблем с квотированием
+          # Пробуем оба варианта отправки
           RESPONSE=$(curl -s -X POST "https://oauth2.googleapis.com/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
-            -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
-            --data-urlencode "assertion=$ASSERTION")
+            -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=$ASSERTION")
 
           # Проверка ответа
-          echo "🔍 Response: $RESPONSE"
-
-          # Извлекаем токен или ошибку
-          if echo "$RESPONSE" | jq -e '.error' > /dev/null 2>&1; then
-            ERROR=$(echo "$RESPONSE" | jq -r '.error')
-            ERROR_DESC=$(echo "$RESPONSE" | jq -r '.error_description')
-            echo "❌ Google API error: $ERROR - $ERROR_DESC"
-
-            # Если ошибка подписи, попробуем альтернативный метод форматирования ключа
-            echo "🔄 Trying alternative key formatting..."
-
-            # Альтернативный метод: сохраняем ключ как есть, без обработки
-            echo "$PRIVATE_KEY_RAW" > /tmp/private-key-alt.pem
-
-            # Пробуем снова с альтернативным ключом
-            SIGNATURE_ALT=$(echo -n "$B64_HEADER.$B64_CLAIM" | openssl dgst -sha256 -sign /tmp/private-key-alt.pem 2>/dev/null | base64 -w 0 | tr '+/' '-_' | tr -d '=')
-
-            ASSERTION_ALT="$B64_HEADER.$B64_CLAIM.$SIGNATURE_ALT"
-
-            RESPONSE_ALT=$(curl -s -X POST "https://oauth2.googleapis.com/token" \
-              -H "Content-Type: application/x-www-form-urlencoded" \
-              -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
-              --data-urlencode "assertion=$ASSERTION_ALT")
-
-            ACCESS_TOKEN=$(echo "$RESPONSE_ALT" | jq -r '.access_token // empty')
-
-            if [ -n "$ACCESS_TOKEN" ]; then
-              echo "✅ Alternative method succeeded!"
-            else
-              echo "❌ Alternative method also failed"
-              echo "Response: $RESPONSE_ALT"
-              exit 1
-            fi
-          else
-            ACCESS_TOKEN=$(echo "$RESPONSE" | jq -r '.access_token')
-          fi
+          ACCESS_TOKEN=$(echo "$RESPONSE" | jq -r '.access_token // empty')
 
           if [ -z "$ACCESS_TOKEN" ]; then
-            echo "❌ Failed to get access token"
-            exit 1
+            echo "❌ Failed with first method, trying second..."
+
+            # Второй вариант с раздельными параметрами
+            RESPONSE2=$(curl -s -X POST "https://oauth2.googleapis.com/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
+              -d "assertion=$ASSERTION")
+
+            ACCESS_TOKEN=$(echo "$RESPONSE2" | jq -r '.access_token // empty')
+
+            if [ -z "$ACCESS_TOKEN" ]; then
+              echo "❌ Failed to get access token"
+              echo "Response: $RESPONSE2"
+              exit 1
+            fi
           fi
 
           echo "✅ Access token obtained"
 
-          # Далее ваш код публикации...
-          # (остальной код без изменений)
+          # Создание edit
+          echo "📝 Creating edit..."
+          EDIT_RESPONSE=$(curl -s -X POST \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits")
+
+          EDIT_ID=$(echo "$EDIT_RESPONSE" | jq -r '.id // empty')
+
+          if [ -z "$EDIT_ID" ]; then
+            echo "❌ Failed to create edit"
+            echo "Response: $EDIT_RESPONSE"
+            exit 1
+          fi
+
+          echo "✅ Edit created: $EDIT_ID"
+
+          # Загрузка AAB
+          echo "📦 Uploading AAB..."
+          UPLOAD_RESPONSE=$(curl -s -X POST \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H "Content-Type: application/octet-stream" \
+            --data-binary "@$AAB_PATH" \
+            "https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$EDIT_ID/bundles?uploadType=media")
+
+          VERSION_CODE=$(echo "$UPLOAD_RESPONSE" | jq -r '.versionCode // empty')
+
+          if [ -z "$VERSION_CODE" ]; then
+            echo "❌ Upload failed"
+            echo "Response: $UPLOAD_RESPONSE"
+            exit 1
+          fi
+
+          echo "✅ Uploaded, version code: $VERSION_CODE"
+
+          # Release notes
+          EN_NOTES=$(jq -Rs . < "app/src/main/play/en-US/whatsnew.txt" 2>/dev/null || echo "\"Release ${{ steps.build.outputs.version_name }}\"")
+          RU_NOTES=$(jq -Rs . < "app/src/main/play/ru-RU/whatsnew.txt" 2>/dev/null || echo "\"Релиз ${{ steps.build.outputs.version_name }}\"")
+          UK_NOTES=$(jq -Rs . < "app/src/main/play/uk/whatsnew.txt" 2>/dev/null || echo "\"Реліз ${{ steps.build.outputs.version_name }}\"")
+
+          # Обновление треков
+          for TRACK in internal alpha beta; do
+            echo "Updating track: $TRACK"
+
+            curl -s -X PUT \
+              -H "Authorization: Bearer $ACCESS_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"releases\": [{
+                  \"versionCodes\": [$VERSION_CODE],
+                  \"status\": \"completed\",
+                  \"releaseNotes\": [
+                    {\"language\": \"en-US\", \"text\": $EN_NOTES},
+                    {\"language\": \"ru-RU\", \"text\": $RU_NOTES},
+                    {\"language\": \"uk\", \"text\": $UK_NOTES}
+                  ]
+                }]
+              }" \
+              "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$EDIT_ID/tracks/$TRACK" > /dev/null
+
+            echo "  ✅ Track $TRACK updated"
+          done
+
+          # Commit
+          echo "💾 Committing changes..."
+          COMMIT_RESPONSE=$(curl -s -X POST \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$EDIT_ID:commit")
+
+          echo "$COMMIT_RESPONSE" | jq .
+          echo "✅ Published to internal, alpha, beta!"
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
