@@ -1,15 +1,44 @@
+# Gradle files
+.gradle/
+build/
+*/build/
+app/build/
+
+# Local configuration
+local.properties
+
+# IDE files - временные файлы
+.idea/caches/
+.idea/libraries/
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/encodings.xml
+.idea/compiler.xml
+.idea/jarRepositories.xml
+.idea/misc.xml
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+*.iws
+*.ipr
+
+# OS files
 .DS_Store
-/build
-/captures
+Thumbs.db
+
+# Build outputs
+captures/
 .externalNativeBuild
 .cxx
-local.properties
+
+# Keystore files - закомментировано, так как храним в репозитории
+# *.jks
+# *.keystore
+
+# Generated files
+generated/
+
+*.aab
+*.apk
+app/release/

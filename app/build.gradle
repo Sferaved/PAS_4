@@ -6,33 +6,20 @@ plugins {
 }
 
 android {
-    namespace 'com.taxi_pas_4'
+    namespace = 'com.taxieasyua.back4app'
     compileSdk = 36
 
     defaultConfig {
-        applicationId "com.taxi_pas_4"
+        applicationId = "com.taxieasyua.back4app"
         minSdk = 26
-        //noinspection EditedTargetSdkVersion
         targetSdk = 36
-        versionCode = 4193
-        versionName = '4.193'
+        versionCode = 4194
+        versionName = '4.194'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += ['en', 'ru', 'uk']
-        multiDexEnabled  = true
-
+        multiDexEnabled = true
     }
-
-    signingConfigs {
-        debug {
-            storeFile file("keystore/com.taxi_pas_4_debug.keystore")
-            storePassword "android"
-            keyAlias "AndroidDebugKey"
-            keyPassword "android"
-        }
-    }
-
-
 
     buildTypes {
         release {
@@ -41,16 +28,30 @@ android {
         }
     }
     compileOptions {
-        coreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
+        coreLibraryDesugaringEnabled = true
     }
     buildFeatures {
         dataBinding = true
         viewBinding = true
     }
     testOptions {
+        
+    }
+    signingConfigs {
+        release {
+            storeFile file("../keystore/keystore.jks")
+            storePassword "18And051971"
+            keyAlias "key0"
+            keyPassword "18And051971"
+        }
+    }
 
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+        }
     }
 }
 dependencies {
@@ -174,5 +175,12 @@ dependencies {
     implementation 'com.github.bumptech.glide:glide:4.16.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0'
 
-
+    implementation 'com.google.android.material:material:1.13.0'
 }
+
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ["-Xlint:deprecation"]
+}
+
+

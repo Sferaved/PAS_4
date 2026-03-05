@@ -583,7 +583,7 @@ public class FinishSeparateFragment extends Fragment {
         Logger.d(context, TAG, "Transaction Status amount: " + amount);
 
         if ("Declined".equals(status)) {
-
+            sharedPreferencesHelperMain.saveValue("add_show_flag", false);
             MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment =
                     new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
             bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
@@ -1920,7 +1920,7 @@ public class FinishSeparateFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-
+        sharedPreferencesHelperMain.saveValue("add_show_flag", true);
         timeUtils = new TimeUtils(required_time, viewModel);
         timeUtils.startTimer();
 
@@ -2088,6 +2088,7 @@ public class FinishSeparateFragment extends Fragment {
     }
 
     private void setShowDialogAddCost() {
+
         if (handlerAddcost != null && showDialogAddcost != null) {
             if (isTaskScheduled) {
                 Log.d("HandlerDebug", "Task is already scheduled, skipping");
@@ -2203,6 +2204,12 @@ public class FinishSeparateFragment extends Fragment {
 //        if (handlerAddcost != null) {
 //            handlerAddcost.removeCallbacks(showDialogAddcost);
 //        }
+        boolean add_show_flag = (boolean) sharedPreferencesHelperMain.getValue("add_show_flag", true);
+        Log.d("add_show_flag", String.valueOf(add_show_flag));
+
+        if (!add_show_flag) {
+            return;
+        }
         cancelShowDialogAddCost();
         stopCycle();
         // Убедитесь, что фрагмент добавлен

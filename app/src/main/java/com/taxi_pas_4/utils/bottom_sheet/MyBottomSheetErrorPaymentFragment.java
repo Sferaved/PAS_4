@@ -251,6 +251,8 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
         if (!actionPerformed) {
             // Пользователь просто закрыл шторку без каких-либо действий
             handleDismissWithoutAction();
+        } else {
+            sharedPreferencesHelperMain.saveValue("add_show_flag", true);
         }
 
         // Уведомляем слушателя об отмене
@@ -267,6 +269,8 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
         if (!actionPerformed) {
             Log.d(TAG, "Диалог закрыт без действий (onDismiss)");
             handleDismissWithoutAction();
+        } else {
+            sharedPreferencesHelperMain.saveValue("add_show_flag", true);
         }
 
         // Уведомляем слушателя, что диалог закрылся
