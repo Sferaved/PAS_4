@@ -55,7 +55,7 @@ jobs:
           TAG_NAME=${GITHUB_REF_NAME}
           CLEAN_VERSION=$(echo "$TAG_NAME" | sed 's/^v//')
           SUFFIX=$(echo "$CLEAN_VERSION" | grep -oE '[0-9]+$' || echo "1000")
-          VERSION_CODE="174422${SUFFIX}"
+          VERSION_CODE="4${SUFFIX}"
           
           echo "version_name=$CLEAN_VERSION" >> $GITHUB_OUTPUT
           echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
