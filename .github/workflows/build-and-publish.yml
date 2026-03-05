@@ -88,28 +88,28 @@ jobs:
 
           echo "🔑 Getting access token..."
 
-          # Проверка файлов
+          # Проверка существования файла
           if [ ! -f "$JSON_FILE" ]; then
-            echo "❌ Service account JSON file not found: $JSON_FILE"
+            echo "❌ Service account file not found: $JSON_FILE"
+            ls -la keystore/
             exit 1
           fi
 
-          if [ ! -f "$AAB_PATH" ]; then
-            echo "❌ AAB file not found: $AAB_PATH"
-            exit 1
-          fi
+          echo "✅ Service account file found"
 
-          # Получение данных из JSON
+          # Извлечение данных из JSON
           CLIENT_EMAIL=$(jq -r '.client_email' "$JSON_FILE")
-          PRIVATE_KEY=$(jq -r '.private_key' "$JSON_FILE")
+          PRIVATE_KEY_RAW=$(jq -r '.private_key' "$JSON_FILE")
 
-          if [ -z "$CLIENT_EMAIL" ] || [ -z "$PRIVATE_KEY" ]; then
-            echo "❌ Invalid service account JSON file"
-            exit 1
-          fi
+          echo "📧 Client email: $CLIENT_EMAIL"
 
-          # Форматирование приватного ключа
-          PRIVATE_KEY=$(echo "$PRIVATE_KEY" | sed 's/\\n/\n/g' | sed 's/^"\(.*\)"$/\1/')
+          # Правильное форматирование приватного ключа
+          # Удаляем кавычки и преобразуем \n в реальные переносы строк
+          PRIVATE_KEY=$(echo "$PRIVATE_KEY_RAW" | sed 's/\\n/\n/g' | sed 's/^"//; s/"$//')
+
+          # Сохраняем ключ во временный файл
+          echo "$PRIVATE_KEY" > /tmp/private-key.pem
+          chmod 600 /tmp/private-key.pem
 
           # Создание JWT
           NOW=$(date +%s)
@@ -118,21 +118,24 @@ jobs:
           JWT_HEADER='{"alg":"RS256","typ":"JWT"}'
           JWT_CLAIM="{\"iss\":\"$CLIENT_EMAIL\",\"scope\":\"https://www.googleapis.com/auth/androidpublisher\",\"aud\":\"https://oauth2.googleapis.com/token\",\"exp\":$EXP,\"iat\":$NOW}"
 
+          # Base64URL кодирование
           B64_HEADER=$(echo -n "$JWT_HEADER" | base64 -w 0 | tr '+/' '-_' | tr -d '=')
           B64_CLAIM=$(echo -n "$JWT_CLAIM" | base64 -w 0 | tr '+/' '-_' | tr -d '=')
 
           # Создание подписи
-          echo "$PRIVATE_KEY" > /tmp/private-key.pem
-          chmod 600 /tmp/private-key.pem
-
           SIGNATURE=$(echo -n "$B64_HEADER.$B64_CLAIM" | openssl dgst -sha256 -sign /tmp/private-key.pem | base64 -w 0 | tr '+/' '-_' | tr -d '=')
 
+          # Формирование assertion
+          ASSERTION="$B64_HEADER.$B64_CLAIM.$SIGNATURE"
+
           # Получение токена
+          echo "📡 Requesting token from Google..."
           RESPONSE=$(curl -s -X POST "https://oauth2.googleapis.com/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
-            -d "assertion=$B64_HEADER.$B64_CLAIM.$SIGNATURE")
+            -d "assertion=$ASSERTION")
 
+          # Проверка ответа
           ACCESS_TOKEN=$(echo "$RESPONSE" | jq -r '.access_token // empty')
 
           if [ -z "$ACCESS_TOKEN" ]; then
@@ -143,37 +146,26 @@ jobs:
 
           echo "✅ Access token obtained"
 
+          # Далее ваш код для публикации...
           # Создание edit
           echo "📝 Creating edit..."
-          EDIT_RESPONSE=$(curl -s -X POST \
+          EDIT_ID=$(curl -s -X POST \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
-            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits")
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits" \
+            | jq -r '.id // empty')
 
-          EDIT_ID=$(echo "$EDIT_RESPONSE" | jq -r '.id // empty')
-
-          if [ -z "$EDIT_ID" ]; then
-            echo "❌ Failed to create edit"
-            echo "Response: $EDIT_RESPONSE"
-            exit 1
-          fi
-
-          echo "✅ Edit created: $EDIT_ID"
+          [ -z "$EDIT_ID" ] && { echo "❌ Failed to create edit"; exit 1; }
 
           # Загрузка AAB
           echo "📦 Uploading AAB..."
-          UPLOAD_RESPONSE=$(curl -s -X POST \
+          VERSION_CODE=$(curl -s -X POST \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
             -H "Content-Type: application/octet-stream" \
             --data-binary "@$AAB_PATH" \
-            "https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$EDIT_ID/bundles?uploadType=media")
+            "https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$EDIT_ID/bundles?uploadType=media" \
+            | jq -r '.versionCode // empty')
 
-          VERSION_CODE=$(echo "$UPLOAD_RESPONSE" | jq -r '.versionCode // empty')
-
-          if [ -z "$VERSION_CODE" ]; then
-            echo "❌ Upload failed"
-            echo "Response: $UPLOAD_RESPONSE"
-            exit 1
-          fi
+          [ -z "$VERSION_CODE" ] && { echo "❌ Upload failed"; exit 1; }
 
           echo "✅ Uploaded, version code: $VERSION_CODE"
 
@@ -185,7 +177,6 @@ jobs:
           # Обновление треков
           for TRACK in internal alpha beta; do
             echo "Updating track: $TRACK"
-
             curl -s -X PUT \
               -H "Authorization: Bearer $ACCESS_TOKEN" \
               -H "Content-Type: application/json" \
@@ -201,18 +192,14 @@ jobs:
                 }]
               }" \
               "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$EDIT_ID/tracks/$TRACK" > /dev/null
-
-            echo "  ✅ Track $TRACK updated"
           done
 
           # Commit
           echo "💾 Committing changes..."
-          COMMIT_RESPONSE=$(curl -s -X POST \
+          curl -s -X POST \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
-            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$EDIT_ID:commit")
-
-          echo "$COMMIT_RESPONSE" | jq .
-          echo "✅ Published to internal, alpha, beta!"
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$EDIT_ID:commit" \
+            | jq . && echo "✅ Published to internal, alpha, beta!"
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
