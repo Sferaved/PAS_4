@@ -4,6 +4,9 @@ build/
 */build/
 app/build/
 
+# Firebase configuration
+google-services.json
+app/google-services.json
 
 # IDE files - временные файлы
 .idea/caches/
