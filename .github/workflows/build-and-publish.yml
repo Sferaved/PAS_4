@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: second_way
+          ref: master
           clean: true
 
       - name: Setup JDK 21
