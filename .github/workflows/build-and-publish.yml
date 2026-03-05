@@ -100,26 +100,27 @@ jobs:
           CLIENT_EMAIL=$(jq -r '.client_email' "$JSON_FILE")
 
           echo "📧 Client email: $CLIENT_EMAIL"
-            
-            python3 - << 'PY'
-            import json
+          
+          python3 - << 'PY'
+          import json  
+          
           with open("keystore/service-account.json") as f:
-            data = json.load(f)
+              data = json.load(f)
           
           with open("/tmp/private-key.pem", "w") as f:
-            f.write(data["private_key"])
-            PY
+              f.write(data["private_key"])
+          PY
             
-            chmod 600 /tmp/private-key.pem
+          chmod 600 /tmp/private-key.pem
             
-            echo "🔍 Key lines:"
-            wc -l /tmp/private-key.pem
+          echo "🔍 Key lines:"
+          wc -l /tmp/private-key.pem
             
-            echo "🔍 First line:"
-            head -n1 /tmp/private-key.pem
+          echo "🔍 First line:"
+          head -n1 /tmp/private-key.pem
             
-            echo "🔍 Last line:"
-            tail -n1 /tmp/private-key.pem
+          echo "🔍 Last line:"
+          tail -n1 /tmp/private-key.pem
 
           NOW=$(date +%s)
           EXP=$(($NOW + 3600))
