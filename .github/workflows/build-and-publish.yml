@@ -116,13 +116,13 @@ jobs:
           JWT_HEADER='{"alg":"RS256","typ":"JWT"}'
           JWT_CLAIM="{\"iss\":\"$CLIENT_EMAIL\",\"scope\":\"https://www.googleapis.com/auth/androidpublisher\",\"aud\":\"https://oauth2.googleapis.com/token\",\"exp\":$EXP,\"iat\":$NOW}"
 
-          B64_HEADER=$(echo -n "$JWT_HEADER" | base64 -w 0 | tr '+/' '-_' | tr -d '=')
-          B64_CLAIM=$(echo -n "$JWT_CLAIM" | base64 -w 0 | tr '+/' '-_' | tr -d '=')
+          B64_HEADER=$(printf '%s' "$JWT_HEADER" | openssl base64 -A | tr '+/' '-_' | tr -d '=')
+          B64_CLAIM=$(printf '%s' "$JWT_CLAIM" | openssl base64 -A | tr '+/' '-_' | tr -d '=')
 
           echo "📝 Creating signature..."
 
           SIGNATURE=$(echo -n "$B64_HEADER.$B64_CLAIM" \
-            | openssl dgst -sha256 -sign /tmp/private-key.pem \
+            | openssl dgst -sha256 -sign /tmp/private-key.pem -binary \
             | base64 -w 0 | tr '+/' '-_' | tr -d '=')
 
           ASSERTION="$B64_HEADER.$B64_CLAIM.$SIGNATURE"
