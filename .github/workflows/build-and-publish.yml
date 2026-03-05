@@ -102,9 +102,9 @@ jobs:
           echo "📧 Client email: $CLIENT_EMAIL"
 
           # ВАЖНО: правильное восстановление private key
-          jq -r '.private_key' "$JSON_FILE" | sed 's/\\n/\n/g' > /tmp/private-key.pem
+          jq -r '.private_key' "$JSON_FILE" > /tmp/private-key.pem
           chmod 600 /tmp/private-key.pem
-
+    
           echo "🔍 Private key first line:"
           head -n1 /tmp/private-key.pem
           echo "🔍 Private key last line:"
