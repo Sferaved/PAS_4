@@ -84,53 +84,85 @@ jobs:
           set -e
           PACKAGE_NAME="com.taxi_pas_4"
           AAB_PATH="${{ env.AAB_PATH }}"
-          JSON_FILE="keystore/service-account.json"
-          
+
           # Получение токена
           CLIENT_EMAIL="my-app-backend@taxipas4.iam.gserviceaccount.com"
-          PRIVATE_KEY="-----BEGIN PRIVATE KEY-----MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCeg31++rEJIJ6GnrI9nlbFI740bO0+y7Lo0i4Les4smhAgtWGSwthJUu+Ky33MVNcBvLgI7mQy3uwAd7G05o2ieVhoCIyySZuh3SeFfGp5P7KNAABLwYQ7Fkdq2BlyDpXP2+lFMyBAdttpFMgmJmZWkfuvHkFq4hBbT21rZZFZOxPA+hoe7O7LF7ymyCQSKJUKZ0nV/3AzOD/UsLgSPQwNVAoj6NWPX6I4Vs5ck4pHH4ZPUUpjiyejeeBKbwat94LP2ikQcaRgQ0g1cvT/PKK8lYhux+0m22DBB/6TPjZ+6bHuE+EDIHL6JgX75T/1SJYgP6RgePRvrOgjRJSq+iGVAgMBAAECggEABsg+p/P0fAeTWNRfRnp+S8WQJ2tAtGbf+GJjz3XD7rhxzQsjCgtAWKojLy0D7H31zBslxFYPifYBTYd8M5leFoVQISAP2wysth6Bs3kDuj0y4ncNTDB9u/nOTktBksspIaFkZ/j8czL9XM/jkhmjAnxmXdNdfllT/1V/lkXcfp+SpIBzxdypOtVthl5jxq/yxUW5qsdUumo+Dain/XE0jN0XukOuzg8Zw3zvdfmObjnMlI+wRUSN+Cbj8L7mOuDcZICHiUUAFzAM40QfIy60ozJkqom6ShknAt5rmP2mQPVkqFCt9rvJQfGcN6s+HFcXSWoxvGZGVo+G0HVqlidrIQKBgQDQ2fCa+utNLSZMo0nKzUW5eDDHbRCyOM4HVKHMZLEZc+0wHKa18iqhDvZNH3nTQJo0NfkJVmhxfhguvnT+pDVf4Tz/kbsy6EWsPq7zzqdfc7E+JkX6p/fQDOZIQba1eznCm+nmPq/F2tAzQhSGo/0JZITNkXsQ09Y0bERI7K9k4QKBgQDCTGeHWAFRkQp1MrGHhqjEaFjEFNWeuZ7kuQ2bJ2p1SEfDzai3z9qtIZ0o/Ky7Z5uTkhDmNW+HueyqzSNiAdpdqauPeaCRY8VlEQUToGN+KfpT5AgNnG+YR3stWl650CkO3gkt1Q5QWGJWtqtV8UmDsc2d8h3fwklR0x1DSNMfNQKBgDBrdqbXqZnY79owuTj1YkbfoJ97n7VSCiIU8vYKGi0GfWT8H4JrRIrWhy/WLk5V2epk4PnTOJ+nVj/wE/u9Ykp6U8QEq1vgEdcfKTyJGrC8h8ka4np8Wq23b+QsqAlnKjr+Hrosql+6nS5lEZEtj8qPrWJjah66nhzFRQeLKBbBAoGAW65Ju6dfF+nkkWCWPGjiAatrFzrtgbP8sdhP/0IeDbFJi67jSbieastNqSVxLAy7cGqf5sCYG+czMXUSmRBexYtmFJFDntcBMatSReyMhd+w6xzSX/nM/oHcMY5O3EbI2OcUVbgOxQKvhFM1jZwJIEcpyrmQNyEqD54aVMFsPXECgYEAtpSr4+GIsr9jt4axTQzumfOgdYnVYQElX+iCopb+9Ei1kpMeCt17jVDx/XjwZRR7cpubbpcoaWAccDUlK3D1mVNs9h64RqsSTjKWhZ/TmSuBYOY7v5LSCAmYqDy2f+PQej6LMJokRtp1iwQWHrjaxiq2zaBC+1f6OZKRTF/aOvk=-----END PRIVATE KEY-----",
-          echo "$PRIVATE_KEY" > /tmp/private-key.pem
+
+          # Приватный ключ в одну строку
+          PRIVATE_KEY="-----BEGIN PRIVATE KEY-----MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCeg31++rEJIJ6GnrI9nlbFI740bO0+y7Lo0i4Les4smhAgtWGSwthJUu+Ky33MVNcBvLgI7mQy3uwAd7G05o2ieVhoCIyySZuh3SeFfGp5P7KNAABLwYQ7Fkdq2BlyDpXP2+lFMyBAdttpFMgmJmZWkfuvHkFq4hBbT21rZZFZOxPA+hoe7O7LF7ymyCQSKJUKZ0nV/3AzOD/UsLgSPQwNVAoj6NWPX6I4Vs5ck4pHH4ZPUUpjiyejeeBKbwat94LP2ikQcaRgQ0g1cvT/PKK8lYhux+0m22DBB/6TPjZ+6bHuE+EDIHL6JgX75T/1SJYgP6RgePRvrOgjRJSq+iGVAgMBAAECggEABsg+p/P0fAeTWNRfRnp+S8WQJ2tAtGbf+GJjz3XD7rhxzQsjCgtAWKojLy0D7H31zBslxFYPifYBTYd8M5leFoVQISAP2wysth6Bs3kDuj0y4ncNTDB9u/nOTktBksspIaFkZ/j8czL9XM/jkhmjAnxmXdNdfllT/1V/lkXcfp+SpIBzxdypOtVthl5jxq/yxUW5qsdUumo+Dain/XE0jN0XukOuzg8Zw3zvdfmObjnMlI+wRUSN+Cbj8L7mOuDcZICHiUUAFzAM40QfIy60ozJkqom6ShknAt5rmP2mQPVkqFCt9rvJQfGcN6s+HFcXSWoxvGZGVo+G0HVqlidrIQKBgQDQ2fCa+utNLSZMo0nKzUW5eDDHbRCyOM4HVKHMZLEZc+0wHKa18iqhDvZNH3nTQJo0NfkJVmhxfhguvnT+pDVf4Tz/kbsy6EWsPq7zzqdfc7E+JkX6p/fQDOZIQba1eznCm+nmPq/F2tAzQhSGo/0JZITNkXsQ09Y0bERI7K9k4QKBgQDCTGeHWAFRkQp1MrGHhqjEaFjEFNWeuZ7kuQ2bJ2p1SEfDzai3z9qtIZ0o/Ky7Z5uTkhDmNW+HueyqzSNiAdpdqauPeaCRY8VlEQUToGN+KfpT5AgNnG+YR3stWl650CkO3gkt1Q5QWGJWtqtV8UmDsc2d8h3fwklR0x1DSNMfNQKBgDBrdqbXqZnY79owuTj1YkbfoJ97n7VSCiIU8vYKGi0GfWT8H4JrRIrWhy/WLk5V2epk4PnTOJ+nVj/wE/u9Ykp6U8QEq1vgEdcfKTyJGrC8h8ka4np8Wq23b+QsqAlnKjr+Hrosql+6nS5lEZEtj8qPrWJjah66nhzFRQeLKBbBAoGAW65Ju6dfF+nkkWCWPGjiAatrFzrtgbP8sdhP/0IeDbFJi67jSbieastNqSVxLAy7cGqf5sCYG+czMXUSmRBexYtmFJFDntcBMatSReyMhd+w6xzSX/nM/oHcMY5O3EbI2OcUVbgOxQKvhFM1jZwJIEcpyrmQNyEqD54aVMFsPXECgYEAtpSr4+GIsr9jt4axTQzumfOgdYnVYQElX+iCopb+9Ei1kpMeCt17jVDx/XjwZRR7cpubbpcoaWAccDUlK3D1mVNs9h64RqsSTjKWhZ/TmSuBYOY7v5LSCAmYqDy2f+PQej6LMJokRtp1iwQWHrjaxiq2zaBC+1f6OZKRTF/aOvk=-----END PRIVATE KEY-----"
+
+          echo "📧 Client email: $CLIENT_EMAIL"
+
+          # Сохраняем ключ во временный файл (нужно добавить переносы строк для openssl)
+          echo "$PRIVATE_KEY" | fold -w 64 > /tmp/private-key.pem
+          sed -i '1s/^/-----BEGIN PRIVATE KEY-----\n/' /tmp/private-key.pem
+          echo "-----END PRIVATE KEY-----" >> /tmp/private-key.pem
           chmod 600 /tmp/private-key.pem
+
+          echo "🔍 Проверка ключа:"
+          head -n3 /tmp/private-key.pem
+
           NOW=$(date +%s)
           EXP=$(($NOW + 3600))
-          
+
           JWT_HEADER='{"alg":"RS256","typ":"JWT"}'
           JWT_CLAIM="{\"iss\":\"$CLIENT_EMAIL\",\"scope\":\"https://www.googleapis.com/auth/androidpublisher\",\"aud\":\"https://oauth2.googleapis.com/token\",\"exp\":$EXP,\"iat\":$NOW}"
-          
-          B64_HEADER=$(echo -n "$JWT_HEADER" | base64 -w 0 | tr '/+' '_-' | tr -d '=')
-          B64_CLAIM=$(echo -n "$JWT_CLAIM" | base64 -w 0 | tr '/+' '_-' | tr -d '=')
-          
-          echo "$PRIVATE_KEY" > /tmp/private-key.pem
-          SIGNATURE=$(echo -n "$B64_HEADER.$B64_CLAIM" | openssl dgst -sha256 -sign /tmp/private-key.pem | base64 -w 0 | tr '/+' '_-' | tr -d '=')
-          
-          ACCESS_TOKEN=$(curl -s -X POST "https://oauth2.googleapis.com/token" \
+
+          # Кодируем header и claim в base64url
+          B64_HEADER=$(echo -n "$JWT_HEADER" | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
+          B64_CLAIM=$(echo -n "$JWT_CLAIM" | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
+
+          echo "📝 Создание подписи..."
+
+          # Создаем подпись
+          SIGNATURE=$(echo -n "$B64_HEADER.$B64_CLAIM" | \
+            openssl dgst -sha256 -sign /tmp/private-key.pem -binary | \
+            openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
+
+          ASSERTION="$B64_HEADER.$B64_CLAIM.$SIGNATURE"
+
+          echo "📡 Запрос токена..."
+
+          # Получаем access token
+          RESPONSE=$(curl -s -X POST "https://oauth2.googleapis.com/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
-            -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=$B64_HEADER.$B64_CLAIM.$SIGNATURE" \
-            | jq -r '.access_token // empty')
-          
-          [ -z "$ACCESS_TOKEN" ] && { echo "❌ Failed to get access token"; exit 1; }
-          
-          # Создание edit и загрузка
-          EDIT_ID=$(curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
+            -d "assertion=$ASSERTION")
+
+          ACCESS_TOKEN=$(echo "$RESPONSE" | jq -r '.access_token // empty')
+
+          if [ -z "$ACCESS_TOKEN" ]; then
+            echo "❌ Ошибка получения токена"
+            echo "Ответ:"
+            echo "$RESPONSE" | jq .
+            exit 1
+          fi
+
+          echo "✅ Токен получен"
+
+          # Создание edit
+          EDIT_ID=$(curl -s -X POST \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
             "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits" \
             | jq -r '.id // empty')
-          
+
           [ -z "$EDIT_ID" ] && { echo "❌ Failed to create edit"; exit 1; }
-          
+
+          # Загрузка AAB
           VERSION_CODE=$(curl -s -X POST \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
             -H "Content-Type: application/octet-stream" \
             --data-binary "@$AAB_PATH" \
             "https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$EDIT_ID/bundles?uploadType=media" \
             | jq -r '.versionCode // empty')
-          
+
           [ -z "$VERSION_CODE" ] && { echo "❌ Upload failed"; exit 1; }
-          
+
           # Release notes
           EN_NOTES=$(jq -Rs . < "app/src/main/play/en-US/whatsnew.txt" 2>/dev/null || echo "\"Release ${{ steps.build.outputs.version_name }}\"")
           RU_NOTES=$(jq -Rs . < "app/src/main/play/ru-RU/whatsnew.txt" 2>/dev/null || echo "\"Релиз ${{ steps.build.outputs.version_name }}\"")
           UK_NOTES=$(jq -Rs . < "app/src/main/play/uk/whatsnew.txt" 2>/dev/null || echo "\"Реліз ${{ steps.build.outputs.version_name }}\"")
-          
+
           # Обновление треков
           for TRACK in internal alpha beta; do
             curl -s -X PUT \
@@ -149,13 +181,12 @@ jobs:
               }" \
               "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$EDIT_ID/tracks/$TRACK" > /dev/null
           done
-          
+
           # Commit
           curl -s -X POST \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
             "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$EDIT_ID:commit" \
             | jq . && echo "✅ Published to internal, alpha, beta!"
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
