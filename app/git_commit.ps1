@@ -105,19 +105,6 @@ git status --short | Out-Host
 Write-Host "`nFull list of changes:" -ForegroundColor Cyan
 git diff --stat | Out-Host
 
-Write-Host "`nCurrent remotes:" -ForegroundColor Cyan
-git remote -v | Out-Host
-
-# Устанавливаем remote Sferaved если его нет
-$sferavedRemote = git remote | Select-String "sferaved"
-if (-not $sferavedRemote) {
-    Write-Host "Adding Sferaved remote..." -ForegroundColor Yellow
-    # ЗАМЕНИТЕ ЭТОТ URL НА РЕАЛЬНЫЙ АДРЕС ВАШЕГО РЕПОЗИТОРИЯ SFERAVED
-    git remote add sferaved https://github.com/Sferaved/PAS_4
-    # или для SSH:
-    # git remote add sferaved git@sferaved:PAS_4.git
-}
-
 # Спрашиваем подтверждение
 #$confirm = Read-Host "`nDo you want to commit these changes? (y/n)"
 $confirm = 'y'
@@ -170,7 +157,7 @@ $pushConfirm = 'y'
 
 if ($pushConfirm -eq 'y' -or $pushConfirm -eq 'Y') {
     Write-Host "Pushing commit..." -ForegroundColor Yellow
-    git push sferaved HEAD:master
+    git push
 
     if ($LASTEXITCODE -ne 0) {
         Write-Host "ERROR: git push failed" -ForegroundColor Red
@@ -178,7 +165,7 @@ if ($pushConfirm -eq 'y' -or $pushConfirm -eq 'Y') {
     }
 
     Write-Host "Pushing tag..." -ForegroundColor Yellow
-    git push sferaved HEAD:master
+    git push origin $tagName
 
     if ($LASTEXITCODE -ne 0) {
         Write-Host "ERROR: tag push failed" -ForegroundColor Red
