@@ -46,7 +46,7 @@ jobs:
           chmod +x gradlew
           
           # Проверка файлов
-          for file in app/google-services.json keystore/keystore.jks keystore/service-account.json; do
+          for file in app/google-services.json app/keystore/keystore.jks app/keystore/service-account.json; do
             if [ ! -f "$file" ]; then echo "❌ $file not found"; exit 1; fi
           done
           echo "✅ All required files present"
@@ -80,109 +80,14 @@ jobs:
         id: build
 
       - name: Publish to Google Play
-        run: |
-          set -e
-          PACKAGE_NAME="com.taxi_pas_4"
-          AAB_PATH="${{ env.AAB_PATH }}"
-          KEY_PATH="app/keystore/private-key.pem"
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+          packageName: com.taxi_pas_4
+          releaseFiles: app/build/outputs/bundle/release/app-release.aab
+          track: internal
+          whatsNewDirectory: app/src/main/play
 
-          # Получение токена
-          CLIENT_EMAIL="my-app-backend@taxipas4.iam.gserviceaccount.com"
-
-          # Проверяем наличие файла ключа
-          if [ ! -f "$KEY_PATH" ]; then
-            echo "❌ Файл ключа не найден: $KEY_PATH"
-            exit 1
-          fi
-
-          echo "📧 Client email: $CLIENT_EMAIL"
-          echo "🔑 Используется ключ: $KEY_PATH"
-
-          NOW=$(date +%s)
-          EXP=$(($NOW + 3600))
-
-          JWT_HEADER='{"alg":"RS256","typ":"JWT"}'
-          JWT_CLAIM="{\"iss\":\"$CLIENT_EMAIL\",\"scope\":\"https://www.googleapis.com/auth/androidpublisher\",\"aud\":\"https://oauth2.googleapis.com/token\",\"exp\":$EXP,\"iat\":$NOW}"
-
-          # Кодируем header и claim в base64url
-          B64_HEADER=$(echo -n "$JWT_HEADER" | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
-          B64_CLAIM=$(echo -n "$JWT_CLAIM" | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
-
-          echo "📝 Создание подписи..."
-
-          # Создаем подпись используя существующий файл ключа
-          SIGNATURE=$(echo -n "$B64_HEADER.$B64_CLAIM" | \
-            openssl dgst -sha256 -sign "$KEY_PATH" -binary | \
-            openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
-
-          ASSERTION="$B64_HEADER.$B64_CLAIM.$SIGNATURE"
-
-          echo "📡 Запрос токена..."
-
-          # Получаем access token
-          RESPONSE=$(curl -s -X POST "https://oauth2.googleapis.com/token" \
-            -H "Content-Type: application/x-www-form-urlencoded" \
-            -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
-            -d "assertion=$ASSERTION")
-
-          ACCESS_TOKEN=$(echo "$RESPONSE" | jq -r '.access_token // empty')
-
-          if [ -z "$ACCESS_TOKEN" ]; then
-            echo "❌ Ошибка получения токена"
-            echo "Ответ:"
-            echo "$RESPONSE" | jq .
-            exit 1
-          fi
-
-          echo "✅ Токен получен"
-
-          # Создание edit
-          EDIT_ID=$(curl -s -X POST \
-            -H "Authorization: Bearer $ACCESS_TOKEN" \
-            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits" \
-            | jq -r '.id // empty')
-
-          [ -z "$EDIT_ID" ] && { echo "❌ Failed to create edit"; exit 1; }
-
-          # Загрузка AAB
-          VERSION_CODE=$(curl -s -X POST \
-            -H "Authorization: Bearer $ACCESS_TOKEN" \
-            -H "Content-Type: application/octet-stream" \
-            --data-binary "@$AAB_PATH" \
-            "https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$EDIT_ID/bundles?uploadType=media" \
-            | jq -r '.versionCode // empty')
-
-          [ -z "$VERSION_CODE" ] && { echo "❌ Upload failed"; exit 1; }
-
-          # Release notes
-          EN_NOTES=$(jq -Rs . < "app/src/main/play/en-US/whatsnew.txt" 2>/dev/null || echo "\"Release ${{ steps.build.outputs.version_name }}\"")
-          RU_NOTES=$(jq -Rs . < "app/src/main/play/ru-RU/whatsnew.txt" 2>/dev/null || echo "\"Релиз ${{ steps.build.outputs.version_name }}\"")
-          UK_NOTES=$(jq -Rs . < "app/src/main/play/uk/whatsnew.txt" 2>/dev/null || echo "\"Реліз ${{ steps.build.outputs.version_name }}\"")
-
-          # Обновление треков
-          for TRACK in internal alpha beta; do
-            curl -s -X PUT \
-              -H "Authorization: Bearer $ACCESS_TOKEN" \
-              -H "Content-Type: application/json" \
-              -d "{
-                \"releases\": [{
-                  \"versionCodes\": [$VERSION_CODE],
-                  \"status\": \"completed\",
-                  \"releaseNotes\": [
-                    {\"language\": \"en-US\", \"text\": $EN_NOTES},
-                    {\"language\": \"ru-RU\", \"text\": $RU_NOTES},
-                    {\"language\": \"uk\", \"text\": $UK_NOTES}
-                  ]
-                }]
-              }" \
-              "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$EDIT_ID/tracks/$TRACK" > /dev/null
-          done
-
-          # Commit
-          curl -s -X POST \
-            -H "Authorization: Bearer $ACCESS_TOKEN" \
-            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$EDIT_ID:commit" \
-            | jq . && echo "✅ Published to internal, alpha, beta!"
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
