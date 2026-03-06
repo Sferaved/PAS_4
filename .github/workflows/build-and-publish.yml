@@ -41,7 +41,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      # === ПРОВЕРКА ТОКЕНА В САМОМ НАЧАЛЕ ===
+      # === ДИАГНОСТИКА ===
       - name: 🔍 Deep diagnostic of service account
         run: |
           set -e
@@ -49,54 +49,44 @@ jobs:
 
           JSON_FILE="app/keystore/service-account.json"
 
-          # Проверяем существование файла
           echo "📁 Checking file: $JSON_FILE"
           ls -la $JSON_FILE
 
-          # Проверяем содержимое JSON
           echo ""
           echo "📋 JSON structure:"
           cat $JSON_FILE | jq 'keys'
 
-          # Проверяем email
           CLIENT_EMAIL=$(jq -r '.client_email' $JSON_FILE)
           echo ""
           echo "📧 Client email: $CLIENT_EMAIL"
 
-          # Проверяем private key ID
           KEY_ID=$(jq -r '.private_key_id' $JSON_FILE)
           echo "🔑 Key ID: $KEY_ID"
 
-          # Проверяем формат приватного ключа
           echo ""
           echo "🔐 Private key format check:"
           PRIVATE_KEY=$(jq -r '.private_key' $JSON_FILE)
 
-          # Проверяем начало ключа
           if [[ "$PRIVATE_KEY" == *"BEGIN PRIVATE KEY"* ]]; then
             echo "✅ Key contains BEGIN PRIVATE KEY"
           else
             echo "❌ Key missing BEGIN PRIVATE KEY"
           fi
 
-          # Проверяем конец ключа
           if [[ "$PRIVATE_KEY" == *"END PRIVATE KEY"* ]]; then
             echo "✅ Key contains END PRIVATE KEY"
           else
             echo "❌ Key missing END PRIVATE KEY"
           fi
 
-          # Проверяем длину ключа
           KEY_LENGTH=$(echo -n "$PRIVATE_KEY" | wc -c)
           echo "📏 Key length: $KEY_LENGTH characters"
 
-          # Сохраняем ключ во временный файл и проверяем его openssl
           echo ""
           echo "🔧 Testing key with openssl:"
           echo "$PRIVATE_KEY" > /tmp/test-key.pem
           chmod 600 /tmp/test-key.pem
 
-          # Проверяем валидность ключа
           if openssl rsa -in /tmp/test-key.pem -check -noout 2>/dev/null; then
             echo "✅ Key is valid RSA private key"
           else
@@ -104,7 +94,6 @@ jobs:
             openssl rsa -in /tmp/test-key.pem -check 2>&1 || true
           fi
 
-          # Пробуем создать тестовую подпись
           echo ""
           echo "✍️ Testing signature creation:"
           echo "test" > /tmp/test-data.txt
@@ -114,7 +103,6 @@ jobs:
             echo "❌ Cannot create signature with key"
           fi
 
-          # Проверяем, что ключ не содержит непечатных символов
           echo ""
           echo "🔍 Checking for hidden characters:"
           if grep -q "[^[:print:]\n\r\t]" /tmp/test-key.pem; then
@@ -123,19 +111,18 @@ jobs:
             echo "✅ Key contains only printable characters"
           fi
 
-      - name: 🔑 Test token with detailed debug
+      # === ПРОВЕРКА ТОКЕНА С ПРАВИЛЬНЫМ КОДИРОВАНИЕМ ===
+      - name: 🔑 Test token with correct encoding
         run: |
           set -e
-          echo "🔑 Testing direct token generation with DEBUG..."
+          echo "🔑 Testing token with correct JWT encoding..."
 
           JSON_FILE="app/keystore/service-account.json"
 
           CLIENT_EMAIL=$(jq -r '.client_email' "$JSON_FILE")
           PRIVATE_KEY=$(jq -r '.private_key' "$JSON_FILE")
-          PROJECT_ID=$(jq -r '.project_id' "$JSON_FILE")
 
           echo "📧 Client email: $CLIENT_EMAIL"
-          echo "📁 Project ID: $PROJECT_ID"
 
           NOW=$(date +%s)
           EXP=$(($NOW + 3600))
@@ -143,84 +130,41 @@ jobs:
           JWT_HEADER='{"alg":"RS256","typ":"JWT"}'
           JWT_CLAIM="{\"iss\":\"$CLIENT_EMAIL\",\"scope\":\"https://www.googleapis.com/auth/androidpublisher\",\"aud\":\"https://oauth2.googleapis.com/token\",\"exp\":$EXP,\"iat\":$NOW}"
 
-          echo "📝 JWT Header: $JWT_HEADER"
-          echo "📝 JWT Claim: $JWT_CLAIM"
-
-          B64_HEADER=$(echo -n "$JWT_HEADER" | base64 -w 0 | tr '/+' '_-' | tr -d '=')
-          B64_CLAIM=$(echo -n "$JWT_CLAIM" | base64 -w 0 | tr '/+' '_-' | tr -d '=')
-
-          echo "🔐 B64 Header: ${B64_HEADER:0:50}..."
-          echo "🔐 B64 Claim: ${B64_CLAIM:0:50}..."
+          # ПРАВИЛЬНОЕ КОДИРОВАНИЕ: openssl base64 -e -A
+          B64_HEADER=$(echo -n "$JWT_HEADER" | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
+          B64_CLAIM=$(echo -n "$JWT_CLAIM" | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
 
           echo "$PRIVATE_KEY" > /tmp/private-key.pem
           chmod 600 /tmp/private-key.pem
 
-          SIGNATURE=$(echo -n "$B64_HEADER.$B64_CLAIM" | openssl dgst -sha256 -sign /tmp/private-key.pem | base64 -w 0 | tr '/+' '_-' | tr -d '=')
-          echo "🔐 Signature: ${SIGNATURE:0:50}..."
+          # ПРАВИЛЬНАЯ ПОДПИСЬ: с -binary и отдельным base64
+          SIGNATURE=$(echo -n "$B64_HEADER.$B64_CLAIM" | \
+            openssl dgst -sha256 -sign /tmp/private-key.pem -binary | \
+            openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
 
           ASSERTION="$B64_HEADER.$B64_CLAIM.$SIGNATURE"
 
-          echo ""
-          echo "📡 Sending request to Google..."
-          echo "URL: https://oauth2.googleapis.com/token"
-          echo "Assertion length: ${#ASSERTION} characters"
+          echo "📡 Requesting token..."
 
-          # Отправляем запрос и сохраняем полный ответ
-          RESPONSE=$(curl -v -X POST "https://oauth2.googleapis.com/token" \
+          RESPONSE=$(curl -s -X POST "https://oauth2.googleapis.com/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
-            -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=$ASSERTION" 2>&1)
+            -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=$ASSERTION")
 
-          echo ""
-          echo "=== FULL RESPONSE ==="
-          echo "$RESPONSE"
+          echo "Response:"
+          echo "$RESPONSE" | jq '.' || echo "$RESPONSE"
 
-          # Пробуем распарсить JSON, если это возможно
-          if echo "$RESPONSE" | jq . > /dev/null 2>&1; then
-            echo ""
-            echo "=== PARSED JSON ==="
-            echo "$RESPONSE" | jq '.'
+          ACCESS_TOKEN=$(echo "$RESPONSE" | jq -r '.access_token // empty')
 
-            ERROR=$(echo "$RESPONSE" | jq -r '.error // empty')
-            ERROR_DESC=$(echo "$RESPONSE" | jq -r '.error_description // empty')
-
-            if [ -n "$ERROR" ]; then
-              echo ""
-              echo "❌ ERROR: $ERROR"
-              echo "📝 DESCRIPTION: $ERROR_DESC"
-
-              # Дополнительная диагностика
-              case "$ERROR" in
-                "invalid_grant")
-                  echo ""
-                  echo "🔍 Possible causes for invalid_grant:"
-                  echo "  1. Service account not added to Google Play Console"
-                  echo "  2. Wrong package name (currently: com.taxi_pas_4)"
-                  echo "  3. Service account doesn't have permission for this app"
-                  echo "  4. OAuth scope is incorrect"
-                  echo ""
-                  echo "✅ What's correct:"
-                  echo "  - JSON key is valid (passed diagnostics)"
-                  echo "  - IAM permissions in Google Cloud are set"
-                  echo "  - Key ID: 28bcbce397c4d85250f4f08d2ca869c8690251ea"
-                  ;;
-              esac
-            fi
-          else
-            echo ""
-            echo "❌ Response is not valid JSON"
+          if [ -z "$ACCESS_TOKEN" ]; then
+            echo "❌ Failed to get access token"
+            exit 1
           fi
 
-          # Проверяем, есть ли в ответе access_token
-          if echo "$RESPONSE" | grep -q "access_token"; then
-            echo "✅ Found access_token in response!"
-            ACCESS_TOKEN=$(echo "$RESPONSE" | jq -r '.access_token // empty')
-            echo "🔑 Token: ${ACCESS_TOKEN:0:50}..."
-          else
-            echo "❌ No access_token in response"
-          fi
+          echo "✅ Access token obtained!"
+          echo "🔑 Token: ${ACCESS_TOKEN:0:50}..."
+          echo "ACCESS_TOKEN=$ACCESS_TOKEN" >> $GITHUB_ENV
 
-          exit 1
-      # Основная сборка (выполняется только если токен получен)
+      # === ОСНОВНАЯ СБОРКА ===
       - name: Prepare and build
         if: success()
         run: |
@@ -260,6 +204,7 @@ jobs:
           fi
         id: build
 
+      # === ПУБЛИКАЦИЯ В GOOGLE PLAY ===
       - name: Publish to Google Play
         if: success()
         run: |
@@ -271,7 +216,7 @@ jobs:
           echo "📦 Package: $PACKAGE_NAME"
           echo "📱 AAB: $AAB_PATH"
           
-          # Получение токена из service-account.json
+          # Получение токена с правильным кодированием
           CLIENT_EMAIL=$(jq -r '.client_email' "$JSON_FILE")
           PRIVATE_KEY=$(jq -r '.private_key' "$JSON_FILE")
           
@@ -283,21 +228,24 @@ jobs:
           JWT_HEADER='{"alg":"RS256","typ":"JWT"}'
           JWT_CLAIM="{\"iss\":\"$CLIENT_EMAIL\",\"scope\":\"https://www.googleapis.com/auth/androidpublisher\",\"aud\":\"https://oauth2.googleapis.com/token\",\"exp\":$EXP,\"iat\":$NOW}"
           
-          # Кодируем в base64url
-          B64_HEADER=$(echo -n "$JWT_HEADER" | base64 -w 0 | tr '/+' '_-' | tr -d '=')
-          B64_CLAIM=$(echo -n "$JWT_CLAIM" | base64 -w 0 | tr '/+' '_-' | tr -d '=')
+          # ПРАВИЛЬНОЕ КОДИРОВАНИЕ
+          B64_HEADER=$(echo -n "$JWT_HEADER" | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
+          B64_CLAIM=$(echo -n "$JWT_CLAIM" | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
           
-          # Сохраняем приватный ключ во временный файл
           echo "$PRIVATE_KEY" > /tmp/private-key.pem
           chmod 600 /tmp/private-key.pem
           
-          # Создаем подпись
-          SIGNATURE=$(echo -n "$B64_HEADER.$B64_CLAIM" | openssl dgst -sha256 -sign /tmp/private-key.pem | base64 -w 0 | tr '/+' '_-' | tr -d '=')
+          # ПРАВИЛЬНАЯ ПОДПИСЬ
+          SIGNATURE=$(echo -n "$B64_HEADER.$B64_CLAIM" | \
+            openssl dgst -sha256 -sign /tmp/private-key.pem -binary | \
+            openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
+          
+          ASSERTION="$B64_HEADER.$B64_CLAIM.$SIGNATURE"
           
           # Получаем access token
           ACCESS_TOKEN=$(curl -s -X POST "https://oauth2.googleapis.com/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
-            -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=$B64_HEADER.$B64_CLAIM.$SIGNATURE" \
+            -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=$ASSERTION" \
             | jq -r '.access_token // empty')
           
           if [ -z "$ACCESS_TOKEN" ]; then
@@ -366,6 +314,7 @@ jobs:
           
           echo "✅ Successfully published to Google Play!"
 
+      # === GITHUB RELEASE ===
       - name: Create GitHub Release
         if: success()
         uses: softprops/action-gh-release@v2
