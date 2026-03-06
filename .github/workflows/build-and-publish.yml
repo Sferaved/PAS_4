@@ -123,6 +123,103 @@ jobs:
             echo "✅ Key contains only printable characters"
           fi
 
+      - name: 🔑 Test token with detailed debug
+        run: |
+          set -e
+          echo "🔑 Testing direct token generation with DEBUG..."
+
+          JSON_FILE="app/keystore/service-account.json"
+
+          CLIENT_EMAIL=$(jq -r '.client_email' "$JSON_FILE")
+          PRIVATE_KEY=$(jq -r '.private_key' "$JSON_FILE")
+          PROJECT_ID=$(jq -r '.project_id' "$JSON_FILE")
+
+          echo "📧 Client email: $CLIENT_EMAIL"
+          echo "📁 Project ID: $PROJECT_ID"
+
+          NOW=$(date +%s)
+          EXP=$(($NOW + 3600))
+
+          JWT_HEADER='{"alg":"RS256","typ":"JWT"}'
+          JWT_CLAIM="{\"iss\":\"$CLIENT_EMAIL\",\"scope\":\"https://www.googleapis.com/auth/androidpublisher\",\"aud\":\"https://oauth2.googleapis.com/token\",\"exp\":$EXP,\"iat\":$NOW}"
+
+          echo "📝 JWT Header: $JWT_HEADER"
+          echo "📝 JWT Claim: $JWT_CLAIM"
+
+          B64_HEADER=$(echo -n "$JWT_HEADER" | base64 -w 0 | tr '/+' '_-' | tr -d '=')
+          B64_CLAIM=$(echo -n "$JWT_CLAIM" | base64 -w 0 | tr '/+' '_-' | tr -d '=')
+
+          echo "🔐 B64 Header: ${B64_HEADER:0:50}..."
+          echo "🔐 B64 Claim: ${B64_CLAIM:0:50}..."
+
+          echo "$PRIVATE_KEY" > /tmp/private-key.pem
+          chmod 600 /tmp/private-key.pem
+
+          SIGNATURE=$(echo -n "$B64_HEADER.$B64_CLAIM" | openssl dgst -sha256 -sign /tmp/private-key.pem | base64 -w 0 | tr '/+' '_-' | tr -d '=')
+          echo "🔐 Signature: ${SIGNATURE:0:50}..."
+
+          ASSERTION="$B64_HEADER.$B64_CLAIM.$SIGNATURE"
+
+          echo ""
+          echo "📡 Sending request to Google..."
+          echo "URL: https://oauth2.googleapis.com/token"
+          echo "Assertion length: ${#ASSERTION} characters"
+
+          # Отправляем запрос и сохраняем полный ответ
+          RESPONSE=$(curl -v -X POST "https://oauth2.googleapis.com/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=$ASSERTION" 2>&1)
+
+          echo ""
+          echo "=== FULL RESPONSE ==="
+          echo "$RESPONSE"
+
+          # Пробуем распарсить JSON, если это возможно
+          if echo "$RESPONSE" | jq . > /dev/null 2>&1; then
+            echo ""
+            echo "=== PARSED JSON ==="
+            echo "$RESPONSE" | jq '.'
+
+            ERROR=$(echo "$RESPONSE" | jq -r '.error // empty')
+            ERROR_DESC=$(echo "$RESPONSE" | jq -r '.error_description // empty')
+
+            if [ -n "$ERROR" ]; then
+              echo ""
+              echo "❌ ERROR: $ERROR"
+              echo "📝 DESCRIPTION: $ERROR_DESC"
+
+              # Дополнительная диагностика
+              case "$ERROR" in
+                "invalid_grant")
+                  echo ""
+                  echo "🔍 Possible causes for invalid_grant:"
+                  echo "  1. Service account not added to Google Play Console"
+                  echo "  2. Wrong package name (currently: com.taxi_pas_4)"
+                  echo "  3. Service account doesn't have permission for this app"
+                  echo "  4. OAuth scope is incorrect"
+                  echo ""
+                  echo "✅ What's correct:"
+                  echo "  - JSON key is valid (passed diagnostics)"
+                  echo "  - IAM permissions in Google Cloud are set"
+                  echo "  - Key ID: 28bcbce397c4d85250f4f08d2ca869c8690251ea"
+                  ;;
+              esac
+            fi
+          else
+            echo ""
+            echo "❌ Response is not valid JSON"
+          fi
+
+          # Проверяем, есть ли в ответе access_token
+          if echo "$RESPONSE" | grep -q "access_token"; then
+            echo "✅ Found access_token in response!"
+            ACCESS_TOKEN=$(echo "$RESPONSE" | jq -r '.access_token // empty')
+            echo "🔑 Token: ${ACCESS_TOKEN:0:50}..."
+          else
+            echo "❌ No access_token in response"
+          fi
+
+          exit 1
       # Основная сборка (выполняется только если токен получен)
       - name: Prepare and build
         if: success()
