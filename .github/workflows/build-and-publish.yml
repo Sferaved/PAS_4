@@ -84,7 +84,7 @@ jobs:
           set -e
           PACKAGE_NAME="com.taxi_pas_4"
           AAB_PATH="${{ env.AAB_PATH }}"
-          KEY_PATH="keystore/private-key.pem"
+          KEY_PATH="app/keystore/private-key.pem"
 
           # Получение токена
           CLIENT_EMAIL="my-app-backend@taxipas4.iam.gserviceaccount.com"
