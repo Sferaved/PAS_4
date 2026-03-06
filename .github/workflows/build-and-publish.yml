@@ -112,10 +112,10 @@ jobs:
           fi
 
       # === ПРОВЕРКА ТОКЕНА С ПРАВИЛЬНЫМ КОДИРОВАНИЕМ ===
-      - name: 🔑 Test token with correct encoding
+      - name: 🔑 Test token with RAW output
         run: |
           set -e
-          echo "🔑 Testing token with correct JWT encoding..."
+          echo "🔑 Testing token with RAW output..."
 
           JSON_FILE="app/keystore/service-account.json"
 
@@ -130,40 +130,56 @@ jobs:
           JWT_HEADER='{"alg":"RS256","typ":"JWT"}'
           JWT_CLAIM="{\"iss\":\"$CLIENT_EMAIL\",\"scope\":\"https://www.googleapis.com/auth/androidpublisher\",\"aud\":\"https://oauth2.googleapis.com/token\",\"exp\":$EXP,\"iat\":$NOW}"
 
-          # ПРАВИЛЬНОЕ КОДИРОВАНИЕ: openssl base64 -e -A
+          echo "📝 JWT Header: $JWT_HEADER"
+          echo "📝 JWT Claim: $JWT_CLAIM"
+
+          # Кодируем header и claim
           B64_HEADER=$(echo -n "$JWT_HEADER" | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
           B64_CLAIM=$(echo -n "$JWT_CLAIM" | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
+
+          echo "🔐 B64 Header: $B64_HEADER"
+          echo "🔐 B64 Claim: $B64_CLAIM"
 
           echo "$PRIVATE_KEY" > /tmp/private-key.pem
           chmod 600 /tmp/private-key.pem
 
-          # ПРАВИЛЬНАЯ ПОДПИСЬ: с -binary и отдельным base64
+          # Создаем подпись
           SIGNATURE=$(echo -n "$B64_HEADER.$B64_CLAIM" | \
             openssl dgst -sha256 -sign /tmp/private-key.pem -binary | \
             openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
 
+          echo "🔐 Signature: $SIGNATURE"
+
           ASSERTION="$B64_HEADER.$B64_CLAIM.$SIGNATURE"
+          echo "📏 Assertion length: ${#ASSERTION}"
 
-          echo "📡 Requesting token..."
+          # Сохраняем assertion в файл для отладки
+          echo "$ASSERTION" > /tmp/assertion.txt
 
-          RESPONSE=$(curl -s -X POST "https://oauth2.googleapis.com/token" \
+          echo ""
+          echo "📡 Sending request to Google..."
+
+          # Отправляем запрос и сохраняем response
+          RESPONSE=$(curl -v -X POST "https://oauth2.googleapis.com/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
-            -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=$ASSERTION")
+            -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=$ASSERTION" 2>&1)
 
-          echo "Response:"
-          echo "$RESPONSE" | jq '.' || echo "$RESPONSE"
+          echo ""
+          echo "=== FULL RESPONSE ==="
+          echo "$RESPONSE"
 
-          ACCESS_TOKEN=$(echo "$RESPONSE" | jq -r '.access_token // empty')
+          # Пробуем другой endpoint для проверки
+          echo ""
+          echo "📡 Testing with alternate endpoint..."
+          ALT_RESPONSE=$(curl -v -X POST "https://www.googleapis.com/oauth2/v4/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=$ASSERTION" 2>&1)
 
-          if [ -z "$ACCESS_TOKEN" ]; then
-            echo "❌ Failed to get access token"
-            exit 1
-          fi
+          echo ""
+          echo "=== ALT RESPONSE ==="
+          echo "$ALT_RESPONSE"
 
-          echo "✅ Access token obtained!"
-          echo "🔑 Token: ${ACCESS_TOKEN:0:50}..."
-          echo "ACCESS_TOKEN=$ACCESS_TOKEN" >> $GITHUB_ENV
-
+          exit 1
       # === ОСНОВНАЯ СБОРКА ===
       - name: Prepare and build
         if: success()
