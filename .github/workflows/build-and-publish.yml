@@ -41,12 +41,115 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
+      # === ПРОВЕРКА ТОКЕНА В САМОМ НАЧАЛЕ ===
+      - name: 🔑 Test Google Play Access Token
+        run: |
+          set -e
+          echo "🔑 Testing Google Play access token generation..."
+          
+          JSON_FILE="app/keystore/service-account.json"
+          
+          # Проверяем существование файла
+          if [ ! -f "$JSON_FILE" ]; then
+            echo "❌ JSON file not found: $JSON_FILE"
+            exit 1
+          fi
+          
+          # Получение данных из service-account.json
+          CLIENT_EMAIL=$(jq -r '.client_email' "$JSON_FILE")
+          PRIVATE_KEY=$(jq -r '.private_key' "$JSON_FILE")
+          
+          echo "📧 Client email: $CLIENT_EMAIL"
+          
+          # Проверяем, что ключ не пустой
+          if [ -z "$PRIVATE_KEY" ]; then
+            echo "❌ Private key is empty"
+            exit 1
+          fi
+          
+          NOW=$(date +%s)
+          EXP=$(($NOW + 3600))
+          
+          JWT_HEADER='{"alg":"RS256","typ":"JWT"}'
+          JWT_CLAIM="{\"iss\":\"$CLIENT_EMAIL\",\"scope\":\"https://www.googleapis.com/auth/androidpublisher\",\"aud\":\"https://oauth2.googleapis.com/token\",\"exp\":$EXP,\"iat\":$NOW}"
+          
+          echo "📝 Creating JWT..."
+          
+          # Кодируем в base64url
+          B64_HEADER=$(echo -n "$JWT_HEADER" | base64 -w 0 | tr '/+' '_-' | tr -d '=')
+          B64_CLAIM=$(echo -n "$JWT_CLAIM" | base64 -w 0 | tr '/+' '_-' | tr -d '=')
+          
+          # Сохраняем приватный ключ во временный файл
+          echo "$PRIVATE_KEY" > /tmp/private-key.pem
+          chmod 600 /tmp/private-key.pem
+          
+          # Создаем подпись
+          SIGNATURE=$(echo -n "$B64_HEADER.$B64_CLAIM" | openssl dgst -sha256 -sign /tmp/private-key.pem | base64 -w 0 | tr '/+' '_-' | tr -d '=')
+          
+          echo "📡 Requesting access token from Google..."
+          
+          # Получаем access token с подробным выводом
+          RESPONSE=$(curl -s -X POST "https://oauth2.googleapis.com/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=$B64_HEADER.$B64_CLAIM.$SIGNATURE")
+          
+          # Парсим ответ
+          ACCESS_TOKEN=$(echo "$RESPONSE" | jq -r '.access_token // empty')
+          ERROR=$(echo "$RESPONSE" | jq -r '.error // empty')
+          ERROR_DESC=$(echo "$RESPONSE" | jq -r '.error_description // empty')
+          
+          if [ -n "$ERROR" ]; then
+            echo "❌ Google API Error: $ERROR"
+            echo "📝 Description: $ERROR_DESC"
+            echo ""
+            echo "🔍 Possible causes:"
+            echo "  1. Service account doesn't have access to Google Play Console"
+            echo "  2. Service account email is wrong: $CLIENT_EMAIL"
+            echo "  3. Private key is invalid or expired"
+            echo "  4. Package name 'com.taxi_pas_4' doesn't exist in Google Play Console"
+            echo ""
+            echo "📋 Full response:"
+            echo "$RESPONSE" | jq '.' || echo "$RESPONSE"
+            exit 1
+          fi
+          
+          if [ -z "$ACCESS_TOKEN" ]; then
+            echo "❌ Failed to get access token - empty response"
+            echo "📋 Full response:"
+            echo "$RESPONSE" | jq '.' || echo "$RESPONSE"
+            exit 1
+          fi
+          
+          echo "✅ Access token successfully obtained!"
+          echo "🔑 Token (first 50 chars): ${ACCESS_TOKEN:0:50}..."
+          
+          # Дополнительная проверка - пробуем получить информацию о приложении
+          echo ""
+          echo "📱 Verifying app access..."
+          APP_INFO=$(curl -s -X GET \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/com.taxi_pas_4" \
+            | jq '.')
+          
+          if echo "$APP_INFO" | grep -q "error"; then
+            echo "⚠️  App exists but may have limited permissions:"
+            echo "$APP_INFO" | jq '.'
+          else
+            echo "✅ App access verified!"
+          fi
+          
+          echo ""
+          echo "🎉 Token test passed! Continuing with build..."
+        id: token_test
+
+      # Основная сборка (выполняется только если токен получен)
       - name: Prepare and build
+        if: success()
         run: |
           chmod +x gradlew
           
           # Проверка файлов
-          for file in app/google-services.json app/keystore/keystore.jks app/keystore/service-account.json; do
+          for file in app/google-services.json app/keystore/keystore.jks; do
             if [ ! -f "$file" ]; then echo "❌ $file not found"; exit 1; fi
           done
           echo "✅ All required files present"
@@ -80,6 +183,7 @@ jobs:
         id: build
 
       - name: Publish to Google Play
+        if: success()
         run: |
           set -e
           PACKAGE_NAME="com.taxi_pas_4"
@@ -185,6 +289,7 @@ jobs:
           echo "✅ Successfully published to Google Play!"
 
       - name: Create GitHub Release
+        if: success()
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ env.AAB_PATH }}
