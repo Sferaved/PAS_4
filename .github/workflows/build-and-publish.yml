@@ -79,14 +79,41 @@ jobs:
           fi
         id: build
 
-      # Упрощенная публикация через готовый action
-      - name: Publish to Google Play
+#      # Упрощенная публикация через готовый action
+#      - name: Publish to Google Play
+#        uses: r0adkll/upload-google-play@v1
+#        with:
+#          serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+#          packageName: com.taxi_pas_4
+#          releaseFiles: app/build/outputs/bundle/release/app-release.aab
+#          track: internal
+#          whatsNewDirectory: app/src/main/play
+
+      - name: Publish to Internal Track
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
           packageName: com.taxi_pas_4
           releaseFiles: app/build/outputs/bundle/release/app-release.aab
           track: internal
+          whatsNewDirectory: app/src/main/play
+
+      - name: Publish to Alpha Track
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+          packageName: com.taxi_pas_4
+          releaseFiles: app/build/outputs/bundle/release/app-release.aab
+          track: alpha
+          whatsNewDirectory: app/src/main/play
+
+      - name: Publish to Beta Track
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+          packageName: com.taxi_pas_4
+          releaseFiles: app/build/outputs/bundle/release/app-release.aab
+          track: beta
           whatsNewDirectory: app/src/main/play
 
       - name: Create GitHub Release
