@@ -10,8 +10,8 @@ on:
       - '*'
 
 jobs:
-  publish_to_google_play:
-    name: Publish to Google Play
+  build_and_publish:
+    name: Build and Publish to Google Play
     runs-on: ubuntu-latest
 
     steps:
@@ -22,35 +22,69 @@ jobs:
           ref: master
           clean: true
 
-      - name: Check if AAB exists
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Prepare and build
         run: |
+          chmod +x gradlew
+          
+          # Проверка файлов
+          for file in app/google-services.json app/keystore/keystore.jks app/keystore/service-account.json; do
+            if [ ! -f "$file" ]; then echo "❌ $file not found"; exit 1; fi
+          done
+          echo "✅ All required files present"
+          
+          # Получение версии из тега
+          TAG_NAME=${GITHUB_REF_NAME}
+          CLEAN_VERSION=$(echo "$TAG_NAME" | sed 's/^v//')
+          SUFFIX=$(echo "$CLEAN_VERSION" | grep -oE '[0-9]+$' || echo "1000")
+          VERSION_CODE="4${SUFFIX}"
+          
+          echo "version_name=$CLEAN_VERSION" >> $GITHUB_OUTPUT
+          echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "📌 Version: $CLEAN_VERSION → versionCode: $VERSION_CODE"
+          
+          # Сборка
+          ./gradlew bundleRelease \
+            -Pandroid.injected.version.code="$VERSION_CODE" \
+            -Pandroid.injected.version.name="$CLEAN_VERSION" \
+            --stacktrace
+          
+          # Проверка AAB
           AAB_PATH="app/build/outputs/bundle/release/app-release.aab"
           if [ -f "$AAB_PATH" ]; then
-            echo "✅ AAB found at $AAB_PATH"
+            echo "✅ Build successful!"
             ls -la $(dirname "$AAB_PATH")
             echo "AAB_PATH=$AAB_PATH" >> $GITHUB_ENV
           else
-            echo "❌ AAB not found at $AAB_PATH"
-            echo "Available files in app/build/outputs:"
-            find app/build/outputs -type f -name "*.aab" 2>/dev/null || echo "No AAB files found"
+            echo "❌ Build failed - AAB not found"
             exit 1
           fi
-
-      - name: Get version from AAB
-        run: |
-          # Пытаемся получить версию из тега или из имени файла
-          TAG_NAME=${GITHUB_REF_NAME}
-          CLEAN_VERSION=$(echo "$TAG_NAME" | sed 's/^v//')
-          echo "version_name=$CLEAN_VERSION" >> $GITHUB_OUTPUT
-          echo "📌 Version from tag: $CLEAN_VERSION"
-        id: version
+        id: build
 
       - name: Publish to Google Play
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
           packageName: com.taxi_pas_4
-          releaseFiles: ${{ env.AAB_PATH }}
+          releaseFiles: app/build/outputs/bundle/release/app-release.aab
           track: internal
           whatsNewDirectory: app/src/main/play
 
@@ -58,7 +92,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ env.AAB_PATH }}
-          name: Release ${{ steps.version.outputs.version_name }}
+          name: Release ${{ steps.build.outputs.version_name }}
           body_path: app/src/main/play/en-US/whatsnew.txt
           generate_release_notes: true
         env:
