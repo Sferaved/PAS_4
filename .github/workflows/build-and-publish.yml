@@ -78,10 +78,20 @@ jobs:
             exit 1
           fi
         id: build
-      - name: Debug service account
+      - name: Fix service account format
         run: |
-          ls -la app/keystore
-          cat app/keystore/service-account.json | head
+          sed -i 's/\r$//' app/keystore/service-account.json
+
+      - name: Check service account
+        run: |
+          echo "LINES:"
+          cat app/keystore/service-account.json | wc -l
+
+          echo "KEY START:"
+          cat app/keystore/service-account.json | grep "BEGIN PRIVATE KEY"
+
+          echo "KEY END:"
+          cat app/keystore/service-account.json | grep "END PRIVATE KEY"
 
       - name: Upload to Google Play
         uses: r0adkll/upload-google-play@v1
