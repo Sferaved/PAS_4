@@ -6,27 +6,47 @@ plugins {
 }
 
 android {
-    namespace = 'com.taxi_pas_4'
+    namespace 'com.taxi.easy.ua'
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.taxi_pas_4"
+        applicationId "com.taxi.easy.ua"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4243
-        versionName = '4.243'
-
+        versionCode = 1872
+        versionName = '4.872'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += ['en', 'ru', 'uk']
         multiDexEnabled = true
     }
 
+    signingConfigs {
+        release {
+            storeFile file("keystore/keystore.jks")
+            storePassword "180571"
+            keyAlias "key0"
+            keyPassword "180571"
+        }
+        debug {
+            storeFile file("keystore/com.taxi.easy.ua_debug.keystore")
+            storePassword "android"
+            keyAlias "AndroidDebugKey"
+            keyPassword "android"
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled = false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    java {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
@@ -35,25 +55,13 @@ android {
     buildFeatures {
         dataBinding = true
         viewBinding = true
+        buildConfig = true
     }
     testOptions {
-        
-    }
-    signingConfigs {
-        release {
-            storeFile file("../keystore/keystore.jks")
-            storePassword "18And051971"
-            keyAlias "key0"
-            keyPassword "18And051971"
-        }
-    }
 
-    buildTypes {
-        release {
-            signingConfig signingConfigs.release
-        }
     }
 }
+
 dependencies {
     // Основные зависимости
     implementation 'androidx.multidex:multidex:2.0.1'
@@ -176,11 +184,6 @@ dependencies {
     annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0'
 
     implementation 'com.google.android.material:material:1.13.0'
-}
-
-
-tasks.withType(JavaCompile).configureEach {
-    options.compilerArgs += ["-Xlint:deprecation"]
 }
 
 

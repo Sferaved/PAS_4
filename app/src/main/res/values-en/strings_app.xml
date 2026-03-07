@@ -1,10 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="application">PAS2</string>
+    <string name="application">PAS1</string>
 
-    <string name="version_code">4.243</string>
-    <string name="version"># 4.243</string>
+    <string name="version_code">4.872</string>
+    <string name="version"># 4.872</string>
 
-    <string name="app_name">Taxi Ukraine 2</string>
+    <string name="app_name">Taxi Dostavka</string>
+
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
@@ -12,5 +14,4 @@
     <string name="nav_header_subtitle">Quick trips around the cities of Ukraine</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
-
 </resources>

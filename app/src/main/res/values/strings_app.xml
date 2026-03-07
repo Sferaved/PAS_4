@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="application">PAS2</string>
+    <string name="application">PAS1</string>
 
-    <string name="version_code">4.243</string>
-    <string name="version"># 4.243</string>
+    <string name="version_code">4.872</string>
+    <string name="version"># 4.872</string>
 
-    <string name="app_name">Таксі Україна 2</string>
+    <string name="app_name">Таксі Доставка</string>
+
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
