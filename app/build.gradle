@@ -13,8 +13,8 @@ android {
         applicationId "com.taxi_pas_4"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4873
-        versionName = '4.873'
+        versionCode = 4874
+        versionName = '4.874'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += ['en', 'ru', 'uk']
         multiDexEnabled = true
@@ -23,9 +23,9 @@ android {
     signingConfigs {
         release {
             storeFile file("keystore/keystore.jks")
-            storePassword "180571"
+            storePassword "18And051971"
             keyAlias "key0"
-            keyPassword "180571"
+            keyPassword "18And051971"
         }
         debug {
             storeFile file("keystore/com.taxi_pas_4_debug.keystore")
