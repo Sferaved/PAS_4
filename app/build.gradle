@@ -13,8 +13,8 @@ android {
         applicationId "com.taxi_pas_4"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4877
-        versionName = '4.877'
+        versionCode = 4878
+        versionName = '4.878'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += ['en', 'ru', 'uk']
         multiDexEnabled = true
@@ -178,6 +178,8 @@ dependencies {
     annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0'
 
     implementation 'com.google.android.material:material:1.13.0'
+
+    implementation 'io.github.centrifugal:centrifuge-java:0.5.0'
 }
 
 
