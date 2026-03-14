@@ -8,6 +8,7 @@ import static android.view.View.VISIBLE;
 import static com.taxi_pas_4.MainActivity.CITY_INFO;
 import static com.taxi_pas_4.MainActivity.activeCalls;
 import static com.taxi_pas_4.MainActivity.button1;
+import static com.taxi_pas_4.MainActivity.firstStart;
 import static com.taxi_pas_4.MainActivity.navController;
 import static com.taxi_pas_4.MainActivity.orderViewModel;
 import static com.taxi_pas_4.androidx.startup.MyApplication.getCurrentActivity;
@@ -1910,6 +1911,15 @@ public class VisicomFragment extends Fragment {
     public void onResume() {
         super.onResume();
         Logger.d(context, TAG, "onResume 1" );
+
+        if (!firstStart) {
+            List<String> startList = logCursor(MainActivity.ROUT_MARKER, context);
+            String fromAddressString = startList.get(5);
+           Logger.d(context, TAG, "address11 fromAddressString" + fromAddressString);
+
+            binding.textGeo.setText(fromAddressString);
+        }
+
 
         if (!NetworkUtils.isNetworkAvailable(requireActivity())) {
             NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
