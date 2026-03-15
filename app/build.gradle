@@ -13,8 +13,8 @@ android {
         applicationId "com.taxi_pas_4"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4880
-        versionName = '4.880'
+        versionCode = 4881
+        versionName = '4.881'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += ['en', 'ru', 'uk']
         multiDexEnabled = true
@@ -180,6 +180,9 @@ dependencies {
     implementation 'com.google.android.material:material:1.13.0'
 
     implementation 'io.github.centrifugal:centrifuge-java:0.5.0'
+
+    implementation "androidx.lifecycle:lifecycle-process:2.6.2"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-savedstate:2.6.2"
 }
 
 

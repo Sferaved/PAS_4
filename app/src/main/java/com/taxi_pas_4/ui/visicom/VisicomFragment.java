@@ -64,6 +64,10 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleObserver;
+import androidx.lifecycle.OnLifecycleEvent;
+import androidx.lifecycle.ProcessLifecycleOwner;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
@@ -231,7 +235,7 @@ public class VisicomFragment extends Fragment {
     private Runnable reserveRunnable;
     private String lastCost = null;
     static SwipeRefreshLayout swipeRefreshLayout;
-
+    private LifecycleObserver lifecycleObserver;
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentVisicomBinding.inflate(inflater, container, false);
@@ -366,60 +370,105 @@ public class VisicomFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         Log.d("LifecycleCheck 1", "Current lifecycle state: " + getViewLifecycleOwner().getLifecycle().getCurrentState());
+
+        // Инициализация базовых компонентов
         setupActionBar();
         locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
+        // Инициализация существующего ExecutionStatusViewModel (из MainActivity)
         viewModel = new ViewModelProvider(requireActivity()).get(ExecutionStatusViewModel.class);
 
-        if(button1 != null) {
-          button1.setVisibility(View.VISIBLE);
+        // Инициализация нового VisicomViewModel для этого фрагмента
+        VisicomViewModel visicomViewModel = new ViewModelProvider(this).get(VisicomViewModel.class);
+
+        // ========== РЕШЕНИЕ ДЛЯ ОТСЛЕЖИВАНИЯ ВОЗВРАТА ИЗ ФОНА ==========
+        // Наблюдаем за сигналом перезагрузки стоимости
+        visicomViewModel.getShouldReloadCost().observe(getViewLifecycleOwner(), shouldReload -> {
+            if (shouldReload != null && shouldReload && isAdded()) {
+                Log.d(TAG, "Получен сигнал на перезагрузку стоимости после возврата из фона");
+
+                // Проверяем, авторизован ли пользователь
+                List<String> userInfo = logCursor(MainActivity.TABLE_USER_INFO, context);
+                if (userInfo.size() > 3 && !userInfo.get(3).equals("email")) {
+                    // Проверяем наличие интернета
+                    if (NetworkUtils.isNetworkAvailable(context)) {
+                        // Небольшая задержка для восстановления всех сервисов
+                        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                            if (isAdded()) {
+                                try {
+                                    Log.d(TAG, "Запускаем visicomCost после возврата из фона");
+                                    visicomCost();
+                                    // Сбрасываем флаг после выполнения
+                                    visicomViewModel.costReloaded();
+                                } catch (MalformedURLException e) {
+                                    Log.e(TAG, "Ошибка в visicomCost при возврате из фона: " + e.getMessage());
+                                    visicomViewModel.costReloaded();
+                                }
+                            }
+                        }, 500); // Задержка 500 мс
+                    } else {
+                        Log.d(TAG, "Нет интернета при возврате из фона");
+                        visicomViewModel.costReloaded();
+                    }
+                } else {
+                    Log.d(TAG, "Пользователь не авторизован, пропускаем перезагрузку");
+                    visicomViewModel.costReloaded();
+                }
+            }
+        });
+
+        // Создаем observer для жизненного цикла приложения
+        lifecycleObserver = new LifecycleObserver() {
+            @OnLifecycleEvent(Lifecycle.Event.ON_START)
+            public void onAppForegrounded() {
+                Log.d(TAG, "Приложение вернулось из фона - устанавливаем сигнал перезагрузки");
+                if (visicomViewModel != null) {
+                    visicomViewModel.onAppForegrounded();
+                }
+            }
+        };
+
+        // Добавляем observer к жизненному циклу приложения
+        ProcessLifecycleOwner.get().getLifecycle().addObserver(lifecycleObserver);
+        // ========== КОНЕЦ РЕШЕНИЯ ==========
+
+        // Обработка кнопки button1
+        if (button1 != null) {
+            button1.setVisibility(View.VISIBLE);
         }
 
-
-
+        // Наблюдение за статусом GPS (X-кнопка)
         viewModel.getStatusX().observe(getViewLifecycleOwner(), aBoolean -> {
-            Logger.d(context, TAG,"StatusXUpdate changed: " + aBoolean);
+            Logger.d(context, TAG, "StatusXUpdate changed: " + aBoolean);
             updateGpsButtonDrawable(aBoolean);
         });
 
+        // Наблюдение за обновлением GPS
         viewModel.getStatusGpsUpdate().observe(getViewLifecycleOwner(), aBoolean -> {
-            Logger.d(context, TAG,"StatusGpsUpdate changed: " + aBoolean);
+            Logger.d(context, TAG, "StatusGpsUpdate changed: " + aBoolean);
+
             if (aBoolean) {
+                // Если GPS обновление активно
                 if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                    // GPS включен - показываем интерфейс и получаем первую локацию
                     btnVisible(VISIBLE);
-//                    binding.textfrom.setVisibility(VISIBLE);
-//                    num1.setVisibility(VISIBLE);
-//                    binding.textGeo.setVisibility(VISIBLE);
-//                    binding.textwhere.setVisibility(VISIBLE);
-//                    binding.num2.setVisibility(VISIBLE);
-//                    binding.textTo.setVisibility(VISIBLE);
                     Logger.d(context, TAG, "onResume: 3");
                     firstLocation();
                 } else {
+                    // GPS выключен - пытаемся получить стоимость без GPS
                     String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
                     if (!userEmail.equals("email")) {
                         try {
                             visicomCost();
                         } catch (MalformedURLException e) {
+                            Log.e(TAG, "Ошибка в visicomCost: " + e.getMessage());
                             throw new RuntimeException(e);
                         }
                         readTariffInfo();
                     }
-
                 }
-            }  else {
-//                String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
-//                if (!userEmail.equals("email")) {
-//                    try {
-//                        visicomCost();
-//                    } catch (MalformedURLException e) {
-//                        throw new RuntimeException(e);
-//                    }
-//                    readTariffInfo();
-//                }
-
             }
-
+            // Если aBoolean == false - ничего не делаем
         });
     }
 
@@ -988,8 +1037,15 @@ public class VisicomFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
 
+        // Удаляем observer жизненного цикла
+        if (lifecycleObserver != null) {
+            ProcessLifecycleOwner.get().getLifecycle().removeObserver(lifecycleObserver);
+        }
+
+        // Отмена всех запросов
         RetrofitClient.getInstance().cancelAllRequests();
 
+        // Очистка binding
         binding = null;
     }
 
