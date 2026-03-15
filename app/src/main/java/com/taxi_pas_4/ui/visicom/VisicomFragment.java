@@ -1915,7 +1915,7 @@ public class VisicomFragment extends Fragment {
         if (!firstStart) {
             List<String> startList = logCursor(MainActivity.ROUT_MARKER, context);
             String fromAddressString = startList.get(5);
-           Logger.d(context, TAG, "address11 fromAddressString" + fromAddressString);
+            Logger.d(context, TAG, "address onResume fromAddressString" + fromAddressString);
 
             binding.textGeo.setText(fromAddressString);
         }
