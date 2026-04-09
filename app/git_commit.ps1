@@ -1,14 +1,18 @@
 Write-Host "===== PAS_4 - Version Update =====" -ForegroundColor Cyan
 Write-Host ""
 
-$projectRoot = Split-Path -Parent $PSScriptRoot
+# Скрипт находится в PAS_4/app/git_commit.ps1
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$projectRoot = Split-Path -Parent $scriptDir  # Поднимаемся на уровень выше (PAS_4)
 Set-Location $projectRoot
 
-$gradleFile = "app/build.gradle"
+Write-Host "Project root: $projectRoot" -ForegroundColor Gray
+
+$gradleFile = Join-Path $projectRoot "app/build.gradle"
 
 if (!(Test-Path $gradleFile)) {
     Write-Host "ERROR: $gradleFile not found" -ForegroundColor Red
-    exit
+    exit 1
 }
 
 # ===== 1. Read build.gradle =====
@@ -19,7 +23,7 @@ $versionNameMatch = [regex]::Match($content, "versionName\s*=\s*'([^']+)'")
 
 if (!$versionCodeMatch.Success -or !$versionNameMatch.Success) {
     Write-Host "ERROR: Cannot find versionCode or versionName" -ForegroundColor Red
-    exit
+    exit 1
 }
 
 $currentVersionCode = [int]$versionCodeMatch.Groups[1].Value
@@ -41,13 +45,19 @@ Write-Host ""
 $content = $content -replace "versionCode\s*=\s*\d+", "versionCode = $newVersionCode"
 $content = $content -replace "versionName\s*=\s*'[^']+'", "versionName = '$newVersionName'"
 
-# Сохраняем build.gradle с UTF-8 без BOM
 $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-[System.IO.File]::WriteAllText($gradleFile, $content, $utf8NoBom)
-Write-Host "OK: build.gradle updated" -ForegroundColor Green
+
+try {
+    [System.IO.File]::WriteAllText($gradleFile, $content, $utf8NoBom)
+    Write-Host "OK: build.gradle updated" -ForegroundColor Green
+} catch {
+    Write-Host "ERROR: Failed to write build.gradle: $_" -ForegroundColor Red
+    exit 1
+}
 Write-Host ""
 
-# ===== 4. Update XML files (с сохранением форматирования) =====
+# ===== 4. Update XML files =====
+# Исправлено: создаем массив правильно
 $xmlFiles = @(
     "app/src/main/res/values/strings_app.xml",
     "app/src/main/res/values-ru/strings_app.xml",
@@ -56,36 +66,40 @@ $xmlFiles = @(
 )
 
 foreach ($file in $xmlFiles) {
-    if (!(Test-Path $file)) {
-        Write-Host "WARNING: File not found: $file"
+    $fullPath = Join-Path $projectRoot $file
+
+    if (!(Test-Path $fullPath)) {
+        Write-Host "WARNING: File not found: $fullPath" -ForegroundColor Yellow
         continue
     }
 
-    Write-Host "Updating: $file"
+    Write-Host "Updating: $fullPath"
 
-    # Читаем файл как текст с UTF-8
-    $content = Get-Content $file -Raw -Encoding UTF8
+    try {
+        $content = Get-Content $fullPath -Raw -Encoding UTF8
 
-    # Обновляем version_code (любое число после тега)
-    $content = $content -replace '(?<=<string name="version_code">).*?(?=</string>)', $newVersionName
+        # Обновляем version_code
+        $content = $content -replace '(?<=<string name="version_code">).*?(?=</string>)', $newVersionName
 
-    # Обновляем version в зависимости от языка
-    if ($file -like "*values-ru*") {
-        $content = $content -replace '(?<=<string name="version">).*?(?=</string>)', "# $newVersionName"
-    }
-    elseif ($file -like "*values-uk*") {
-        $content = $content -replace '(?<=<string name="version">).*?(?=</string>)', "# $newVersionName"
-    }
-    elseif ($file -like "*values-en*") {
-        $content = $content -replace '(?<=<string name="version">).*?(?=</string>)', "# $newVersionName"
-    }
-    else {
-        $content = $content -replace '(?<=<string name="version">).*?(?=</string>)', "# $newVersionName"
-    }
+        # Обновляем version в зависимости от языка
+        if ($file -like "*values-ru*") {
+            $content = $content -replace '(?<=<string name="version">).*?(?=</string>)', "# $newVersionName"
+        }
+        elseif ($file -like "*values-uk*") {
+            $content = $content -replace '(?<=<string name="version">).*?(?=</string>)', "# $newVersionName"
+        }
+        elseif ($file -like "*values-en*") {
+            $content = $content -replace '(?<=<string name="version">).*?(?=</string>)', "# $newVersionName"
+        }
+        else {
+            $content = $content -replace '(?<=<string name="version">).*?(?=</string>)', "# $newVersionName"
+        }
 
-    # Сохраняем с UTF-8 без BOM
-    [System.IO.File]::WriteAllText($file, $content, $utf8NoBom)
-    Write-Host "   OK: updated" -ForegroundColor Green
+        [System.IO.File]::WriteAllText($fullPath, $content, $utf8NoBom)
+        Write-Host "   OK: updated" -ForegroundColor Green
+    } catch {
+        Write-Host "   ERROR: Failed to update $fullPath : $_" -ForegroundColor Red
+    }
 }
 
 Write-Host ""
@@ -93,10 +107,16 @@ Write-Host "SUCCESS: Version updated to $newVersionName ($newVersionCode)" -Fore
 Write-Host ""
 
 # ============================================================
-# ===================== GIT BLOCK =============================
+# ===================== GIT BLOCK ============================
 # ============================================================
 
 Write-Host "===== Git operations =====" -ForegroundColor Yellow
+
+# Проверяем, что мы в git репозитории
+if (!(Test-Path (Join-Path $projectRoot ".git"))) {
+    Write-Host "ERROR: Not a git repository!" -ForegroundColor Red
+    exit 1
+}
 
 # Показываем изменения
 Write-Host "`nChanged files:" -ForegroundColor Cyan
@@ -105,55 +125,46 @@ git status --short | Out-Host
 Write-Host "`nFull list of changes:" -ForegroundColor Cyan
 git diff --stat | Out-Host
 
-# Спрашиваем подтверждение
-#$confirm = Read-Host "`nDo you want to commit these changes? (y/n)"
-$confirm = 'y'
+$confirm = Read-Host "`nDo you want to commit these changes? (y/n)"
 
 if ($confirm -ne 'y' -and $confirm -ne 'Y') {
     Write-Host "Git operations cancelled." -ForegroundColor Yellow
-    exit
+    exit 0
 }
 
-
-# Add changes
 Write-Host "`nAdding changes..." -ForegroundColor Yellow
 git add .
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "ERROR: git add failed" -ForegroundColor Red
-    exit
+    exit 1
 }
 
-# Проверяем изменения
 $status = git status --porcelain
 if ([string]::IsNullOrEmpty($status)) {
     Write-Host "No changes to commit." -ForegroundColor Yellow
-    exit
+    exit 0
 }
 
-# Commit
 $commitMessage = "Bump version to $newVersionName ($newVersionCode)"
 Write-Host "Committing: $commitMessage" -ForegroundColor Yellow
 git commit -m $commitMessage
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "ERROR: git commit failed" -ForegroundColor Red
-    exit
+    exit 1
 }
 
-# Create tag
 $tagName = "v$newVersionName"
 Write-Host "Creating tag: $tagName" -ForegroundColor Yellow
 git tag $tagName
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "ERROR: tag creation failed" -ForegroundColor Red
-    exit
+    exit 1
 }
 
-# Спрашиваем про push
-#$pushConfirm = Read-Host "`nDo you want to push changes and tag to remote? (y/n)"
-$pushConfirm = 'y'
+$pushConfirm = Read-Host "`nDo you want to push changes and tag to remote? (y/n)"
 
 if ($pushConfirm -eq 'y' -or $pushConfirm -eq 'Y') {
     Write-Host "Pushing commit..." -ForegroundColor Yellow
@@ -161,7 +172,7 @@ if ($pushConfirm -eq 'y' -or $pushConfirm -eq 'Y') {
 
     if ($LASTEXITCODE -ne 0) {
         Write-Host "ERROR: git push failed" -ForegroundColor Red
-        exit
+        exit 1
     }
 
     Write-Host "Pushing tag..." -ForegroundColor Yellow
@@ -169,7 +180,7 @@ if ($pushConfirm -eq 'y' -or $pushConfirm -eq 'Y') {
 
     if ($LASTEXITCODE -ne 0) {
         Write-Host "ERROR: tag push failed" -ForegroundColor Red
-        exit
+        exit 1
     }
 
     Write-Host "OK: Git push completed, tag $tagName created and pushed" -ForegroundColor Green
