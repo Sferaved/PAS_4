@@ -200,7 +200,7 @@ public class MainActivity extends AppCompatActivity {
 
     public static String apiKeyMapBox;
     public static String apiKey;
-
+    public static String weatherKey;
 
     VisicomFragment visicomFragment;
 
@@ -245,7 +245,19 @@ public class MainActivity extends AppCompatActivity {
         String localeCode = (String) MyApplication.sharedPreferencesHelperMain.getValue("locale", Locale.getDefault().getLanguage());
         applyLocale(localeCode);
         super.onCreate(savedInstanceState);
+        if (getIntent() != null && getIntent().hasExtra("shortcut_action")) {
+            String action = getIntent().getStringExtra("shortcut_action");
 
+            switch (action) {
+                case "order":
+                    openOrderScreen();
+                    break;
+                case "driver":
+                    openDriverScreen();
+                    break;
+
+            }
+        }
 //        try {
 //            Thread.sleep(8000);
 //        } catch (InterruptedException e) {
@@ -294,7 +306,8 @@ public class MainActivity extends AppCompatActivity {
                 R.id.nav_city,
                 R.id.nav_settings,
                 R.id.nav_options,
-                R.id.nav_anr
+                R.id.nav_anr,
+                R.id.nav_weather
         ).setOpenableLayout(drawer).build();
 
         // Связывание Navigation с UI
@@ -413,7 +426,17 @@ public class MainActivity extends AppCompatActivity {
         sharedPreferencesHelperMain.saveValue("date", "no_date");
         sharedPreferencesHelperMain.saveValue("comment", "no_comment");
     }
+    private void openOrderScreen() {
+        // Открыть экран заказа такси
+    }
 
+    private void openDriverScreen() {
+        // Открыть экран для водителей
+        if (NetworkUtils.isNetworkAvailable(this)) {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.taxieasyua.job"));
+            startActivity(browserIntent);
+        }
+    }
     // Вспомогательный метод для проверки разрешений
     private boolean checkLocationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -1091,7 +1114,12 @@ public class MainActivity extends AppCompatActivity {
                     .build());
 
         }
+        if (item.getItemId() == R.id.weather) {
 
+            navController.navigate(R.id.nav_weather, null, new NavOptions.Builder()
+                    .build());
+
+        }
         if (item.getItemId() == R.id.send_email_admin) {
             new LogEmailSender(this).sendLog();
         }

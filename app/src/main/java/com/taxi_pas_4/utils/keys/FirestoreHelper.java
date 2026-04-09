@@ -60,8 +60,36 @@ public class FirestoreHelper {
                 }
             }
         });
-    }
 
+
+    }
+    public void getWeatherKey(OnVisicomKeyFetchedListener listener) {
+        DocumentReference docRef = firestore.collection("keys").document("weather_key");
+
+        listenerVisicomKey = docRef.addSnapshotListener((documentSnapshot, e) -> {
+            if (e != null) {
+                if (listener != null) {
+                    listener.onFailure(e);
+                }
+                return;
+            }
+
+            if (documentSnapshot != null && documentSnapshot.exists() && documentSnapshot.contains("weather_key")) {
+                String vKey = documentSnapshot.getString("weather_key");
+                if (listener != null) {
+                    try {
+                        listener.onSuccess(vKey);
+                    } catch (GeneralSecurityException | IOException ex) {
+                        listener.onFailure(new RuntimeException(ex));
+                    }
+                }
+            } else {
+                if (listener != null) {
+                    listener.onFailure(new Exception("Поле weather_key не найдено в документе или документ отсутствует."));
+                }
+            }
+        });
+    }
     public void getMapboxKey(OnMapboxKeyFetchedListener listener) {
         DocumentReference docRef = firestore.collection("keys").document("mapbox_key");
 

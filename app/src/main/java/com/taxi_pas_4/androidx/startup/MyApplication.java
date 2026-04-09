@@ -81,7 +81,7 @@ public class MyApplication extends Application {
             setupCrashHandler();
             setupANRWatchDog();
             fetchUXCamKey(1);
-
+            weatherKeyFromFb();
             visicomKeyFromFb();
             mapboxKeyFromFb();
             supportEmailFromFb();
@@ -301,7 +301,21 @@ public class MyApplication extends Application {
             }
         });
     }
+    private void weatherKeyFromFb() {
+        firestoreHelper.getWeatherKey(new FirestoreHelper.OnVisicomKeyFetchedListener() {
+            @Override
+            public void onSuccess(String vKey) {
+                MainActivity.weatherKey = vKey;
+                Logger.d(getApplicationContext(), TAG, "weatherKey: " + vKey);
+            }
 
+            @Override
+            public void onFailure(Exception e) {
+                FirebaseCrashlytics.getInstance().recordException(e);
+                Logger.e(getApplicationContext(), TAG, "Ошибка: " + e.getMessage());
+            }
+        });
+    }
     private void supportEmailFromFb() {
         firestoreHelper.getSupportEmail(new FirestoreHelper.OnSupportEmailFetchedListener() {
             @Override

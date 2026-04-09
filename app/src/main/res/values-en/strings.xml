@@ -63,7 +63,7 @@
     <string name="from_edit">From</string>
     <string name="sms_code">Verification code from SMS message</string>
     <string name="android">Android application for fast and cheap trips when ordering online.</string>
-    <string name="good_day">My greetings. \n \n Found a great app for taxi rides. \n \n I advise you to try the link in the official Google store: \n\n https://play.google.com/store/apps/details?id=com.taxieasyua.back4app \n\n Have a nice day. \n See you later.</string>
+    <string name="good_day">My greetings. \n \n Found a great app for taxi rides. \n \n I advise you to try the link in the official Google store: \n\n https://play.google.com/store/apps/details?id=com.taxi_pas_4 \n\n Have a nice day. \n See you later.</string>
     <string name="share">Recommend the app to a friend...</string>
     <string name="no_email_agent">Email client is not installed.</string>
     <string name="check_position">Wait, your location is being determined...</string>
@@ -650,5 +650,35 @@ Tap "Settings" to check.</string>
     <string name="city_change_dialog">Change City</string>
     <string name="find_new_city_mes">"New city detected: "</string>
     <string name="turn_mes">. Switch?</string>
+    <!-- Weather -->
+    <string name="weather_title">Weather</string>
+    <string name="weather_subtitle">Current forecast for your city</string>
+    <string name="weather_details">Detailed forecast</string>
+    <string name="show_weather_map">Weather map</string>
+    <string name="forecast_5_days">5-day forecast</string>
+    <string name="no_weather_data">No weather data</string>
+    <string name="no_weather_description">Check your internet connection and try again</string>
+    <string name="update_weather">Update weather</string>
+    <string name="weather_map_coming_soon">Weather map will be available in the next update</string>
+    <string name="weather_load_error">Failed to load weather data Weather</string>
+    <string name="loading">Loading...</string>
+    <string name="humidity">Humidity</string>
+    <string name="wind">Wind</string>
+    <string name="pressure">Pressure</string>
+    <string name="no_connection">No internet connection</string>
+    <string name="weather">🌤️ Weather</string>
+    <string name="speed"> m/s</string>
+    <string name="pressure_high"> mm</string>
+    <!-- Shortcut labels -->
+    <string name="shortcut_order_short">🚕 Order</string>
+    <string name="shortcut_order_long">Order a taxi</string>
 
+    <string name="shortcut_driver_short">👨‍✈️ Work</string>
+    <string name="shortcut_driver_long">Work as a driver</string>
+
+    <string name="shortcut_weather_short">🌤 Weather</string>
+    <string name="shortcut_weather_long">Check the weather</string>
+    <string name="shortcut_disabled">Function temporarily unavailable</string>
+    <string name="shortcut_city_short">Change city</string>
+    <string name="shortcut_city_long">Select another city</string>
 </resources>

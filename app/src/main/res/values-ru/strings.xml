@@ -65,7 +65,7 @@
     <string name="from_edit">Откуда</string>
     <string name="sms_code">Код проверки со смс-сообщения</string>
     <string name="android">Андроид-приложение для скорых и дешевых поездок при заказе онлайн.</string>
-    <string name="good_day">Приветствую. Нашел великолепное приложение для поездок на такси. \n \n Советую попробовать по ссылке в официальном магазине Google: \n\n https://play.google.com/store/apps/details?id=com.taxieasyua.back4app \n\n Хорошего дня. \n Еще увидимся.</string>
+    <string name="good_day">Приветствую. Нашел великолепное приложение для поездок на такси. \n \n Советую попробовать по ссылке в официальном магазине Google: \n\n https://play.google.com/store/apps/details?id=com.taxi_pas_4 \n\n Хорошего дня. \n Еще увидимся.</string>
     <string name="share">Посоветовать другу приложение...</string>
     <string name="no_email_agent">Почтовый клиент не установлен.</string>
     <string name="check_position">Ожидайте, происходит определение Вашего местоположения...</string>
@@ -657,4 +657,35 @@
     <string name="city_change_dialog">Смена города</string>
     <string name="find_new_city_mes">"Определён новый город: "</string>
     <string name="turn_mes">. Переключить?</string>
+    <!-- Погода -->
+    <string name="weather_title">Погода</string>
+    <string name="weather_subtitle">Актуальный прогноз для вашего города</string>
+    <string name="weather_details">Подробный прогноз</string>
+    <string name="show_weather_map">Карта погоды</string>
+    <string name="forecast_5_days">Прогноз на 5 дней</string>
+    <string name="no_weather_data">Нет данных о погоде</string>
+    <string name="no_weather_description">Проверьте подключение к интернету и попробуйте снова</string>
+    <string name="update_weather">Обновить погоду</string>
+    <string name="weather_map_coming_soon">Карта погоды будет доступна в следующем обновлении</string>
+    <string name="weather_load_error">Не удалось загрузить данные о погоде</string>
+    <string name="loading">Загрузка...</string>
+    <string name="humidity">Влажность</string>
+    <string name="wind">Ветер</string>
+    <string name="pressure">Давление</string>
+    <string name="no_connection">Нет подключения к интернету</string>
+    <string name="weather">🌤️ Погода</string>
+    <string name="speed"> м/с</string>
+    <string name="pressure_high"> мм</string>
+    <string name="shortcut_order_short">🚕 Заказать</string>
+    <string name="shortcut_order_long">Заказать такси</string>
+
+    <string name="shortcut_driver_short">👨‍✈️ Работа</string>
+    <string name="shortcut_driver_long">Работа водителем</string>
+
+    <string name="shortcut_weather_short">🌤 Погода</string>
+    <string name="shortcut_weather_long">Узнать погоду</string>
+    <string name="shortcut_disabled">Функция временно недоступна</string>
+    <string name="shortcut_city_short">Сменить город</string>
+    <string name="shortcut_city_long">Выбрать другой город</string>
+
 </resources>
