@@ -683,4 +683,6 @@ Tap "Settings" to check.</string>
     <string name="shortcut_city_long">Select another city</string>
     <string name="updated_at">updated at</string>
     <string name="wait_update">Wait for update...</string>
+    <string name="send_gmail">Send to Gmail</string>
+    <string name="error_send_email">"Error sending email: "</string>
 </resources>

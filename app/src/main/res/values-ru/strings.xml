@@ -689,4 +689,6 @@
     <string name="shortcut_city_long">Выбрать другой город</string>
     <string name="updated_at">обновлено в</string>
     <string name="wait_update">Подождите обновления...</string>
+    <string name="send_gmail">Отправить на Gmail</string>
+    <string name="error_send_email">"Ошибка отправки email: "</string>
 </resources>

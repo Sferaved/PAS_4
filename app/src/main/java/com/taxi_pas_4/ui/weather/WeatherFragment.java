@@ -29,9 +29,7 @@ import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.progressindicator.LinearProgressIndicator;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
@@ -58,7 +56,7 @@ import retrofit2.http.Query;
 public class WeatherFragment extends Fragment {
 
     private static final String TAG = "WeatherFragment";
-    private final String API_KEY = getApiKey(); // Замените на ваш API ключ
+    private String API_KEY; // Замените на ваш API ключ
     //    https://api.openweathermap.org/data/2.5/weather?q=Kyiv&appid=f5790978f87a638e2eee88a858c03ec4&units=metric
     private static final String BASE_URL = "https://api.openweathermap.org/data/2.5/";
 
@@ -117,6 +115,10 @@ public class WeatherFragment extends Fragment {
         context = requireActivity();
         requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
+        // ИНИЦИАЛИЗАЦИЯ FirestoreHelper и SharedPreferences
+        firestoreHelper = new FirestoreHelper(context);
+        prefs = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
+        API_KEY = getApiKey();
         initViews();
         setupRetrofit();
         setupClickListeners();
@@ -126,30 +128,53 @@ public class WeatherFragment extends Fragment {
         return root;
     }
     private String getApiKey() {
-
+        // Сначала проверяем в MainActivity
         if (MainActivity.weatherKey != null && !MainActivity.weatherKey.isEmpty()) {
             return MainActivity.weatherKey;
-        } else {
-            weatherKeyFromFb();
         }
 
-        assert context != null;
-        prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
-        return prefs.getString("weather_api_key", null);
+        // Затем проверяем в SharedPreferences
+        if (prefs != null) {
+            String savedKey = prefs.getString("weather_api_key", null);
+            if (savedKey != null && !savedKey.isEmpty()) {
+                return savedKey;
+            }
+        }
+
+        // Если ключа нет, загружаем из Firestore
+        weatherKeyFromFb();
+
+        // Возвращаем пустую строку, пока ключ загружается
+        return "";
     }
     private void weatherKeyFromFb() {
+        // Проверяем, что firestoreHelper не null
+        if (firestoreHelper == null) {
+            firestoreHelper = new FirestoreHelper(context);
+        }
+
         firestoreHelper.getWeatherKey(new FirestoreHelper.OnVisicomKeyFetchedListener() {
             @Override
             public void onSuccess(String vKey) {
-                MainActivity.weatherKey = vKey;
-                prefs.edit().putString("weather_api_key", vKey).apply();
-                Logger.d(context, TAG, "weatherKey: " + vKey);
+                if (vKey != null && !vKey.isEmpty()) {
+                    MainActivity.weatherKey = vKey;
+                    if (prefs != null) {
+                        prefs.edit().putString("weather_api_key", vKey).apply();
+                    }
+                    Logger.d(context, TAG, "weatherKey получен: " + vKey);
+
+                    // После получения ключа перезагружаем погоду
+                    if (isAdded() && NetworkUtils.isNetworkAvailable(requireContext())) {
+                        loadWeatherData();
+                    }
+                }
             }
 
             @Override
             public void onFailure(Exception e) {
                 FirebaseCrashlytics.getInstance().recordException(e);
-                Logger.e(context, TAG, "Ошибка: " + e.getMessage());
+                Logger.e(context, TAG, "Ошибка получения ключа: " + e.getMessage());
+                showErrorState();
             }
         });
     }
@@ -227,6 +252,13 @@ public class WeatherFragment extends Fragment {
     }
 
     private void fetchCurrentWeather(String city) {
+        if (API_KEY == null || API_KEY.isEmpty()) {
+            Logger.e(context, TAG, "API_KEY пуст, ждем загрузки из Firestore");
+            showErrorState();
+            checkAndHideProgress();
+            return;
+        }
+
         Logger.e(context, TAG, "fetchCurrentWeather API_KEY: " + API_KEY);
         String localCode = sharedPreferencesHelperMain.getValue("locale", "uk").toString();
         Call<WeatherResponse> call = weatherApiService.getCurrentWeather(
@@ -256,6 +288,12 @@ public class WeatherFragment extends Fragment {
     }
 
     private void fetchForecast(String city) {
+        if (API_KEY == null || API_KEY.isEmpty()) {
+            Logger.e(context, TAG, "API_KEY пуст, ждем загрузки из Firestore");
+            showErrorState();
+            checkAndHideProgress();
+            return;
+        }
         Logger.e(context, TAG, "fetchCurrentWeather API_KEY: " + API_KEY);
         String localCode = sharedPreferencesHelperMain.getValue("locale", "uk").toString();
 
