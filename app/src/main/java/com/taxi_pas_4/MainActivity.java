@@ -313,7 +313,9 @@ public class MainActivity extends AppCompatActivity {
         // Связывание Navigation с UI
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
-
+        if (getIntent() != null && getIntent().getBooleanExtra("open_weather", false)) {
+            navController.navigate(R.id.nav_visicom);
+        }
         // Инициализация меню и элементов
         navMenu = navigationView.getMenu();
         navVisicomMenuItem = navMenu.findItem(R.id.nav_visicom);

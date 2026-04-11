@@ -1,11 +1,13 @@
 package com.taxi_pas_4.ui.weather;
 
 import static com.taxi_pas_4.MainActivity.button1;
+import static com.taxi_pas_4.androidx.startup.MyApplication.getCurrentActivity;
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.Bundle;
@@ -21,6 +23,9 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.core.view.ViewCompat;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.NavOptions;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -32,6 +37,7 @@ import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.databinding.FragmentWeatherBinding;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
+import com.taxi_pas_4.utils.keys.FirestoreHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.uxcam.UXCam;
 
@@ -52,8 +58,8 @@ import retrofit2.http.Query;
 public class WeatherFragment extends Fragment {
 
     private static final String TAG = "WeatherFragment";
-    private static final String API_KEY = MainActivity.weatherKey; // Замените на ваш API ключ
-//    https://api.openweathermap.org/data/2.5/weather?q=Kyiv&appid=f5790978f87a638e2eee88a858c03ec4&units=metric
+    private final String API_KEY = getApiKey(); // Замените на ваш API ключ
+    //    https://api.openweathermap.org/data/2.5/weather?q=Kyiv&appid=f5790978f87a638e2eee88a858c03ec4&units=metric
     private static final String BASE_URL = "https://api.openweathermap.org/data/2.5/";
 
     private FragmentWeatherBinding binding;
@@ -72,7 +78,8 @@ public class WeatherFragment extends Fragment {
     private Context context;
 
     private WeatherApiService weatherApiService;
-
+    FirestoreHelper firestoreHelper;
+    SharedPreferences prefs;
     public interface WeatherApiService {
         @GET("weather")
         Call<WeatherResponse> getCurrentWeather(
@@ -118,7 +125,34 @@ public class WeatherFragment extends Fragment {
 
         return root;
     }
+    private String getApiKey() {
 
+        if (MainActivity.weatherKey != null && !MainActivity.weatherKey.isEmpty()) {
+            return MainActivity.weatherKey;
+        } else {
+            weatherKeyFromFb();
+        }
+
+        assert context != null;
+        prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
+        return prefs.getString("weather_api_key", null);
+    }
+    private void weatherKeyFromFb() {
+        firestoreHelper.getWeatherKey(new FirestoreHelper.OnVisicomKeyFetchedListener() {
+            @Override
+            public void onSuccess(String vKey) {
+                MainActivity.weatherKey = vKey;
+                prefs.edit().putString("weather_api_key", vKey).apply();
+                Logger.d(context, TAG, "weatherKey: " + vKey);
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                FirebaseCrashlytics.getInstance().recordException(e);
+                Logger.e(context, TAG, "Ошибка: " + e.getMessage());
+            }
+        });
+    }
     private void initViews() {
         progressBar = binding.progressBar;
         recyclerForecast = binding.recyclerForecast;
@@ -156,8 +190,17 @@ public class WeatherFragment extends Fragment {
     private void setupClickListeners() {
         btnWeatherDetails.setOnClickListener(v -> showWeatherDetails());
         btnShowMap.setOnClickListener(v -> showWeatherMap());
-
+        binding.currentWeatherCard.setOnClickListener(v -> showOrderScreen());
         binding.btnRefresh.setOnClickListener(v -> refreshWeather());
+    }
+
+    private void showOrderScreen() {
+        sharedPreferencesHelperMain.saveValue("time", "no_time");
+        sharedPreferencesHelperMain.saveValue("date", "no_date");
+        NavController navController = Navigation.findNavController(getCurrentActivity(), R.id.nav_host_fragment_content_main);
+        navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                .setPopUpTo(R.id.nav_visicom, true)
+                .build());
     }
 
     private void checkNetworkAndLoadWeather() {

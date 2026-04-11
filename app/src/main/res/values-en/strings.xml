@@ -681,4 +681,6 @@ Tap "Settings" to check.</string>
     <string name="shortcut_disabled">Function temporarily unavailable</string>
     <string name="shortcut_city_short">Change city</string>
     <string name="shortcut_city_long">Select another city</string>
+    <string name="updated_at">updated at</string>
+    <string name="wait_update">Wait for update...</string>
 </resources>

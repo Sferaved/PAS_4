@@ -1,5 +1,6 @@
 package com.taxi_pas_4.ui.weather;
 
+import static com.taxi_pas_4.androidx.startup.MyApplication.getCurrentActivity;
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import android.annotation.SuppressLint;
@@ -9,19 +10,32 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.navigation.NavController;
+import androidx.navigation.NavOptions;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.log.Logger;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.ViewHolder> {
 
+    private static final String TAG = "WeatherAdapter";
     private final Context context;
     private final List<WeatherResponse.ForecastItem> forecastList;
 
@@ -81,6 +95,71 @@ public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.ViewHold
         if (forecast.getMain() != null) {
             holder.tvHumidity.setText(forecast.getMain().getHumidity() + "%");
         }
+
+        // Кнопка перехода к заказу - передаем конкретный forecast для этой позиции
+        holder.ivOrderAction.setOnClickListener(v -> {
+            newOrderFromWeatherScreen(forecast);
+        });
+    }
+
+    private void newOrderFromWeatherScreen(WeatherResponse.ForecastItem forecast) {
+        try {
+            // Парсим дату из конкретного прогноза
+            Date forecastDate = inputFormat.parse(forecast.getDtTxt());
+
+            if (forecastDate != null) {
+                // Конвертируем в LocalDate для сравнения (только дата, без времени)
+                LocalDate forecastLocalDate = forecastDate.toInstant()
+                        .atZone(ZoneId.of("Europe/Kiev"))
+                        .toLocalDate();
+
+                LocalDate currentLocalDate = LocalDate.now(ZoneId.of("Europe/Kiev"));
+
+                if (forecastLocalDate.equals(currentLocalDate)) {
+                    // Для текущего дня - просто переход, ничего не сохраняем
+                    sharedPreferencesHelperMain.saveValue("time", "no_time");
+                    sharedPreferencesHelperMain.saveValue("date", "no_date");
+                    Logger.d(context, TAG, "Текущий день (" + forecastLocalDate + ") - просто переход без сохранения");
+                } else {
+                    // Для других дней - сохраняем дату из прогноза
+                    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+                    String forecastDateOnly = forecastLocalDate.format(dateFormatter);
+
+                    // Формат для времени: HH:mm
+                    SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+
+                    // Получаем текущее украинское время
+                    Calendar ukraineCalendar = Calendar.getInstance(TimeZone.getTimeZone("Europe/Kiev"));
+                    String currentTime = timeFormat.format(ukraineCalendar.getTime());
+
+                    // Сохраняем ДАТУ из прогноза погоды (конкретной позиции)
+                    sharedPreferencesHelperMain.saveValue("date", forecastDateOnly);
+
+                    // Сохраняем ТЕКУЩЕЕ украинское ВРЕМЯ
+                    sharedPreferencesHelperMain.saveValue("time", currentTime);
+
+                    Logger.d(context, TAG, "Дата из прогноза: " + forecastDateOnly);
+                    Logger.d(context, TAG, "Исходная строка прогноза: " + forecast.getDtTxt());
+                    Logger.d(context, TAG, "Текущее украинское время: " + currentTime);
+                    Logger.d(context, TAG, "Текущая дата: " + currentLocalDate);
+                }
+
+                // Навигация к Visicom фрагменту
+                NavController navController = Navigation.findNavController(getCurrentActivity(), R.id.nav_host_fragment_content_main);
+                navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_visicom, true)
+                        .build());
+
+            } else {
+                Logger.e(context, TAG, "Ошибка: дата прогноза null");
+                Toast.makeText(context, "Не удалось получить дату", Toast.LENGTH_SHORT).show();
+            }
+
+        } catch (Exception e) {
+            Logger.e(context, TAG, "Ошибка в newOrderFromWeatherScreen: " + e.getMessage());
+            FirebaseCrashlytics.getInstance().recordException(e);
+            Toast.makeText(context, "Ошибка при переходе к заказу", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -90,7 +169,7 @@ public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.ViewHold
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvDay, tvDate, tvTemp, tvDescription, tvHumidity;
-        ImageView ivWeatherIcon;
+        ImageView ivWeatherIcon, ivOrderAction;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -100,6 +179,7 @@ public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.ViewHold
             tvDescription = itemView.findViewById(R.id.tv_description);
             tvHumidity = itemView.findViewById(R.id.tv_humidity);
             ivWeatherIcon = itemView.findViewById(R.id.iv_weather_icon);
+            ivOrderAction = itemView.findViewById(R.id.iv_order_action);
         }
     }
 

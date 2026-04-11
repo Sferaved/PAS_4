@@ -306,6 +306,9 @@ public class MyApplication extends Application {
             @Override
             public void onSuccess(String vKey) {
                 MainActivity.weatherKey = vKey;
+                SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+                prefs.edit().putString("weather_api_key", vKey).apply();
+
                 Logger.d(getApplicationContext(), TAG, "weatherKey: " + vKey);
             }
 

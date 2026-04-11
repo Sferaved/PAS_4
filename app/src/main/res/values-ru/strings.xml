@@ -687,5 +687,6 @@
     <string name="shortcut_disabled">Функция временно недоступна</string>
     <string name="shortcut_city_short">Сменить город</string>
     <string name="shortcut_city_long">Выбрать другой город</string>
-
+    <string name="updated_at">обновлено в</string>
+    <string name="wait_update">Подождите обновления...</string>
 </resources>

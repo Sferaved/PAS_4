@@ -693,4 +693,6 @@
     <string name="shortcut_disabled">Функція тимчасово недоступна</string>
     <string name="shortcut_city_short">Змінити місто</string>
     <string name="shortcut_city_long">Вибрати інше місто</string>
+    <string name="updated_at">оновлено о</string>
+    <string name="wait_update">Зачекайте оновлення...</string>
 </resources>
