@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -22,11 +23,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,6 +39,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
@@ -60,6 +65,7 @@ import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.play.core.appupdate.AppUpdateInfo;
 import com.google.android.play.core.appupdate.AppUpdateManager;
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
@@ -89,6 +95,7 @@ import com.taxi_pas_4.utils.centrifugo.CentrifugoManager;
 import com.taxi_pas_4.utils.connect.NetworkMonitor;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.download.AppUpdater;
+import com.taxi_pas_4.utils.helpers.TelegramUtils;
 import com.taxi_pas_4.utils.log.LogEmailSender;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
@@ -1123,9 +1130,82 @@ public class MainActivity extends AppCompatActivity {
 
         }
         if (item.getItemId() == R.id.send_email_admin) {
-            new LogEmailSender(this).sendLog();
-        }
+            // Инфлейтим кастомный layout
+            View dialogView = getLayoutInflater().inflate(R.layout.dialog_send_report, null);
 
+            // Находим все элементы
+            TextInputEditText etMessage = dialogView.findViewById(R.id.discinp);
+//            TextView tvLogInfo = dialogView.findViewById(R.id.dialogMessage);
+            ProgressBar progressBar = dialogView.findViewById(R.id.progressBar);
+            TextView tvCharCounter = dialogView.findViewById(R.id.charCounter);
+            AppCompatButton negativeButton = dialogView.findViewById(R.id.negativeButton);
+            AppCompatButton positiveButton = dialogView.findViewById(R.id.positiveButton);
+
+
+
+            // Устанавливаем начальное значение счетчика
+            tvCharCounter.setText(String.format(getString(R.string.char_counter), 0));
+
+            // Счетчик символов
+            etMessage.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    int length = s.length();
+                    tvCharCounter.setText(String.format(getString(R.string.char_counter), length));
+                    progressBar.setProgress(Math.min(length, 500));
+
+                    if (length > 500) {
+                        tvCharCounter.setTextColor(ContextCompat.getColor(MainActivity.this, R.color.error_red));
+                        progressBar.setProgressTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, R.color.error_red)));
+                    } else if (length > 450) {
+                        tvCharCounter.setTextColor(ContextCompat.getColor(MainActivity.this, R.color.warning_orange));
+                        progressBar.setProgressTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, R.color.warning_orange)));
+                    } else {
+                        tvCharCounter.setTextColor(ContextCompat.getColor(MainActivity.this, R.color.gray_500));
+                        progressBar.setProgressTintList(ColorStateList.valueOf(ContextCompat.getColor(MainActivity.this, R.color.colorPrimaryDark)));
+                    }
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {}
+            });
+
+            // Создаем диалог
+            androidx.appcompat.app.AlertDialog.Builder builder =
+                    new androidx.appcompat.app.AlertDialog.Builder(this, R.style.CustomAlertDialogTheme);
+            builder.setView(dialogView);
+
+            AlertDialog dialog = builder.create();
+            dialog.setCancelable(true);
+
+            // Обработка кнопок
+            positiveButton.setOnClickListener(v -> {
+                String message = etMessage.getText().toString().trim();
+
+                if (message.length() > 500) {
+                    Toast.makeText(this, getString(R.string.error_message_too_long), Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if (message.isEmpty()) {
+                    Toast.makeText(this, getString(R.string.error_message_empty), Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                String logFilePath = getExternalFilesDir(null) + "/app_log.txt";
+                TelegramUtils.sendErrorToTelegram(generateEmailBody(message), logFilePath);
+
+                Toast.makeText(this, getString(R.string.report_sent), Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            });
+
+            negativeButton.setOnClickListener(v -> dialog.dismiss());
+
+            dialog.show();
+        }
         if (item.getItemId() == R.id.send_email) {
             String subject = getString(R.string.android);
             String body = getString(R.string.good_day);
@@ -1238,7 +1318,96 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
+    public String generateEmailBody(String errorMessage) {
 
+        List<String> stringList = logCursor(MainActivity.CITY_INFO);
+        List<String> userList = logCursor(MainActivity.TABLE_USER_INFO);
+
+
+        // Определение города
+
+        String city;
+        String input = stringList.get(1);
+
+        switch (input) {
+            case "Dnipropetrovsk Oblast":
+                city = getString(R.string.Dnipro_city);
+                break;
+            case "OdessaTest":
+                city = getString(R.string.OdessaTest);
+                break;
+            case "Odessa":
+                city = getString(R.string.city_odessa);
+                break;
+            case "Zaporizhzhia":
+                city = getString(R.string.city_zaporizhzhia);
+                break;
+            case "Cherkasy Oblast":
+                city = getString(R.string.city_cherkassy);
+                break;
+            case "Lviv":
+                city = getString(R.string.city_lviv);
+                break;
+            case "Ivano_frankivsk":
+                city = getString(R.string.city_ivano_frankivsk);
+                break;
+            case "Vinnytsia":
+                city = getString(R.string.city_vinnytsia);
+                break;
+            case "Poltava":
+                city = getString(R.string.city_poltava);
+                break;
+            case "Sumy":
+                city = getString(R.string.city_sumy);
+                break;
+            case "Kharkiv":
+                city = getString(R.string.city_kharkiv);
+                break;
+            case "Chernihiv":
+                city = getString(R.string.city_chernihiv);
+                break;
+            case "Rivne":
+                city = getString(R.string.city_rivne);
+                break;
+            case "Ternopil":
+                city = getString(R.string.city_ternopil);
+                break;
+            case "Khmelnytskyi":
+                city = getString(R.string.city_khmelnytskyi);
+                break;
+            case "Zakarpattya":
+                city = getString(R.string.city_zakarpattya);
+                break;
+            case "Zhytomyr":
+                city = getString(R.string.city_zhytomyr);
+                break;
+            case "Kropyvnytskyi":
+                city = getString(R.string.city_kropyvnytskyi);
+                break;
+            case "Mykolaiv":
+                city = getString(R.string.city_mykolaiv);
+                break;
+            case "Chernivtsi":
+                city = getString(R.string.city_chernivtsi);
+                break;
+            case "Lutsk":
+                city = getString(R.string.city_lutsk);
+                break;
+            default:
+                city = getString(R.string.Kyiv_city);
+                break;
+        }
+
+        // Формирование тела сообщения
+
+        return errorMessage + "\n"+
+                getString(R.string.SA_info_pas) + "\n" +
+                getString(R.string.SA_info_city) + " " + city + "\n" +
+                getString(R.string.SA_pas_text) + " " + getString(R.string.version) + "\n" +
+                getString(R.string.SA_user_text) + " " + userList.get(4) + "\n" +
+                getString(R.string.SA_email) + " " + userList.get(3) + "\n";
+//                + getString(R.string.SA_phone_text) + " " + userList.get(2) + "\n" + "\n";
+    }
     @Override
     protected void onDestroy() {
         super.onDestroy();

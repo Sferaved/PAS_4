@@ -24,7 +24,7 @@
     <string name="my_phone">Мой телефон</string>
     <string name="open_maps">Заказать по карте</string>
     <string name="driver">🚖 Работа водителем (реклама)</string>
-    <string name="send_email">📧 Поделиться</string>
+    <string name="send_email">✉️ Поделиться</string>
     <string name="gps_ok">Определение геопозиции включено</string>
     <string name="cancel_button">Нет, спасибо</string>
     <string name="gps_on">Включить</string>
@@ -149,7 +149,7 @@
     <string name="disc_text">% +/- 💰🧾</string>
     <string name="email_sent">Сообщение отправлено</string>
     <string name="send_like">👍 Оценить приложение</string>
-    <string name="send_email_admin">📧 Сообщить о проблеме</string>
+    <string name="send_email_admin">📢 Сообщить о проблеме</string>
     <string name="SA_subject">Сообщение № I-</string>
     <string name="SA_message_start">Текст вашего сообщения: </string>
     <string name="SA_info_pas">Информация о приложении: </string>
@@ -469,7 +469,7 @@
     <string name="update_canceled">Обновление было отменено.</string>
     <string name="restart_error">Ошибка при перезапуске приложения.</string>
     <string name="btn_option_text">Действия</string>
-    <string name="language">⌨️ Язык</string>
+    <string name="language">🌐️ Язык</string>
     <string name="item_settings">Настройки</string>
     <string name="save_btn">Сохранить</string>
     <string name="close">Закрыть</string>
@@ -691,4 +691,14 @@
     <string name="wait_update">Подождите обновления...</string>
     <string name="send_gmail">Отправить на Gmail</string>
     <string name="error_send_email">"Ошибка отправки email: "</string>
+    <string name="send_report_title">Отправить отчет</string>
+    <string name="message_hint">Опишите проблему...</string>
+    <string name="log_file_info">app_log.txt (%s)</string>
+    <string name="log_file_not_found">Лог-файл не найден</string>
+    <string name="char_counter">%d/500</string>
+
+    <string name="send_button">Отправить</string>
+    <string name="error_message_too_long">Сообщение слишком длинное (макс. 500 символов)</string>
+    <string name="error_message_empty">Введите сообщение</string>
+    <string name="report_sent">Отчет отправлен</string>
 </resources>

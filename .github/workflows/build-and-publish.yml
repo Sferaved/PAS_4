@@ -144,7 +144,7 @@ jobs:
           UK_NOTES=$(jq -Rs . < "app/src/main/play/uk/whatsnew.txt" 2>/dev/null || echo "\"Реліз ${{ steps.build.outputs.version_name }}\"")
           
           # Обновление треков
-          for TRACK in internal alpha beta; do
+          for TRACK in internal alpha beta production; do
             curl -s -X PUT \
               -H "Authorization: Bearer $ACCESS_TOKEN" \
               -H "Content-Type: application/json" \
