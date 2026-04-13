@@ -3330,12 +3330,14 @@ public class VisicomFragment extends Fragment {
                 .setCancelable(false)
                 .setPositiveButton(R.string.ok_button, (dialog, which) -> {
                     dialog.dismiss();
-                    checkCardPaymentForCity(addType);
-//                    if ("60".equals(addType)) {
-//                        createDoubleOrder();
-//                    } else if ("45".equals(addType)) {
+
+                    if ("60".equals(addType)) {
+                        createDoubleOrder();
+
+                    } else if ("45".equals(addType)) {
+                        checkCardPaymentForCity();
 //                        createBlackList();
-//                    }
+                    }
                 })
                 .setNegativeButton(R.string.cancel_button, (dialog, which) -> {
                     if ("60".equals(addType)) {
@@ -3368,7 +3370,7 @@ public class VisicomFragment extends Fragment {
 
         }
     }
-    private void checkCardPaymentForCity(String addType) {
+    private void checkCardPaymentForCity() {
         List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
         String cityName = stringList.get(1);
         FirestoreHelper firestoreHelper = new FirestoreHelper(context);
@@ -3380,13 +3382,7 @@ public class VisicomFragment extends Fragment {
 
                         if (cardPaymentEnabled) {
                             Logger.d(context, TAG, "Оплата картой ДОСТУПНА для города " + cityName);
-
-                            if ("60".equals(addType)) {
-                                createDoubleOrder();
-                            } else if ("45".equals(addType)) {
-                                createBlackList();
-                            }
-
+                            createBlackList();
                         } else {
                             Logger.d(context, TAG, "Оплата картой НЕДОСТУПНА для города " + cityName);
                             String message = context.getString(R.string.card_payment_false);
