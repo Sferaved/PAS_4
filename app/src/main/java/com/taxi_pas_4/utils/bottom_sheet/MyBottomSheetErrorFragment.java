@@ -133,6 +133,8 @@ public class MyBottomSheetErrorFragment extends BottomSheetDialogFragment {
                 errorMessageKey = "verify_address";
             } else if (errorMessage.equals(getString(R.string.error_5_min_cancel_card_order))) {
                 errorMessageKey = "error_5_min_cancel_card_order";
+            } else if (errorMessage.equals(getString(R.string.card_payment_false))) {
+                errorMessageKey = "card_payment_false";
             }
         }
 
@@ -207,6 +209,13 @@ public class MyBottomSheetErrorFragment extends BottomSheetDialogFragment {
                         if (currentDestination == null || currentDestination.getId() != R.id.nav_visicom) {
                             navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder().setPopUpTo(R.id.nav_visicom, true).build());
                         }
+                        dismiss();
+                    });
+                    break;
+                case "card_payment_false":
+                    textViewInfo.setOnClickListener(v -> dismiss());
+                    btn_ok.setText(getString(R.string.ok_error));
+                    btn_ok.setOnClickListener(v -> {
                         dismiss();
                     });
                     break;

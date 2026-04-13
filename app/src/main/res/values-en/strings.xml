@@ -695,4 +695,5 @@ Tap "Settings" to check.</string>
     <string name="error_message_too_long">Message is too long (max 500 characters)</string>
     <string name="error_message_empty">Enter a message</string>
     <string name="report_sent">Report sent</string>
+    <string name="card_payment_false">"Currently, you can only pay in cash for your route. Card payments will be restored soon; we\'re already working on it."</string>
 </resources>

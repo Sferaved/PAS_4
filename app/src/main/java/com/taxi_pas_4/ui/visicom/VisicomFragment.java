@@ -114,6 +114,7 @@ import com.taxi_pas_4.utils.download.AppUpdater;
 import com.taxi_pas_4.utils.from_json_parser.FromJSONParserRetrofit;
 import com.taxi_pas_4.utils.ip.RetrofitClient;
 import com.taxi_pas_4.utils.kafka.KafkaRequest;
+import com.taxi_pas_4.utils.keys.FirestoreHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.retrofit.cost_json_parser.CostJSONParserRetrofit;
@@ -3329,11 +3330,12 @@ public class VisicomFragment extends Fragment {
                 .setCancelable(false)
                 .setPositiveButton(R.string.ok_button, (dialog, which) -> {
                     dialog.dismiss();
-                    if ("60".equals(addType)) {
-                        createDoubleOrder();
-                    } else if ("45".equals(addType)) {
-                        createBlackList();
-                    }
+                    checkCardPaymentForCity(addType);
+//                    if ("60".equals(addType)) {
+//                        createDoubleOrder();
+//                    } else if ("45".equals(addType)) {
+//                        createBlackList();
+//                    }
                 })
                 .setNegativeButton(R.string.cancel_button, (dialog, which) -> {
                     if ("60".equals(addType)) {
@@ -3366,6 +3368,46 @@ public class VisicomFragment extends Fragment {
 
         }
     }
+    private void checkCardPaymentForCity(String addType) {
+        List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
+        String cityName = stringList.get(1);
+        FirestoreHelper firestoreHelper = new FirestoreHelper(context);
+        firestoreHelper.getCardPaymentKeyForCity(
+                new FirestoreHelper.OnCardPaymentKeyFetchedListener() {
+                    @Override
+                    public void onSuccess(Boolean cardPaymentEnabled) {
+                        Logger.d(context, TAG, "Успешно получено значение: " + cardPaymentEnabled);
+
+                        if (cardPaymentEnabled) {
+                            Logger.d(context, TAG, "Оплата картой ДОСТУПНА для города " + cityName);
+
+                            if ("60".equals(addType)) {
+                                createDoubleOrder();
+                            } else if ("45".equals(addType)) {
+                                createBlackList();
+                            }
+
+                        } else {
+                            Logger.d(context, TAG, "Оплата картой НЕДОСТУПНА для города " + cityName);
+                            String message = context.getString(R.string.card_payment_false);
+                            MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
+                            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Exception e) {
+                        Logger.e(context,TAG, "Ошибка получения настроек: " + e.getMessage());
+
+                        // Показываем ошибку пользователю
+                        Toast.makeText(context,
+                                "Ошибка загрузки настроек: " + e.getMessage(),
+                                Toast.LENGTH_LONG).show();
+                    }
+                },
+                cityName
+        );
+    }
 
     private void createBlackList() {
         sharedPreferencesHelperMain.saveValue("black_list_45", true);
@@ -3382,81 +3424,6 @@ public class VisicomFragment extends Fragment {
 
         googleVerifyAccount();
 
-//        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
-//        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-//
-//        OkHttpClient client = new OkHttpClient.Builder()
-//                .addInterceptor(new RetryInterceptor())
-//                .addInterceptor(interceptor)
-//                .connectTimeout(30, TimeUnit.SECONDS) // Тайм-аут на соединение
-//                .readTimeout(30, TimeUnit.SECONDS)    // Тайм-аут на чтение данных
-//                .writeTimeout(30, TimeUnit.SECONDS)   // Тайм-аут на запись данных
-//                .build();
-//        Retrofit retrofit = new Retrofit.Builder()
-//                .baseUrl(baseUrl)
-//                .addConverterFactory(GsonConverterFactory.create())
-//                .client(client)
-//                .build();
-//
-//        PayApi apiService = retrofit.create(PayApi.class);
-//        Call<ResponsePaySystem> call = apiService.getPaySystem();
-//        call.enqueue(new Callback<ResponsePaySystem>() {
-//            @Override
-//            public void onResponse(@NonNull Call<ResponsePaySystem> call, @NonNull Response<ResponsePaySystem> response) {
-//                if (response.isSuccessful() && response.body() != null) {
-//                    // Обработка успешного ответа
-//                    ResponsePaySystem responsePaySystem = response.body();
-//                    String paymentCode = responsePaySystem.getPay_system();
-//                    switch (paymentCode) {
-//                        case "wfp":
-//                            pay_method = "wfp_payment";
-//                            break;
-//                        case "fondy":
-//                            pay_method = "fondy_payment";
-//                            break;
-//                        case "mono":
-//                            pay_method = "mono_payment";
-//                            break;
-//                    }
-//                    if(isAdded()){
-//                        ContentValues cv = new ContentValues();
-//                        cv.put("payment_type", pay_method);
-//                        // обновляем по id
-//                        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-//                        database.update(MainActivity.TABLE_SETTINGS_INFO, cv, "id = ?",
-//                                new String[] { "1" });
-//
-//                        cv = new ContentValues();
-//                        cv.put("verifyOrder", "0");
-//
-//                        database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
-//                        database.close();
-//
-//                        orderRout();
-//
-//                        googleVerifyAccount();
-//                    }
-//
-//
-//                } else {
-//                    if (isAdded()) { //
-//                        MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(context.getString(R.string.verify_internet));
-//                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-//                    }
-//
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(@NonNull Call<ResponsePaySystem> call, @NonNull Throwable t) {
-//                FirebaseCrashlytics.getInstance().recordException(t);
-//                if (isAdded()) { //
-//                    navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-//                            .setPopUpTo(R.id.nav_restart, true)
-//                            .build());
-//                }
-//            }
-//        });
     }
 
     public void createDoubleOrder() {

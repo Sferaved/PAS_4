@@ -707,4 +707,5 @@
     <string name="error_message_too_long">Повідомлення занадто довге (макс. 500 символів)</string>
     <string name="error_message_empty">Введіть повідомлення</string>
     <string name="report_sent">Звіт надіслано</string>
+    <string name="card_payment_false">" На даний момент сплатити можливо лише готівкою за Ваш маршрут. Оплата карткою відновиться найближчим часом, ми вже працюємо над цим"</string>
 </resources>
