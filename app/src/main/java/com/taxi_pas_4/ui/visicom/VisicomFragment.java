@@ -1754,6 +1754,7 @@ public class VisicomFragment extends Fragment {
                 MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
                 bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
             } else {
+                Logger.d(context, TAG, "pay_method " + pay_method);
                 switch (pay_method) {
                     case "bonus_payment":
                     case "card_payment":
@@ -3011,14 +3012,14 @@ public class VisicomFragment extends Fragment {
         Log.d("blockUserBlackList", "Starting the block process for user.");
 
         // Update button text and make it non-clickable
-        buttonBonus.setText(context.getString(R.string.card_payment));
+//        buttonBonus.setText(context.getString(R.string.card_payment));
 //        buttonBonus.setClickable(false);
-        buttonBonus.setOnClickListener(v -> {
-            String message = context.getString(R.string.black_list_message_err);
-            MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
-            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
-
-        });
+//        buttonBonus.setOnClickListener(v -> {
+//            String message = context.getString(R.string.black_list_message_err);
+//            MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
+//            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+//
+//        });
 
         Log.d("blockUserBlackList", "Button text set and made non-clickable.");
 

@@ -135,6 +135,8 @@ public class MyBottomSheetErrorFragment extends BottomSheetDialogFragment {
                 errorMessageKey = "error_5_min_cancel_card_order";
             } else if (errorMessage.equals(getString(R.string.card_payment_false))) {
                 errorMessageKey = "card_payment_false";
+            } else if (errorMessage.equals(getString(R.string.black_list_message_err))) {
+                errorMessageKey = "black_list_message_err";
             }
         }
 
@@ -202,6 +204,7 @@ public class MyBottomSheetErrorFragment extends BottomSheetDialogFragment {
                     break;
 
                 case "black_list_message":
+                case "black_list_message_err":
                     textViewInfo.setOnClickListener(v -> dismiss());
                     btn_ok.setText(getString(R.string.ok_error));
                     btn_ok.setOnClickListener(v -> {
