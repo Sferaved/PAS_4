@@ -42,6 +42,14 @@
         android:paddingBottom="0dp" />
 
     <item
+        android:id="@+id/inclusiveTransport"
+        android:orderInCategory="100"
+        android:title="@string/inclusiveTransport"
+        android:paddingLeft="0dp"
+        android:paddingTop="0dp"
+        android:paddingRight="0dp"
+        android:paddingBottom="0dp" />
+    <item
         android:id="@+id/send_email"
         android:orderInCategory="100"
         android:title="@string/send_email"

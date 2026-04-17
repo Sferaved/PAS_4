@@ -120,6 +120,7 @@ import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.retrofit.cost_json_parser.CostJSONParserRetrofit;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 import com.taxi_pas_4.utils.ui.BackPressBlocker;
+import com.taxi_pas_4.utils.worker.InclusiveTransportPreferenceWorker;
 import com.taxi_pas_4.utils.worker.TilePreloadWorker;
 import com.uxcam.UXCam;
 
@@ -1198,7 +1199,13 @@ public class VisicomFragment extends Fragment {
                 phoneNumber = logCursor(MainActivity.TABLE_USER_INFO, context).get(2);
             }
             c.close();
-
+            if (InclusiveTransportPreferenceWorker.needsInclusiveTransport()) {
+                Logger.d(context, TAG, "Нужно добавить информацию в заказ что нужен инклюзивный  транспорт");
+                // Проверяем, содержит ли уже комментарий эту фразу
+                if (!comment.contains(context.getString(R.string.inclusive_transport_message_yes))) {
+                    comment += context.getString(R.string.inclusive_transport_message_yes);
+                }
+            }
             parameters = str_origin + "/" + str_dest + "/" + tarif + "/" + phoneNumber + "/"
                     + displayName + " (" + context.getString(R.string.version_code) + ") *" + userEmail + "*" + payment_type + "/"
                     + time + "/" + date;
@@ -1249,6 +1256,13 @@ public class VisicomFragment extends Fragment {
             }
             sharedPreferencesHelperMain.saveValue("black_list_45", false);
             sharedPreferencesHelperMain.saveValue("old_cost", clientCost);
+            if (InclusiveTransportPreferenceWorker.needsInclusiveTransport()) {
+                Logger.d(context, TAG, "Нужно добавить информацию в заказ что нужен инклюзивный  транспорт");
+                // Проверяем, содержит ли уже комментарий эту фразу
+                if (!comment.contains(context.getString(R.string.inclusive_transport_message_yes))) {
+                    comment += context.getString(R.string.inclusive_transport_message_yes);
+                }
+            }
             parameters = str_origin + "/" + str_dest + "/" + tarif + "/" + phoneNumber + "/"
                     + clientCost + "/" + paramsUserArr + "/" + addCost + "/"
                     + time + "/" + comment + "/" + date + "/" + start + "/" + finish + "/" + wfpInvoice;
@@ -1674,8 +1688,8 @@ public class VisicomFragment extends Fragment {
 
 //            List<String> stringList = logCursor(MainActivity.TABLE_ADD_SERVICE_INFO, context);
 //            String comment = stringList.get(2);
-            String comment = sharedPreferencesHelperMain.getValue("comment", "no_comment").toString();
-            sendUrlMap.put("comment_info", comment);
+//            String comment = sharedPreferencesHelperMain.getValue("comment", "no_comment").toString();
+//            sendUrlMap.put("comment_info", comment);
 
             List<String> services = logCursor(MainActivity.TABLE_SERVICE_INFO, context);
             List<String> servicesChecked = new ArrayList<>();

@@ -820,6 +820,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
                 phoneNumber = logCursor(MainActivity.TABLE_USER_INFO).get(2);
                 c.close();
             }
+
             parameters = str_origin + "/" + str_dest + "/" + tarif + "/" + phoneNumber + "/"
                     + displayName + " (" + context.getString(R.string.version_code) + ") " + "*" + userEmail  + "*" + payment_type;
         }

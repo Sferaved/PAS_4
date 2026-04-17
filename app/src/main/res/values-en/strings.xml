@@ -696,4 +696,12 @@ Tap "Settings" to check.</string>
     <string name="error_message_empty">Enter a message</string>
     <string name="report_sent">Report sent</string>
     <string name="card_payment_false">"Currently, you can only pay in cash for your route. Card payments will be restored soon; we\'re already working on it."</string>
+    <!-- Inclusive transport -->
+    <string name="inclusive_transport_title">Inclusive Transport</string>
+    <string name="inclusive_transport_message">Do you need vehicles adapted for people with disabilities?</string>
+    <string name="inclusive_transport_message_yes">Attention!!! We need a vehicle adapted for people with disabilities.</string>
+    <string name="inclusive_transport_yes">Yes</string>
+    <string name="inclusive_transport_no">No</string>
+    <string name="inclusiveTransport">♿ Inclusive</string>
+    <string name="currentInclusiveState">"Currently set to: "</string>
 </resources>

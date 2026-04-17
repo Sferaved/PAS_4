@@ -23,7 +23,7 @@
     <string name="my_phone">Мій телефон</string>
     <string name="open_maps">Замовити по мапе</string>
     <string name="driver">🚖 ‍Робота водієм (реклама)</string>
-    <string name="send_email">📢 Поділитися</string>
+    <string name="send_email">✉️ Поділитися</string>
     <string name="gps_ok">Визначення геопозиції включено</string>
     <string name="cancel_button">Ні, дякую</string>
     <string name="gps_on">Увімкнути</string>
@@ -709,4 +709,12 @@
     <string name="error_message_empty">Введіть повідомлення</string>
     <string name="report_sent">Звіт надіслано</string>
     <string name="card_payment_false">" На даний момент сплатити можливо лише готівкою за Ваш маршрут. Оплата карткою відновиться найближчим часом, ми вже працюємо над цим"</string>
+    <!-- Інклюзивний транспорт -->
+    <string name="inclusive_transport_title">Інклюзивний транспорт</string>
+    <string name="inclusive_transport_message">Чи потрібні вам автомобілі, адаптовані для людей з обмеженими можливостями?</string>
+    <string name="inclusive_transport_message_yes">Увага !!! Потрібен автомобіль адаптований для людей з обмеженими можливостями</string>
+    <string name="inclusive_transport_yes">Так</string>
+    <string name="inclusive_transport_no">Ні</string>
+    <string name="inclusiveTransport">♿ Інклюзивність</string>
+    <string name="currentInclusiveState">"Зараз встановлено: "</string>
 </resources>

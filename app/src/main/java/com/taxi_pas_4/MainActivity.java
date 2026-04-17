@@ -5,9 +5,11 @@ import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHel
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
@@ -46,6 +48,7 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.navigation.NavController;
 import androidx.navigation.NavDestination;
 import androidx.navigation.NavOptions;
@@ -112,6 +115,7 @@ import com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
 import com.taxi_pas_4.utils.worker.AddUserNoNameWorker;
 import com.taxi_pas_4.utils.worker.CheckPushPermissionWorker;
 import com.taxi_pas_4.utils.worker.GetCardTokenWfpWorker;
+import com.taxi_pas_4.utils.worker.InclusiveTransportPreferenceWorker;
 import com.taxi_pas_4.utils.worker.InsertPushDateWorker;
 import com.taxi_pas_4.utils.worker.UpdatePushDateWorker;
 import com.taxi_pas_4.utils.worker.UpdateUserInfoWorker;
@@ -265,7 +269,11 @@ public class MainActivity extends AppCompatActivity {
 
             }
         }
-//        try {
+
+
+        IntentFilter filter = new IntentFilter("ACTION_REQUEST_INCLUSIVE_TRANSPORT");
+        LocalBroadcastManager.getInstance(this).registerReceiver(inclusiveTransportReceiver, filter);
+        Logger.d(this, TAG, "Inclusive transport receiver registered");
 //            Thread.sleep(8000);
 //        } catch (InterruptedException e) {
 //            throw new RuntimeException(e);
@@ -549,6 +557,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        if (!InclusiveTransportPreferenceWorker.hasBeenAsked()) {
+            Logger.d(this, TAG, "Нужно показать диалог инклюзивного транспорта");
+            new Handler(Looper.getMainLooper()).postDelayed(this::showInclusiveTransportDialog, 5000);
+        }
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
             sendCurrentFcmToken();
@@ -1116,7 +1129,9 @@ public class MainActivity extends AppCompatActivity {
         if (item.getItemId() == R.id.gps) {
             eventGps();
         }
-
+        if (item.getItemId() == R.id.inclusiveTransport) {
+            showInclusiveTransportDialog();
+        }
         if (item.getItemId() == R.id.settings) {
 
             navController.navigate(R.id.nav_settings, null, new NavOptions.Builder()
@@ -2360,7 +2375,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-
+        LocalBroadcastManager.getInstance(this)
+                .unregisterReceiver(inclusiveTransportReceiver);
 
     }
 
@@ -2650,5 +2666,60 @@ public class MainActivity extends AppCompatActivity {
         // 3. Если ничего не нашли — возвращаем пустую строку
         Log.w(TAG, "Email пользователя не найден ни в SharedPreferences, ни в FirebaseAuth");
         return "";
+    }
+
+    private final BroadcastReceiver inclusiveTransportReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Logger.d(MainActivity.this, TAG, "onReceive: получили broadcast!");
+            if ("ACTION_REQUEST_INCLUSIVE_TRANSPORT".equals(intent.getAction())) {
+                Logger.d(MainActivity.this, TAG, "ACTION_MATCH: показываем диалог");
+                showInclusiveTransportDialog();
+            } else {
+                Logger.d(MainActivity.this, TAG, "Action не совпадает: " + intent.getAction());
+            }
+        }
+    };
+
+    private void showInclusiveTransportDialog() {
+        Logger.d(this, TAG, "showInclusiveTransportDialog вызван");
+
+        // Проверяем, что Activity не destroyed и не finishing
+        if (isFinishing() || isDestroyed()) {
+            Logger.e(this, TAG, "Activity is finishing or destroyed, cannot show dialog");
+            return;
+        }
+
+        // Запускаем на UI потоке с небольшой задержкой
+        runOnUiThread(() -> {
+            try {
+                Logger.d(this, TAG, "Создаем диалог");
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle(getString(R.string.inclusive_transport_title));
+
+                String currentInclusiveState = getString(R.string.inclusive_transport_no);
+                if (InclusiveTransportPreferenceWorker.needsInclusiveTransport()){
+                    currentInclusiveState = getString(R.string.inclusive_transport_yes);
+                }
+                builder.setMessage(getString(R.string.inclusive_transport_message) + "\n"+ "\n"+ getString(R.string.currentInclusiveState) + currentInclusiveState);
+
+                builder.setPositiveButton(getString(R.string.inclusive_transport_yes), (dialog, which) -> {
+                    Logger.d(this, TAG, "Пользователь выбрал ДА");
+                    InclusiveTransportPreferenceWorker.saveUserPreference(this, true);
+                });
+                builder.setNegativeButton(getString(R.string.inclusive_transport_no), (dialog, which) -> {
+                    Logger.d(this, TAG, "Пользователь выбрал НЕТ");
+                    InclusiveTransportPreferenceWorker.saveUserPreference(this, false);
+                });
+                builder.setCancelable(false);
+
+                AlertDialog dialog = builder.create();
+                dialog.show();
+                Logger.d(this, TAG, "Диалог показан");
+            } catch (Exception e) {
+                FirebaseCrashlytics.getInstance().recordException(e);
+                Logger.e(this, TAG, "Ошибка при показе диалога: " + e.getMessage());
+            }
+        });
     }
 }

@@ -702,4 +702,12 @@
     <string name="error_message_empty">Введите сообщение</string>
     <string name="report_sent">Отчет отправлен</string>
     <string name="card_payment_false">" На сейчас оплатить возможно только наличными за Ваш маршрут. Оплата картой восстановиться в ближайшее время, мы уже работаем над этим"</string>
+    <!-- Инклюзивный транспорт -->
+    <string name="inclusive_transport_title">Инклюзивный транспорт</string>
+    <string name="inclusive_transport_message">Нужны ли Вам автомобили, адаптированные для людей с ограниченными возможностями?</string>
+    <string name="inclusive_transport_message_yes">Внимание !!! Нужен автомобиль, адаптированный для людей с ограниченными возможностями</string>
+    <string name="inclusive_transport_yes">Да</string>
+    <string name="inclusive_transport_no">Нет</string>
+    <string name="inclusiveTransport">♿ Инклюзивность</string>
+    <string name="currentInclusiveState">"Сейчас установлено: "</string>
 </resources>
