@@ -418,7 +418,7 @@ public class CityFinder {
     }
     @SuppressLint("Range")
     private void applyCityChange(String city, double startLat, double startLan, String position) {
-
+        String TAG = "applyCityChange";
         Logger.d(context, TAG, "applyCityChange: " + city);
 
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
@@ -456,6 +456,7 @@ public class CityFinder {
         String finish = position;
         Logger.d(context, TAG, "cangedCity: " + cangedCity);
         if( !cangedCity ) {
+            Logger.d(context, TAG, "cangedCity:  2" + cangedCity);
             String query = "SELECT * FROM " + MainActivity.ROUT_MARKER + " LIMIT 1";
             @SuppressLint("Recycle") Cursor cr = database.rawQuery(query, null);
 
@@ -463,10 +464,21 @@ public class CityFinder {
             toLatitude = cr.getDouble(cr.getColumnIndex("to_lat"));
             toLongitude = cr.getDouble(cr.getColumnIndex("to_lng"));
             finish = cr.getString(cr.getColumnIndex("finish"));
+
+            Logger.d(context, TAG, "toLongitude1:" + toLongitude);
+            Logger.d(context, TAG, "position1:" + position);
+            Logger.d(context, TAG, "finish1:" + finish);
             cr.close();
         }
 
         database.close();
+        Logger.d(context, TAG, "startLat:" + startLat);
+        Logger.d(context, TAG, "startLan:" + startLan);
+        Logger.d(context, TAG, "toLatitude:" + toLatitude);
+        Logger.d(context, TAG, "toLongitude:" + toLongitude);
+        Logger.d(context, TAG, "position:" + position);
+        Logger.d(context, TAG, "finish:" + finish);
+
         // 🔽 обновление маршрута
         List<String> settings = new ArrayList<>();
         settings.add(Double.toString(startLat));
@@ -503,13 +515,14 @@ public class CityFinder {
     }
 
     private void updateRoutMarker(List<String> settings) {
+        String TAG = "updateRoutMarker";
         Logger.d(context, TAG, "updateRoutMarker: " + settings.toString());
         ContentValues cv = new ContentValues();
 
         cv.put("startLat", Double.parseDouble(settings.get(0)));
         cv.put("startLan", Double.parseDouble(settings.get(1)));
-        cv.put("to_lat", Double.parseDouble(settings.get(0)));
-        cv.put("to_lng", Double.parseDouble(settings.get(1)));
+        cv.put("to_lat", Double.parseDouble(settings.get(2)));
+        cv.put("to_lng", Double.parseDouble(settings.get(3)));
         cv.put("start", settings.get(4));
         cv.put("finish", settings.get(5));
 

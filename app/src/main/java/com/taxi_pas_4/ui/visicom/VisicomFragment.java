@@ -2685,6 +2685,7 @@ public class VisicomFragment extends Fragment {
                         FromJSONParserRetrofit.sendURL(urlFrom, result -> {
                             if (result != null) {
                                 String FromAdressString = result.get("route_address_from");
+                                Logger.d(context, TAG, "FromAdressString: " + FromAdressString);
                                 if (FromAdressString != null && FromAdressString.contains("Точка на карте")) {
                                     FromAdressString = context.getString(R.string.startPoint);
                                 }
@@ -2696,7 +2697,7 @@ public class VisicomFragment extends Fragment {
                                         FromAdressString,
                                         context
                                 ).findCity(latitude, longitude);
-
+                                Logger.d(context, TAG, "ToAdressString: " + textViewTo.getText().toString());
                             } else {
                                 Logger.d(context, TAG, "Ошибка при получении адреса");
                             }
