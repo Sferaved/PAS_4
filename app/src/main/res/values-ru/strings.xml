@@ -710,4 +710,5 @@
     <string name="inclusive_transport_no">Нет</string>
     <string name="inclusiveTransport">♿ Инклюзивность</string>
     <string name="currentInclusiveState">"Сейчас установлено: "</string>
+    <string name="server_error_card_payment">В данный момент оплата картой невозможна. Смените способ оплаты за наличные водителю.</string>
 </resources>

@@ -1767,6 +1767,10 @@ public class VisicomFragment extends Fragment {
                 message = getResources().getString(R.string.server_error_connected);
                 MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
                 bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
+            } else if (message.equals("ErrorCardPayment")) {
+                message = getResources().getString(R.string.server_error_card_payment);
+                MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
+                bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
             } else {
                 Logger.d(context, TAG, "pay_method " + pay_method);
                 switch (pay_method) {

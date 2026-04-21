@@ -716,4 +716,5 @@
     <string name="inclusive_transport_no">Ні</string>
     <string name="inclusiveTransport">♿ Інклюзивність</string>
     <string name="currentInclusiveState">"Зараз встановлено: "</string>
+    <string name="server_error_card_payment">На даний момент оплата карткою неможлива. Змініть спосіб оплати за готівку водію.</string>
 </resources>
