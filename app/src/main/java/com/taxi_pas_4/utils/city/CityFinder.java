@@ -54,7 +54,7 @@ public class CityFinder {
 
     private WeakReference<Activity> activityRef;
     String cityMenu;
-
+    boolean cangedCity;
     public CityFinder(
             Context context,
             double startLat,
@@ -395,6 +395,7 @@ public class CityFinder {
         final String finalCity = city;
 
         if (!finalCity.equals(cityOld)) {
+            cangedCity  = true;
             new androidx.appcompat.app.AlertDialog.Builder(activity)
                     .setTitle(R.string.city_change_dialog) // добавьте соответствующий заголовок в strings.xml
                     .setMessage(activity.getString(R.string.find_new_city_mes) + cityMenu + activity.getString(R.string.turn_mes))
@@ -408,11 +409,14 @@ public class CityFinder {
                     .setCancelable(false)
                     .show();
             return;
+        } else {
+            cangedCity = false;
         }
 
 // и тут тоже используем finalCity
         applyCityChange(finalCity, startLat, startLan, position);
     }
+    @SuppressLint("Range")
     private void applyCityChange(String city, double startLat, double startLan, String position) {
 
         Logger.d(context, TAG, "applyCityChange: " + city);
@@ -439,7 +443,7 @@ public class CityFinder {
         cv.put("payment_type", "nal_payment");
         database.update(MainActivity.TABLE_SETTINGS_INFO, cv, "id = ?", new String[]{"1"});
 
-        database.close();
+
 
         // 🔽 очистка состояний
         sharedPreferencesHelperMain.saveValue("time", "no_time");
@@ -447,14 +451,30 @@ public class CityFinder {
         sharedPreferencesHelperMain.saveValue("comment", "no_comment");
         sharedPreferencesHelperMain.saveValue("tarif", " ");
 
+        double toLatitude = startLat;
+        double toLongitude =startLan;
+        String finish = position;
+        Logger.d(context, TAG, "cangedCity: " + cangedCity);
+        if( !cangedCity ) {
+            String query = "SELECT * FROM " + MainActivity.ROUT_MARKER + " LIMIT 1";
+            @SuppressLint("Recycle") Cursor cr = database.rawQuery(query, null);
+
+            cr.moveToFirst();
+            toLatitude = cr.getDouble(cr.getColumnIndex("to_lat"));
+            toLongitude = cr.getDouble(cr.getColumnIndex("to_lng"));
+            finish = cr.getString(cr.getColumnIndex("finish"));
+            cr.close();
+        }
+
+        database.close();
         // 🔽 обновление маршрута
         List<String> settings = new ArrayList<>();
         settings.add(Double.toString(startLat));
         settings.add(Double.toString(startLan));
-        settings.add(Double.toString(startLat));
-        settings.add(Double.toString(startLan));
+        settings.add(Double.toString(toLatitude));
+        settings.add(Double.toString(toLongitude));
         settings.add(position);
-        settings.add("");
+        settings.add(finish);
 
         updateRoutMarker(settings);
         clearTABLE_SERVICE_INFO();

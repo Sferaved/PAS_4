@@ -837,6 +837,10 @@ public class HomeFragment extends Fragment {
                                     bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                                 }
                             }
+                        } else if (message.equals("ErrorCardPayment")) {
+                            message = getResources().getString(R.string.server_error_card_payment);
+                            MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(message);
+                            bottomSheetDialogFragment.show(getChildFragmentManager(), bottomSheetDialogFragment.getTag());
                         } else {
                             switch (pay_method) {
                                 case "bonus_payment":
