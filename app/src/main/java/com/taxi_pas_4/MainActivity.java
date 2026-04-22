@@ -121,6 +121,7 @@ import com.taxi_pas_4.utils.worker.UpdatePushDateWorker;
 import com.taxi_pas_4.utils.worker.UpdateUserInfoWorker;
 import com.taxi_pas_4.utils.worker.UserPhoneFromFbWorker;
 import com.taxi_pas_4.utils.worker.VersionFromMarketWorker;
+import com.taxi_pas_4.utils.worker.utils.SaveIPWithEmailUtils;
 import com.taxi_pas_4.utils.worker.utils.TokenUtils;
 
 import org.json.JSONException;
@@ -2110,6 +2111,9 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void settingsNewUser(String emailUser) {
+        // Пример 2: Запуск с указанием страницы информации об IP клиента
+        String app = getString(R.string.application) + getString(R.string.version);
+        SaveIPWithEmailUtils.startWorker(emailUser, app, getApplicationContext());
         // Сохраняем email (если ещё не сохранён)
         MyApplication.sharedPreferencesHelperMain.saveValue("userEmail", emailUser);
 
