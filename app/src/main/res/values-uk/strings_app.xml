@@ -1,15 +1,15 @@
 <resources>
     <string name="application">PAS4</string>
 
-    <string name="version_code">4.897</string>
-    <string name="version"># 4.897</string>
+    <string name="version_code">4.898</string>
+    <string name="version"># 4.898</string>
 
-    <string name="app_name">Таксі Доставка</string>
+    <string name="app_name">Таксі Дюк Попутник</string>
 
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="nav_header_title">Попутчик таксі Україна дешево</string>
+    <string name="nav_header_title">Таксі Дюк Попутник</string>
     <string name="nav_header_subtitle">Швидкі поїздки по містам України</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Налаштування</string>
