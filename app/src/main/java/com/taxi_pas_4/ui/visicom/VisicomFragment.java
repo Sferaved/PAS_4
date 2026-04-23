@@ -2025,73 +2025,18 @@ public class VisicomFragment extends Fragment {
         if (cityCheckActivity.equals("run")) {
             btnVisible(VISIBLE);
         }
-        if (!NetworkUtils.isNetworkAvailable(requireContext()) && isAdded()) {
-            NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
-            navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-                    .setPopUpTo(R.id.nav_restart, true)
-                    .build());
-        }
-
 
         String visible_shed = (String) sharedPreferencesHelperMain.getValue("visible_shed", "no");
         if(visible_shed.equals("no")) {
             Logger.d(context, TAG, "onResume 2" );
             btnVisible(INVISIBLE);
-//            schedule.setVisibility(INVISIBLE);
-//            shed_down.setVisibility(INVISIBLE);
-//
-//            gpsBtn.setVisibility(View.INVISIBLE);
-//            binding.num1.setVisibility(View.INVISIBLE);
-//            binding.textfrom.setVisibility(View.INVISIBLE);
-//
-//            binding.textwhere.setVisibility(View.INVISIBLE);
-//
-////            binding.svButton.setVisibility(View.INVISIBLE);
-//            binding.btnCallAdmin.setVisibility(View.INVISIBLE);
-
         } else  {
             if (NetworkUtils.isNetworkAvailable(context)) {
                 Logger.d(context, TAG, "onResume 3" );
                 btnVisible(VISIBLE);
-//                binding.textfrom.setVisibility(VISIBLE);
-//                binding.num1.setVisibility(VISIBLE);
-//                binding.clearButtonFrom.setVisibility(VISIBLE);
-//
-//
-//                binding.clearButtonTo.setVisibility(VISIBLE);
-//
-//                binding.textGeo.setVisibility(VISIBLE);
-//                binding.clearButtonFrom.setVisibility(VISIBLE);
-//
-//                binding.num2.setVisibility(VISIBLE);
-//                binding.textTo.setVisibility(VISIBLE);
-//                binding.clearButtonTo.setVisibility(VISIBLE);
-
-//                schedule.setVisibility(VISIBLE);
-//                shed_down.setVisibility(VISIBLE);
-
-
-//                binding.svButton.setVisibility(View.VISIBLE);
-//                binding.btnCallAdmin.setVisibility(View.VISIBLE);
-
             } else {
                 Logger.d(context, TAG, "onResume 4" );
                 btnVisible(INVISIBLE);
-//                schedule.setVisibility(INVISIBLE);
-//                shed_down.setVisibility(INVISIBLE);
-
-//                gpsBtn.setVisibility(INVISIBLE);
-//                binding.num1.setVisibility(INVISIBLE);
-//                binding.textfrom.setVisibility(INVISIBLE);
-//
-//                binding.textwhere.setVisibility(VISIBLE);
-//                progressBar.setVisibility(VISIBLE);
-//
-//
-////
-////                binding.svButton.setVisibility(GONE);
-//                binding.btnCallAdmin.setVisibility(GONE);
-
             }
         }
         Logger.d(context, TAG, "onResume 5" );
