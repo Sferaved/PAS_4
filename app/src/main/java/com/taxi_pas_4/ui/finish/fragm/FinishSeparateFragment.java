@@ -80,6 +80,7 @@ import com.taxi_pas_4.utils.pusher.events.CanceledStatusEvent;
 import com.taxi_pas_4.utils.pusher.events.TransactionStatusEvent;
 import com.taxi_pas_4.utils.time_ut.TimeUtils;
 import com.taxi_pas_4.utils.ui.BackPressBlocker;
+import com.taxi_pas_4.utils.worker.InclusiveTransportPreferenceWorker;
 import com.uxcam.UXCam;
 
 import org.greenrobot.eventbus.EventBus;
@@ -2506,6 +2507,7 @@ public class FinishSeparateFragment extends Fragment {
             newCheck++;
         }
         Log.d("addCheck", "newCheck 3: " + newCheck);
+
         String mes = context.getString(R.string.add_services);
         if (newCheck != 0) {
             mes = context.getString(R.string.add_services) + " (" + newCheck + ")";
