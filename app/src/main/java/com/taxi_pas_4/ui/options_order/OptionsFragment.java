@@ -119,14 +119,13 @@ public class OptionsFragment extends Fragment {
         listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
         cbInclusive = view.findViewById(R.id.cb_inclusive);
 
-// Загрузка сохраненного состояния инклюзивности
-        String inclusiveValue = (String) sharedPreferencesHelperMain.getValue("inclusive", "0");
-        cbInclusive.setChecked(inclusiveValue.equals("1"));
+// Загрузка сохраненного состояния инклюзивности через Worker
+// Метод needsInclusiveTransport() возвращает boolean, по умолчанию false
+        boolean isInclusive = InclusiveTransportPreferenceWorker.needsInclusiveTransport();
+        cbInclusive.setChecked(isInclusive);
 
-// Сохраняем предпочтение в Worker только если чекбокс отмечен
-        if (cbInclusive.isChecked()) {
-            InclusiveTransportPreferenceWorker.saveUserPreference(context, true);
-        }
+// Синхронизируем с SharedPreferences для единообразия
+        sharedPreferencesHelperMain.saveValue("inclusive", isInclusive ? "1" : "0");
 
 // Обработчик изменения состояния
         cbInclusive.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -134,6 +133,7 @@ public class OptionsFragment extends Fragment {
             InclusiveTransportPreferenceWorker.saveUserPreference(context, isChecked);
             Logger.d(context, TAG, "Инклюзивность: " + (isChecked ? "включена" : "выключена"));
         });
+
         List<String> services = logCursor(MainActivity.TABLE_SERVICE_INFO, context);
         for (int i = 0; i < arrayServiceCode.length; i++) {
             if(services.get(i+1).equals("1")) {
