@@ -804,7 +804,7 @@ public class VisicomFragment extends Fragment {
         binding.btnCallAdmin.setVisibility(View.VISIBLE);
 
         if (visible == INVISIBLE || visible == GONE) {
-            binding.fabCallAdmin.setVisibility(VISIBLE);
+
             binding.btnCallAdmin.setText(R.string.try_again);
             binding.btnCallAdmin.setOnClickListener(v -> {
                 Log.d("BTN_VISIBLE", "Клик: Попробовать снова - запуск SwipeRefresh");
@@ -821,34 +821,9 @@ public class VisicomFragment extends Fragment {
                 startActivity(new Intent(context, MainActivity.class));                //
             });
 
-            binding.fabCallAdmin.setOnClickListener(v -> {
-                Logger.d(context,"BTN_VISIBLE", "Клик: Позвонить админу");
-                Logger.d(context,"BTN_VISIBLE", "Клик: Позвонить админу");
-                try {
-                    Intent intent = new Intent(Intent.ACTION_DIAL);
-                    List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
-                    if (stringList.size() > 3) {
-                        String phone = stringList.get(3);
-                        Logger.d(context,"BTN_VISIBLE", "Телефон для звонка: " + phone);
-                        if (phone != null && !phone.trim().isEmpty()) {
-                            intent.setData(Uri.parse(phone));
-                            startActivity(intent);
-                        } else {
-                            Logger.e(context,"BTN_VISIBLE", "Номер телефона пустой или null");
-                            Toast.makeText(requireContext(), R.string.no_access_to_phone_admin, Toast.LENGTH_SHORT).show();
-                        }
-                    } else {
-                        Logger.e(context,"BTN_VISIBLE", "Не удалось получить данные телефона");
-                        Toast.makeText(requireContext(), R.string.no_access_to_phone_admin, Toast.LENGTH_SHORT).show();
-                    }
-                } catch (Exception e) {
-                    Logger.e(context,"BTN_VISIBLE", "Ошибка при звонке: " + e.getMessage());
-                    Toast.makeText(requireContext(), R.string.no_access_to_phone_admin, Toast.LENGTH_SHORT).show();
-                }
-            });
 
         } else {
-            binding.fabCallAdmin.setVisibility(GONE);
+
             btnCallAdmin.setText(R.string.call_admin);
             btnCallAdmin.setOnClickListener(v -> {
                 Logger.d(context,"BTN_VISIBLE", "Клик: Позвонить админу");
@@ -3415,7 +3390,7 @@ public class VisicomFragment extends Fragment {
     }
 
     private void googleVerifyAccount() {
-        binding.fabCallAdmin.setVisibility(GONE);
+
         FirebaseConsentManager consentManager = new FirebaseConsentManager(context);
 
         consentManager.checkUserConsent(new FirebaseConsentManager.ConsentCallback() {
