@@ -459,32 +459,29 @@ public class MainActivity extends AppCompatActivity {
         sharedPreferencesHelperMain.saveValue("comment", "no_comment");
     }
 
-    /**
-     * Показывает Snackbar о потере интернета
-     */
-    /**
-     * Показывает Snackbar о потере интернета
-     */
     private void showNoInternetSnackbar() {
         // Не показываем, если уже показываем или Activity уничтожена
         if (isSnackbarShowing || isFinishing() || isDestroyed()) {
             return;
         }
 
-        // Находим корневое View (работает с любым фрагментом)
+        // Находим корневое View
         View rootView = findViewById(android.R.id.content);
         if (rootView == null) {
             return;
         }
 
         try {
+            // Сначала скрываем старый, если есть
+            if (noInternetSnackbar != null && noInternetSnackbar.isShown()) {
+                noInternetSnackbar.dismiss();
+            }
+
             noInternetSnackbar = Snackbar.make(rootView, R.string.network_no_internet, Snackbar.LENGTH_INDEFINITE)
                     .setAction(R.string.retry, v -> {
-                        // Принудительная проверка интернета
                         if (networkMonitor != null) {
                             networkMonitor.forceCheck();
                         }
-                        // Только показываем тост о результате, НО НЕ СКРЫВАЕМ СНЕКБАР
                         if (NetworkUtils.isNetworkAvailable(MainActivity.this)) {
                             Toast.makeText(MainActivity.this, R.string.network_available_check, Toast.LENGTH_SHORT).show();
                         } else {
@@ -494,7 +491,6 @@ public class MainActivity extends AppCompatActivity {
                     .setActionTextColor(ContextCompat.getColor(this, R.color.white))
                     .setTextColor(ContextCompat.getColor(this, R.color.white));
 
-            // Меняем фон
             View snackbarView = noInternetSnackbar.getView();
             if (snackbarView != null) {
                 snackbarView.setBackgroundColor(ContextCompat.getColor(this, R.color.error_red));
@@ -504,6 +500,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onDismissed(Snackbar transientBottomBar, int event) {
                     isSnackbarShowing = false;
+                    noInternetSnackbar = null;  // ← важно: обнуляем ссылку
                 }
 
                 @Override
@@ -520,17 +517,21 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Скрывает Snackbar при восстановлении интернета
-     */
     private void hideNoInternetSnackbar() {
+        // Проверяем через флаг и прямо через snackbar
         if (noInternetSnackbar != null && noInternetSnackbar.isShown()) {
             try {
                 noInternetSnackbar.dismiss();
-                isSnackbarShowing = false;
+                // isSnackbarShowing сбросится в onDismissed
                 Logger.d(this, TAG, "No internet Snackbar hidden");
             } catch (Exception e) {
                 Logger.e(this, TAG, "Error hiding snackbar: " + e.getMessage());
+            }
+        } else {
+            // Флаг мог остаться true, а snackbar уже нет - сбрасываем
+            if (isSnackbarShowing) {
+                isSnackbarShowing = false;
+                Logger.d(this, TAG, "Snackbar flag reset");
             }
         }
     }
@@ -660,7 +661,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
+        if (NetworkUtils.isNetworkAvailable(this)) {
+            hideNoInternetSnackbar();
+        }
         if (!InclusiveTransportPreferenceWorker.hasBeenAsked()) {
             Logger.d(this, TAG, "Нужно показать диалог инклюзивного транспорта");
             new Handler(Looper.getMainLooper()).postDelayed(this::showInclusiveTransportDialog, 5000);

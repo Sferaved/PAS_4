@@ -3,7 +3,6 @@ package com.taxi_pas_4.ui.visicom;
 
 import static android.content.Context.MODE_PRIVATE;
 import static android.view.View.GONE;
-import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
 import static com.taxi_pas_4.MainActivity.CITY_INFO;
 import static com.taxi_pas_4.MainActivity.activeCalls;
@@ -231,7 +230,6 @@ public class VisicomFragment extends Fragment {
     private ActivityResultLauncher<String[]> permissionLauncher;
     private boolean location_update;
     LocationManager locationManager;
-    public static int currentNavDestination = -1; // ID текущего экрана
 
     private Handler costHandler;
     private Runnable reserveRunnable;
@@ -351,7 +349,7 @@ public class VisicomFragment extends Fragment {
         btnAdd = binding.btnAdd;
         constr2 = binding.constr2;
 
-        constr2.setVisibility(INVISIBLE);
+        constr2.setVisibility(GONE);
 
         requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), new OnBackPressedCallback(true) {
             @Override
@@ -670,14 +668,14 @@ public class VisicomFragment extends Fragment {
 
         // С existing слушатели кликов
         schedule.setOnClickListener(v -> {
-            btnVisible(INVISIBLE);
+            btnVisible(GONE);
             sharedPreferencesHelperMain.saveValue("initial_page", "visicom");
             NavController navController = NavHostFragment.findNavController(this);
             navController.navigate(R.id.nav_options);
         });
 
         shed_down.setOnClickListener(v -> {
-            btnVisible(INVISIBLE);
+            btnVisible(GONE);
             sharedPreferencesHelperMain.saveValue("initial_page", "visicom");
             NavController navController = Navigation.findNavController(getCurrentActivity(), R.id.nav_host_fragment_content_main);
             navController.navigate(R.id.nav_options, null, new NavOptions.Builder().build());
@@ -803,7 +801,7 @@ public class VisicomFragment extends Fragment {
 
         binding.btnCallAdmin.setVisibility(View.VISIBLE);
 
-        if (visible == INVISIBLE || visible == GONE) {
+        if (visible == GONE || visible == GONE) {
             binding.fabCallAdmin.setVisibility(VISIBLE);
             binding.btnCallAdmin.setText(R.string.try_again);
             binding.btnCallAdmin.setOnClickListener(v -> {
@@ -881,9 +879,9 @@ public class VisicomFragment extends Fragment {
         if (text_view_cost != null) {
             Log.d("BTN_VISIBLE", "text_view_cost не null, продолжаем выполнение");
 
-            // Управление ProgressBar - ТОЛЬКО для состояния INVISIBLE
-            if (visible == View.INVISIBLE) {
-                Log.d("BTN_VISIBLE", "Режим INVISIBLE - показываем ProgressBar");
+            // Управление ProgressBar - ТОЛЬКО для состояния GONE
+            if (visible == View.GONE) {
+                Log.d("BTN_VISIBLE", "Режим GONE - показываем ProgressBar");
                 binding.progressBar.setVisibility(View.VISIBLE);
             }
             // Режим VISIBLE - обычное состояние
@@ -953,8 +951,6 @@ public class VisicomFragment extends Fragment {
         switch (visibility) {
             case View.VISIBLE:
                 return "VISIBLE";
-            case View.INVISIBLE:
-                return "INVISIBLE";
             case View.GONE:
                 return "GONE";
             default:
@@ -970,12 +966,12 @@ public class VisicomFragment extends Fragment {
 
 
         if (text_view_cost != null) {
-            if (visible == INVISIBLE) {
+            if (visible == GONE) {
                 progressBar.setVisibility(VISIBLE);
             } else {
                 progressBar.setVisibility(GONE);
             }
-            if (visible == INVISIBLE) {
+            if (visible == GONE) {
                 if (swipeRefreshLayout != null) {
                     btnCallAdmin.setText(R.string.try_again);
                     progressBar.setVisibility(VISIBLE);
@@ -2030,7 +2026,7 @@ public class VisicomFragment extends Fragment {
 
         String cityCheckActivity = (String) sharedPreferencesHelperMain.getValue("CityCheckActivity", "**");
         Logger.d(context, TAG, "CityCheckActivity: " + cityCheckActivity);
-        progressBar.setVisibility(INVISIBLE);
+        progressBar.setVisibility(GONE);
         if (cityCheckActivity.equals("run")) {
             btnVisible(VISIBLE);
         }
@@ -2038,14 +2034,14 @@ public class VisicomFragment extends Fragment {
         String visible_shed = (String) sharedPreferencesHelperMain.getValue("visible_shed", "no");
         if(visible_shed.equals("no")) {
             Logger.d(context, TAG, "onResume 2" );
-            btnVisible(INVISIBLE);
+            btnVisible(GONE);
         } else  {
             if (NetworkUtils.isNetworkAvailable(context)) {
                 Logger.d(context, TAG, "onResume 3" );
                 btnVisible(VISIBLE);
             } else {
                 Logger.d(context, TAG, "onResume 4" );
-                btnVisible(INVISIBLE);
+                btnVisible(GONE);
             }
         }
         Logger.d(context, TAG, "onResume 5" );
@@ -2197,7 +2193,7 @@ public class VisicomFragment extends Fragment {
         buttonBonus.setOnClickListener(v -> {
             boolean black_list_yes = verifyOrder();
             Logger.d(context, TAG, "buttonBonus 2 " + black_list_yes);
-            btnVisible(INVISIBLE);
+            btnVisible(GONE);
             String costText = text_view_cost.getText().toString().trim();
 
             text_view_cost.setText("***");
@@ -2237,7 +2233,7 @@ public class VisicomFragment extends Fragment {
 
 
         btnAdd.setOnClickListener(v -> {
-            btnVisible(INVISIBLE);
+            btnVisible(GONE);
             sharedPreferencesHelperMain.saveValue("initial_page", "visicom");
             sharedPreferencesHelperMain.saveValue("old_cost", "0");
             NavController navController = NavHostFragment.findNavController(this);
@@ -2310,7 +2306,7 @@ public class VisicomFragment extends Fragment {
             }
 
             linearLayout.setVisibility(GONE);
-            btnVisible(INVISIBLE);
+            btnVisible(GONE);
             List<String> stringList1 = logCursor(MainActivity.CITY_INFO, context);
 
             pay_method = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(4);
@@ -2445,9 +2441,9 @@ public class VisicomFragment extends Fragment {
         if (NetworkUtils.isNetworkAvailable(context)) {
             if (geoText.getText().toString().isEmpty()) {
 
-                binding.textfrom.setVisibility(INVISIBLE);
-                num1.setVisibility(INVISIBLE);
-                binding.textwhere.setVisibility(INVISIBLE);
+                binding.textfrom.setVisibility(GONE);
+                num1.setVisibility(GONE);
+                binding.textwhere.setVisibility(GONE);
             }
             String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
             if (!userEmail.equals("email")) {
@@ -2460,7 +2456,7 @@ public class VisicomFragment extends Fragment {
             }
 
         } else {
-            binding.textwhere.setVisibility(INVISIBLE);
+            binding.textwhere.setVisibility(GONE);
             progressBar.setVisibility(GONE);
         }
 
@@ -2704,7 +2700,7 @@ public class VisicomFragment extends Fragment {
     private void visicomCost() throws MalformedURLException {
         Logger.d(context, TAG, "=== visicomCost() started ===");
 
-        constr2.setVisibility(INVISIBLE);
+        constr2.setVisibility(GONE);
 
 
         MainActivity.costMap = null;
