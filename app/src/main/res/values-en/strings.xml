@@ -709,4 +709,7 @@ Tap "Settings" to check.</string>
     <string name="network_no_internet">Weak internet connection</string>
     <string name="network_connected">Internet connected</string>
     <string name="network_restored">Internet restored</string>
+    <string name="retry">check</string>
+    <string name="network_available_check">Internet is available, connecting...</string>
+    <string name="network_still_down">Internet is still unavailable</string>
 </resources>

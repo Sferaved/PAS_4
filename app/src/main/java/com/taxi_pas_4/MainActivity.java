@@ -68,6 +68,7 @@ import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.play.core.appupdate.AppUpdateInfo;
 import com.google.android.play.core.appupdate.AppUpdateManager;
@@ -249,6 +250,8 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("StaticFieldLeak")
     public static ImageButton button1;
     private CentrifugoManager centrifugoManager;
+    private Snackbar noInternetSnackbar;
+    private boolean isSnackbarShowing = false;
 
     @SuppressLint("SourceLockedOrientationActivity")
     @Override
@@ -315,7 +318,6 @@ public class MainActivity extends AppCompatActivity {
                 R.id.nav_account,
                 R.id.nav_author,
                 R.id.nav_finish_separate,
-                R.id.nav_restart,
                 R.id.nav_search,
                 R.id.nav_cacheOrder,
                 R.id.nav_map,
@@ -384,7 +386,16 @@ public class MainActivity extends AppCompatActivity {
         // Инициализация ресивера для отслеживания сети
 
         networkMonitor = new NetworkMonitor(this);
-        networkMonitor.startMonitoring(this);
+        networkMonitor.setListener(isConnected -> {
+            runOnUiThread(() -> {
+                if (isConnected) {
+                    hideNoInternetSnackbar();
+                } else {
+                    showNoInternetSnackbar();
+                }
+            });
+        });
+        networkMonitor.startMonitoring();
         constraints = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build();
@@ -447,6 +458,94 @@ public class MainActivity extends AppCompatActivity {
         sharedPreferencesHelperMain.saveValue("date", "no_date");
         sharedPreferencesHelperMain.saveValue("comment", "no_comment");
     }
+
+    /**
+     * Показывает Snackbar о потере интернета
+     */
+    /**
+     * Показывает Snackbar о потере интернета
+     */
+    private void showNoInternetSnackbar() {
+        // Не показываем, если уже показываем или Activity уничтожена
+        if (isSnackbarShowing || isFinishing() || isDestroyed()) {
+            return;
+        }
+
+        // Находим корневое View (работает с любым фрагментом)
+        View rootView = findViewById(android.R.id.content);
+        if (rootView == null) {
+            return;
+        }
+
+        try {
+            noInternetSnackbar = Snackbar.make(rootView, R.string.network_no_internet, Snackbar.LENGTH_INDEFINITE)
+                    .setAction(R.string.retry, v -> {
+                        // Принудительная проверка интернета
+                        if (networkMonitor != null) {
+                            networkMonitor.forceCheck();
+                        }
+                        // Только показываем тост о результате, НО НЕ СКРЫВАЕМ СНЕКБАР
+                        if (NetworkUtils.isNetworkAvailable(MainActivity.this)) {
+                            Toast.makeText(MainActivity.this, R.string.network_available_check, Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(MainActivity.this, R.string.network_still_down, Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .setActionTextColor(ContextCompat.getColor(this, R.color.white))
+                    .setTextColor(ContextCompat.getColor(this, R.color.white));
+
+            // Меняем фон
+            View snackbarView = noInternetSnackbar.getView();
+            if (snackbarView != null) {
+                snackbarView.setBackgroundColor(ContextCompat.getColor(this, R.color.error_red));
+            }
+
+            noInternetSnackbar.addCallback(new Snackbar.Callback() {
+                @Override
+                public void onDismissed(Snackbar transientBottomBar, int event) {
+                    isSnackbarShowing = false;
+                }
+
+                @Override
+                public void onShown(Snackbar transientBottomBar) {
+                    isSnackbarShowing = true;
+                }
+            });
+
+            noInternetSnackbar.show();
+            Logger.d(this, TAG, "No internet Snackbar shown");
+
+        } catch (Exception e) {
+            Logger.e(this, TAG, "Error showing snackbar: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Скрывает Snackbar при восстановлении интернета
+     */
+    private void hideNoInternetSnackbar() {
+        if (noInternetSnackbar != null && noInternetSnackbar.isShown()) {
+            try {
+                noInternetSnackbar.dismiss();
+                isSnackbarShowing = false;
+                Logger.d(this, TAG, "No internet Snackbar hidden");
+            } catch (Exception e) {
+                Logger.e(this, TAG, "Error hiding snackbar: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Обновляет Snackbar при смене фрагмента (чтобы привязать к новому корневому View)
+     */
+    private void refreshSnackbarIfNeeded() {
+        if (isSnackbarShowing && !NetworkUtils.isNetworkAvailable(this)) {
+            // Скрываем текущий и показываем новый
+            hideNoInternetSnackbar();
+            showNoInternetSnackbar();
+        }
+    }
+
     private void openOrderScreen() {
         // Открыть экран заказа такси
     }
@@ -1430,7 +1529,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
+        hideNoInternetSnackbar();
+        if (networkMonitor != null) {
+            networkMonitor.stopMonitoring();
+        }
         // Отмена регистрации слушателя при уничтожении активности
         if (appUpdater != null) {
             appUpdater.unregisterListener();

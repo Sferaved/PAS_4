@@ -715,4 +715,7 @@
     <string name="network_no_internet">Слабое интернет соединение</string>
     <string name="network_connected">Интернет подключен</string>
     <string name="network_restored">Интернет восстановлен</string>
+    <string name="retry">проверить</string>
+    <string name="network_available_check">Интернет доступен, подключаемся...</string>
+    <string name="network_still_down">Интернет всё ещё недоступен</string>
 </resources>
