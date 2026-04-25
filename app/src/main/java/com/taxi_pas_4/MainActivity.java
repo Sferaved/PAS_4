@@ -419,13 +419,16 @@ public class MainActivity extends AppCompatActivity {
                                 .setPopUpTo(R.id.nav_city, true)
                                 .build());
                     }
-                } else if (navController != null) {
-                    currentNavDestination = R.id.nav_restart;
-                    navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-                            .setPopUpTo(R.id.nav_restart, true)
-                            .build());
-                } else {
-                    Logger.e(this, TAG, "NavController равен null, навигация невозможна!");
+                }
+//                else if (navController != null) {
+//                    currentNavDestination = R.id.nav_restart;
+//                    navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+//                            .setPopUpTo(R.id.nav_restart, true)
+//                            .build());
+//                }
+                else {
+                    Toast.makeText(this, R.string.network_no_internet, Toast.LENGTH_LONG).show();
+                    Logger.w(this, TAG, "NO INTERNET - Showing toast message");
                 }
             };
             if (Objects.requireNonNull(navController.getCurrentDestination()).getId() != R.id.nav_finish_separate) {

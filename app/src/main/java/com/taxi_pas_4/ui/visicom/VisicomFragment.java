@@ -507,10 +507,12 @@ public class VisicomFragment extends Fragment {
                                     .build());
                         }
                     } else if (navController != null) {
-                        currentNavDestination = R.id.nav_restart;
-                        navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-                                .setPopUpTo(R.id.nav_restart, true)
-                                .build());
+                        Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
+                        Logger.w(context, TAG, "NO INTERNET - Showing toast message");
+//                        currentNavDestination = R.id.nav_restart;
+//                        navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
+//                                .setPopUpTo(R.id.nav_restart, true)
+//                                .build());
                     } else {
                         Logger.e(context, TAG, "NavController равен null, навигация невозможна!");
                     }
