@@ -847,6 +847,7 @@ public class VisicomFragment extends Fragment {
             binding.clearButtonTo.setVisibility(VISIBLE);
             binding.fabCallAdmin.setVisibility(GONE);
             btnCallAdmin.setText(R.string.call_admin);
+            binding.gpsbut.setVisibility(VISIBLE);
             btnCallAdmin.setOnClickListener(v -> {
                 Logger.d(context,"BTN_VISIBLE", "Клик: Позвонить админу");
                 try {
