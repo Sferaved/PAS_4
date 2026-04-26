@@ -397,10 +397,7 @@ public class VisicomSearchFragment extends Fragment {
         if (!NetworkUtils.isNetworkAvailable(requireContext()) && isAdded()) {
             Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
             Logger.w(context, TAG, "NO INTERNET - Showing toast message");
-//            NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
-//            navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-//                    .setPopUpTo(R.id.nav_restart, true)
-//                    .build());
+
         }
 
         Bundle arguments = getArguments();
@@ -660,10 +657,7 @@ public class VisicomSearchFragment extends Fragment {
             if (!NetworkUtils.isNetworkAvailable(requireContext()) && isAdded()) {
                 Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
                 Logger.w(context, TAG, "NO INTERNET - Showing toast message");
-//                NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
-//                navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-//                        .setPopUpTo(R.id.nav_restart, true)
-//                        .build());
+//                
             }
 
 
@@ -1015,10 +1009,8 @@ public class VisicomSearchFragment extends Fragment {
                 Logger.d(context, TAG, "locationManager: " + locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER));
                 // GPS включен, выполните ваш код здесь
                 if (!NetworkUtils.isNetworkAvailable(requireContext()) && isAdded()) {
-                    NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
-                    navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-                            .setPopUpTo(R.id.nav_restart, true)
-                            .build());
+                    Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
+                    Logger.w(context, TAG, "NO INTERNET - Showing toast message");
                 }
 
                 else  if(location_update) {

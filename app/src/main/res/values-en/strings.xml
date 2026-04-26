@@ -712,4 +712,8 @@ Tap "Settings" to check.</string>
     <string name="retry">check</string>
     <string name="network_available_check">Internet is available, connecting...</string>
     <string name="network_still_down">Internet is still unavailable</string>
+    <!-- First launch - hints -->
+    <string name="first_start_reading">Reading your choice</string>
+    <string name="first_start_checking">Checking your registration</string>
+    <string name="first_start_setting">Setting up your account</string>
 </resources>

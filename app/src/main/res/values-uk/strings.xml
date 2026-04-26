@@ -724,4 +724,8 @@
     <string name="retry">перевірити</string>
     <string name="network_available_check">Інтернет доступний, підключаємося...</string>
     <string name="network_still_down">Інтернет все ще недоступний</string>
+    <!-- Перший запуск - підказки -->
+    <string name="first_start_reading">Зчитуємо ваш вибір</string>
+    <string name="first_start_checking">Перевіряємо вашу реєстрацію</string>
+    <string name="first_start_setting">Налаштовуємо ваш акаунт</string>
 </resources>

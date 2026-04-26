@@ -507,10 +507,6 @@ public class VisicomFragment extends Fragment {
                     } else if (navController != null) {
                         Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
                         Logger.w(context, TAG, "NO INTERNET - Showing toast message");
-//                        currentNavDestination = R.id.nav_restart;
-//                        navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-//                                .setPopUpTo(R.id.nav_restart, true)
-//                                .build());
                     } else {
                         Logger.e(context, TAG, "NavController равен null, навигация невозможна!");
                     }
@@ -790,19 +786,14 @@ public class VisicomFragment extends Fragment {
         shed_down.setVisibility(visible);
         // Всегда отображаемые элементы (независимо от параметра)
         Log.d("BTN_VISIBLE", "Установка всегда видимых элементов:");
-        binding.textfrom.setVisibility(View.VISIBLE);
-        binding.num1.setVisibility(View.VISIBLE);
-        binding.clearButtonFrom.setVisibility(View.VISIBLE);
-        binding.textGeo.setVisibility(View.VISIBLE);
-        binding.textwhere.setVisibility(View.VISIBLE);
-        binding.num2.setVisibility(VISIBLE);
-        binding.textTo.setVisibility(VISIBLE);
-        binding.clearButtonTo.setVisibility(VISIBLE);
+
 
         binding.btnCallAdmin.setVisibility(View.VISIBLE);
 
-        if (visible == GONE || visible == GONE) {
+        if (visible == GONE) {
+
             binding.fabCallAdmin.setVisibility(VISIBLE);
+            binding.gpsbut.setVisibility(GONE);
             binding.btnCallAdmin.setText(R.string.try_again);
             binding.btnCallAdmin.setOnClickListener(v -> {
                 Log.d("BTN_VISIBLE", "Клик: Попробовать снова - запуск SwipeRefresh");
@@ -846,6 +837,14 @@ public class VisicomFragment extends Fragment {
             });
 
         } else {
+            binding.textfrom.setVisibility(View.VISIBLE);
+            binding.num1.setVisibility(View.VISIBLE);
+            binding.clearButtonFrom.setVisibility(View.VISIBLE);
+            binding.textGeo.setVisibility(View.VISIBLE);
+            binding.textwhere.setVisibility(View.VISIBLE);
+            binding.num2.setVisibility(VISIBLE);
+            binding.textTo.setVisibility(VISIBLE);
+            binding.clearButtonTo.setVisibility(VISIBLE);
             binding.fabCallAdmin.setVisibility(GONE);
             btnCallAdmin.setText(R.string.call_admin);
             btnCallAdmin.setOnClickListener(v -> {
@@ -1554,9 +1553,8 @@ public class VisicomFragment extends Fragment {
                 @Override
                 public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
                     FirebaseCrashlytics.getInstance().recordException(t);
-                    navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-                            .setPopUpTo(R.id.nav_restart, true)
-                            .build());
+                    Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
+                    Logger.w(context, TAG, "NO INTERNET - Showing toast message");
                 }
             });
         }
@@ -2003,10 +2001,6 @@ public class VisicomFragment extends Fragment {
         if (!NetworkUtils.isNetworkAvailable(requireActivity())) {
             Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
             Logger.w(context, TAG, "NO INTERNET - Showing toast message");
-//            NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
-//            navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-//                    .setPopUpTo(R.id.nav_restart, true)
-//                    .build());
         }
 
 
@@ -2299,10 +2293,8 @@ public class VisicomFragment extends Fragment {
         });
         btnOrder.setOnClickListener(v -> {
             if (!NetworkUtils.isNetworkAvailable(requireContext()) && isAdded()) {
-                NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
-                navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-                        .setPopUpTo(R.id.nav_restart, true)
-                        .build());
+                Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
+                Logger.w(context, TAG, "NO INTERNET - Showing toast message");
             }
 
             linearLayout.setVisibility(GONE);
@@ -2513,10 +2505,8 @@ public class VisicomFragment extends Fragment {
                 Logger.d(context, TAG, "locationManager: " + locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER));
                 // GPS включен, выполните ваш код здесь
                 if (!NetworkUtils.isNetworkAvailable(requireContext()) && isAdded()) {
-                    NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
-                    navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-                            .setPopUpTo(R.id.nav_restart, true)
-                            .build());
+                    Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
+                    Logger.w(context, TAG, "NO INTERNET - Showing toast message");
                 }
 
                 else  if(location_update) {

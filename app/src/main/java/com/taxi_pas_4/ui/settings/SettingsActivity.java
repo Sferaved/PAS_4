@@ -137,14 +137,6 @@ public class SettingsActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(this, R.string.network_no_internet, Toast.LENGTH_LONG).show();
                     Logger.w(this, TAG, "NO INTERNET - Showing toast message");
-//                        NavController navController = Navigation.findNavController(getCurrentActivity(), R.id.nav_restart);
-//                        navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-//                                .setPopUpTo(R.id.nav_restart, true)
-//                                .build());
-
-//                    MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-//                            .setPopUpTo(R.id.nav_restart, true)
-//                            .build());
                 }
 
             });
@@ -158,14 +150,6 @@ public class SettingsActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(this, R.string.network_no_internet, Toast.LENGTH_LONG).show();
                     Logger.w(this, TAG, "NO INTERNET - Showing toast message");
-//                        NavController navController = Navigation.findNavController(getCurrentActivity(), R.id.nav_restart);
-//                        navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-//                                .setPopUpTo(R.id.nav_restart, true)
-//                                .build());
-
-//                    MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-//                            .setPopUpTo(R.id.nav_restart, true)
-//                            .build());
                 }
 
             });

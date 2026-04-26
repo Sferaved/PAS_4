@@ -485,8 +485,7 @@ public class WeatherFragment extends Fragment {
         if (getActivity() != null) {
             Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
             Logger.w(context, TAG, "NO INTERNET - Showing toast message");
-//            MainActivity.navController.navigate(R.id.nav_restart);
-        }
+         }
     }
 
     private String getCityFromDatabase() {

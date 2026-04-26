@@ -62,12 +62,10 @@ public class NavigationViewTest {
                                 R.id.nav_account,
                                 R.id.nav_author,
                                 R.id.nav_finish_separate,
-                                R.id.nav_restart,
                                 R.id.nav_search,
                                 R.id.nav_cacheOrder,
                                 R.id.nav_map,
                                 R.id.nav_city,
-
                                 R.id.nav_anr
                         };
 

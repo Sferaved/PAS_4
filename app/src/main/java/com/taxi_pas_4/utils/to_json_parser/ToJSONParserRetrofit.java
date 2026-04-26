@@ -189,9 +189,7 @@ public class ToJSONParserRetrofit {
                     } else {
                         Toast.makeText(getCurrentActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
                         Logger.w(getCurrentActivity(), TAG, "NO INTERNET - Showing toast message");
-//                        MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-//                                .setPopUpTo(R.id.nav_restart, true)
-//                                .build());
+
                     }
                 }
 
@@ -199,9 +197,6 @@ public class ToJSONParserRetrofit {
                 public void onFailure(@NonNull Call<JsonResponse> call, @NonNull Throwable t) {
                     Toast.makeText(getCurrentActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
                     Logger.w(getCurrentActivity(), TAG, "NO INTERNET - Showing toast message");
-//                    MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-//                            .setPopUpTo(R.id.nav_restart, true)
-//                            .build());
                 }
             });
         });
@@ -222,9 +217,6 @@ public class ToJSONParserRetrofit {
                 } catch (InterruptedException e) {
                     Toast.makeText(getCurrentActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
                     Logger.w(getCurrentActivity(), TAG, "NO INTERNET - Showing toast message");
-//                    MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-//                            .setPopUpTo(R.id.nav_restart, true)
-//                            .build());
                     Thread.currentThread().interrupt();
                 }
             }

@@ -223,9 +223,6 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                         if (isAdded()) { //
                             Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
                             Logger.w(context, TAG, "NO INTERNET - Showing toast message");
-//                            MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-//                                    .setPopUpTo(R.id.nav_restart, true)
-//                                    .build());
                         }
 
                     }
@@ -234,9 +231,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                     if (isAdded()) { //
                         Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
                         Logger.w(context, TAG, "NO INTERNET - Showing toast message");
-//                        MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-//                                .setPopUpTo(R.id.nav_restart, true)
-//                                .build());
+
                     }
                     Logger.d(context, TAG, "Request failed:");
                 }
@@ -249,9 +244,6 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                 if (isAdded()) { //
                     Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
                     Logger.w(context, TAG, "NO INTERNET - Showing toast message");
-//                    MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-//                            .setPopUpTo(R.id.nav_restart, true)
-//                            .build());
                 }
                 Logger.d(context, TAG, "Request failed:"+ t.getMessage());
             }
@@ -345,9 +337,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                     if (isAdded()) {
                         Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
                         Logger.w(context, TAG, "NO INTERNET - Showing toast message");
-//                        MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-//                                .setPopUpTo(R.id.nav_restart, true)
-//                                .build());
+
                     }
 
 
@@ -362,10 +352,6 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                 getReversWfp(city);
                 Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
                 Logger.w(context, TAG, "NO INTERNET - Showing toast message");
-//                MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-//                        .setPopUpTo(R.id.nav_restart, true)
-//                        .build());
-
                 Logger.d(context, TAG, "onResponse: failure " + t);
             }
         });
@@ -406,18 +392,15 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                         Logger.d(context, TAG, "Transaction Status: " + statusResponse.getTransactionStatus());
                         // Другие данные можно также получить из statusResponse
                     } else {
-                        Logger.d(context, TAG, "Response body is null");
-                        MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-                                .setPopUpTo(R.id.nav_restart, true)
-                                .build());
+                        Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
+                        Logger.w(context, TAG, "NO INTERNET - Showing toast message");
 
                     }
                 } else {
                     Logger.d(context, TAG, "Request failed: " + response.code());
                     if (isAdded()) { //
-                        MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-                                .setPopUpTo(R.id.nav_restart, true)
-                                .build());
+                         Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
+                        Logger.w(context, TAG, "NO INTERNET - Showing toast message");
                     }
 
                 }
@@ -429,9 +412,8 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
             public void onFailure(@NonNull Call<ReversResponse> call, @NonNull Throwable t) {
                 FirebaseCrashlytics.getInstance().recordException(t);
                 if (isAdded()) { //
-                    MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-                            .setPopUpTo(R.id.nav_restart, true)
-                            .build());
+                    Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
+                    Logger.w(context, TAG, "NO INTERNET - Showing toast message");
                     dismiss();
                 }
                 Logger.d(context, TAG, "Request failed: " + t.getMessage());
@@ -493,9 +475,8 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                     Logger.d(context, TAG, "onResponse: Ошибка запроса, код " + response.code());
 
                     if (isAdded()) { //
-                        MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-                                .setPopUpTo(R.id.nav_restart, true)
-                                .build());
+                         Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
+                        Logger.w(context, TAG, "NO INTERNET - Showing toast message");
                     }
                 }
 
@@ -507,9 +488,8 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                 FirebaseCrashlytics.getInstance().recordException(t);
                 Logger.d(context, TAG, "onFailure: Ошибка сети: " + t.getMessage());
 
-                MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-                        .setPopUpTo(R.id.nav_restart, true)
-                        .build());
+                Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
+                Logger.w(context, TAG, "NO INTERNET - Showing toast message");
             }
         });
 
@@ -752,9 +732,8 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                     Logger.d(context, TAG, "onResponse: Ошибка запроса, код " + response.code());
 
                     if (isAdded()) { //
-                        MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-                                .setPopUpTo(R.id.nav_restart, true)
-                                .build());
+                         Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
+                        Logger.w(context, TAG, "NO INTERNET - Showing toast message");
                     }
                 }
             }
@@ -764,9 +743,8 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                 // Обработка ошибки сети или другие ошибки
                 Logger.d(context, TAG, "onFailure: Ошибка сети: " + t.getMessage());
                 FirebaseCrashlytics.getInstance().recordException(t);
-                MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-                        .setPopUpTo(R.id.nav_restart, true)
-                        .build());
+                Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
+                Logger.w(context, TAG, "NO INTERNET - Showing toast message");
             }
         });
 
@@ -1036,9 +1014,8 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
 
                 } else {
                     if (isAdded()) { //
-                        MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-                                .setPopUpTo(R.id.nav_restart, true)
-                                .build());
+                         Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
+                        Logger.w(context, TAG, "NO INTERNET - Showing toast message");
                     }
 
                 }
@@ -1048,9 +1025,8 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
             public void onFailure(@NonNull Call<ResponsePaySystem> call, @NonNull Throwable t) {
                 FirebaseCrashlytics.getInstance().recordException(t);
                 if (isAdded()) { //
-                    MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-                            .setPopUpTo(R.id.nav_restart, true)
-                            .build());
+                    Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
+                    Logger.w(context, TAG, "NO INTERNET - Showing toast message");
                 }
             }
         });

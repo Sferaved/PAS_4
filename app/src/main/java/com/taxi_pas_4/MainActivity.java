@@ -5,11 +5,9 @@ import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHel
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
@@ -48,7 +46,6 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.navigation.NavController;
 import androidx.navigation.NavDestination;
 import androidx.navigation.NavOptions;
@@ -100,13 +97,13 @@ import com.taxi_pas_4.utils.connect.NetworkMonitor;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.download.AppUpdater;
 import com.taxi_pas_4.utils.helpers.TelegramUtils;
-import com.taxi_pas_4.utils.log.LogEmailSender;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.model.OrderViewModel;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.utils.permissions.UserPermissions;
+import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 import com.taxi_pas_4.utils.pusher.PusherManager;
 import com.taxi_pas_4.utils.user.del_server.ApiUserService;
 import com.taxi_pas_4.utils.user.del_server.CallbackUser;
@@ -275,14 +272,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-        IntentFilter filter = new IntentFilter("ACTION_REQUEST_INCLUSIVE_TRANSPORT");
-        LocalBroadcastManager.getInstance(this).registerReceiver(inclusiveTransportReceiver, filter);
-        Logger.d(this, TAG, "Inclusive transport receiver registered");
-//            Thread.sleep(8000);
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        }
-
         orderViewModel = new ViewModelProvider(this).get(OrderViewModel.class);
 
 
@@ -430,14 +419,7 @@ public class MainActivity extends AppCompatActivity {
                                 .setPopUpTo(R.id.nav_city, true)
                                 .build());
                     }
-                }
-//                else if (navController != null) {
-//                    currentNavDestination = R.id.nav_restart;
-//                    navController.navigate(R.id.nav_restart, null, new NavOptions.Builder()
-//                            .setPopUpTo(R.id.nav_restart, true)
-//                            .build());
-//                }
-                else {
+                } else {
                     Toast.makeText(this, R.string.network_no_internet, Toast.LENGTH_LONG).show();
                     Logger.w(this, TAG, "NO INTERNET - Showing toast message");
                 }
@@ -656,7 +638,30 @@ public class MainActivity extends AppCompatActivity {
             visicomFragment.requestPermissions();
         }
     }
+    private void showFirstStartToasts() {
+        // Проверяем, показывали ли уже
+        boolean hasShown = (boolean) sharedPreferencesHelperMain.getValue("hasShownFirstStartToasts", false);
+        if (hasShown) {
+            return; // Уже показывали, выходим
+        }
 
+        // Массив сообщений
+        String[] messages = {
+                getString(R.string.first_start_reading),
+                getString(R.string.first_start_checking),
+                getString(R.string.first_start_setting)
+        };
+
+        for (int i = 0; i < messages.length; i++) {
+            final int index = i;
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                Toast.makeText(MainActivity.this, messages[index], Toast.LENGTH_SHORT).show();
+            }, i * 1500); // Каждое сообщение через 1.5 секунды
+        }
+
+        // Сохраняем флаг
+        sharedPreferencesHelperMain.saveValue("hasShownFirstStartToasts", true);
+    }
 
     @Override
     protected void onResume() {
@@ -664,25 +669,20 @@ public class MainActivity extends AppCompatActivity {
         if (NetworkUtils.isNetworkAvailable(this)) {
             hideNoInternetSnackbar();
         }
-        if (!InclusiveTransportPreferenceWorker.hasBeenAsked()) {
-            Logger.d(this, TAG, "Нужно показать диалог инклюзивного транспорта");
-            new Handler(Looper.getMainLooper()).postDelayed(this::showInclusiveTransportDialog, 5000);
+        if (!InclusiveTransportPreferenceWorker.hasBeenAsked() && !firstStart) {
+            runOnUiThread(this::showInclusiveTransportDialog);
         }
+        // ✅ ИСПРАВЛЕННЫЙ БЛОК - Toast показываются ТОЛЬКО ПРИ ПЕРВОМ ЗАПУСКЕ
+        if (firstStart) {
+            showFirstStartToasts();
+        }
+
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
             sendCurrentFcmToken();
         }
         costMap = null;
 
-//        appUpdateManager = AppUpdateManagerFactory.create(MainActivity.this);
-//
-//        appUpdateManager.getAppUpdateInfo().addOnSuccessListener(appUpdateInfo -> {
-//            if (appUpdateInfo.installStatus() == InstallStatus.DOWNLOADED) {
-//                appUpdateManager.completeUpdate();
-//            }
-//        }).addOnFailureListener(e -> {
-//            Logger.e(this, TAG, "Ошибка проверки обновлений: " + e.getMessage());
-//        });
 
         new Thread(() -> {
             appUpdateManager = AppUpdateManagerFactory.create(MainActivity.this);
@@ -1903,6 +1903,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(MainActivity.this, R.string.checking, Toast.LENGTH_SHORT).show();
             startFireBase();
         } else {
+
             findUserFromServer(userEmail, findUser -> {
                 // Use the boolean result here
                 Log.d(TAG, "User exists: " + findUser);
@@ -1947,7 +1948,6 @@ public class MainActivity extends AppCompatActivity {
                         startActivity(intent);
                     }
                     firstStart = false;
-
 
                     OneTimeWorkRequest versionFromMarketRequest = new OneTimeWorkRequest.Builder(VersionFromMarketWorker.class)
                             .setConstraints(constraints)
@@ -2487,9 +2487,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        LocalBroadcastManager.getInstance(this)
-                .unregisterReceiver(inclusiveTransportReceiver);
-
     }
 
     private void applyLocale(String localeCode) {
@@ -2550,39 +2547,38 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Clears all SharedPreferences files for the app
+    // Clears all SharedPreferences files for the app
     void clearAllSharedPreferences(Context context) {
         Logger.d(context, TAG, "Starting clearAllSharedPreferences");
         if (context == null) {
             throw new IllegalArgumentException("Context cannot be null");
         }
 
+        // 1. Очищаем через существующий метод clear()
+        if (sharedPreferencesHelperMain != null) {
+            sharedPreferencesHelperMain.clear();
+            Logger.d(context, TAG, "Cleared SharedPreferences via helper.clear()");
+        }
+
+        // 2. Физически удаляем все XML файлы (для надежности)
         String prefsDir = context.getApplicationInfo().dataDir + "/shared_prefs";
         File dir = new File(prefsDir);
 
         if (dir.exists() && dir.isDirectory()) {
-            String[] files = dir.list();
+            File[] files = dir.listFiles();
             if (files != null) {
-                for (String file : files) {
-                    if (file.endsWith(".xml")) {
-                        String prefName = file.substring(0, file.length() - 4);
-                        Logger.d(context, TAG, "Clearing SharedPreferences: " + prefName);
-                        try {
-                            SharedPreferences prefs = context.getSharedPreferences(prefName, Context.MODE_PRIVATE);
-                            SharedPreferences.Editor editor = prefs.edit();
-                            editor.clear();
-                            editor.apply();
-                            Logger.d(context, TAG, "Cleared SharedPreferences: " + prefName);
-                        } catch (Exception e) {
-                            Logger.e(context, TAG, "Error clearing SharedPreferences " + prefName + ": " + e.toString());
-                        }
+                for (File file : files) {
+                    if (file.getName().endsWith(".xml")) {
+                        boolean deleted = file.delete();
+                        Logger.d(context, TAG, "Deleted " + file.getName() + ": " + deleted);
                     }
                 }
-            } else {
-                Logger.d(context, TAG, "No SharedPreferences files found or unable to list files in: " + prefsDir);
             }
-        } else {
-            Logger.d(context, TAG, "SharedPreferences directory does not exist or is not a directory: " + prefsDir);
         }
+
+        // 3. Пересоздаем экземпляр helper с чистыми настройками
+        sharedPreferencesHelperMain = new SharedPreferencesHelper(context);
+
         Logger.d(context, TAG, "Completed clearAllSharedPreferences");
     }
 
@@ -2780,18 +2776,7 @@ public class MainActivity extends AppCompatActivity {
         return "";
     }
 
-    private final BroadcastReceiver inclusiveTransportReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Logger.d(MainActivity.this, TAG, "onReceive: получили broadcast!");
-            if ("ACTION_REQUEST_INCLUSIVE_TRANSPORT".equals(intent.getAction())) {
-                Logger.d(MainActivity.this, TAG, "ACTION_MATCH: показываем диалог");
-                showInclusiveTransportDialog();
-            } else {
-                Logger.d(MainActivity.this, TAG, "Action не совпадает: " + intent.getAction());
-            }
-        }
-    };
+
 
     private void showInclusiveTransportDialog() {
         Logger.d(this, TAG, "showInclusiveTransportDialog вызван");

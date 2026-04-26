@@ -727,7 +727,6 @@ public class OpenStreetMapFragment extends Fragment {
         } catch (MalformedURLException | InterruptedException | JSONException e) {
             Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
             Logger.w(requireActivity(), TAG, "NO INTERNET - Showing toast message");
-//            MainActivity.navController.navigate(R.id.nav_restart, null, new NavOptions.Builder().setPopUpTo(R.id.nav_restart, true).build());
         }
     }
 
