@@ -78,6 +78,7 @@ import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.taxi_pas_4.utils.pusher.events.AddCostUpdateEvent;
 import com.taxi_pas_4.utils.pusher.events.CanceledStatusEvent;
 import com.taxi_pas_4.utils.pusher.events.TransactionStatusEvent;
+import com.taxi_pas_4.utils.review.AppReviewManager;
 import com.taxi_pas_4.utils.time_ut.TimeUtils;
 import com.taxi_pas_4.utils.ui.BackPressBlocker;
 import com.taxi_pas_4.utils.worker.InclusiveTransportPreferenceWorker;
@@ -1041,6 +1042,11 @@ public class FinishSeparateFragment extends Fragment {
         sharedPreferencesHelperMain.saveValue("carFound", true);
 //        new Handler(Looper.getMainLooper()).post(() -> {
             // Выполнено
+        // Збільшуємо лічильник завершених поїздок
+        int currentCount = (int) sharedPreferencesHelperMain.getValue("completed_orders_count", 0);
+        sharedPreferencesHelperMain.saveValue("completed_orders_count", currentCount + 1);
+        // ✅ Додаємо виклик оцінювання після завершення поїздки
+        showReviewDialogIfNeeded();
         stopCycle();
         updateProgress(4);
 
@@ -1070,6 +1076,54 @@ public class FinishSeparateFragment extends Fragment {
         Logger.d(context, TAG, "orderComplete " + canceled);
 
         showFinishCost(context);
+    }
+
+    /**
+     * Показує діалог оцінювання після успішного завершення поїздки
+     */
+    private void showReviewDialogIfNeeded() {
+        // Отримуємо MainActivity
+        Activity activity = getActivity();
+        if (!(activity instanceof MainActivity)) {
+            Logger.d(context, TAG, "Cannot show review dialog: activity is not MainActivity");
+            return;
+        }
+
+        MainActivity mainActivity = (MainActivity) activity;
+        AppReviewManager reviewManager = mainActivity.getAppReviewManager();
+
+        if (reviewManager == null) {
+            Logger.d(context, TAG, "AppReviewManager is null");
+            return;
+        }
+
+        // Перевіряємо, чи можна показувати діалог
+        if (reviewManager.hasUserReviewed()) {
+            Logger.d(context, TAG, "User already reviewed the app");
+            return;
+        }
+
+        // Затримка перед показом (щоб не заважати основному потоку)
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            if (isAdded() && getActivity() != null) {
+                reviewManager.requestReview(requireActivity(), new AppReviewManager.ReviewCallback() {
+                    @Override
+                    public void onReviewCompleted() {
+                        Logger.d(context, TAG, "Review dialog completed after order");
+                    }
+
+                    @Override
+                    public void onReviewFailed(Exception e) {
+                        Logger.d(context, TAG, "Review failed after order: " + e.getMessage());
+                    }
+
+                    @Override
+                    public void onReviewNotAvailable(String reason) {
+                        Logger.d(context, TAG, "Review not available after order: " + reason);
+                    }
+                });
+            }
+        }, 2000); // Затримка 2 секунди
     }
 
     private void orderInRout() {

@@ -1,6 +1,7 @@
 package com.taxi_pas_4;
 
 import static android.view.View.GONE;
+import static com.taxi_pas_4.androidx.startup.MyApplication.getContext;
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import android.Manifest;
@@ -105,6 +106,7 @@ import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.utils.permissions.UserPermissions;
 import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 import com.taxi_pas_4.utils.pusher.PusherManager;
+import com.taxi_pas_4.utils.review.AppReviewManager;
 import com.taxi_pas_4.utils.user.del_server.ApiUserService;
 import com.taxi_pas_4.utils.user.del_server.CallbackUser;
 import com.taxi_pas_4.utils.user.del_server.RetrofitClient;
@@ -249,7 +251,10 @@ public class MainActivity extends AppCompatActivity {
     private CentrifugoManager centrifugoManager;
     private Snackbar noInternetSnackbar;
     private boolean isSnackbarShowing = false;
-
+    private AppReviewManager appReviewManager;
+    public AppReviewManager getAppReviewManager() {
+        return appReviewManager;
+    }
     @SuppressLint("SourceLockedOrientationActivity")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -271,6 +276,8 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+// Ініціалізація менеджера оцінювання
+        appReviewManager = new AppReviewManager(this);
 
         orderViewModel = new ViewModelProvider(this).get(OrderViewModel.class);
 
@@ -1425,12 +1432,56 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
+//        if (item.getItemId() == R.id.send_like) {
+//            if (NetworkUtils.isNetworkAvailable(this)) {
+//                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.taxi_pas_4"));
+//                startActivity(browserIntent);
+//            }
+//
+//        }
         if (item.getItemId() == R.id.send_like) {
-            if (NetworkUtils.isNetworkAvailable(this)) {
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.taxi_pas_4"));
-                startActivity(browserIntent);
-            }
+            // Перевіряємо, чи вже оцінював
+            if (appReviewManager.hasUserReviewed()) {
+                // Вже оцінював - показуємо повідомлення або одразу відкриваємо сторінку
+                Toast.makeText(this, "Дякуємо за вашу оцінку!", Toast.LENGTH_SHORT).show();
 
+                // Або одразу відкриваємо сторінку в Google Play
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("https://play.google.com/store/apps/details?id=" + getPackageName())));
+                } catch (Exception e) {
+                    // Ігноруємо помилку
+                }
+            } else {
+                // Запитуємо оцінку
+                appReviewManager.requestReview(this, new AppReviewManager.ReviewCallback() {
+                    @Override
+                    public void onReviewCompleted() {
+                        Logger.d(getContext(), TAG, "Review dialog completed");
+                        // Можна показати подяку
+                        runOnUiThread(() ->
+                                Toast.makeText(MainActivity.this, "Дякуємо за відгук!", Toast.LENGTH_SHORT).show()
+                        );
+                    }
+
+                    @Override
+                    public void onReviewFailed(Exception e) {
+                        Logger.e(getContext(), TAG, "Review failed: " + e.getMessage());
+                        runOnUiThread(() ->
+                                Toast.makeText(MainActivity.this, "Не вдалося відкрити оцінювання", Toast.LENGTH_SHORT).show()
+                        );
+                    }
+
+                    @Override
+                    public void onReviewNotAvailable(String reason) {
+                        Logger.d(getContext(),TAG, "Review not available: " + reason);
+                        runOnUiThread(() ->
+                                Toast.makeText(MainActivity.this, "Оцінити можна пізніше", Toast.LENGTH_SHORT).show()
+                        );
+                    }
+                });
+            }
+            return true;
         }
         if (item.getItemId() == R.id.uninstal_app) {
             AppDataUtils.delApp(this);
@@ -2501,6 +2552,11 @@ public class MainActivity extends AppCompatActivity {
 
     void clearApplication(Context context) {
         Logger.d(context, TAG, "Starting clearApplication");
+
+        // Скидаємо дані про оцінки
+        if (appReviewManager != null) {
+            appReviewManager.resetReviewData();
+        }
 
         // 1. Разлогиниваем пользователя из Firebase Auth
         try {
