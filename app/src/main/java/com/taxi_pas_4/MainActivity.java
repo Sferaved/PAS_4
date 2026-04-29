@@ -71,6 +71,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.play.core.appupdate.AppUpdateInfo;
 import com.google.android.play.core.appupdate.AppUpdateManager;
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
+import com.google.android.play.core.install.model.InstallErrorCode;
 import com.google.android.play.core.install.model.InstallStatus;
 import com.google.android.play.core.install.model.UpdateAvailability;
 import com.google.firebase.analytics.FirebaseAnalytics;
@@ -1443,7 +1444,7 @@ public class MainActivity extends AppCompatActivity {
             // Перевіряємо, чи вже оцінював
             if (appReviewManager.hasUserReviewed()) {
                 // Вже оцінював - показуємо повідомлення або одразу відкриваємо сторінку
-                Toast.makeText(this, "Дякуємо за вашу оцінку!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.thanks_for_review, Toast.LENGTH_SHORT).show();
 
                 // Або одразу відкриваємо сторінку в Google Play
                 try {
@@ -2455,6 +2456,39 @@ public class MainActivity extends AppCompatActivity {
                     Logger.e(MyApplication.getContext(), TAG,
                             "Таймаут при проверке обновлений: " + e.getMessage());
                 } catch (ExecutionException e) {
+                    // Проверяем, является ли корневая причина InstallException
+                    Throwable cause = e.getCause();
+                    if (cause instanceof com.google.android.play.core.install.InstallException) {
+                        com.google.android.play.core.install.InstallException installEx =
+                                (com.google.android.play.core.install.InstallException) cause;
+                        int errorCode = installEx.getErrorCode();
+
+                        // Игнорируем ошибку -10 (APP_NOT_OWNED)
+                        if (errorCode == -10) {
+                            Logger.d(MyApplication.getContext(), TAG,
+                                    "Приложение установлено не из Google Play Store, пропускаем проверку обновлений");
+                            return null;
+                        }
+
+                        // Игнорируем другие ошибки, используя константы InstallErrorCode
+                        if (errorCode == InstallErrorCode.ERROR_INSTALL_UNAVAILABLE) { // -2
+                            Logger.d(MyApplication.getContext(), TAG,
+                                    "Обновления временно недоступны (ERROR_INSTALL_UNAVAILABLE)");
+                            return null;
+                        }
+
+                        if (errorCode == InstallErrorCode.ERROR_API_NOT_AVAILABLE) { // -3
+                            Logger.d(MyApplication.getContext(), TAG,
+                                    "API обновлений недоступен (ERROR_API_NOT_AVAILABLE)");
+                            return null;
+                        }
+
+                        if (errorCode == InstallErrorCode.ERROR_INSTALL_NOT_ALLOWED) { // -7
+                            Logger.d(MyApplication.getContext(), TAG,
+                                    "Установка обновлений не разрешена (ERROR_INSTALL_NOT_ALLOWED)");
+                            return null;
+                        }
+                    }
                     error = e;
                     Logger.e(MyApplication.getContext(), TAG,
                             "Ошибка выполнения при проверке обновлений: " + e.getMessage());
@@ -2478,8 +2512,9 @@ public class MainActivity extends AppCompatActivity {
                 super.onPostExecute(appUpdateInfo);
 
                 if (error != null) {
-                    Logger.e(MyApplication.getContext(), TAG,
-                            "Ошибка проверки обновлений: " + error.getMessage());
+                    // Не показываем ошибку пользователю, просто логируем
+                    Logger.d(MyApplication.getContext(), TAG,
+                            "Проверка обновлений пропущена");
                     return;
                 }
 
@@ -2534,7 +2569,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }.execute();
     }
-
     @Override
     protected void onPause() {
         super.onPause();
