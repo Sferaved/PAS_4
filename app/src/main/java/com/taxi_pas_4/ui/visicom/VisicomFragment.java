@@ -119,6 +119,7 @@ import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.retrofit.cost_json_parser.CostJSONParserRetrofit;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 import com.taxi_pas_4.utils.ui.BackPressBlocker;
+import com.taxi_pas_4.utils.worker.InclusiveTransportPreferenceWorker;
 import com.taxi_pas_4.utils.worker.TilePreloadWorker;
 import com.uxcam.UXCam;
 
@@ -1218,21 +1219,26 @@ public class VisicomFragment extends Fragment {
             }
             c.close();
             // Проверяем, что комментарий не является "мусорным"
-            boolean isDummyComment = (comment == null ||
-                    comment.equals("no_comment") ||
-                    comment.equals("no_name") ||
-                    comment.equals("none") ||
-                    comment.trim().isEmpty());
+            boolean isInclusive = InclusiveTransportPreferenceWorker.needsInclusiveTransport();
+            if (isInclusive) {
 
-            if (isDummyComment) {
-                // Если комментарий мусорный - просто устанавливаем сообщение про инклюзив
-                comment = context.getString(R.string.inclusive_transport_message_yes);
-                Logger.d(context, "comment", "Был мусорный комментарий, устанавливаем только инклюзив: " + comment);
-            } else {
-                // Проверяем, содержит ли уже комментарий эту фразу
-                if (!comment.contains(context.getString(R.string.inclusive_transport_message_yes))) {
-                    comment += " " + context.getString(R.string.inclusive_transport_message_yes);
-                    Logger.d(context, "comment", "Добавляем инклюзив к существующему комментарию: " + comment);
+
+                boolean isDummyComment = (comment == null ||
+                        comment.equals("no_comment") ||
+                        comment.equals("no_name") ||
+                        comment.equals("none") ||
+                        comment.trim().isEmpty());
+
+                if (isDummyComment) {
+                    // Если комментарий мусорный - просто устанавливаем сообщение про инклюзив
+                    comment = context.getString(R.string.inclusive_transport_message_yes);
+                    Logger.d(context, "comment", "Был мусорный комментарий, устанавливаем только инклюзив: " + comment);
+                } else {
+                    // Проверяем, содержит ли уже комментарий эту фразу
+                    if (!comment.contains(context.getString(R.string.inclusive_transport_message_yes))) {
+                        comment += " " + context.getString(R.string.inclusive_transport_message_yes);
+                        Logger.d(context, "comment", "Добавляем инклюзив к существующему комментарию: " + comment);
+                    }
                 }
             }
             sharedPreferencesHelperMain.saveValue("comment", comment );
