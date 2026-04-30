@@ -60,45 +60,13 @@ public class WeatherWidgetWorker extends Worker {
         super(context, params);
     }
 
-    @NonNull
+    // Добавьте в класс WeatherWidgetWorker.java
+
     @Override
     public Result doWork() {
-        try {
-            // Получаем API ключ
-            String apiKey = getApiKey();
-            if (apiKey == null || apiKey.isEmpty()) {
-                Logger.e(getApplicationContext(), TAG, "API Key is null or empty, cannot fetch weather");
-                loadSavedWeatherToWidget();
-                return Result.retry();
-            }
-
-            String city = getCityFromDatabase();
-            if (city == null || city.isEmpty()) {
-                city = "Kyiv";
-            }
-
-            Logger.d(getApplicationContext(), TAG, "Fetching weather for city: " + city);
-            Logger.d(getApplicationContext(), TAG, "Using API Key: " + apiKey.substring(0, Math.min(apiKey.length(), 5)) + "...");
-
-            saveCityToPrefs(city);
-
-            WeatherResponse weather = fetchWeatherDataSync(city, apiKey);
-
-            if (weather != null && weather.getMain() != null) {
-                saveWeatherToPrefs(weather);
-                WeatherWidget.updateAllWidgets(getApplicationContext(), weather);
-                Logger.d(getApplicationContext(), TAG, "Weather updated successfully for: " + city);
-                return Result.success();
-            } else {
-                loadSavedWeatherToWidget();
-                Logger.e(getApplicationContext(), TAG, "Failed to get weather, using saved data");
-                return Result.retry();
-            }
-        } catch (Exception e) {
-            Logger.e(getApplicationContext(), TAG, "Worker failed: " + e.getMessage());
-            loadSavedWeatherToWidget();
-            return Result.retry();
-        }
+        // ❌ НИЧЕГО НЕ ДЕЛАЕМ - автообновление отключено
+        Logger.d(getApplicationContext(), TAG, "Auto update is disabled");
+        return Result.success();
     }
 
     private WeatherResponse fetchWeatherDataSync(String city, String apiKey) throws InterruptedException {

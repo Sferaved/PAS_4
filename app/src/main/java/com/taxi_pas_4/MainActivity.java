@@ -90,6 +90,8 @@ import com.taxi_pas_4.ui.clear.AppDataUtils;
 import com.taxi_pas_4.ui.finish.OrderResponse;
 import com.taxi_pas_4.ui.home.HomeFragment;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
+import com.taxi_pas_4.ui.weather.WeatherApiHelper;
+import com.taxi_pas_4.ui.weather.WeatherResponse;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGPSFragment;
@@ -124,6 +126,7 @@ import com.taxi_pas_4.utils.worker.UserPhoneFromFbWorker;
 import com.taxi_pas_4.utils.worker.VersionFromMarketWorker;
 import com.taxi_pas_4.utils.worker.utils.SaveIPWithEmailUtils;
 import com.taxi_pas_4.utils.worker.utils.TokenUtils;
+import com.taxi_pas_4.widget.WeatherNotificationHelper;
 
 import org.json.JSONException;
 
@@ -256,6 +259,7 @@ public class MainActivity extends AppCompatActivity {
     public AppReviewManager getAppReviewManager() {
         return appReviewManager;
     }
+
     @SuppressLint("SourceLockedOrientationActivity")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -273,10 +277,20 @@ public class MainActivity extends AppCompatActivity {
                 case "driver":
                     openDriverScreen();
                     break;
+                case "weather_notification":  // ДОБАВЬТЕ ЭТОТ КЕЙС 👇
+                    sendWeatherNotificationFromShortcut();
+                    break;
 
             }
         }
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS}, 100);
+            }
+        }
 // Ініціалізація менеджера оцінювання
         appReviewManager = new AppReviewManager(this);
 
@@ -447,6 +461,171 @@ public class MainActivity extends AppCompatActivity {
         sharedPreferencesHelperMain.saveValue("time", "no_time");
         sharedPreferencesHelperMain.saveValue("date", "no_date");
         sharedPreferencesHelperMain.saveValue("comment", "no_comment");
+    }
+
+    /**
+     * Отправка уведомления о погоде из контекстного меню (App Shortcut)
+     */
+    private void sendWeatherNotificationFromShortcut() {
+        Logger.d(this, TAG, "Weather notification requested from shortcut");
+
+        // Проверяем разрешение на уведомления для Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                // Запрашиваем разрешение
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS}, 100);
+                Toast.makeText(this, "Будь ласка, надайте дозвіл на сповіщення", Toast.LENGTH_LONG).show();
+                return;
+            }
+        }
+
+        // Получаем кэшированную погоду
+        WeatherResponse weather = WeatherApiHelper.getCachedWeather(this);
+
+        if (weather != null && weather.getMain() != null) {
+            // Получаем город
+            String cityName = getCurrentCityName();
+
+            // Отправляем уведомление
+            WeatherNotificationHelper.showWeatherNotification(this, weather, cityName);
+
+            Toast.makeText(this, "☁️ Сповіщення про погоду надіслано", Toast.LENGTH_SHORT).show();
+            Logger.d(this, TAG, "Weather notification sent from shortcut");
+        } else {
+            // Нет кэша - пробуем загрузить
+            Toast.makeText(this, "⏳ Завантаження погоди...", Toast.LENGTH_SHORT).show();
+
+            String apiKey = WeatherApiHelper.getApiKey(this);
+            if (apiKey != null && !apiKey.isEmpty()) {
+                String city = getCurrentCityName();
+                WeatherApiHelper.fetchWeatherAsync(this, city, apiKey, new WeatherApiHelper.WeatherCallback() {
+                    @Override
+                    public void onSuccess(WeatherResponse w) {
+                        // Сохраняем в кэш
+                        WeatherApiHelper.cacheWeather(MainActivity.this, w);
+
+                        String cityName = getCurrentCityName();
+                        WeatherNotificationHelper.showWeatherNotification(MainActivity.this, w, cityName);
+
+                        runOnUiThread(() ->
+                                Toast.makeText(MainActivity.this, "☁️ Сповіщення надіслано", Toast.LENGTH_SHORT).show());
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        runOnUiThread(() ->
+                                Toast.makeText(MainActivity.this, "❌ Помилка завантаження погоди", Toast.LENGTH_SHORT).show());
+                        Logger.e(MainActivity.this, TAG, "Weather fetch failed: " + error);
+                    }
+                });
+            } else {
+                Toast.makeText(this, "❌ Ключ погоди не знайдено", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    /**
+     * Получает название текущего города для отображения
+     */
+    private String getCurrentCityName() {
+
+        List<String> stringList = logCursor(MainActivity.CITY_INFO);
+        String city = stringList.get(1);
+        String cityMenu;
+        switch (city){
+            case "Kyiv City":
+                cityMenu =  getString(R.string.Kyiv_city);
+                break;
+            case "Dnipropetrovsk Oblast":
+                cityMenu = getString(R.string.Dnipro_city);
+                break;
+            case "Odessa":
+            case "OdessaTest":
+                cityMenu = getString(R.string.city_odessa);
+                break;
+            case "Zaporizhzhia":
+                cityMenu = getString(R.string.city_zaporizhzhia);
+                break;
+            case "Cherkasy Oblast":
+                cityMenu = getString(R.string.Cherkasy);
+                break;
+            case "Lviv":
+                cityMenu = getString(R.string.city_lviv);
+                break;
+            case "Ivano_frankivsk":
+                cityMenu = getString(R.string.city_ivano_frankivsk);
+                break;
+            case "Vinnytsia":
+                cityMenu = getString(R.string.city_vinnytsia);
+                break;
+            case "Poltava":
+                cityMenu = getString(R.string.city_poltava);
+                break;
+            case "Sumy":
+                cityMenu = getString(R.string.city_sumy);
+                break;
+            case "Kharkiv":
+                cityMenu = getString(R.string.city_kharkiv);
+                break;
+            case "Chernihiv":
+                cityMenu = getString(R.string.city_chernihiv);
+                break;
+            case "Rivne":
+                cityMenu = getString(R.string.city_rivne);
+                break;
+            case "Ternopil":
+                cityMenu = getString(R.string.city_ternopil);
+                break;
+            case "Khmelnytskyi":
+                cityMenu = getString(R.string.city_khmelnytskyi);
+                break;
+            case "Zakarpattya":
+                cityMenu = getString(R.string.city_zakarpattya);
+                break;
+            case "Zhytomyr":
+                cityMenu = getString(R.string.city_zhytomyr);
+                break;
+            case "Kropyvnytskyi":
+                cityMenu = getString(R.string.city_kropyvnytskyi);
+                break;
+            case "Mykolaiv":
+                cityMenu = getString(R.string.city_mykolaiv);
+                break;
+            case "Chernivtsi":
+                cityMenu = getString(R.string.city_chernivtsi);
+                break;
+            case "Lutsk":
+                cityMenu = getString(R.string.city_lutsk);
+                break;
+            default:
+                cityMenu = getString(R.string.Kyiv_city);
+        }
+
+
+//        return getCityName(city);
+        return  cityMenu;
+    }
+
+    /**
+     * Получает название текущего города для API
+     */
+    private String getCurrentCityForApi() {
+        List<String> stringList = logCursor(CITY_INFO);
+        if (stringList == null || stringList.size() < 2) {
+            return "Kyiv";
+        }
+
+        String city = stringList.get(1);
+        switch (city) {
+            case "Kyiv City": return "Kyiv";
+            case "Dnipropetrovsk Oblast": return "Dnipro";
+            case "Odessa": return "Odessa";
+            case "Lviv": return "Lviv";
+            case "Kharkiv": return "Kharkiv";
+            default: return "Kyiv";
+        }
     }
 
     private void showNoInternetSnackbar() {
@@ -1214,7 +1393,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 
         if (item.getItemId() == R.id.action_exit) {
-            FirebaseAnalytics firebaseAnalytics = FirebaseAnalytics.getInstance(MyApplication.getContext());
+            FirebaseAnalytics firebaseAnalytics = FirebaseAnalytics.getInstance(getContext());
             firebaseAnalytics.setAnalyticsCollectionEnabled(false);
             MyApplication.sharedPreferencesHelperMain.removeValue("userEmail");
             MyApplication.sharedPreferencesHelperMain.removeValue("last_fcm_token");
@@ -1303,8 +1482,8 @@ public class MainActivity extends AppCompatActivity {
             });
 
             // Создаем диалог
-            androidx.appcompat.app.AlertDialog.Builder builder =
-                    new androidx.appcompat.app.AlertDialog.Builder(this, R.style.CustomAlertDialogTheme);
+            AlertDialog.Builder builder =
+                    new AlertDialog.Builder(this, R.style.CustomAlertDialogTheme);
             builder.setView(dialogView);
 
             AlertDialog dialog = builder.create();
@@ -1401,7 +1580,7 @@ public class MainActivity extends AppCompatActivity {
                                     }).start();
 
                                 } else {
-                                    Logger.d(MyApplication.getContext(), TAG,
+                                    Logger.d(getContext(), TAG,
                                             "Update already in progress. Skipping restart.");
                                     Toast.makeText(MainActivity.this,
                                             getString(R.string.update_in_progress), Toast.LENGTH_SHORT).show();
@@ -1433,13 +1612,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-//        if (item.getItemId() == R.id.send_like) {
-//            if (NetworkUtils.isNetworkAvailable(this)) {
-//                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.taxi_pas_4"));
-//                startActivity(browserIntent);
-//            }
-//
-//        }
         if (item.getItemId() == R.id.send_like) {
             // Перевіряємо, чи вже оцінював
             if (appReviewManager.hasUserReviewed()) {
@@ -1461,7 +1633,7 @@ public class MainActivity extends AppCompatActivity {
                         Logger.d(getContext(), TAG, "Review dialog completed");
                         // Можна показати подяку
                         runOnUiThread(() ->
-                                Toast.makeText(MainActivity.this, "Дякуємо за відгук!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(MainActivity.this,  R.string.thanks_for_review, Toast.LENGTH_SHORT).show()
                         );
                     }
 
@@ -1469,7 +1641,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onReviewFailed(Exception e) {
                         Logger.e(getContext(), TAG, "Review failed: " + e.getMessage());
                         runOnUiThread(() ->
-                                Toast.makeText(MainActivity.this, "Не вдалося відкрити оцінювання", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(MainActivity.this, R.string.no_open_review, Toast.LENGTH_SHORT).show()
                         );
                     }
 
@@ -1477,7 +1649,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onReviewNotAvailable(String reason) {
                         Logger.d(getContext(),TAG, "Review not available: " + reason);
                         runOnUiThread(() ->
-                                Toast.makeText(MainActivity.this, "Оцінити можна пізніше", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(MainActivity.this, R.string.open_review_later, Toast.LENGTH_SHORT).show()
                         );
                     }
                 });
@@ -2569,6 +2741,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }.execute();
     }
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -2586,7 +2759,6 @@ public class MainActivity extends AppCompatActivity {
 
     void clearApplication(Context context) {
         Logger.d(context, TAG, "Starting clearApplication");
-
         // Скидаємо дані про оцінки
         if (appReviewManager != null) {
             appReviewManager.resetReviewData();

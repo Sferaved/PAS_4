@@ -1,6 +1,5 @@
 package com.taxi_pas_4.ui.settings;
 
-import static com.taxi_pas_4.androidx.startup.MyApplication.getCurrentActivity;
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import android.annotation.SuppressLint;
@@ -18,9 +17,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.navigation.NavController;
-import androidx.navigation.NavOptions;
-import androidx.navigation.Navigation;
 
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;

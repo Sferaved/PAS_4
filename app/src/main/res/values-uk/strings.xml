@@ -662,6 +662,7 @@
     <string name="city_change_dialog">Зміна міста</string>
     <string name="find_new_city_mes">"Визначено нове місто: "</string>
     <string name="turn_mes">. Переключити?</string>
+
     <!-- Погода -->
     <string name="weather_title">Погода</string>
     <string name="weather_subtitle">Актуальний прогноз для вашого міста</string>
@@ -728,6 +729,7 @@
     <string name="first_start_reading">Зчитуємо ваш вибір</string>
     <string name="first_start_checking">Перевіряємо вашу реєстрацію</string>
     <string name="first_start_setting">Налаштовуємо ваш акаунт</string>
+
     <string name="no_internet_restart">Немає інтернету. Натисніть кнопку для перезапуску</string>
     <string name="restart_app">Перезапустити додаток</string>
     <string name="restarting_app">Перезапуск додатку...</string>
@@ -736,4 +738,11 @@
     <string name="close_app">Закрити додаток</string>
     <string name="restart_title">Перезапуск додатку</string>
     <string name="thanks_for_review">Дякуємо за вашу оцінку!</string>
+    <string name="no_open_review">Не вдалося відкрити оцінювання</string>
+    <string name="open_review_later">Оцінити можна пізніше</string>
+    <string name="weather_now">Погода зараз</string>
+    <string name="weather_notification_desc">Отримати сповіщення про погоду</string>
+    <string name="weather_no_data">Немає даних про погоду</string>
+    <string name="check">%s, очікується %s</string>
+    <string name="wether">Погода у м.%s</string>
 </resources>

@@ -2,11 +2,12 @@ package com.taxi_pas_4.utils.worker.api;
 
 import com.taxi_pas_4.utils.network.RetryInterceptor;
 
+import java.util.concurrent.TimeUnit;
+
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
-import java.util.concurrent.TimeUnit;
 
 public class RetrofitClient {
     private static final String BASE_URL = "https://t.easy-order-taxi.site/";

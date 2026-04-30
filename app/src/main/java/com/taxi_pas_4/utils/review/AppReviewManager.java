@@ -1,13 +1,11 @@
 package com.taxi_pas_4.utils.review;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,9 +14,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.play.core.review.ReviewInfo;
 import com.google.android.play.core.review.ReviewManager;
 import com.google.android.play.core.review.ReviewManagerFactory;
-
 import com.taxi_pas_4.BuildConfig;
-import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 
@@ -56,8 +52,17 @@ public class AppReviewManager {
      */
     public void requestReview(@NonNull Activity activity, @Nullable ReviewCallback callback) {
         Logger.d(context, TAG, "requestReview() called");
+        // ПРОВЕРКА НА ЭМУЛЯТОР - сразу используем fallback
+        if (isEmulator()) {
+            Logger.d(context, TAG, "Emulator detected - opening Play Store directly");
+            openPlayStorePage(activity);  // ← ДОБАВИТЬ ЭТО!
+            if (callback != null) {
+                callback.onReviewCompleted();
+            }
+            return;  // Выходим, не проверяем остальные условия
+        }
 
-        // Перевіряємо, чи можна робити запит
+        // Остальной код для реальных устройств...
         if (!canRequestReview()) {
             Logger.d(context, TAG, "Cannot request review - conditions not met");
             if (callback != null) {
@@ -65,6 +70,7 @@ public class AppReviewManager {
             }
             return;
         }
+
 
         // Отримуємо ReviewInfo
         Task<ReviewInfo> request = reviewManager.requestReviewFlow();
@@ -117,12 +123,28 @@ public class AppReviewManager {
         });
     }
 
+    private boolean isEmulator() {
+        return Build.FINGERPRINT.startsWith("generic")
+                || Build.FINGERPRINT.startsWith("unknown")
+                || Build.MODEL.contains("google_sdk")
+                || Build.MODEL.contains("Emulator")
+                || Build.MODEL.contains("Android SDK built for x86")
+                || Build.MANUFACTURER.contains("Genymotion")
+                || (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
+                || "google_sdk".equals(Build.PRODUCT);
+    }
+
     /**
      * Перевіряє, чи можна робити запит на оцінку
      */
     private boolean canRequestReview() {
         if (BuildConfig.DEBUG) {
-            Logger.d(context, TAG, "DEBUG MODE: Skipping all checks");
+            // В DEBUG режиме используем fallback для эмуляторов
+            if (isEmulator()) {
+                Logger.d(context, TAG, "Emulator detected - will use fallback");
+                // Не возвращаем true, чтобы пойти по пути fallback
+                return false;
+            }
             return true;
         }
         // 1. Чи вже оцінював користувач?

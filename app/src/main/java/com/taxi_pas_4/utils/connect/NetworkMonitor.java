@@ -1,6 +1,5 @@
 package com.taxi_pas_4.utils.connect;
 
-import android.app.Activity;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.Network;

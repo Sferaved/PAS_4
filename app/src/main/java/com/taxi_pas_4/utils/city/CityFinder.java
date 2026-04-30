@@ -2,7 +2,7 @@ package com.taxi_pas_4.utils.city;
 
 import static android.content.Context.MODE_PRIVATE;
 import static android.view.View.GONE;
-import static  com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
+import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -10,9 +10,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.navigation.NavController;
@@ -20,13 +18,13 @@ import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import  com.taxi_pas_4.MainActivity;
-import  com.taxi_pas_4.R;
-import  com.taxi_pas_4.ui.visicom.VisicomFragment;
-import  com.taxi_pas_4.utils.data.DataArr;
-import  com.taxi_pas_4.utils.ip.ApiServiceCountry;
-import  com.taxi_pas_4.utils.ip.CountryResponse;
-import  com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.R;
+import com.taxi_pas_4.ui.visicom.VisicomFragment;
+import com.taxi_pas_4.utils.data.DataArr;
+import com.taxi_pas_4.utils.ip.ApiServiceCountry;
+import com.taxi_pas_4.utils.ip.CountryResponse;
+import com.taxi_pas_4.utils.log.Logger;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -78,25 +76,25 @@ public class CityFinder {
             public void onResponse(@NonNull Call<CityResponse> call, @NonNull Response<CityResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     String city = response.body().getCity();
-                    Log.d(TAG, "City: " + city);
+                    Logger.d(context, TAG, "City: " + city);
 
                     cityVerify(city);
                 } else {
-                    Log.e(TAG, "Request failed: " + response.code());
+                    Logger.e(context, TAG, "Request failed: " + response.code());
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<CityResponse> call, @NonNull Throwable t) {
                 FirebaseCrashlytics.getInstance().recordException(t);
-                Log.e(TAG, "Error: " + t.getMessage(), t);
+                Logger.e(context, TAG, "Error: " + t.getMessage());
             }
         });
     }
-    
-    private void cityVerify (String city) {
+
+    private void cityVerify(String cityFromApi) {
         String cityResult;
-        switch (city) {
+        switch (cityFromApi) {
             case "city_kiev":
                 cityResult = "Kyiv City";
                 break;
@@ -163,16 +161,22 @@ public class CityFinder {
             default:
                 cityResult = "all";
         }
-        List<String> stringList = logCursor(MainActivity.CITY_INFO);
-        city = stringList.get(1);
 
-//        if(!city.equals(cityResult)) {
-            sharedPreferencesHelperMain.saveValue("setStatusX", false);
-            Log.d(TAG, "City: " + city);
-            Log.d(TAG, "cityResult: " + cityResult);
+        // Получаем город из БД
+        List<String> stringList = logCursor(MainActivity.CITY_INFO);
+        String currentCityFromDB = stringList.get(1);
+
+        Logger.d(context, TAG, "currentCityFromDB: " + currentCityFromDB);
+        Logger.d(context, TAG, "cityResult: " + cityResult);
+        sharedPreferencesHelperMain.saveValue("setStatusX", false);
+        VisicomFragment.updateGpsButtonCross(false);
+        // ☝️ ВОТ ЭТО УСЛОВИЕ - РАСКОММЕНТИРУЙТЕ И ПОПРАВЬТЕ
+        if (!cityResult.equals(currentCityFromDB)) {
+
+            Logger.d(context, TAG, "City: " + currentCityFromDB);
+            Logger.d(context, TAG, "cityResult: " + cityResult);
 
             String newTitle;
-
 
             String Kyiv_City_phone = "tel:0674443804";
             String Dnipropetrovsk_Oblast_phone = "tel:0667257070";
@@ -180,143 +184,118 @@ public class CityFinder {
             String Zaporizhzhia_phone = "tel:0687257070";
             String Cherkasy_Oblast_phone = "tel:0962294243";
 
-
-
-            switch (cityResult){
+            switch (cityResult) {
                 case "Kyiv City":
-
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_kyiv);
                     countryState = "UA";
                     break;
                 case "Dnipropetrovsk Oblast":
-
                     phoneNumber = Dnipropetrovsk_Oblast_phone;
                     cityMenu = context.getString(R.string.city_dnipro);
                     countryState = "UA";
                     break;
                 case "Odessa":
-
                     phoneNumber = Odessa_phone;
                     cityMenu = context.getString(R.string.city_odessa);
                     countryState = "UA";
                     break;
                 case "Zaporizhzhia":
-
                     phoneNumber = Zaporizhzhia_phone;
                     cityMenu = context.getString(R.string.city_zaporizhzhia);
                     countryState = "UA";
                     break;
                 case "Cherkasy Oblast":
-
                     phoneNumber = Cherkasy_Oblast_phone;
                     cityMenu = context.getString(R.string.city_cherkassy);
                     countryState = "UA";
                     break;
                 case "Lviv":
-
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_lviv);
                     countryState = "UA";
                     break;
                 case "Ivano_frankivsk":
-
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_ivano_frankivsk);
                     countryState = "UA";
                     break;
                 case "Vinnytsia":
-
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_vinnytsia);
                     countryState = "UA";
                     break;
                 case "Poltava":
-
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_poltava);
                     countryState = "UA";
                     break;
                 case "Sumy":
-
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_sumy);
                     countryState = "UA";
                     break;
                 case "Kharkiv":
-
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_kharkiv);
                     countryState = "UA";
                     break;
                 case "Chernihiv":
-
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_chernihiv);
                     countryState = "UA";
                     break;
                 case "Rivne":
-
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_rivne);
                     countryState = "UA";
                     break;
                 case "Ternopil":
-
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_ternopil);
                     countryState = "UA";
                     break;
                 case "Khmelnytskyi":
-
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_khmelnytskyi);
                     countryState = "UA";
                     break;
                 case "Zakarpattya":
-
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_zakarpattya);
                     countryState = "UA";
                     break;
                 case "Zhytomyr":
-
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_zhytomyr);
                     countryState = "UA";
                     break;
                 case "Kropyvnytskyi":
-
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_kropyvnytskyi);
                     countryState = "UA";
                     break;
                 case "Mykolaiv":
-
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_mykolaiv);
                     countryState = "UA";
                     break;
                 case "Chernivtsi":
-
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_chernivtsi);
                     countryState = "UA";
                     break;
                 case "Lutsk":
-
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.city_chernivtsi);
                     countryState = "UA";
                     break;
                 case "OdessaTest":
-
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = "Test";
                     countryState = "UA";
                     break;
                 case "foreign countries":
-
                     phoneNumber = Kyiv_City_phone;
                     cityMenu = context.getString(R.string.foreign_countries);
                     break;
@@ -328,9 +307,8 @@ public class CityFinder {
                     break;
             }
 
-            newTitle =  context.getString(R.string.menu_city) + " " + cityMenu;
+            newTitle = context.getString(R.string.menu_city) + " " + cityMenu;
             sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-
             sharedPreferencesHelperMain.saveValue("countryState", countryState);
 
             Logger.d(context, TAG, "onItemClick: pay_method" + pay_method);
@@ -341,12 +319,18 @@ public class CityFinder {
                     startLan,
                     position
             );
+        } else {
+            Logger.d(context, TAG, "Города одинаковые - диалог НЕ показываем");
 
-//        }
-
+            if (VisicomFragment.progressBar != null) {
+                VisicomFragment.progressBar.setVisibility(View.GONE);
+            }
+        }
     }
     @SuppressLint("SetTextI18n")
     private void updateMyPosition(String city, double startLat, double startLan, String position) {
+        String TAG = "updateMyPosition";
+
         Logger.d(context, TAG, "updateMyPosition:city " + city);
 
         Activity activity = activityRef.get();
@@ -390,10 +374,10 @@ public class CityFinder {
 
         List<String> stringList = logCursor(MainActivity.CITY_INFO);
         String cityOld = stringList.get(1);
-
+        Logger.d(context, TAG, "updateMyPosition:cityOld " + cityOld);
 // ✅ создаём final копию
         final String finalCity = city;
-
+        VisicomFragment.progressBar.setVisibility(View.GONE);
         if (!finalCity.equals(cityOld)) {
             cangedCity  = true;
             new androidx.appcompat.app.AlertDialog.Builder(activity)
@@ -403,7 +387,7 @@ public class CityFinder {
                         applyCityChange(finalCity, startLat, startLan, position);
                     })
                     .setNegativeButton(R.string.cancel, (dialog, which) -> {
-                        VisicomFragment.progressBar.setVisibility(View.GONE);
+                        VisicomFragment.updateGpsButtonCross(true);
                         Logger.d(context, TAG, "User declined city change");
                     })
                     .setCancelable(false)

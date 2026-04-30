@@ -47,7 +47,6 @@ import androidx.core.content.ContextCompat;
 import androidx.core.os.HandlerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavOptions;
@@ -81,7 +80,6 @@ import com.taxi_pas_4.utils.pusher.events.TransactionStatusEvent;
 import com.taxi_pas_4.utils.review.AppReviewManager;
 import com.taxi_pas_4.utils.time_ut.TimeUtils;
 import com.taxi_pas_4.utils.ui.BackPressBlocker;
-import com.taxi_pas_4.utils.worker.InclusiveTransportPreferenceWorker;
 import com.uxcam.UXCam;
 
 import org.greenrobot.eventbus.EventBus;
@@ -1047,6 +1045,7 @@ public class FinishSeparateFragment extends Fragment {
         sharedPreferencesHelperMain.saveValue("completed_orders_count", currentCount + 1);
         // ✅ Додаємо виклик оцінювання після завершення поїздки
         showReviewDialogIfNeeded();
+
         stopCycle();
         updateProgress(4);
 
@@ -1125,7 +1124,6 @@ public class FinishSeparateFragment extends Fragment {
             }
         }, 2000); // Затримка 2 секунди
     }
-
     private void orderInRout() {
         Logger.d(context, TAG, "orderInRout ");
         sharedPreferencesHelperMain.saveValue("carFound", true);
@@ -2548,17 +2546,27 @@ public class FinishSeparateFragment extends Fragment {
             }
         }
         Log.d("addCheck", "newCheck 1: " + newCheck);
-        List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, context);
-        String tarif = stringListInfo.get(2);
+//        List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, context);
+//        String tarif = stringListInfo.get(2);
+        String tarif = sharedPreferencesHelperMain.getValue("tarif", " ").toString();
+
         Log.d("addCheck", "tarif " + tarif);
         if (!tarif.equals(" ")) {
             flexible_tariff_name = tarif;
             newCheck++;
         }
+        if (tarif.equals(context.getResources().getString(R.string.start_t))) {
+            flexible_tariff_name = tarif;
+            newCheck--;
+        }
         Log.d("addCheck", "newCheck 2: " + newCheck);
         Log.d("addCheck", "comment_info " + "/" + comment_info + "/");
 
-        if (!comment_info.equals("no_comment") && !comment_info.isEmpty() && !comment_info.equals(" ")) {
+        if (!comment_info.equals("no_comment")
+                && !comment_info.isEmpty()
+                && !comment_info.equals(" ")
+                && !comment_info.equals("no_name ")
+        ) {
             newCheck++;
         }
         Log.d("addCheck", "newCheck 3: " + newCheck);

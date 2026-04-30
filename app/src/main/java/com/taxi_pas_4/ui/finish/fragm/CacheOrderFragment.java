@@ -38,9 +38,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
-import androidx.navigation.Navigation;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
@@ -340,7 +338,8 @@ public class CacheOrderFragment extends Fragment {
         String date = stringList.get(3);
         String comment = sharedPreferencesHelperMain.getValue("comment", "no_comment").toString();
         List<String> stringListInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, context);
-        String tarif = stringListInfo.get(2);
+//        String tarif = stringListInfo.get(2);
+        String tarif = sharedPreferencesHelperMain.getValue("tarif", " ").toString();
         String payment_type = stringListInfo.get(4);
 
 

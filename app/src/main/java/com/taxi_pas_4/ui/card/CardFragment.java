@@ -2,7 +2,6 @@ package com.taxi_pas_4.ui.card;
 
 import static android.content.Context.MODE_PRIVATE;
 import static com.taxi_pas_4.MainActivity.button1;
-import static com.taxi_pas_4.androidx.startup.MyApplication.getCurrentActivity;
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import android.annotation.SuppressLint;
