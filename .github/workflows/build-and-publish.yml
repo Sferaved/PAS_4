@@ -145,7 +145,7 @@ jobs:
           
           # Обновление треков
           #   for TRACK in internal alpha beta production; do
-          for TRACK in internal alpha beta; do
+          for TRACK in internal alpha beta production; do
             curl -s -X PUT \
               -H "Authorization: Bearer $ACCESS_TOKEN" \
               -H "Content-Type: application/json" \
