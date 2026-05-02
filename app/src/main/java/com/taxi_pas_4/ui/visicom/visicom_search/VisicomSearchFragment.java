@@ -2,7 +2,6 @@ package com.taxi_pas_4.ui.visicom.visicom_search;
 
 
 import static android.content.Context.MODE_PRIVATE;
-import static android.view.View.GONE;
 import static com.taxi_pas_4.MainActivity.button1;
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
@@ -709,7 +708,7 @@ public class VisicomSearchFragment extends Fragment {
             text_toError.setVisibility(View.GONE);
             root.findViewById(R.id.textwhere).setVisibility(View.GONE);
             root.findViewById(R.id.num2).setVisibility(View.GONE);
-            gpsbut.setVisibility(GONE);
+//            gpsbut.setVisibility(GONE);
         }
         if(end.equals("ok")) {
             oldAddresses("finish");
