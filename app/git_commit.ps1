@@ -125,8 +125,8 @@ git status --short | Out-Host
 Write-Host "`nFull list of changes:" -ForegroundColor Cyan
 git diff --stat | Out-Host
 
-$confirm = Read-Host "`nDo you want to commit these changes? (y/n)"
-
+#$confirm = Read-Host "`nDo you want to commit these changes? (y/n)"
+$confirm = 'y'
 if ($confirm -ne 'y' -and $confirm -ne 'Y') {
     Write-Host "Git operations cancelled." -ForegroundColor Yellow
     exit 0
@@ -164,8 +164,8 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-$pushConfirm = Read-Host "`nDo you want to push changes and tag to remote? (y/n)"
-
+#$pushConfirm = Read-Host "`nDo you want to push changes and tag to remote? (y/n)"
+$pushConfirm = 'y'
 if ($pushConfirm -eq 'y' -or $pushConfirm -eq 'Y') {
     Write-Host "Pushing commit..." -ForegroundColor Yellow
     git push

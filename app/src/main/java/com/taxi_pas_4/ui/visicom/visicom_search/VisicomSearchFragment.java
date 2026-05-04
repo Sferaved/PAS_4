@@ -1440,19 +1440,19 @@ public class VisicomSearchFragment extends Fragment {
                 }
 
             }
-            String newAddress = getString(R.string.address_on_map);
-
-            boolean isAddressExists = false;
-            for (String[] address : addresses) {
-                if (address.length > 0 && address[0].equals(newAddress)) {
-                    isAddressExists = true;
-                    break;
-                }
-            }
-
-            if (!isAddressExists) {
-                addresses.add(new String[]{newAddress, "", "", ""});
-            }
+//            String newAddress = getString(R.string.address_on_map);
+//
+//            boolean isAddressExists = false;
+//            for (String[] address : addresses) {
+//                if (address.length > 0 && address[0].equals(newAddress)) {
+//                    isAddressExists = true;
+//                    break;
+//                }
+//            }
+//
+//            if (!isAddressExists) {
+//                addresses.add(new String[]{newAddress, "", "", ""});
+//            }
 
 
         } catch (JSONException e) {
@@ -1851,12 +1851,12 @@ public class VisicomSearchFragment extends Fragment {
         //                    btn_ok.setVisibility(View.VISIBLE);
         db.close();
         c.close();
-        addresses.add(new String[]{
-                getString(R.string.address_on_map),
-                "",
-                "",
-                "",
-        });
+//        addresses.add(new String[]{
+//                getString(R.string.address_on_map),
+//                "",
+//                "",
+//                "",
+//        });
          addressesList = new ArrayList<>();
         for (String[] addressArray : addresses) {
             // Выбираем значение 'address' из массива и добавляем его в addressesList
@@ -2105,18 +2105,18 @@ public class VisicomSearchFragment extends Fragment {
         } else {
             Logger.d(context, TAG, "No results found.");
         }
-        String newAddress = getString(R.string.address_on_map);
-
-        boolean isAddressExists = false;
-        for (String[] address : addresses) {
-            if (address.length > 0 && address[0].equals(newAddress)) {
-                isAddressExists = true;
-                break;
-            }
-        }
-        if (!isAddressExists) {
-            addresses.add(new String[]{newAddress, "", "", ""});
-        }
+//        String newAddress = getString(R.string.address_on_map);
+//
+//        boolean isAddressExists = false;
+//        for (String[] address : addresses) {
+//            if (address.length > 0 && address[0].equals(newAddress)) {
+//                isAddressExists = true;
+//                break;
+//            }
+//        }
+//        if (!isAddressExists) {
+//            addresses.add(new String[]{newAddress, "", "", ""});
+//        }
 
         new Handler(Looper.getMainLooper()).post(() -> {
             addressesList = new ArrayList<>();
