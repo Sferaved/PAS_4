@@ -241,32 +241,6 @@ public class VisicomSearchFragment extends Fragment {
         database.close();
 
     }
-    private void startLocationUpdates() {
-        LocationRequest locationRequest = createLocationRequest();
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                || ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            return;
-        }
-        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
-    }
-    private void stopLocationUpdates() {
-        fusedLocationProviderClient.removeLocationUpdates(locationCallback);
-    }
-
-    private LocationRequest createLocationRequest() {
-        return new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000)  // приоритет и интервал обновления
-                .setMinUpdateIntervalMillis(100) // минимальный быстрый интервал
-                .build();
-    }
-
-
-    private void checkPermission(String permission) {
-
-        requestLocationPermissions();
-    }
-
-
 
 
     // Метод для сохранения количества запросов разрешений в SharedPreferences

@@ -766,7 +766,7 @@ public class VisicomFragment extends Fragment {
 
     public static void addCheck(Context context) {
 
-        String tarif = (String) sharedPreferencesHelperMain.getValue("tarif", " ");
+
         int newCheck = 0;
         List<String> services = logCursor(MainActivity.TABLE_SERVICE_INFO, context);
         for (int i = 0; i < DataArr.arrayServiceCode().length; i++) {
@@ -774,16 +774,12 @@ public class VisicomFragment extends Fragment {
                 newCheck++;
             }
         }
+
+        String tarif = (String) sharedPreferencesHelperMain.getValue("tarif", " ");
         if (!tarif.equals(" ")) {
             newCheck++;
         }
-//        boolean isInclusive = InclusiveTransportPreferenceWorker.needsInclusiveTransport();
-//        if (isInclusive) {
-//            newCheck++;
-//        }
 
-//        List<String> stringList = logCursor(MainActivity.TABLE_ADD_SERVICE_INFO, context);
-//        String comment = stringList.get(2);
         String comment = sharedPreferencesHelperMain.getValue("comment", "no_comment").toString();
         Logger.d(context, TAG, "comment" + comment);
 
@@ -794,11 +790,15 @@ public class VisicomFragment extends Fragment {
         ) {
             newCheck++;
         }
+        String discount= sharedPreferencesHelperMain.getValue("discount", "0").toString();
+        if(!discount.equals("0")) {
+            newCheck++;
+        }
+
         String mes = context.getString(R.string.add_services);
         if (newCheck != 0) {
             mes = context.getString(R.string.add_services) + " (" + newCheck + ")";
         }
-
 
         btnAdd.setText(mes);
 
