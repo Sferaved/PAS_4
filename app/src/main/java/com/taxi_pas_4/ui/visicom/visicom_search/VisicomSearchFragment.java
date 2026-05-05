@@ -34,6 +34,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -183,39 +184,35 @@ public class VisicomSearchFragment extends Fragment {
         return root;
 
     }
-    private void requestLocationPermissions() {
-        permissionLauncher.launch(new String[]{
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-        });
-    }
-    private void scrollSetVisibility() {
-        if (addressesList != null) {
-            addressListView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+    private void updateScrollButtonsVisibility() {
+        if (addressListView != null && addressAdapter != null) {
+            addressListView.post(() -> {
                 int totalHeight = 0;
                 int desiredWidth = View.MeasureSpec.makeMeasureSpec(addressListView.getWidth(), View.MeasureSpec.AT_MOST);
 
                 for (int i = 0; i < addressAdapter.getCount(); i++) {
                     View listItem = addressAdapter.getView(i, null, addressListView);
-
-                    // Замер высоты элемента
                     listItem.measure(desiredWidth, View.MeasureSpec.UNSPECIFIED);
                     totalHeight += listItem.getMeasuredHeight();
                 }
-                Log.d("TotalHeight", "Total height of all items: " + totalHeight);
-                if (totalHeight > 300) {
-                    scrollButtonUp.setVisibility(View.VISIBLE);
-                    scrollButtonDown.setVisibility(View.VISIBLE);
+
+                int listViewHeight = addressListView.getHeight();
+                LinearLayout scrollContainer = root.findViewById(R.id.scroll_buttons_container);
+
+                if (totalHeight > listViewHeight && listViewHeight > 0) {
+                    scrollContainer.setVisibility(View.VISIBLE);
                 } else {
-                    scrollButtonUp.setVisibility(View.GONE);
-                    scrollButtonDown.setVisibility(View.GONE);
+                    scrollContainer.setVisibility(View.GONE);
                 }
             });
-
-
-
         }
     }
+    private void scrollSetVisibility() {
+        if (addressesList != null && addressAdapter != null) {
+            addressListView.getViewTreeObserver().addOnGlobalLayoutListener(this::updateScrollButtonsVisibility);
+        }
+    }
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -546,6 +543,7 @@ public class VisicomSearchFragment extends Fragment {
         addressesList = new ArrayList<>();
         addressAdapter = new ArrayAdapter<>(context, R.layout.custom_list_item, addressesList);
         addressListView.setAdapter(addressAdapter);
+        updateScrollButtonsVisibility();
         scrollButtonUp = root.findViewById(R.id.scrollButtonUp);
         scrollButtonDown = root.findViewById(R.id.scrollButtonDown);
 
@@ -1512,7 +1510,7 @@ public class VisicomSearchFragment extends Fragment {
 
                 addressListView.setAdapter(addressAdapter);
 
-
+                updateScrollButtonsVisibility();
                 addressListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
                 addressListView.setItemChecked(0, true);
 
@@ -1840,7 +1838,7 @@ public class VisicomSearchFragment extends Fragment {
         addressAdapter = new ArrayAdapter<>(context, R.layout.custom_list_item, addressesList);
         
         addressListView.setAdapter(addressAdapter);
-
+        updateScrollButtonsVisibility();
         addressListView.setVisibility(View.VISIBLE);
 
 
@@ -2111,6 +2109,7 @@ public class VisicomSearchFragment extends Fragment {
 
             addressListView.setAdapter(addressAdapter);
             addressListView.setVisibility(View.VISIBLE);
+            updateScrollButtonsVisibility();
 
             addressListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
             addressListView.setItemChecked(0, true);
