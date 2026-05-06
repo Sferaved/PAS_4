@@ -110,6 +110,7 @@ import com.taxi_pas_4.utils.model.OrderViewModel;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.utils.permissions.UserPermissions;
+import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 import com.taxi_pas_4.utils.pusher.PusherManager;
 import com.taxi_pas_4.utils.review.AppReviewManager;
@@ -271,7 +272,7 @@ public class MainActivity extends AppCompatActivity {
         applyLocale(localeCode);
         super.onCreate(savedInstanceState);
         bugReportHelper = new BugReportHelper(this);
-
+        PhoneCallHelper.init(this);
         if (getIntent() != null && getIntent().hasExtra("shortcut_action")) {
             String action = getIntent().getStringExtra("shortcut_action");
 

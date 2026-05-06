@@ -60,6 +60,7 @@ import com.taxi_pas_4.utils.ip.RetrofitClient;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
+import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 import com.taxi_pas_4.utils.ui.BackPressBlocker;
 import com.taxi_pas_4.utils.worker.InclusiveTransportPreferenceWorker;
@@ -178,11 +179,15 @@ public class CacheOrderFragment extends Fragment {
 
         btnCallAdminFin = binding.btnCallAdminFin;
         btnCallAdminFin.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_DIAL);
-            List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
-            String phone = stringList.get(3);
-            intent.setData(Uri.parse(phone));
-            startActivity(intent);
+            PhoneCallHelper.callWithFallback(() -> {
+                List<String> stringList = logCursor(MainActivity.CITY_INFO, MyApplication.getContext());
+                return stringList.size() > 3 ? stringList.get(3) : "";
+            });
+//            Intent intent = new Intent(Intent.ACTION_DIAL);
+//            List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
+//            String phone = stringList.get(3);
+//            intent.setData(Uri.parse(phone));
+//            startActivity(intent);
         });
  
 

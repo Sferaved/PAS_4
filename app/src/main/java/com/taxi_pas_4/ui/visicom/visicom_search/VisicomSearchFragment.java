@@ -78,6 +78,7 @@ import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.helpers.LocaleHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
+import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -669,11 +670,15 @@ public class VisicomSearchFragment extends Fragment {
 
         btnCallAdmin = root.findViewById(R.id.btnCallAdmin);
         btnCallAdmin.setOnClickListener(view -> {
-            Intent intent = new Intent(Intent.ACTION_DIAL);
-            List<String> stringList1 = logCursor(MainActivity.CITY_INFO);
-            String phone = stringList1.get(3);
-            intent.setData(Uri.parse(phone));
-            startActivity(intent);
+            PhoneCallHelper.callWithFallback(() -> {
+                List<String> stringListPhone = logCursor(MainActivity.CITY_INFO);
+                return stringList.size() > 3 ? stringList.get(3) : "";
+            });
+//            Intent intent = new Intent(Intent.ACTION_DIAL);
+//            List<String> stringList1 = logCursor(MainActivity.CITY_INFO);
+//            String phone = stringList1.get(3);
+//            intent.setData(Uri.parse(phone));
+//            startActivity(intent);
         });
 
 

@@ -37,6 +37,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.ui.cities.api.CityApiClient;
 import com.taxi_pas_4.ui.cities.api.CityResponse;
 import com.taxi_pas_4.ui.cities.api.CityService;
@@ -45,6 +46,7 @@ import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.helpers.TelegramUtils;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.uxcam.UXCam;
 
 import java.io.File;
@@ -93,12 +95,16 @@ public class MyBottomSheetErrorFragment extends BottomSheetDialogFragment {
 
         btn_help = view.findViewById(R.id.btn_help);
         btn_help.setOnClickListener(v -> {
-            List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
-            Intent intent = new Intent(Intent.ACTION_DIAL);
-            String phone = stringList.get(3);
-
-            intent.setData(Uri.parse(phone));
-            startActivity(intent);
+            PhoneCallHelper.callWithFallback(() -> {
+                List<String> stringList = logCursor(MainActivity.CITY_INFO, MyApplication.getContext());
+                return stringList.size() > 3 ? stringList.get(3) : "";
+            });
+//            List<String> stringList = logCursor(MainActivity.CITY_INFO, requireActivity());
+//            Intent intent = new Intent(Intent.ACTION_DIAL);
+//            String phone = stringList.get(3);
+//
+//            intent.setData(Uri.parse(phone));
+//            startActivity(intent);
         });
 
         btn_ok = view.findViewById(R.id.btn_ok);

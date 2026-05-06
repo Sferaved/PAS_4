@@ -35,6 +35,7 @@ import androidx.navigation.Navigation;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.FragmentHistoryBinding;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.RouteResponse;
@@ -42,6 +43,7 @@ import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.db.DatabaseHelper;
 import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.uxcam.UXCam;
 
 import java.io.File;
@@ -165,10 +167,14 @@ public class HistoryFragment extends Fragment {
 
         AppCompatButton btnCallAdmin = binding.btnCallAdmin;
         btnCallAdmin.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_DIAL);
-            String phone = logCursor(MainActivity.CITY_INFO, context).get(3);
-            intent.setData(Uri.parse(phone));
-            startActivity(intent);
+            PhoneCallHelper.callWithFallback(() -> {
+                List<String> stringList = logCursor(MainActivity.CITY_INFO, MyApplication.getContext());
+                return stringList.size() > 3 ? stringList.get(3) : "";
+            });
+//            Intent intent = new Intent(Intent.ACTION_DIAL);
+//            String phone = logCursor(MainActivity.CITY_INFO, context).get(3);
+//            intent.setData(Uri.parse(phone));
+//            startActivity(intent);
         });
 
         AppCompatButton text_uid = binding.textUid;

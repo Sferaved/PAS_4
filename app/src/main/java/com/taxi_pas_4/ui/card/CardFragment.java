@@ -35,6 +35,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.FragmentCardBinding;
 import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
@@ -44,6 +45,7 @@ import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.keys.FirestoreHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
+import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.uxcam.UXCam;
 
 import java.io.UnsupportedEncodingException;
@@ -296,10 +298,14 @@ public class CardFragment extends Fragment {
 
         AppCompatButton btnCallAdmin = binding.btnCallAdmin;
         btnCallAdmin.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_DIAL);
-            String phone = logCursor(MainActivity.CITY_INFO, requireActivity()).get(3);
-            intent.setData(Uri.parse(phone));
-            startActivity(intent);
+            PhoneCallHelper.callWithFallback(() -> {
+                List<String> stringList = logCursor(MainActivity.CITY_INFO, MyApplication.getContext());
+                return stringList.size() > 3 ? stringList.get(3) : "";
+            });
+//            Intent intent = new Intent(Intent.ACTION_DIAL);
+//            String phone = logCursor(MainActivity.CITY_INFO, requireActivity()).get(3);
+//            intent.setData(Uri.parse(phone));
+//            startActivity(intent);
         });
         SwipeRefreshLayout swipeRefreshLayout = root.findViewById(R.id.swipeRefreshLayout);
         TextView svButton = root.findViewById(R.id.sv_button);

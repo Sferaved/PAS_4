@@ -56,6 +56,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.FragmentFinishSeparateBinding;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.BonusResponse;
@@ -74,6 +75,7 @@ import com.taxi_pas_4.utils.hold.HoldResponse;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
+import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.taxi_pas_4.utils.pusher.events.AddCostUpdateEvent;
 import com.taxi_pas_4.utils.pusher.events.CanceledStatusEvent;
 import com.taxi_pas_4.utils.pusher.events.TransactionStatusEvent;
@@ -282,11 +284,15 @@ public class FinishSeparateFragment extends Fragment {
 
         AppCompatButton btnCallAdmin = root.findViewById(R.id.btnCallAdmin);
         btnCallAdmin.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_DIAL);
-            List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
-            String phone = stringList.get(3);
-            intent.setData(Uri.parse(phone));
-            startActivity(intent);
+            PhoneCallHelper.callWithFallback(() -> {
+                List<String> stringList = logCursor(MainActivity.CITY_INFO, MyApplication.getContext());
+                return stringList.size() > 3 ? stringList.get(3) : "";
+            });
+//            Intent intent = new Intent(Intent.ACTION_DIAL);
+//            List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
+//            String phone = stringList.get(3);
+//            intent.setData(Uri.parse(phone));
+//            startActivity(intent);
         });
         messageFondy =  context.getString(R.string.fondy_message);
         email = logCursor(TABLE_USER_INFO, context).get(3);
@@ -1312,9 +1318,10 @@ public class FinishSeparateFragment extends Fragment {
                     Logger.d(context, TAG, "onResponse: driverPhone " + driverPhone);
                     btn_add_cost.setText(context.getString(R.string.phone_driver));
                     btn_add_cost.setOnClickListener(v -> {
-                        Intent intent = new Intent(Intent.ACTION_DIAL);
-                        intent.setData(Uri.parse("tel:" + driverPhone));
-                        context.startActivity(intent);
+                        PhoneCallHelper.callDriver(driverPhone, context);
+//                        Intent intent = new Intent(Intent.ACTION_DIAL);
+//                        intent.setData(Uri.parse("tel:" + driverPhone));
+//                        context.startActivity(intent);
                     });
                     btn_add_cost.setVisibility(View.VISIBLE);
                     btn_add_cost.setEnabled(true);
@@ -1389,9 +1396,13 @@ public class FinishSeparateFragment extends Fragment {
             Logger.d(context, TAG, "onResponse: driverPhone " + driverPhone);
             btn_add_cost.setText(context.getString(R.string.phone_driver));
             btn_add_cost.setOnClickListener(v -> {
-                Intent intent = new Intent(Intent.ACTION_DIAL);
-                intent.setData(Uri.parse("tel:" + driverPhone));
-                context.startActivity(intent);
+                PhoneCallHelper.callWithFallback(() -> {
+                    List<String> stringList = logCursor(MainActivity.CITY_INFO, MyApplication.getContext());
+                    return stringList.size() > 3 ? stringList.get(3) : "";
+                });
+//                Intent intent = new Intent(Intent.ACTION_DIAL);
+//                intent.setData(Uri.parse("tel:" + driverPhone));
+//                context.startActivity(intent);
             });
             btn_add_cost.setVisibility(View.VISIBLE);
             btn_add_cost.setEnabled(true);

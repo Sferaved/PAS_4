@@ -19,6 +19,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.ui.fondy.revers.ApiResponseRev;
 import com.taxi_pas_4.ui.fondy.revers.ReversApi;
 import com.taxi_pas_4.ui.fondy.revers.ReversRequestData;
@@ -27,6 +28,7 @@ import com.taxi_pas_4.ui.fondy.revers.SuccessResponseDataRevers;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetMessageFragment;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -65,11 +67,15 @@ public class ErrorPayActivity extends AppCompatActivity {
         fab_call.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_DIAL);
-                List<String> stringList = logCursor(MainActivity.CITY_INFO);
-                String phone = stringList.get(3);
-                intent.setData(Uri.parse(phone));
-                startActivity(intent);
+                PhoneCallHelper.callWithFallback(() -> {
+                    List<String> stringList = logCursor(MainActivity.CITY_INFO);
+                    return stringList.size() > 3 ? stringList.get(3) : "";
+                });
+//                Intent intent = new Intent(Intent.ACTION_DIAL);
+//                List<String> stringList = logCursor(MainActivity.CITY_INFO);
+//                String phone = stringList.get(3);
+//                intent.setData(Uri.parse(phone));
+//                startActivity(intent);
             }
         });
     }

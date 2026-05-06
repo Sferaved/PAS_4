@@ -38,6 +38,7 @@ import androidx.navigation.NavOptions;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.FragmentGalleryBinding;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetBonusFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetDialogFragment;
@@ -46,6 +47,7 @@ import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGalleryFragment;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.data.DataArr;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 import com.taxi_pas_4.utils.worker.InclusiveTransportPreferenceWorker;
 import com.uxcam.UXCam;
@@ -133,11 +135,15 @@ public class GalleryFragment extends Fragment {
 
         btnCallAdmin = binding.btnCallAdmin;
         btnCallAdmin.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_DIAL);
-            List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
-            String phone = stringList.get(3);
-            intent.setData(Uri.parse(phone));
-            startActivity(intent);
+            PhoneCallHelper.callWithFallback(() -> {
+                List<String> stringList = logCursor(MainActivity.CITY_INFO, MyApplication.getContext());
+                return stringList.size() > 3 ? stringList.get(3) : "";
+            });
+//            Intent intent = new Intent(Intent.ACTION_DIAL);
+//            List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
+//            String phone = stringList.get(3);
+//            intent.setData(Uri.parse(phone));
+//            startActivity(intent);
         });
         del_but = binding.delBut;
         del_but.setOnClickListener(new View.OnClickListener() {

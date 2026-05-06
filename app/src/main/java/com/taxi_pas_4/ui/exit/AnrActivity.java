@@ -14,9 +14,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 
 import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.FragmentAnrBinding;
 import com.taxi_pas_4.utils.connect.NetworkMonitor;
 import com.taxi_pas_4.utils.log.LogEmailSender;
+import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,10 +47,14 @@ public class AnrActivity extends AppCompatActivity {
         });
 
         btnCallAdmin.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_DIAL);
-            String phone = logCursor(MainActivity.CITY_INFO, AnrActivity.this).get(3);
-            intent.setData(Uri.parse(phone));
-            startActivity(intent);
+            PhoneCallHelper.callWithFallback(() -> {
+                List<String> stringList = logCursor(MainActivity.CITY_INFO, MyApplication.getContext());
+                return stringList.size() > 3 ? stringList.get(3) : "";
+            });
+//            Intent intent = new Intent(Intent.ACTION_DIAL);
+//            String phone = logCursor(MainActivity.CITY_INFO, AnrActivity.this).get(3);
+//            intent.setData(Uri.parse(phone));
+//            startActivity(intent);
             finish();
         });
 

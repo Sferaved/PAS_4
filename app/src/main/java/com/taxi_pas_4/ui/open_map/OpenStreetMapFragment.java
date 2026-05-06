@@ -69,6 +69,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.FragmentOpenstreetmapBinding;
 import com.taxi_pas_4.ui.maps.FromJSONParser;
 import com.taxi_pas_4.ui.open_map.api.ApiResponse;
@@ -77,6 +78,7 @@ import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
+import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 
 import org.json.JSONException;
 import org.osmdroid.api.IMapController;
@@ -421,11 +423,15 @@ public class OpenStreetMapFragment extends Fragment {
         }
 
         fabCall.setOnClickListener(v -> {
-            List<String> stringList = logCursor(MainActivity.CITY_INFO, ctx);
-            String phone = stringList.get(3);
-            Intent intent = new Intent(Intent.ACTION_DIAL);
-            intent.setData(Uri.parse(phone));
-            startActivity(intent);
+            PhoneCallHelper.callWithFallback(() -> {
+                List<String> stringList = logCursor(MainActivity.CITY_INFO, MyApplication.getContext());
+                return stringList.size() > 3 ? stringList.get(3) : "";
+            });
+//            List<String> stringList = logCursor(MainActivity.CITY_INFO, ctx);
+//            String phone = stringList.get(3);
+//            Intent intent = new Intent(Intent.ACTION_DIAL);
+//            intent.setData(Uri.parse(phone));
+//            startActivity(intent);
         });
 
         gpsSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {

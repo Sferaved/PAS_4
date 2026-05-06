@@ -37,6 +37,7 @@ import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.FragmentBonusBinding;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.BonusResponse;
@@ -44,6 +45,7 @@ import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.auth.FirebaseConsentManager;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.uxcam.UXCam;
 
 import java.util.ArrayList;
@@ -94,10 +96,14 @@ public class BonusFragment extends Fragment {
 
         btnCallAdmin = binding.btnCallAdmin;
         btnCallAdmin.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_DIAL);
-            String phone = logCursor(MainActivity.CITY_INFO, requireActivity()).get(3);
-            intent.setData(Uri.parse(phone));
-            startActivity(intent);
+            PhoneCallHelper.callWithFallback(() -> {
+                List<String> stringList = logCursor(MainActivity.CITY_INFO, MyApplication.getContext());
+                return stringList.size() > 3 ? stringList.get(3) : "";
+            });
+//            Intent intent = new Intent(Intent.ACTION_DIAL);
+//            String phone = logCursor(MainActivity.CITY_INFO, requireActivity()).get(3);
+//            intent.setData(Uri.parse(phone));
+//            startActivity(intent);
         });
 
         in_but = binding.btnInAccount;

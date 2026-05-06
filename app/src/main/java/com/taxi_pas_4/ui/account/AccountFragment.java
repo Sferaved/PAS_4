@@ -42,6 +42,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.redmadrobot.inputmask.MaskedTextChangedListener;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.FragmentAccountBinding;
 import com.taxi_pas_4.ui.exit.ExitActivity;
 import com.taxi_pas_4.ui.finish.ApiClient;
@@ -54,6 +55,7 @@ import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.db.DatabaseHelper;
 import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.taxi_pas_4.utils.user.save_firebase.FirebaseUserManager;
 import com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
 import com.uxcam.UXCam;
@@ -203,10 +205,14 @@ public class AccountFragment extends Fragment {
         });
 
         btnCallAdmin.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_DIAL);
-            String phone = logCursor(MainActivity.CITY_INFO).get(3);
-            intent.setData(Uri.parse(phone));
-            startActivity(intent);
+            PhoneCallHelper.callWithFallback(() -> {
+                List<String> stringListPhone = logCursor(MainActivity.CITY_INFO);
+                return stringListPhone.size() > 3 ? stringList.get(3) : "";
+            });
+//            Intent intent = new Intent(Intent.ACTION_DIAL);
+//            String phone = logCursor(MainActivity.CITY_INFO).get(3);
+//            intent.setData(Uri.parse(phone));
+//            startActivity(intent);
         });
 
         btnOrder = binding.btnOrder;

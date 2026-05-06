@@ -34,6 +34,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.ui.card.CustomCardAdapter;
 import com.taxi_pas_4.ui.card.MyBottomSheetCardPayment;
 import com.taxi_pas_4.ui.finish.ApiClient;
@@ -62,6 +63,7 @@ import com.taxi_pas_4.utils.data.DataArr;
 import com.taxi_pas_4.utils.helpers.LocaleHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
+import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 import com.taxi_pas_4.utils.worker.InclusiveTransportPreferenceWorker;
 import com.uxcam.UXCam;
@@ -160,13 +162,17 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
         btn_help = view.findViewById(R.id.btn_help);
         btn_help.setOnClickListener(v -> {
             actionPerformed = true; // Отмечаем, что действие было выполнено
-            List<String> stringList = logCursor(MainActivity.CITY_INFO, requireContext());
-            Intent intent = new Intent(Intent.ACTION_DIAL);
-            String phone = stringList.get(3);
-
-            intent.setData(Uri.parse(phone));
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
+            PhoneCallHelper.callWithFallback(() -> {
+                List<String> stringList = logCursor(MainActivity.CITY_INFO, MyApplication.getContext());
+                return stringList.size() > 3 ? stringList.get(3) : "";
+            });
+//            List<String> stringList = logCursor(MainActivity.CITY_INFO, requireContext());
+//            Intent intent = new Intent(Intent.ACTION_DIAL);
+//            String phone = stringList.get(3);
+//
+//            intent.setData(Uri.parse(phone));
+//            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//            startActivity(intent);
         });
 
         btn_ok = view.findViewById(R.id.btn_ok);

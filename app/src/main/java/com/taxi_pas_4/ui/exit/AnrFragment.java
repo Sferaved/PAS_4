@@ -23,8 +23,10 @@ import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.Fragment;
 
 import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.FragmentAnrBinding;
 import com.taxi_pas_4.utils.connect.NetworkMonitor;
+import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,10 +69,14 @@ public class AnrFragment extends Fragment {
             startActivity(new Intent(requireActivity(), MainActivity.class));
         });
         btnCallAdmin.setOnClickListener(view16 -> {
-            Intent intent = new Intent(Intent.ACTION_DIAL);
-            String phone = logCursor(MainActivity.CITY_INFO, requireActivity()).get(3);
-            intent.setData(Uri.parse(phone));
-            startActivity(intent);
+            PhoneCallHelper.callWithFallback(() -> {
+                List<String> stringList = logCursor(MainActivity.CITY_INFO, MyApplication.getContext());
+                return stringList.size() > 3 ? stringList.get(3) : "";
+            });
+//            Intent intent = new Intent(Intent.ACTION_DIAL);
+//            String phone = logCursor(MainActivity.CITY_INFO, requireActivity()).get(3);
+//            intent.setData(Uri.parse(phone));
+//            startActivity(intent);
         });
         btn_exit.setOnClickListener(view16 -> {
             closeApplication();

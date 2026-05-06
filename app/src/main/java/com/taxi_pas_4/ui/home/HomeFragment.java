@@ -112,6 +112,7 @@ import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
+import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.taxi_pas_4.utils.retrofit.cost_json_parser.CostJSONParserRetrofit;
 import com.taxi_pas_4.utils.retrofit.worker.RetrofitWorker;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
@@ -565,18 +566,26 @@ public class HomeFragment extends Fragment {
         });
         btnCallAdmin = binding.btnCallAdmin;
         btnCallAdmin.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_DIAL);
-            String phone = logCursor(MainActivity.CITY_INFO, requireActivity()).get(3);
-            intent.setData(Uri.parse(phone));
-            startActivity(intent);
+            PhoneCallHelper.callWithFallback(() -> {
+                List<String> stringListPhone = logCursor(MainActivity.CITY_INFO, MyApplication.getContext());
+                return stringListPhone.size() > 3 ? stringList.get(3) : "";
+            });
+//            Intent intent = new Intent(Intent.ACTION_DIAL);
+//            String phone = logCursor(MainActivity.CITY_INFO, requireActivity()).get(3);
+//            intent.setData(Uri.parse(phone));
+//            startActivity(intent);
         });
 
         btnCallAdminFin = binding.btnCallAdminFin;
         btnCallAdminFin.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_DIAL);
-            String phone = logCursor(MainActivity.CITY_INFO, requireActivity()).get(3);
-            intent.setData(Uri.parse(phone));
-            startActivity(intent);
+            PhoneCallHelper.callWithFallback(() -> {
+                List<String> stringListPhone = logCursor(MainActivity.CITY_INFO, MyApplication.getContext());
+                return stringListPhone.size() > 3 ? stringList.get(3) : "";
+            });
+//            Intent intent = new Intent(Intent.ACTION_DIAL);
+//            String phone = logCursor(MainActivity.CITY_INFO, requireActivity()).get(3);
+//            intent.setData(Uri.parse(phone));
+//            startActivity(intent);
         });
 
 

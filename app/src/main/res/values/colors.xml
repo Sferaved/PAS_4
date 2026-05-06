@@ -52,4 +52,5 @@
     <color name="text_secondary_old">#A0A0A0</color>
     <color name="text_primary">#212121</color>
     <color name="text_secondary">#E0E0E0</color>
+    <color name="colorAccentDark">#D81B60</color>
 </resources>
