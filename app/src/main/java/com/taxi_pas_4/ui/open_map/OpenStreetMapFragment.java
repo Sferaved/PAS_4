@@ -2,7 +2,6 @@ package com.taxi_pas_4.ui.open_map;
 
 import static android.content.Context.MODE_PRIVATE;
 import static android.view.View.GONE;
-import static android.view.View.VISIBLE;
 import static com.taxi_pas_4.MainActivity.button1;
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 

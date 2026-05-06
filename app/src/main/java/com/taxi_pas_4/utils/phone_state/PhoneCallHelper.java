@@ -1,7 +1,6 @@
 package com.taxi_pas_4.utils.phone_state;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -44,6 +43,44 @@ public class PhoneCallHelper {
         isInitialized = true;
     }
 
+    public static void initWithActivity(FragmentActivity activity) {
+        currentActivityRef = new WeakReference<>(activity);
+        preferencesHelper = new SharedPreferencesHelper(activity);
+
+        permissionLauncher = activity.registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                isGranted -> {
+                    if (isGranted) {
+                        if (pendingPhoneNumber != null) {
+                            makeCallDirect(pendingPhoneNumber);
+                            pendingPhoneNumber = null;
+                        }
+                    } else {
+                        if (pendingPhoneNumber != null) {
+                            showPermissionDeniedMessage(getContext());
+                            openDialer(pendingPhoneNumber, getContext());
+                            pendingPhoneNumber = null;
+                        }
+                    }
+                }
+        );
+
+        launcherReady = true;
+        isInitialized = true;
+    }
+    public static void ensureCallPermission() {
+        Context context = getContext();
+
+        if (!(context instanceof FragmentActivity)) return;
+
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            if (launcherReady && permissionLauncher != null) {
+                permissionLauncher.launch(Manifest.permission.CALL_PHONE);
+            }
+        }
+    }
     /**
      * Инициализация с фрагментом (для RegisterForActivityResult)
      */
