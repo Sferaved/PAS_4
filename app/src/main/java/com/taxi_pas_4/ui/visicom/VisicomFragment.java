@@ -3,6 +3,7 @@ package com.taxi_pas_4.ui.visicom;
 
 import static android.content.Context.MODE_PRIVATE;
 import static android.view.View.GONE;
+import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
 import static com.taxi_pas_4.MainActivity.CITY_INFO;
 import static com.taxi_pas_4.MainActivity.activeCalls;
@@ -814,7 +815,7 @@ public class VisicomFragment extends Fragment {
         // Всегда видимая кнопка администратора
         binding.btnCallAdmin.setVisibility(View.VISIBLE);
 
-        if (visible == GONE) {
+        if (visible == GONE || visible == INVISIBLE) {
             showRetryMode();
         } else if (visible == VISIBLE) {
             showNormalMode();
@@ -822,15 +823,15 @@ public class VisicomFragment extends Fragment {
 
         // Управление ProgressBar
         binding.progressBar.setVisibility(visible == GONE ? View.VISIBLE : View.GONE);
-
-        // Групповая установка видимости для основных элементов
-        setViewsVisibility(visible,
-                binding.linearLayoutButtons,
-                binding.gpsbut,
-                binding.btnAdd, binding.btnBonus, binding.btnMinus,
-                binding.textViewCost, binding.btnPlus, binding.btnOrder,
-                binding.schedule, binding.shedDown
-        );
+//
+//        // Групповая установка видимости для основных элементов
+//        setViewsVisibility(visible,
+//                binding.linearLayoutButtons,
+//                binding.gpsbut,
+//                binding.btnAdd, binding.btnBonus, binding.btnMinus,
+//                binding.textViewCost, binding.btnPlus, binding.btnOrder,
+//                binding.schedule, binding.shedDown
+//        );
 
         Logger.d(context,"BTN_VISIBLE", "Метод завершен. Текущий режим: " + getVisibilityString(visible));
     }
@@ -869,7 +870,7 @@ public class VisicomFragment extends Fragment {
         boolean needFix = false;
 
         // Проверяем видимость
-        if (binding.gpsbut.getVisibility() != VISIBLE) {
+        if (binding.gpsbut.getVisibility() == INVISIBLE || binding.gpsbut.getVisibility() == GONE) {
             binding.gpsbut.setVisibility(VISIBLE);
             needFix = true;
         }
@@ -888,7 +889,7 @@ public class VisicomFragment extends Fragment {
 
 
         // Проверяем видимость (должна быть GONE в нормальном режиме)
-        if (binding.fabCallAdmin.getVisibility() != GONE) {
+        if (binding.fabCallAdmin.getVisibility() != INVISIBLE || binding.fabCallAdmin.getVisibility() != GONE) {
             binding.fabCallAdmin.setVisibility(GONE);
             needFix = true;
         }
