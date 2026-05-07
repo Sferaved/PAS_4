@@ -815,6 +815,9 @@ public class VisicomFragment extends Fragment {
         // Всегда видимая кнопка администратора
         binding.btnCallAdmin.setVisibility(View.VISIBLE);
 
+        // GPS кнопка всегда видна
+        binding.gpsbut.setVisibility(View.VISIBLE);
+
         if (visible == GONE || visible == INVISIBLE) {
             showRetryMode();
         } else if (visible == VISIBLE) {
@@ -823,11 +826,10 @@ public class VisicomFragment extends Fragment {
 
         // Управление ProgressBar
         binding.progressBar.setVisibility(visible == GONE ? View.VISIBLE : View.GONE);
-//
-        // Групповая установка видимости для основных элементов
+
+        // Групповая установка видимости для основных элементов (исключаем gpsbut)
         setViewsVisibility(visible,
                 binding.linearLayoutButtons,
-                binding.gpsbut,
                 binding.btnAdd, binding.btnBonus, binding.btnMinus,
                 binding.textViewCost, binding.btnPlus, binding.btnOrder,
                 binding.schedule, binding.shedDown
@@ -857,18 +859,16 @@ public class VisicomFragment extends Fragment {
     }
 
     private void showNormalMode() {
+        // Убираем gpsbut из этого списка
         setViewsVisibility(VISIBLE,
                 binding.textfrom, binding.num1, binding.clearButtonFrom,
                 binding.textGeo, binding.textwhere, binding.num2,
-                binding.textTo, binding.clearButtonTo, binding.gpsbut
+                binding.textTo, binding.clearButtonTo
+                // binding.gpsbut - удаляем отсюда
         );
-
 
         binding.btnCallAdmin.setText(R.string.call_admin);
         binding.btnCallAdmin.setOnClickListener(v -> callAdmin());
-
-
-
     }
 
     private void setViewsVisibility(int visibility, View... views) {

@@ -32,6 +32,7 @@
                     android:layout_marginTop="4dp"
                     android:background="@drawable/buttons_green_cross"
                     android:text="@string/change"
+                    android:visibility="visible"
                     android:textSize="20sp"
                     android:textColor="@color/black"
                     app:layout_constraintEnd_toEndOf="@+id/textGeo"
