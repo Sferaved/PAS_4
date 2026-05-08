@@ -462,6 +462,22 @@
                     app:layout_constraintWidth_percent="@dimen/button_width" />
 
                 <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnReset"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/buttons"
+                    android:fontFamily="@font/regular"
+                    android:text="@string/try_again"
+                    android:textAlignment="center"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/textView_textSize"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/btnOrder"
+                    app:layout_constraintWidth_percent="@dimen/button_width" />
+
+                <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/btnCallAdmin"
                     android:layout_width="0dp"
                     android:layout_height="@dimen/button_height"
@@ -474,7 +490,7 @@
                     android:textSize="@dimen/textView_textSize"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/btnOrder"
+                    app:layout_constraintTop_toBottomOf="@+id/btnReset"
                     app:layout_constraintWidth_percent="@dimen/button_width" />
 
                 <androidx.constraintlayout.widget.Guideline

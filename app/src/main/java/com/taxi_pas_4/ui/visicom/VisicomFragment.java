@@ -840,9 +840,9 @@ public class VisicomFragment extends Fragment {
 
     private void showRetryMode() {
 
-        binding.btnCallAdmin.setText(R.string.try_again);
+        binding.btnReset.setVisibility(VISIBLE);
 
-        binding.btnCallAdmin.setOnClickListener(v -> {
+        binding.btnReset.setOnClickListener(v -> {
             Logger.d(context,"BTN_VISIBLE", "Клик: Попробовать снова");
             clearTABLE_SERVICE_INFO();
             sharedPreferencesHelperMain.saveValue("time", "no_time");
@@ -867,8 +867,7 @@ public class VisicomFragment extends Fragment {
                 // binding.gpsbut - удаляем отсюда
         );
 
-        binding.btnCallAdmin.setText(R.string.call_admin);
-        binding.btnCallAdmin.setOnClickListener(v -> callAdmin());
+        binding.btnReset.setVisibility(GONE);
     }
 
     private void setViewsVisibility(int visibility, View... views) {
