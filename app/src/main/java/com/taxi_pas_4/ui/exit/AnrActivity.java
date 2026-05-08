@@ -31,7 +31,8 @@ public class AnrActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        PhoneCallHelper.initWithActivity(this);
+        PhoneCallHelper.ensureCallPermission();
         com.taxi_pas_4.databinding.FragmentAnrBinding binding = FragmentAnrBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
