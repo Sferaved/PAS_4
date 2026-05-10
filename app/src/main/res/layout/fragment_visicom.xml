@@ -471,6 +471,7 @@
                     android:text="@string/try_again"
                     android:textAlignment="center"
                     android:textColor="@color/white"
+                    android:visibility="gone"
                     android:textSize="@dimen/textView_textSize"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
