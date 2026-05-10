@@ -33,6 +33,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.ui.home.ButtonVisibilityCallback;
 import com.taxi_pas_4.ui.home.CustomListAdapter;
 import com.taxi_pas_4.ui.home.HomeFragment;
 import com.taxi_pas_4.utils.data.DataArr;
@@ -76,6 +77,8 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
     TimeZone timeZone;
     SQLiteDatabase database;
     Context context;
+    private ButtonVisibilityCallback callback;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -283,7 +286,16 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
 
         return view;
     }
-
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        // Получаем callback из активности или родительского фрагмента
+        if (getParentFragment() instanceof ButtonVisibilityCallback) {
+            callback = (ButtonVisibilityCallback) getParentFragment();
+        } else if (getActivity() instanceof ButtonVisibilityCallback) {
+            callback = (ButtonVisibilityCallback) getActivity();
+        }
+    }
     private void showDataPickerDialog() {
         Dialog dataPickerDialog = new Dialog(context);
         dataPickerDialog.setContentView(R.layout.custom_date_picker);
@@ -646,7 +658,9 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
 
                     String newCost = String.valueOf(firstCost + discount);
                     HomeFragment.text_view_cost.setText(newCost);
-                    HomeFragment.btnVisible(View.VISIBLE);
+                    if (callback != null) {
+                        callback.onShowButtons(View.VISIBLE);
+                    }
                 } else  {
                     ContentValues cv = new ContentValues();
                     cv.put("tarif", " ");

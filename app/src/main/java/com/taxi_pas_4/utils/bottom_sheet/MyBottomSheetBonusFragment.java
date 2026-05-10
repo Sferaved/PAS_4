@@ -38,6 +38,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.gallery.GalleryFragment;
+import com.taxi_pas_4.ui.home.ButtonVisibilityCallback;
 import com.taxi_pas_4.ui.home.CustomArrayAdapter;
 import com.taxi_pas_4.ui.home.HomeFragment;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
@@ -88,6 +89,7 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
     int fistItem, finishItem;
     private TextView tvSelectedTime, tvSelectedDate;
     View view;
+    private ButtonVisibilityCallback callback;
 
     public MyBottomSheetBonusFragment() {
     }
@@ -247,7 +249,16 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
         });
         return view;
     }
-
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        // Получаем callback из активности или родительского фрагмента
+        if (getParentFragment() instanceof ButtonVisibilityCallback) {
+            callback = (ButtonVisibilityCallback) getParentFragment();
+        } else if (getActivity() instanceof ButtonVisibilityCallback) {
+            callback = (ButtonVisibilityCallback) getActivity();
+        }
+    }
     private void checkCardPaymentForCity(String cityName) {
         String TAG = "checkCardPaymentForCity";
 
@@ -577,7 +588,9 @@ public class MyBottomSheetBonusFragment extends BottomSheetDialogFragment {
                             HomeFragment.costFirstForMin = firstCost;
                             String costUpdate = String.valueOf(firstCost);
                             textView.setText(costUpdate);
-                            HomeFragment.btnVisible(View.VISIBLE);
+                            if (callback != null) {
+                                callback.onShowButtons(View.VISIBLE);
+                            }
                         } else {
                             progressBar.setVisibility(View.INVISIBLE);
                             if (pos == 1 || pos == 2) {
