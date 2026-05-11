@@ -2591,8 +2591,6 @@ public class VisicomFragment extends Fragment {
 
 
     private void firstLocation() {
-        Logger.d(context, TAG, "=== firstLocation() START ===");
-
         progressBar.setVisibility(View.VISIBLE);
         schedule.setVisibility(View.VISIBLE);
         shed_down.setVisibility(View.VISIBLE);
@@ -2610,87 +2608,66 @@ public class VisicomFragment extends Fragment {
 
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Logger.d(context, TAG, "Нет разрешения на геолокацию");
-            progressBar.setVisibility(View.GONE);
             return;
         }
 
         viewModel.setStatusX(false);
 
+        // ✅ Одноразовое получение текущей локации
         fusedLocationProviderClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
                 .addOnSuccessListener(location -> {
                     if (location != null) {
-                        Logger.d(context, TAG, "Location received");
+                        updateGpsButtonDrawable(false);
+                        double latitude = location.getLatitude();
+                        double longitude = location.getLongitude();
+                        boolean coordinatesChanged = haveCoordinatesChanged(latitude, longitude);
+                        Logger.d(context, TAG, "getCurrentLocation: координаты изменились = " + coordinatesChanged +
+                                ", latitude=" + latitude + ", longitude=" + longitude);
 
+                        if (!coordinatesChanged) {
+                            progressBar.setVisibility(View.GONE);
+                            updateGpsButtonCross(false);
+                            Logger.d(context, TAG, "Пропускаем обновление - координаты не изменились");
+                            return;
+                        }
+                        Logger.d(context, TAG, "getCurrentLocation: " + latitude + ", " + longitude);
 
-                        // Асинхронная проверка GNSS
-                        TaxiLocationValidator.isRealGnssWorkingAsync(context, gnssWorking -> {
-                            requireActivity().runOnUiThread(() -> {
-                                if (!gnssWorking && !TaxiLocationValidator.isGnssCheckDisabled()) {
-                                    showGnssErrorSnackbar();
-                                    progressBar.setVisibility(View.GONE);
-                                    return;
+                        List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
+                        String api = stringList.get(2);
+                        String language = Locale.getDefault().getLanguage();
+
+                        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+                        String urlFrom = baseUrl + "/" + api + "/android/fromSearchGeoLocal/" + latitude + "/" + longitude + "/" + language;
+
+                        FromJSONParserRetrofit.sendURL(urlFrom, result -> {
+                            if (result != null) {
+                                String FromAdressString = result.get("route_address_from");
+                                Logger.d(context, TAG, "FromAdressString: " + FromAdressString);
+                                if (FromAdressString != null && FromAdressString.contains("Точка на карте")) {
+                                    FromAdressString = context.getString(R.string.startPoint);
                                 }
-
-                                // Асинхронная проверка локации
-                                TaxiLocationValidator.evaluateAsync(location, context, risk -> {
-                                    requireActivity().runOnUiThread(() -> {
-                                        if (risk == TaxiLocationValidator.RiskLevel.BLOCK) {
-                                            showLocationErrorDialog(location);
-                                            progressBar.setVisibility(View.GONE);
-                                            return;
-                                        }
-
-                                        if (risk == TaxiLocationValidator.RiskLevel.SUSPICIOUS) {
-                                            showSuspiciousLocationWarning(location, risk);
-                                        }
-
-                                        // Продолжаем обработку локации
-                                        double latitude = location.getLatitude();
-                                        double longitude = location.getLongitude();
-                                        boolean coordinatesChanged = haveCoordinatesChanged(latitude, longitude);
-
-                                        if (!coordinatesChanged) {
-                                            progressBar.setVisibility(View.GONE);
-                                            updateGpsButtonCross(false);
-                                            return;
-                                        }
-
-                                        // Получаем адрес...
-                                        List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
-                                        String api = stringList.get(2);
-                                        String language = Locale.getDefault().getLanguage();
-
-                                        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
-                                        String urlFrom = baseUrl + "/" + api + "/android/fromSearchGeoLocal/" + latitude + "/" + longitude + "/" + language;
-
-                                        FromJSONParserRetrofit.sendURL(urlFrom, result -> {
-                                            if (result != null && isAdded()) {
-                                                String FromAdressString = result.get("route_address_from");
-                                                if (FromAdressString != null && FromAdressString.contains("Точка на карте")) {
-                                                    FromAdressString = context.getString(R.string.startPoint);
-                                                }
-                                                geoText.setText(FromAdressString);
-
-                                                new CityFinder(context, latitude, longitude, FromAdressString, context)
-                                                        .findCity(latitude, longitude);
-                                                updateGpsButtonDrawable(false);
-                                                updateCoordinatesInDatabase(latitude, longitude, FromAdressString);
-
-                                                try {
-                                                    visicomCost();
-                                                } catch (MalformedURLException e) {
-                                                    Logger.e(context, TAG, "Error: " + e.getMessage());
-                                                }
-                                                progressBar.setVisibility(View.GONE);
-                                            } else {
-                                                progressBar.setVisibility(View.GONE);
-                                            }
-                                        });
-                                    });
-                                });
-                            });
+                                geoText.setText(FromAdressString);
+                                new CityFinder(
+                                        context,
+                                        latitude,
+                                        longitude,
+                                        FromAdressString,
+                                        context
+                                ).findCity(latitude, longitude);
+                                updateCoordinatesInDatabase(latitude, longitude, FromAdressString);
+                                try {
+                                    visicomCost();
+                                } catch (MalformedURLException e) {
+                                    throw new RuntimeException(e);
+                                }
+                                Logger.d(context, TAG, "ToAdressString: " + textViewTo.getText().toString());
+                            } else {
+                                Logger.d(context, TAG, "Ошибка при получении адреса");
+                            }
                         });
+
                     } else {
+                        Logger.d(context, TAG, "Локация = null");
                         progressBar.setVisibility(View.GONE);
                     }
                 });
