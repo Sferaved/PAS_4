@@ -902,4 +902,6 @@ Tap "Settings" to check.</string>
     <string name="whethee_send_mes">☁️ Notification sent</string>
     <string name="error_whether_mes">❌ Error loading weather</string>
     <string name="inclusiv_transport_yes">Inclusive transport required</string>
+    <string name="location_failed">Failed to determine location</string>
+    <string name="location_failed_message">Failed to obtain coordinates. Please check that GPS is enabled and allow location services.</string>
 </resources>

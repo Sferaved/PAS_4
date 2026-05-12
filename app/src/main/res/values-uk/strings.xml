@@ -915,4 +915,6 @@
     <string name="whethee_send_mes">☁️ Сповіщення надіслано</string>
     <string name="error_whether_mes">❌ Помилка завантаження погоди</string>
     <string name="inclusiv_transport_yes">Потрібен інклюзивний транспорт</string>
+    <string name="location_failed">Не вдалося визначити розташування</string>
+    <string name="location_failed_message">Не вдалося отримати координати. Будь ласка, перевірте, чи ввімкнено GPS і дозвольте визначити місцезнаходження.</string>
 </resources>

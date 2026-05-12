@@ -242,6 +242,10 @@ public class VisicomFragment extends Fragment {
 
     private static final double DEFAULT_LAT = 50.4501; // Киев по умолчанию
     private static final double DEFAULT_LON = 30.5234;
+    private boolean isUpdatingFromGPS = false;
+    private long lastSuccessfulLocationTime = 0;
+    private String lastProcessedAddress = "";
+    private String pendingAddressRequest = null;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -989,7 +993,9 @@ public class VisicomFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
-        super.onDestroyView();
+        // ✅ Отменяем активные запросы
+        pendingAddressRequest = null;
+        isUpdatingFromGPS = false;
 
         // Удаляем observer жизненного цикла
         if (lifecycleObserver != null) {
@@ -1001,6 +1007,8 @@ public class VisicomFragment extends Fragment {
 
         // Очистка binding
         binding = null;
+
+        super.onDestroyView();
     }
 
     @SuppressLint("Range")
@@ -2018,12 +2026,17 @@ public class VisicomFragment extends Fragment {
         super.onResume();
         Logger.d(context, TAG, "onResume 1" );
 
-        if (!firstStart) {
+        // ✅ НЕ восстанавливаем из БД, если сейчас идет GPS обновление
+        if (!firstStart && !isUpdatingFromGPS) {
             List<String> startList = logCursor(MainActivity.ROUT_MARKER, context);
             String fromAddressString = startList.get(5);
             Logger.d(context, TAG, "address onResume fromAddressString" + fromAddressString);
 
-            binding.textGeo.setText(fromAddressString);
+            // ✅ Проверяем, не установлен ли уже этот адрес
+            if (!binding.textGeo.getText().toString().equals(fromAddressString)) {
+                binding.textGeo.setText(fromAddressString);
+                Logger.d(context, TAG, "Restored address from DB: " + fromAddressString);
+            }
         }
 
 
@@ -2591,6 +2604,12 @@ public class VisicomFragment extends Fragment {
 
 
     private void firstLocation() {
+        // ✅ Защита от повторных вызовов
+        if (isUpdatingFromGPS) {
+            Logger.d(context, TAG, "GPS update already in progress, skipping");
+            return;
+        }
+
         progressBar.setVisibility(View.VISIBLE);
         schedule.setVisibility(View.VISIBLE);
         shed_down.setVisibility(View.VISIBLE);
@@ -2608,10 +2627,14 @@ public class VisicomFragment extends Fragment {
 
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Logger.d(context, TAG, "Нет разрешения на геолокацию");
+            progressBar.setVisibility(View.GONE);
             return;
         }
 
         viewModel.setStatusX(false);
+
+        // ✅ Устанавливаем флаг, что начали обновление
+        isUpdatingFromGPS = true;
 
         // ✅ Одноразовое получение текущей локации
         fusedLocationProviderClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
@@ -2620,6 +2643,8 @@ public class VisicomFragment extends Fragment {
                         updateGpsButtonDrawable(false);
                         double latitude = location.getLatitude();
                         double longitude = location.getLongitude();
+
+                        // ✅ Проверяем, изменились ли координаты
                         boolean coordinatesChanged = haveCoordinatesChanged(latitude, longitude);
                         Logger.d(context, TAG, "getCurrentLocation: координаты изменились = " + coordinatesChanged +
                                 ", latitude=" + latitude + ", longitude=" + longitude);
@@ -2627,9 +2652,20 @@ public class VisicomFragment extends Fragment {
                         if (!coordinatesChanged) {
                             progressBar.setVisibility(View.GONE);
                             updateGpsButtonCross(false);
+                            isUpdatingFromGPS = false; // ✅ Снимаем флаг
                             Logger.d(context, TAG, "Пропускаем обновление - координаты не изменились");
                             return;
                         }
+
+                        // ✅ Защита от слишком частых обновлений
+                        long currentTime = System.currentTimeMillis();
+                        if (currentTime - lastSuccessfulLocationTime < 3000) {
+                            Logger.d(context, TAG, "Too frequent updates, skipping");
+                            progressBar.setVisibility(View.GONE);
+                            isUpdatingFromGPS = false;
+                            return;
+                        }
+
                         Logger.d(context, TAG, "getCurrentLocation: " + latitude + ", " + longitude);
 
                         List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
@@ -2639,14 +2675,46 @@ public class VisicomFragment extends Fragment {
                         baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
                         String urlFrom = baseUrl + "/" + api + "/android/fromSearchGeoLocal/" + latitude + "/" + longitude + "/" + language;
 
+                        // ✅ Сохраняем идентификатор запроса
+                        final String requestKey = latitude + "_" + longitude + "_" + currentTime;
+                        pendingAddressRequest = requestKey;
+
                         FromJSONParserRetrofit.sendURL(urlFrom, result -> {
+                            // ✅ Проверяем, что это последний запрос
+                            if (!requestKey.equals(pendingAddressRequest)) {
+                                Logger.d(context, TAG, "Ignoring stale address response");
+                                progressBar.setVisibility(View.GONE);
+                                isUpdatingFromGPS = false;
+                                return;
+                            }
+
+                            if (!isAdded()) {
+                                isUpdatingFromGPS = false;
+                                return;
+                            }
+
                             if (result != null) {
                                 String FromAdressString = result.get("route_address_from");
                                 Logger.d(context, TAG, "FromAdressString: " + FromAdressString);
+
                                 if (FromAdressString != null && FromAdressString.contains("Точка на карте")) {
                                     FromAdressString = context.getString(R.string.startPoint);
                                 }
+
+                                // ✅ Проверяем, не тот же ли это адрес
+                                if (lastProcessedAddress.equals(FromAdressString) &&
+                                        System.currentTimeMillis() - lastSuccessfulLocationTime < 10000) {
+                                    Logger.d(context, TAG, "Same address, skipping update");
+                                    progressBar.setVisibility(View.GONE);
+                                    isUpdatingFromGPS = false;
+                                    return;
+                                }
+
+                                // ✅ Обновляем UI
                                 geoText.setText(FromAdressString);
+                                lastProcessedAddress = FromAdressString;
+                                lastSuccessfulLocationTime = currentTime;
+
                                 new CityFinder(
                                         context,
                                         latitude,
@@ -2654,7 +2722,9 @@ public class VisicomFragment extends Fragment {
                                         FromAdressString,
                                         context
                                 ).findCity(latitude, longitude);
+
                                 updateCoordinatesInDatabase(latitude, longitude, FromAdressString);
+
                                 try {
                                     visicomCost();
                                 } catch (MalformedURLException e) {
@@ -2664,12 +2734,22 @@ public class VisicomFragment extends Fragment {
                             } else {
                                 Logger.d(context, TAG, "Ошибка при получении адреса");
                             }
-                        });
 
+                            progressBar.setVisibility(View.GONE);
+                            isUpdatingFromGPS = false; // ✅ Снимаем флаг
+                            pendingAddressRequest = null;
+                        });
                     } else {
                         Logger.d(context, TAG, "Локация = null");
                         progressBar.setVisibility(View.GONE);
+                        isUpdatingFromGPS = false; // ✅ Снимаем флаг
                     }
+                })
+                .addOnFailureListener(e -> {
+                    Logger.e(context, TAG, "Failed to get location: " + e.getMessage());
+                    progressBar.setVisibility(View.GONE);
+                    isUpdatingFromGPS = false; // ✅ Снимаем флаг
+                    Toast.makeText(context, R.string.location_failed, Toast.LENGTH_SHORT).show();
                 });
     }
 
@@ -2787,23 +2867,19 @@ public class VisicomFragment extends Fragment {
         return sb.toString();
     }
     private boolean haveCoordinatesChanged(double newLat, double newLon) {
-        // Получаем текущие координаты из БД
         double[] currentCoordinates = getCurrentCoordinatesFromDatabase();
         double currentLat = currentCoordinates[0];
         double currentLon = currentCoordinates[1];
 
-        // Вычисляем разницу
+        // ✅ Увеличил порог до 0.00005 (~5 метров) для стабильности
         double latDiff = Math.abs(newLat - currentLat);
         double lonDiff = Math.abs(newLon - currentLon);
+        boolean changed = latDiff > 0.00005 || lonDiff > 0.00005;
 
-        // Проверяем, изменились ли координаты (с допустимой погрешностью 0.00001 градуса ~ 1 метр)
-        boolean changed = latDiff > 0.00001 || lonDiff > 0.00001;
-
-        // Детальное логирование
         Logger.d(context, TAG, String.format(Locale.US,
                 "haveCoordinatesChanged: changed=%b, " +
                         "old=(%.6f, %.6f), new=(%.6f, %.6f), " +
-                        "diff(lat=%.6f, lon=%.6f), threshold=0.00001",
+                        "diff(lat=%.6f, lon=%.6f), threshold=0.00005",
                 changed, currentLat, currentLon, newLat, newLon, latDiff, lonDiff));
 
         return changed;
