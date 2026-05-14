@@ -9,7 +9,6 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.utils.log.Logger;
 
 import org.json.JSONException;

@@ -146,6 +146,7 @@
     <string name="email_sent">Message sent</string>
     <string name="send_like">👍 Rate the app</string>
     <string name="send_email_admin">📢 Report a problem</string>
+    <string name="send_report_admin">Report a problem</string>
     <string name="SA_subject">Message No. I-</string>
     <string name="SA_message_start">The text of your message: </string>
     <string name="SA_info_pas">App info: </string>
@@ -904,4 +905,10 @@ Tap "Settings" to check.</string>
     <string name="inclusiv_transport_yes">Inclusive transport required</string>
     <string name="location_failed">Failed to determine location</string>
     <string name="location_failed_message">Failed to obtain coordinates. Please check that GPS is enabled and allow location services.</string>
+    <string name="short_err">Short error description *</string>
+    <string name="step_err">Steps to reproduce</string>
+    <string name="resalt_err">Expected result</string>
+    <string name="fact_err">Actual result</string>
+    <string name="invalid_input_detected">Invalid input detected</string>
+    <string name="max_length_50">Maximum length is 50 characters</string>
 </resources>

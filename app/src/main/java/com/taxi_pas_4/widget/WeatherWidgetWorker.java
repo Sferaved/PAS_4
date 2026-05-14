@@ -4,18 +4,14 @@ import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Build;
 
 import androidx.annotation.NonNull;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.ui.weather.WeatherApiHelper;
 import com.taxi_pas_4.ui.weather.WeatherResponse;
 import com.taxi_pas_4.utils.log.Logger;
-
-import java.util.Locale;
 
 public class WeatherWidgetWorker extends Worker {
 

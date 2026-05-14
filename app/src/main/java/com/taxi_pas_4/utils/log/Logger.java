@@ -78,7 +78,7 @@ public class Logger {
     public static void e(Context context, String tag, String message) {
         if (context == null) {
             // Если context null - пишем только в logcat, но не в файл
-            android.util.Log.e(tag, message);
+            Log.e(tag, message);
             return;
         }
         Log.e(tag, message);
@@ -88,7 +88,7 @@ public class Logger {
     public static void d(Context context, String tag, String message) {
         if (context == null) {
             // Если context null - пишем только в logcat, но не в файл
-            android.util.Log.d(tag, message);
+            Log.d(tag, message);
             return;
         }
         Log.d(tag, message);
@@ -98,7 +98,7 @@ public class Logger {
     public static void i(Context context, String tag, String message) {
         if (context == null) {
             // Если context null - пишем только в logcat, но не в файл
-            android.util.Log.i(tag, message);
+            Log.i(tag, message);
             return;
         }
         Log.i(tag, message);
@@ -108,7 +108,7 @@ public class Logger {
     public static void w(Context context, String tag, String message) {
         if (context == null) {
             // Если context null - пишем только в logcat, но не в файл
-            android.util.Log.w(tag, message);
+            Log.w(tag, message);
             return;
         }
         Log.w(tag, message);

@@ -150,6 +150,7 @@
     <string name="email_sent">Сообщение отправлено</string>
     <string name="send_like">👍 Оценить приложение</string>
     <string name="send_email_admin">📢 Сообщить о проблеме</string>
+    <string name="send_report_admin">Сообщить о проблеме</string>
     <string name="SA_subject">Сообщение № I-</string>
     <string name="SA_message_start">Текст вашего сообщения: </string>
     <string name="SA_info_pas">Информация о приложении: </string>
@@ -904,6 +905,7 @@
     <!-- Для плохой погоды (уже должно быть) -->
     <string name="dificult_find_car">⚠️ Поиск машины затруднен. Рекомендуется добавить в тариф. \n\n Зафиксировано: </string>
     <string name="air_alarm">🚨 Воздушная тревога</string>
+    <string name="reb_alarm">📡 Работа РЭБ</string>
     <string name="attantion_mes">Обратите внимание</string>
     <string name="notify_perm_toast">Пожалуйста, разрешите уведомления</string>
     <string name="send_notufy_mes_toast">☁️ Уведомление о погоде отправлено</string>
@@ -913,4 +915,10 @@
     <string name="inclusiv_transport_yes">Требуется инклюзивный транспорт</string>
     <string name="location_failed">Не удалось определить местоположение</string>
     <string name="location_failed_message">Не удалось получить координаты. Пожалуйста, проверьте включен ли GPS и дайте разрешение на определение местоположения.</string>
+    <string name="short_err">Краткое описание ошибки *</string>
+    <string name="step_err">Шаги для воспроизведения</string>
+    <string name="resalt_err">Ожидаемый результат</string>
+    <string name="fact_err">Фактический результат</string>
+    <string name="invalid_input_detected">Обнаружен недопустимый ввод</string>
+    <string name="max_length_50">Максимальная длина 50 символов</string>
 </resources>

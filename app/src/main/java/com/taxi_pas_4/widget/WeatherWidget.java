@@ -606,12 +606,12 @@ public class WeatherWidget extends AppWidgetProvider {
     }
 
     private static long getLastNotificationTime(Context context) {
-        android.content.SharedPreferences prefs = context.getSharedPreferences("weather_widget_prefs", Context.MODE_PRIVATE);
+        SharedPreferences prefs = context.getSharedPreferences("weather_widget_prefs", Context.MODE_PRIVATE);
         return prefs.getLong("last_notification_time", 0);
     }
 
     private static void saveLastNotificationTime(Context context, long time) {
-        android.content.SharedPreferences prefs = context.getSharedPreferences("weather_widget_prefs", Context.MODE_PRIVATE);
+        SharedPreferences prefs = context.getSharedPreferences("weather_widget_prefs", Context.MODE_PRIVATE);
         prefs.edit().putLong("last_notification_time", time).apply();
     }
 
