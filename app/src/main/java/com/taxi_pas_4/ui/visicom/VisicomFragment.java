@@ -121,6 +121,7 @@ import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.taxi_pas_4.utils.retrofit.cost_json_parser.CostJSONParserRetrofit;
+import com.taxi_pas_4.utils.sanitizer.InputSanitizerHelper;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 import com.taxi_pas_4.utils.ui.BackPressBlocker;
 import com.taxi_pas_4.utils.worker.InclusiveTransportPreferenceWorker;
@@ -1251,7 +1252,11 @@ public class VisicomFragment extends Fragment {
         String phoneNumber = "no phone";
         String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
         String displayName = logCursor(MainActivity.TABLE_USER_INFO, context).get(4);
+        displayName = InputSanitizerHelper.sanitize(displayName, InputSanitizerHelper.InputType.USERNAME);
 
+        if (displayName.trim().isEmpty()) {
+            displayName = "No_name";
+        }
         pay_method = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(4);
 
         if (urlAPI.equals("costSearchMarkersTimeMyApi")) {
@@ -2812,14 +2817,7 @@ public class VisicomFragment extends Fragment {
                                 }
 
                                 // ✅ Проверяем, не тот же ли это адрес
-                                if (lastProcessedAddress.equals(FromAdressString) &&
-                                        System.currentTimeMillis() - lastSuccessfulLocationTime < 10000) {
-                                    Logger.d(context, TAG, "Same address, skipping update");
-                                    progressBar.setVisibility(View.GONE);
-                                    isUpdatingFromGPS = false;
-                                    pendingAddressRequest = null; // ✅ Сбрасываем запрос
-                                    return;
-                                }
+
 
                                 // ✅ Обновляем UI
 //                                geoText.setText(FromAdressString);
