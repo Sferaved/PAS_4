@@ -888,13 +888,13 @@
     <string name="phone_permission_denied_message">Немає дозволу на дзвінок. Відкрито набір номера.</string>
     <string name="phone_error_driver_empty">Номер водія не вказано</string>
     <!-- Діалоги верифікації -->
-    <string name="verification_required_title">⚠️ Верифікація акаунта</string>
-    <string name="verification_required_message">Для роботи з додатком необхідна верифікація акаунта.\n\nБудь ласка, увійдіть у свій акаунт або зареєструйтесь.</string>
-    <string name="verification_cancelled_title">⚠️ Верифікація обов\'язкова</string>
-    <string name="verification_cancelled_message">Ви не можете використовувати додаток без підтвердження акаунта.\n\nБудь ласка, авторизуйтесь для продовження роботи.</string>
-    <string name="verification_error_title">❌ Помилка</string>
-    <string name="verification_error_message">Сталася помилка:\n%s\n\nБудь ласка, спробуйте ще раз.</string>
-    <string name="verification_mandatory_toast">Верифікація обов\'язкова для роботи з додатком</string>
+    <string name="verification_required_title">📱 Вхід до облікового запису</string>
+    <string name="verification_required_message">Для повноцінної роботи з додатком рекомендується увійти у свій обліковий запис або зареєструватися.\n\nЦе займе всього хвилину!</string>
+    <string name="verification_cancelled_title">🔐 Продовження роботи</string>
+    <string name="verification_cancelled_message">Для використання всіх можливостей програми необхідно увійти в обліковий запис.\n\nВи можете зробити це зараз або пізніше.</string>
+    <string name="verification_error_title">🔧 Технічна помилка</string>
+    <string name="verification_error_message">Щось пішло не так:\n%s\n\nБудь ласка, спробуйте ще раз.</string>
+    <string name="verification_mandatory_toast">Для роботи з програмою необхідно увійти в обліковий запис</string>
 
     <!-- Кнопки -->
     <string name="verify_now">Увійти</string>

@@ -885,13 +885,13 @@
     <string name="phone_permission_denied_message">Нет разрешения на звонок. Открыт набор номера.</string>
     <string name="phone_error_driver_empty">Номер водителя не указан</string>
     <!-- Диалоги верификации -->
-    <string name="verification_required_title">⚠️ Верификация аккаунта</string>
-    <string name="verification_required_message">Для работы с приложением необходима верификация аккаунта.\n\nПожалуйста, войдите в свой аккаунт или зарегистрируйтесь.</string>
-    <string name="verification_cancelled_title">⚠️ Верификация обязательна</string>
-    <string name="verification_cancelled_message">Вы не можете использовать приложение без подтверждения аккаунта.\n\nПожалуйста, авторизуйтесь для продолжения работы.</string>
-    <string name="verification_error_title">❌ Ошибка</string>
-    <string name="verification_error_message">Произошла ошибка:\n%s\n\nПожалуйста, попробуйте снова.</string>
-    <string name="verification_mandatory_toast">Верификация обязательна для работы с приложением</string>
+    <string name="verification_required_title">📱 Вход в аккаунт</string>
+    <string name="verification_required_message">Для полноценной работы с приложением рекомендуется войти в свой аккаунт или зарегистрироваться.\n\nЭто займёт всего минуту!</string>
+    <string name="verification_cancelled_title">🔐 Продолжение работы</string>
+    <string name="verification_cancelled_message">Для использования всех возможностей приложения необходимо войти в аккаунт.\n\nВы можете сделать это сейчас или позже.</string>
+    <string name="verification_error_title">🔧 Техническая ошибка</string>
+    <string name="verification_error_message">Что-то пошло не так:\n%s\n\nПожалуйста, попробуйте ещё раз.</string>
+    <string name="verification_mandatory_toast">Для работы с приложением необходимо войти в аккаунт</string>
 
     <!-- Кнопки -->
     <string name="verify_now">Войти</string>

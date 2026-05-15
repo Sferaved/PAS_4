@@ -3,7 +3,6 @@ package com.taxi_pas_4;
 import static android.view.View.GONE;
 import static com.taxi_pas_4.androidx.startup.MyApplication.getContext;
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
-
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
@@ -913,6 +912,8 @@ public class MainActivity extends AppCompatActivity {
             hideNoInternetSnackbar();
         }
         if (!InclusiveTransportPreferenceWorker.hasBeenAsked() && !firstStart) {
+            String KEY_INCLUSIVE_TRANSPORT_ASKED = "inclusive_transport_asked";
+            sharedPreferencesHelperMain.saveValue(KEY_INCLUSIVE_TRANSPORT_ASKED, true);
             runOnUiThread(this::showInclusiveTransportDialog);
         }
         // ✅ ИСПРАВЛЕННЫЙ БЛОК - Toast показываются ТОЛЬКО ПРИ ПЕРВОМ ЗАПУСКЕ
