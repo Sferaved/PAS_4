@@ -268,8 +268,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Установка локали перед вызовом super.onCreate()
-        String localeCode = (String) MyApplication.sharedPreferencesHelperMain.getValue("locale", Locale.getDefault().getLanguage());
-        applyLocale(localeCode);
+//        String localeCode = (String) MyApplication.sharedPreferencesHelperMain.getValue("locale", Locale.getDefault().getLanguage());
+//        applyLocale(localeCode);
         super.onCreate(savedInstanceState);
         bugReportHelper = new BugReportHelper(this);
         PhoneCallHelper.initWithActivity(this);

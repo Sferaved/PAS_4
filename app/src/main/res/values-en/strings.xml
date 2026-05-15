@@ -42,6 +42,7 @@
     <string name="firebase_false_message">UAH. Sorry, the order cannot be placed without verifying your Google account.</string>
     <string name="UAH">UAH</string>
     <string name="order">Order</string>
+    <string name="order_card">Order</string>
     <string name="thanks_message">"Thank you for ordering from "</string>
     <string name="call_of_order">" Wait for the operator to call. The cost of the trip: "</string>
     <string name="next_try">" Try again or call the operator."</string>

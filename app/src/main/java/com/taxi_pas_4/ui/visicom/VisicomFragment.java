@@ -462,10 +462,24 @@ public class VisicomFragment extends Fragment {
         }
 
         // Наблюдение за статусом GPS (X-кнопка)
-//        viewModel.getStatusX().observe(getViewLifecycleOwner(), aBoolean -> {
-//            Logger.d(context, TAG, "StatusXUpdate changed: " + aBoolean);
-//            updateGpsButtonDrawable(aBoolean);
-//        });
+        viewModel.getStatusX().observe(getViewLifecycleOwner(), aBoolean -> {
+            Logger.d(context, TAG, "StatusXUpdate changed: " + aBoolean);
+
+            if (aBoolean != null && aBoolean) {
+                // true - показываем крестик
+                Logger.d(context, TAG, "Устанавливаем buttons_green_cross (крестик)");
+                gpsBtn.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.buttons_green_cross));
+                gpsBtn.setTextColor(Color.WHITE);
+            } else {
+                // false - убираем крестик, показываем обычную зеленую кнопку
+                Logger.d(context, TAG, "Убираем крестик, устанавливаем buttons_green");
+                gpsBtn.setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.buttons_green));
+                gpsBtn.setTextColor(Color.WHITE);
+            }
+
+            // Принудительно перерисовываем кнопку
+            gpsBtn.invalidate();
+        });
 
         // Наблюдение за обновлением GPS
         viewModel.getStatusGpsUpdate().observe(getViewLifecycleOwner(), aBoolean -> {
@@ -506,11 +520,23 @@ public class VisicomFragment extends Fragment {
     public static void updateGpsButtonCross(boolean show) {
         if (gpsBtn != null && getCurrentActivity() != null) {
             if (show) {
+                // При show=true ВСЕГДА показываем крестик
                 gpsBtn.setBackground(ContextCompat.getDrawable(getCurrentActivity(), R.drawable.buttons_green_cross));
+                gpsBtn.setTextColor(Color.WHITE);
             } else {
+                // При show=false проверяем статус GPS и StatusX
                 Context context = MyApplication.getContext();
                 LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-                if (locationManager != null && locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+
+                // Получаем текущее значение StatusX из ViewModel или SharedPreferences
+                boolean statusX = (boolean) sharedPreferencesHelperMain.getValue("setStatusX", true);
+
+                if (statusX) {
+                    // Если StatusX = true - показываем крестик
+                    gpsBtn.setBackground(ContextCompat.getDrawable(getCurrentActivity(), R.drawable.buttons_green_cross));
+                    gpsBtn.setTextColor(Color.WHITE);
+                } else if (locationManager != null && locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                    // StatusX = false и GPS включен
                     if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                         gpsBtn.setBackground(ContextCompat.getDrawable(context, R.drawable.buttons_green));
                         gpsBtn.setTextColor(Color.WHITE);
@@ -519,6 +545,7 @@ public class VisicomFragment extends Fragment {
                         gpsBtn.setTextColor(Color.BLACK);
                     }
                 } else {
+                    // GPS выключен
                     gpsBtn.setBackground(ContextCompat.getDrawable(context, R.drawable.btn_red));
                     gpsBtn.setTextColor(Color.WHITE);
                 }
@@ -2875,10 +2902,16 @@ public class VisicomFragment extends Fragment {
 
                                     // ========== РАСШИФРОВКА РЕШЕНИЯ ==========
                                     if (!cityChanged) {
+                                        sharedPreferencesHelperMain.saveValue("setStatusX", false);
+                                        viewModel.setStatusX(false);
                                         Logger.d(context, TAG, "📝 Расшифровка: Город НЕ ИЗМЕНИЛСЯ → обновляем позицию");
                                     } else if (cityChanged && userConfirmed) {
+                                        sharedPreferencesHelperMain.saveValue("setStatusX", false);
+                                        viewModel.setStatusX(false);
                                         Logger.d(context, TAG, "📝 Расшифровка: Город ИЗМЕНИЛСЯ И пользователь СОГЛАСИЛСЯ → обновляем позицию");
                                     } else if (cityChanged && !userConfirmed) {
+                                        sharedPreferencesHelperMain.saveValue("setStatusX", true);
+                                        viewModel.setStatusX(true);
                                         Logger.d(context, TAG, "📝 Расшифровка: Город ИЗМЕНИЛСЯ НО пользователь ОТКАЗАЛСЯ → НЕ обновляем позицию");
                                     }
 
@@ -2902,8 +2935,9 @@ public class VisicomFragment extends Fragment {
                                         // Пересчёт стоимости
                                         Logger.d(context, TAG, "   2️⃣ Пересчёт стоимости...");
                                         Logger.d(context, TAG, "      ├─ Вызов visicomCost()");
+                                        sharedPreferencesHelperMain.saveValue("setStatusX", false);
                                         viewModel.setStatusX(false);
-                                        updateGpsButtonCross(false);
+//                                        updateGpsButtonCross(false);
                                         long costStartTime = System.currentTimeMillis();
                                         try {
                                             visicomCost();
@@ -2921,6 +2955,7 @@ public class VisicomFragment extends Fragment {
                                     }
                                     // ========== ВЕТКА: ОТКАЗ ОТ ОБНОВЛЕНИЯ ==========
                                     else {
+                                        sharedPreferencesHelperMain.saveValue("setStatusX", true);
                                         viewModel.setStatusX(true);
                                         Logger.d(context, TAG, "❌ ПРИНЯТО РЕШЕНИЕ: НЕ обновляем позицию и стоимость");
                                         Logger.d(context, TAG, "───────────────────────────────────────────");
@@ -2975,6 +3010,8 @@ public class VisicomFragment extends Fragment {
                             }
                         });
                     } else {
+                        sharedPreferencesHelperMain.saveValue("setStatusX", true);
+                        viewModel.setStatusX(true);
                         Logger.d(context, TAG, "Локация = null");
                         progressBar.setVisibility(View.GONE);
                         isUpdatingFromGPS = false;
@@ -2982,6 +3019,8 @@ public class VisicomFragment extends Fragment {
                     }
                 })
                 .addOnFailureListener(e -> {
+                    sharedPreferencesHelperMain.saveValue("setStatusX", true);
+                    viewModel.setStatusX(true);
                     Logger.e(context, TAG, "Failed to get location: " + e.getMessage());
                     progressBar.setVisibility(View.GONE);
                     isUpdatingFromGPS = false;
@@ -3175,9 +3214,9 @@ public class VisicomFragment extends Fragment {
             values.put("startLat", newLat);
             values.put("startLan", newLon);
             values.put("start", address);
-            values.put("to_lat", existingToLat);  // Сохраняем старую конечную точку
-            values.put("to_lng", existingToLng);  // Сохраняем старую конечную точку
-            values.put("finish", existingFinish);  // Сохраняем старый адрес назначения
+            values.put("to_lat", newLat);  // Сохраняем старую конечную точку
+            values.put("to_lng", newLon);  // Сохраняем старую конечную точку
+            values.put("finish", "");  // Сохраняем старый адрес назначения
 
             Logger.d(context, TAG, "Подготовлены значения для обновления:");
             Logger.d(context, TAG, "  startLat=" + newLat);

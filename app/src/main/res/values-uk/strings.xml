@@ -43,6 +43,7 @@
     <string name="firebase_false_message">грн. Вибачте, без перевірки Google-акаунту замовлення не можливе.</string>
     <string name="UAH">грн</string>
     <string name="order">Замовити</string>
+    <string name="order_card">Замовити</string>
     <string name="thanks_message">"Дякуємо за замовлення від "</string>
     <string name="call_of_order">" Очікуйте дзвінка оператора. Вартість поїздки: "</string>
     <string name="next_try">" Спробуйте ще або зателефонуйте оператору."</string>

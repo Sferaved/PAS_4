@@ -615,10 +615,8 @@ public class CityFinder {
                 return context.getString(R.string.city_chernivtsi);
             case "Lutsk":
                 return context.getString(R.string.city_lutsk);
-            case "foreign countries":
-                return context.getString(R.string.foreign_countries);
             default:
-                return city;
+                return context.getString(R.string.foreign_countries);
         }
     }
 

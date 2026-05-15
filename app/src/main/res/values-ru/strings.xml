@@ -44,6 +44,7 @@
     <string name="firebase_false_message">грн. Извините, без проверки Google-аккаунта заказ невозможен.</string>
     <string name="UAH">грн</string>
     <string name="order">Заказать</string>
+    <string name="order_card">Заказать</string>
     <string name="thanks_message">"Спасибо за заказ от "</string>
     <string name="call_of_order">" Ожидайте звонка оператора. Стоимость поездки: "</string>
     <string name="next_try">" Попробуйте еще или позвоните оператору."</string>
