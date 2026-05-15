@@ -954,7 +954,6 @@ public class MainActivity extends AppCompatActivity {
         }
         sharedPreferencesHelperMain.saveValue("gps_upd", gps_upd);
 
-
     }
 
     @Override

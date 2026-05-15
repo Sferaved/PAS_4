@@ -2153,6 +2153,8 @@ public class VisicomFragment extends Fragment {
     public void onResume() {
         super.onResume();
         Logger.d(context, TAG, "onResume 1" );
+
+
         isFragmentVisible = true;
 
         // ✅ Если есть активный запрос, не восстанавливаем из БД
@@ -2609,7 +2611,7 @@ public class VisicomFragment extends Fragment {
             viewModel.setStatusGpsUpdate(false);
         }
 
-
+        updateGpsButtonCross(Boolean.TRUE.equals(viewModel.getStatusX().getValue()));
         if (NetworkUtils.isNetworkAvailable(context)) {
             if (geoText.getText().toString().isEmpty()) {
 
@@ -2637,6 +2639,8 @@ public class VisicomFragment extends Fragment {
 
 
         updateApp();
+        boolean restartAfterFinderCity = (boolean) sharedPreferencesHelperMain.getValue("restartAfterFinderCity", false);
+        updateGpsButtonCross(restartAfterFinderCity);
     }
 
     private void gpsButSetOnClickListener(LocationManager locationManager) {
@@ -2917,6 +2921,7 @@ public class VisicomFragment extends Fragment {
                                     }
                                     // ========== ВЕТКА: ОТКАЗ ОТ ОБНОВЛЕНИЯ ==========
                                     else {
+                                        viewModel.setStatusX(true);
                                         Logger.d(context, TAG, "❌ ПРИНЯТО РЕШЕНИЕ: НЕ обновляем позицию и стоимость");
                                         Logger.d(context, TAG, "───────────────────────────────────────────");
                                         Logger.d(context, TAG, "🚫 Причина отказа:");
@@ -2932,14 +2937,16 @@ public class VisicomFragment extends Fragment {
                                         Logger.d(context, TAG, "───────────────────────────────────────────");
                                         Logger.d(context, TAG, "🎨 Восстановление UI:");
 
+
+                                        geoText.setText("");
+                                        textViewTo.setText("");
+                                        btnVisible(GONE);
                                         if (progressBar != null) {
                                             progressBar.setVisibility(View.GONE);
                                             Logger.d(context, TAG, "   ├─ progressBar.setVisibility(GONE)");
                                         } else {
                                             Logger.w(context, TAG, "   ├─ ⚠️ progressBar = null, пропускаем");
                                         }
-
-                                        btnVisible(VISIBLE);
                                         Logger.d(context, TAG, "   └─ btnVisible(VISIBLE) - кнопки восстановлены");
                                     }
 
