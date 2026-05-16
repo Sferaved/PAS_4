@@ -272,7 +272,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         bugReportHelper = new BugReportHelper(this);
         PhoneCallHelper.initWithActivity(this);
-        PhoneCallHelper.ensureCallPermission();
+        //PhoneCallHelper.ensureCallPermission();
         if (getIntent() != null && getIntent().hasExtra("shortcut_action")) {
             String action = getIntent().getStringExtra("shortcut_action");
 
@@ -914,7 +914,11 @@ public class MainActivity extends AppCompatActivity {
         if (!InclusiveTransportPreferenceWorker.hasBeenAsked() && !firstStart) {
             String KEY_INCLUSIVE_TRANSPORT_ASKED = "inclusive_transport_asked";
             sharedPreferencesHelperMain.saveValue(KEY_INCLUSIVE_TRANSPORT_ASKED, true);
-            runOnUiThread(this::showInclusiveTransportDialog);
+
+            // Отложенный показ на 500 мс
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                runOnUiThread(this::showInclusiveTransportDialog);
+            }, 3000); // задержка в миллисекундах
         }
         // ✅ ИСПРАВЛЕННЫЙ БЛОК - Toast показываются ТОЛЬКО ПРИ ПЕРВОМ ЗАПУСКЕ
         if (firstStart) {
