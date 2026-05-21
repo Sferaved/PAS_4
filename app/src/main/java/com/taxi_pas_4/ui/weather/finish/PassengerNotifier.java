@@ -1,15 +1,13 @@
 package com.taxi_pas_4.ui.weather.finish;
 
-import static android.view.View.GONE;
-
 import android.content.Context;
 import android.content.res.Configuration;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.AppCompatButton;
 
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
@@ -306,6 +304,10 @@ public class PassengerNotifier {
 
         String message;
 
+        if (weather != null) {
+            weather = capitalizeFirst(weather);
+        }
+
         if (problems.isEmpty()) {
             if (weather != null && temperature > -50) {
                 message = localizedContext.getString(R.string.weather_good_message, weather, temperature);
@@ -363,30 +365,34 @@ public class PassengerNotifier {
     private void showNotification(Context context, String message) {
         Logger.d(context, TAG, "showNotification: показываем кастомный AlertDialog");
 
-        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_verification_simple, null);
+        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_weather_notice, null);
 
         TextView tvTitle = dialogView.findViewById(R.id.tvTitle);
         TextView tvMessage = dialogView.findViewById(R.id.tvMessage);
+        AppCompatButton btnOk = dialogView.findViewById(R.id.btnOk);
 
         tvTitle.setText(R.string.attantion_mes);
         tvMessage.setText(message);
+        btnOk.setText(R.string.ok_error);
 
         AlertDialog dialog = new AlertDialog.Builder(context)
                 .setView(dialogView)
                 .setCancelable(false)
                 .create();
 
-        Button btnNegative = dialogView.findViewById(R.id.btnNegative);
-        Button btnPositive = dialogView.findViewById(R.id.btnPositive);
-
-        btnNegative.setVisibility(GONE);
-        btnPositive.setText(R.string.ok_error);
-
-        btnPositive.setOnClickListener(v -> {
+        btnOk.setOnClickListener(v -> {
             Logger.d(context, TAG, "showNotification: нажата кнопка 'Зрозуміло'");
             dialog.dismiss();
         });
 
         dialog.show();
+    }
+
+    private static String capitalizeFirst(String text) {
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+        String trimmed = text.trim();
+        return Character.toUpperCase(trimmed.charAt(0)) + trimmed.substring(1);
     }
 }

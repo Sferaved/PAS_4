@@ -118,6 +118,7 @@ import com.taxi_pas_4.utils.kafka.KafkaRequest;
 import com.taxi_pas_4.utils.keys.FirestoreHelper;
 import com.taxi_pas_4.utils.location.TaxiLocationValidator;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.route.RoutePlaceMatcher;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.taxi_pas_4.utils.retrofit.cost_json_parser.CostJSONParserRetrofit;
@@ -1728,7 +1729,12 @@ public class VisicomFragment extends Fragment {
         if (!"0".equals(orderWeb)) {
             String to_name;
 //            orderWeb = text_view_cost.getText().toString();
-            if (Objects.equals(sendUrlMap.get("routefrom"), sendUrlMap.get("routeto"))) {
+            if (Objects.equals(sendUrlMap.get("routefrom"), sendUrlMap.get("routeto"))
+                    || RoutePlaceMatcher.isSameRoute(
+                    sendUrlMap.get("routefrom"),
+                    sendUrlMap.get("routefromnumber"),
+                    sendUrlMap.get("routeto"),
+                    sendUrlMap.get("to_number"))) {
                 to_name = context.getString(R.string.on_city_tv);
                 Logger.d(context, TAG, "orderFinished: to_name 1 " + to_name);
                 if (!Objects.equals(sendUrlMap.get("lat"), "0")) {
