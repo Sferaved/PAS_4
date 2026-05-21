@@ -3,6 +3,7 @@ package com.taxi_pas_4;
 import static android.view.View.GONE;
 import static com.taxi_pas_4.androidx.startup.MyApplication.getContext;
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
@@ -138,9 +139,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
 
 import im.crisp.client.external.ChatActivity;
 import im.crisp.client.external.Crisp;
@@ -153,14 +155,9 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 
-// OkHttp
-
-
-// Java / Android
-
-
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
+    private static final ExecutorService DB_INIT_EXECUTOR = Executors.newSingleThreadExecutor();
     public static String supportEmail;
     public static String utaxKey;
 
@@ -295,6 +292,20 @@ public class MainActivity extends AppCompatActivity {
         if (!sharedPreferencesHelperMain.contains("notification_permission_requested")) {
             sharedPreferencesHelperMain.saveValue("notification_permission_requested", false);
         }
+
+        constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
+
+        final boolean databaseAlreadyInitialized = isDatabaseInitialized();
+        if (!databaseAlreadyInitialized) {
+            try {
+                initDB();
+            } catch (MalformedURLException | JSONException | InterruptedException e) {
+                FirebaseCrashlytics.getInstance().recordException(e);
+            }
+        }
+
 // Ініціалізація менеджера оцінювання
         appReviewManager = new AppReviewManager(this);
 
@@ -411,13 +422,19 @@ public class MainActivity extends AppCompatActivity {
             });
         });
         networkMonitor.startMonitoring();
-        constraints = new Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build();
-        try {
-            initDB();
-        } catch (MalformedURLException | JSONException | InterruptedException e) {
-            FirebaseCrashlytics.getInstance().recordException(e);
+        if (databaseAlreadyInitialized) {
+            DB_INIT_EXECUTOR.execute(() -> {
+                try {
+                    initDB();
+                    runOnUiThread(() -> {
+                        if (NetworkUtils.isNetworkAvailable(MainActivity.this)) {
+                            newUser();
+                        }
+                    });
+                } catch (MalformedURLException | JSONException | InterruptedException e) {
+                    runOnUiThread(() -> FirebaseCrashlytics.getInstance().recordException(e));
+                }
+            });
         }
         // Настройка Action Bar
         if (getSupportActionBar() != null) {
@@ -465,6 +482,10 @@ public class MainActivity extends AppCompatActivity {
         sharedPreferencesHelperMain.saveValue("time", "no_time");
         sharedPreferencesHelperMain.saveValue("date", "no_date");
         sharedPreferencesHelperMain.saveValue("comment", "no_comment");
+
+        if (!databaseAlreadyInitialized) {
+            newUser();
+        }
     }
 
     /**
@@ -787,8 +808,24 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private boolean isDatabaseInitialized() {
+        try (SQLiteDatabase db = openOrCreateDatabase(DB_NAME, MODE_PRIVATE, null);
+             Cursor cursor = db.rawQuery(
+                     "SELECT 1 FROM sqlite_master WHERE type='table' AND name=? LIMIT 1",
+                     new String[]{CITY_INFO})) {
+            return cursor.moveToFirst();
+        } catch (Exception e) {
+            Logger.e(this, TAG, "isDatabaseInitialized: " + e.getMessage());
+            return false;
+        }
+    }
+
     public void setCityAppbar() {
         List<String> stringList = logCursor(MainActivity.CITY_INFO);
+        if (stringList.size() < 2) {
+            Logger.w(this, TAG, "setCityAppbar: cityInfo is empty");
+            return;
+        }
         city = stringList.get(1);
         String cityMenu;
         switch (city) {
@@ -928,18 +965,17 @@ public class MainActivity extends AppCompatActivity {
         costMap = null;
 
 
-        new Thread(() -> {
+        new Handler(Looper.getMainLooper()).postDelayed(() -> new Thread(() -> {
             appUpdateManager = AppUpdateManagerFactory.create(MainActivity.this);
 
             appUpdateManager.getAppUpdateInfo().addOnSuccessListener(appUpdateInfo -> {
                 if (appUpdateInfo.installStatus() == InstallStatus.DOWNLOADED) {
-                    // Возвращаемся на главный поток для завершения
                     runOnUiThread(() -> appUpdateManager.completeUpdate());
                 }
             }).addOnFailureListener(e -> {
                 Logger.e(MainActivity.this, TAG, "Ошибка проверки обновлений: " + e.getMessage());
             });
-        }).start();
+        }).start(), 8_000);
 
         sharedPreferencesHelperMain.saveValue("pay_error", "**");
 
@@ -1094,11 +1130,9 @@ public class MainActivity extends AppCompatActivity {
             cityMaxPay();
 //            merchantFondy("Kyiv City");
             if (MainActivity.navVisicomMenuItem != null) {
-                // Новый текст элемента меню
                 String cityMenu = getString(R.string.city_kyiv);
-                String newTitle = getString(R.string.menu_city) + " " + cityMenu;
-                // Изменяем текст элемента меню
-                MainActivity.navVisicomMenuItem.setTitle(newTitle);
+                String menuTitle = getString(R.string.menu_city) + " " + cityMenu;
+                runOnUiThread(() -> MainActivity.navVisicomMenuItem.setTitle(menuTitle));
             }
 
 
@@ -1172,11 +1206,6 @@ public class MainActivity extends AppCompatActivity {
 
 
         database.close();
-
-        if (NetworkUtils.isNetworkAvailable(this)) {
-            // Действия при наличии интернета
-            newUser();
-        }
 
     }
 
@@ -2291,11 +2320,10 @@ public class MainActivity extends AppCompatActivity {
         if (userEmail.equals("email") || userEmail.equals("no_email") ||userEmail.isEmpty()) {
             firstStart = true;
             sharedPreferencesHelperMain.saveValue("CityCheckActivity", "**");
-            VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
-            Toast.makeText(MainActivity.this, R.string.checking, Toast.LENGTH_SHORT).show();
             if (VisicomFragment.progressBar != null) {
                 VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
             }
+            Toast.makeText(MainActivity.this, R.string.checking, Toast.LENGTH_SHORT).show();
 
             // Блокируем UI до верификации
             blockUiUntilVerification();
@@ -2312,7 +2340,9 @@ public class MainActivity extends AppCompatActivity {
                 if (!findUser) {
                     firstStart = true;
 
-                    VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
+                    if (VisicomFragment.progressBar != null) {
+                        VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
+                    }
                     Toast.makeText(MainActivity.this, R.string.checking, Toast.LENGTH_SHORT).show();
                     startFireBase();
                 } else {
