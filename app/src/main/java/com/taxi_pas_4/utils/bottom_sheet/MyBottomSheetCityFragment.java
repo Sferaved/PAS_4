@@ -46,6 +46,7 @@ import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.ip.ApiServiceCountry;
 import com.taxi_pas_4.utils.ip.CountryResponse;
 import com.taxi_pas_4.utils.ip.RetrofitClient;
+import com.taxi_pas_4.utils.location.AutoLocationAfterCityHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.uxcam.UXCam;
@@ -1205,6 +1206,7 @@ public class MyBottomSheetCityFragment extends BottomSheetDialogFragment {
         database.update(MainActivity.ROUT_MARKER, cv, "id = ?",
                 new String[]{"1"});
         database.close();
+        AutoLocationAfterCityHelper.markCityLoaded();
     }
 
     @Override

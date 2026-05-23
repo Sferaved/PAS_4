@@ -33,6 +33,7 @@ import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetMessageFragment;
 import com.taxi_pas_4.utils.ip.ApiServiceCountry;
 import com.taxi_pas_4.utils.ip.CountryResponse;
 import com.taxi_pas_4.utils.ip.RetrofitClient;
+import com.taxi_pas_4.utils.location.AutoLocationAfterCityHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 import com.taxi_pas_4.utils.worker.TilePreloadWorker;
@@ -936,6 +937,7 @@ public class CityCheckActivity extends AppCompatActivity {
                 new String[]{"1"});
         database.close();
         sharedPreferencesHelperMain.saveValue("CityCheckActivity", "run");
+        AutoLocationAfterCityHelper.markCityLoaded();
 
         startTilePreloadWorker();
 

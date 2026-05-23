@@ -25,6 +25,7 @@ import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.data.DataArr;
 import com.taxi_pas_4.utils.ip.ApiServiceCountry;
 import com.taxi_pas_4.utils.ip.CountryResponse;
+import com.taxi_pas_4.utils.location.AutoLocationAfterCityHelper;
 import com.taxi_pas_4.utils.log.Logger;
 
 import java.lang.ref.WeakReference;
@@ -705,6 +706,7 @@ public class CityFinder {
             clearTABLE_SERVICE_INFO();
 
             sharedPreferencesHelperMain.saveValue("CityCheckActivity", "run");
+            AutoLocationAfterCityHelper.markCityLoaded();
 
             // Навигация
             Activity activity = activityRef.get();
