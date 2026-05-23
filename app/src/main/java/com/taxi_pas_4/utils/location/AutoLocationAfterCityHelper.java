@@ -20,6 +20,11 @@ public final class AutoLocationAfterCityHelper {
     public static final String KEY_LOCATION_PROMPT_AFTER_CITY_DONE = "location_permission_prompt_after_city_done";
     public static final String KEY_LOCATION_EVER_GRANTED = "location_permission_ever_granted";
 
+    /** Определённые авто-GPS координаты (не пишутся в ROUT_MARKER). */
+    public static final String KEY_DETECTED_LAT = "auto_location_detected_lat";
+    public static final String KEY_DETECTED_LON = "auto_location_detected_lon";
+    public static final String KEY_DETECTED_ADDRESS = "auto_location_detected_address";
+
     private AutoLocationAfterCityHelper() {
     }
 
@@ -82,6 +87,43 @@ public final class AutoLocationAfterCityHelper {
         if (!wasPromptShown()) {
             markPromptShown();
         }
+    }
+
+    public static void saveDetectedCoordinates(double lat, double lon, String address) {
+        // SharedPreferencesHelper поддерживает String, не Double
+        sharedPreferencesHelperMain.saveValue(KEY_DETECTED_LAT, String.valueOf(lat));
+        sharedPreferencesHelperMain.saveValue(KEY_DETECTED_LON, String.valueOf(lon));
+        if (address != null) {
+            sharedPreferencesHelperMain.saveValue(KEY_DETECTED_ADDRESS, address);
+        }
+    }
+
+    public static double getDetectedLat() {
+        return parseCoord(sharedPreferencesHelperMain.getValue(KEY_DETECTED_LAT, "0.0"));
+    }
+
+    public static double getDetectedLon() {
+        return parseCoord(sharedPreferencesHelperMain.getValue(KEY_DETECTED_LON, "0.0"));
+    }
+
+    private static double parseCoord(Object value) {
+        if (value == null) {
+            return 0.0;
+        }
+        try {
+            return Double.parseDouble(String.valueOf(value));
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
+    }
+
+    public static String getDetectedAddress() {
+        Object value = sharedPreferencesHelperMain.getValue(KEY_DETECTED_ADDRESS, "");
+        return value != null ? String.valueOf(value) : "";
+    }
+
+    public static boolean hasDetectedCoordinates() {
+        return getDetectedLat() != 0.0 || getDetectedLon() != 0.0;
     }
 
 }

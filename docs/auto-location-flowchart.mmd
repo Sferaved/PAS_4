@@ -1,0 +1,70 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "fontSize": "22px",
+    "fontFamily": "Segoe UI, Arial, sans-serif",
+    "primaryColor": "#e8f5e9",
+    "primaryTextColor": "#1b5e20",
+    "primaryBorderColor": "#2e7d32",
+    "secondaryColor": "#e3f2fd",
+    "secondaryTextColor": "#0d47a1",
+    "secondaryBorderColor": "#1565c0",
+    "tertiaryColor": "#fff3e0",
+    "tertiaryTextColor": "#e65100",
+    "tertiaryBorderColor": "#ef6c00",
+    "lineColor": "#37474f",
+    "textColor": "#212121",
+    "mainBkg": "#e8f5e9",
+    "nodeBorder": "#2e7d32",
+    "edgeLabelBackground": "#ffffff"
+  },
+  "flowchart": {
+    "htmlLabels": true,
+    "curve": "basis",
+    "padding": 24,
+    "nodeSpacing": 70,
+    "rankSpacing": 85,
+    "diagramPadding": 24,
+    "useMaxWidth": false
+  }
+}}%%
+flowchart TD
+    A(["<b>Город загружен</b>"])
+    B{"<b>Экран заказа</b><br/>onResume"}
+    C{"<b>Город ready?</b>"}
+    Z(["<b>Ничего не делаем</b>"])
+    D{"<b>Есть разрешение GPS?</b>"}
+    E["<b>Системный запрос</b><br/>разрешения"]
+    F["<b>Авто GPS</b>"]
+    G["<b>Адрес из последнего заказа</b><br/>ROUT_MARKER"]
+    H{"<b>Успех?</b>"}
+    I(["<b>Адрес + зелёная кнопка GPS</b>"])
+    J(["<b>Зелёная кнопка / fallback</b>"])
+    K(["<b>Адрес в поле + пересчёт при сети</b>"])
+
+  A --> B --> C
+  C -->|нет| Z
+  C -->|да| D
+  D -->|нет, первый раз| E
+  D -->|нет, уже спрашивали| G
+  D -->|да| F
+  E -->|да| F
+  E -->|нет| G
+  G --> K
+  F --> H
+  H -->|да| I
+  H -->|нет| J
+
+  classDef start fill:#c8e6c9,stroke:#1b5e20,stroke-width:3px,color:#1b5e20
+  classDef decision fill:#bbdefb,stroke:#0d47a1,stroke-width:3px,color:#0d47a1
+  classDef action fill:#ffe0b2,stroke:#e65100,stroke-width:3px,color:#bf360c
+  classDef success fill:#a5d6a7,stroke:#2e7d32,stroke-width:3px,color:#1b5e20
+  classDef idle fill:#eceff1,stroke:#546e7a,stroke-width:3px,color:#37474f
+  classDef fallback fill:#fff9c4,stroke:#f9a825,stroke-width:3px,color:#f57f17
+
+  class A start
+  class B,C,D,H decision
+  class E,F action
+  class I,J success
+  class Z idle
+  class G,K fallback

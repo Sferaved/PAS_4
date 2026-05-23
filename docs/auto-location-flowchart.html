@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Авто-геолокация после города — схема</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(160deg, #f0f7ff 0%, #ffffff 45%, #f5fff8 100%);
+      min-height: 100vh;
+    }
+    h1 {
+      text-align: center;
+      font-size: 28px;
+      color: #1a237e;
+      margin: 0 0 8px;
+    }
+    p.hint {
+      text-align: center;
+      color: #455a64;
+      font-size: 15px;
+      margin: 0 0 24px;
+    }
+    .wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(26, 35, 126, 0.12);
+      padding: 40px 24px 48px;
+      overflow-x: auto;
+    }
+    .mermaid {
+      display: flex;
+      justify-content: center;
+    }
+    .mermaid svg {
+      max-width: none !important;
+      height: auto !important;
+    }
+  </style>
+</head>
+<body>
+  <h1>Авто-геолокация после загрузки города</h1>
+  <p class="hint">ПАС 1 / ПАС 2 / ПАС 4 — для отчёта: Ctrl+P → «Сохранить как PDF» или скриншот (масштаб 125–150%)</p>
+  <div class="wrap">
+    <pre class="mermaid">
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "fontSize": "22px",
+    "fontFamily": "Segoe UI, Arial, sans-serif",
+    "primaryColor": "#e8f5e9",
+    "primaryTextColor": "#1b5e20",
+    "primaryBorderColor": "#2e7d32",
+    "secondaryColor": "#e3f2fd",
+    "secondaryTextColor": "#0d47a1",
+    "secondaryBorderColor": "#1565c0",
+    "tertiaryColor": "#fff3e0",
+    "tertiaryTextColor": "#e65100",
+    "tertiaryBorderColor": "#ef6c00",
+    "lineColor": "#37474f",
+    "textColor": "#212121",
+    "mainBkg": "#e8f5e9",
+    "nodeBorder": "#2e7d32",
+    "clusterBkg": "#fafafa",
+    "titleColor": "#1a237e",
+    "edgeLabelBackground": "#ffffff"
+  },
+  "flowchart": {
+    "htmlLabels": true,
+    "curve": "basis",
+    "padding": 24,
+    "nodeSpacing": 70,
+    "rankSpacing": 85,
+    "diagramPadding": 24,
+    "useMaxWidth": false
+  }
+}}%%
+flowchart TD
+    A(["<b>Город загружен</b>"])
+    B{"<b>Экран заказа</b><br/>onResume"}
+    C{"<b>Город ready?</b>"}
+    Z(["<b>Ничего не делаем</b>"])
+    D{"<b>Есть разрешение GPS?</b>"}
+    E["<b>Системный запрос</b><br/>разрешения"]
+    F["<b>Авто GPS</b>"]
+    G["<b>Адрес из последнего заказа</b><br/>ROUT_MARKER"]
+    H{"<b>Успех?</b>"}
+    I(["<b>Адрес + зелёная кнопка GPS</b>"])
+    J(["<b>Зелёная кнопка / fallback</b>"])
+    K(["<b>Адрес в поле + пересчёт при сети</b>"])
+
+  A --> B --> C
+  C -->|нет| Z
+  C -->|да| D
+  D -->|нет, первый раз| E
+  D -->|нет, уже спрашивали| G
+  D -->|да| F
+  E -->|да| F
+  E -->|нет| G
+  G --> K
+  F --> H
+  H -->|да| I
+  H -->|нет| J
+
+  classDef start fill:#c8e6c9,stroke:#1b5e20,stroke-width:3px,color:#1b5e20
+  classDef decision fill:#bbdefb,stroke:#0d47a1,stroke-width:3px,color:#0d47a1
+  classDef action fill:#ffe0b2,stroke:#e65100,stroke-width:3px,color:#bf360c
+  classDef success fill:#a5d6a7,stroke:#2e7d32,stroke-width:3px,color:#1b5e20
+  classDef idle fill:#eceff1,stroke:#546e7a,stroke-width:3px,color:#37474f
+  classDef fallback fill:#fff9c4,stroke:#f9a825,stroke-width:3px,color:#f57f17
+
+  class A start
+  class B,C,D,H decision
+  class E,F action
+  class I,J success
+  class Z idle
+  class G,K fallback
+    </pre>
+  </div>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose" });
+    await mermaid.run();
+    const svg = document.querySelector(".mermaid svg");
+    if (svg) {
+      const w = svg.getBoundingClientRect().width;
+      if (w < 900) {
+        svg.style.transform = "scale(1.35)";
+        svg.style.transformOrigin = "top center";
+      }
+    }
+  </script>
+</body>
+</html>
