@@ -2676,7 +2676,20 @@ public class VisicomFragment extends Fragment {
             new Handler(Looper.getMainLooper()).postDelayed(this::updateApp, 8_000);
         }
         maybeAutoApplyLocationAfterCity();
+        restoreGpsCrossIfPendingUserApply();
 
+    }
+
+    /** Крестик: GPS-координаты есть, но пользователь ещё не применил их нажатием на кнопку GPS. */
+    private void restoreGpsCrossIfPendingUserApply() {
+        if (!isAdded() || binding == null) {
+            return;
+        }
+        if (AutoLocationAfterCityHelper.isGpsPendingUserApply()) {
+            sharedPreferencesHelperMain.saveValue("setStatusX", true);
+            viewModel.setStatusX(true);
+            updateGpsButtonCross(true);
+        }
     }
 
     /**
@@ -2819,8 +2832,18 @@ public class VisicomFragment extends Fragment {
         }
         progressBar.setVisibility(View.GONE);
         isUpdatingFromGPS = false;
-        finishAutoLocationGpsButtonState();
-        applyLastOrderAddressFromRouteMarker();
+        autoLocationFromCityLoad = false;
+
+        boolean gpsDetectedNotApplied = AutoLocationAfterCityHelper.hasDetectedCoordinates();
+        if (gpsDetectedNotApplied) {
+            sharedPreferencesHelperMain.saveValue("setStatusX", true);
+            viewModel.setStatusX(true);
+            updateGpsButtonCross(true);
+            Logger.d(context, TAG, "Авто-GPS: крестик на кнопке GPS — координаты не применены, нужно нажать GPS");
+        } else {
+            finishAutoLocationGpsButtonState();
+        }
+        applyLastOrderAddressFromRouteMarker(gpsDetectedNotApplied);
     }
 
     private void logAutoDetectedRouteAndPath(double detectedLat, double detectedLon, String detectedAddress) {
@@ -2849,12 +2872,17 @@ public class VisicomFragment extends Fragment {
 
     private void finishAutoLocationGpsButtonState() {
         autoLocationFromCityLoad = false;
+        AutoLocationAfterCityHelper.clearGpsPendingUserApply();
         sharedPreferencesHelperMain.saveValue("setStatusX", false);
         viewModel.setStatusX(false);
         updateGpsButtonCross(false);
     }
 
     private void applyLastOrderAddressFromRouteMarker() {
+        applyLastOrderAddressFromRouteMarker(false);
+    }
+
+    private void applyLastOrderAddressFromRouteMarker(boolean keepGpsCross) {
         if (!isAdded() || binding == null) {
             return;
         }
@@ -2882,9 +2910,11 @@ public class VisicomFragment extends Fragment {
         }
 
         geoText.setText(startAddress);
-        sharedPreferencesHelperMain.saveValue("setStatusX", false);
-        viewModel.setStatusX(false);
-        updateGpsButtonCross(false);
+        if (!keepGpsCross) {
+            sharedPreferencesHelperMain.saveValue("setStatusX", false);
+            viewModel.setStatusX(false);
+            updateGpsButtonCross(false);
+        }
 
         String userEmail = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
         if (!"email".equals(userEmail) && NetworkUtils.isNetworkAvailable(context)) {
