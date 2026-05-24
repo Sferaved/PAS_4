@@ -29,6 +29,7 @@ import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
+import com.taxi_pas_4.utils.payment.PendingTransactionHelper;
 import com.taxi_pas_4.utils.pusher.events.TransactionStatusEvent;
 
 import org.greenrobot.eventbus.EventBus;
@@ -551,6 +552,7 @@ public class PusherManager {
                 }
             } else {
                 Log.d("Pusher", "UID mismatch. Event uid: " + uid + ", MainActivity.uid: " + MainActivity.uid);
+                PendingTransactionHelper.save(uid, transactionStatus);
             }
         });
     }

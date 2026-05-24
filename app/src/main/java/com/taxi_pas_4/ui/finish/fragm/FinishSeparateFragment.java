@@ -79,6 +79,8 @@ import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.taxi_pas_4.utils.pusher.events.AddCostUpdateEvent;
 import com.taxi_pas_4.utils.pusher.events.CanceledStatusEvent;
+import com.taxi_pas_4.utils.payment.PaymentDeclinedNotifier;
+import com.taxi_pas_4.utils.payment.PendingTransactionHelper;
 import com.taxi_pas_4.utils.pusher.events.TransactionStatusEvent;
 import com.taxi_pas_4.utils.review.AppReviewManager;
 import com.taxi_pas_4.utils.time_ut.TimeUtils;
@@ -608,10 +610,11 @@ public class FinishSeparateFragment extends Fragment {
         Logger.d(context, TAG, "Transaction Status amount: " + amount);
 
         if ("Declined".equals(status)) {
-            sharedPreferencesHelperMain.saveValue("add_show_flag", false);
-            MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment =
-                    new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
-            bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+            PaymentDeclinedNotifier.notifyDeclined(context, () -> {
+                MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment =
+                        new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
+                bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+            });
         }
     }
 
@@ -1862,10 +1865,8 @@ public class FinishSeparateFragment extends Fragment {
                 String declined_invoice = (String) sharedPreferencesHelperMain.getValue("declined_invoice", "**");
                 Logger.d(context,"getTransactionStatus", "Finish declined_invoice: " + declined_invoice);
                 Logger.d(context,"getTransactionStatus", "Finish MainActivity.order_id: " + MainActivity.order_id);
-                if ("Declined".equals(status) && !declined_invoice.equals(MainActivity.order_id)) {
-                    sharedPreferencesHelperMain.saveValue("declined_invoice", MainActivity.order_id);
+                if ("Declined".equals(status) && PaymentDeclinedNotifier.shouldHandleDeclined()) {
                     handleTransactionStatusDeclined(status, context);
-                    viewModel.setCancelStatus(true);
                 }
             }
 
@@ -2073,6 +2074,9 @@ public class FinishSeparateFragment extends Fragment {
         startAddCostDialog (timeCheckOutAddCost);
 
         applyPendingAddCostIfNeeded();
+
+        PendingTransactionHelper.consumePendingDeclined(context, () ->
+                handleTransactionStatusDeclined("Declined", context));
     }
 
     @Override
@@ -2098,17 +2102,11 @@ public class FinishSeparateFragment extends Fragment {
 
         String status = event.getStatus();
         // Ваша логика обработки статуса
-        if ("Declined".equals(status)) {
-            String declined_invoice = (String) sharedPreferencesHelperMain.getValue("declined_invoice", "**");
-            if (!declined_invoice.equals(MainActivity.order_id)) {
-                sharedPreferencesHelperMain.saveValue("declined_invoice", MainActivity.order_id);
-                handleTransactionStatusDeclined(status, getContext());
-                if (viewModel != null) {
-                    viewModel.setCancelStatus(true);
-                }
-            }
+        if ("Declined".equals(status) && PaymentDeclinedNotifier.shouldHandleDeclined()) {
+            handleTransactionStatusDeclined(status, getContext());
         }
     }
+
     @Override
     public void onStart() {
         super.onStart();

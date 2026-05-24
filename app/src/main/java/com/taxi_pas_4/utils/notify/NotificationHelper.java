@@ -266,19 +266,25 @@ public class NotificationHelper {
     }
 
 
-    public static void sendPaymentErrorNotification(Context context, String title, String message) {
-        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+    private static final String PAYMENT_ERROR_CHANNEL_ID = "payment_error";
 
-        NotificationChannel channel = new NotificationChannel("payment_error", context.getString(R.string.paymentErrMes), NotificationManager.IMPORTANCE_HIGH);
-        notificationManager.createNotificationChannel(channel);
+    public static void sendPaymentErrorNotification(Context context, String title, String message) {
+        ensurePaymentErrorChannel(context);
+
+        int notificationId = generateUniqueNotificationId();
 
         Intent intent = new Intent(context, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK); // Уничтожаем старую активность и создаём новую
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        intent.putExtra("notification_id", notificationId);
+        intent.putExtra("fcm_action", "payment_error");
 
         PendingIntent pendingIntent = PendingIntent.getActivity(
-                context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                context,
+                notificationId,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "payment_error")
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, PAYMENT_ERROR_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_error)
                 .setContentTitle(title)
                 .setContentText(message)
@@ -286,7 +292,30 @@ public class NotificationHelper {
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setContentIntent(pendingIntent);
 
-        notificationManager.notify(2, builder.build());
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+
+        if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+            Logger.d(context, TAG, "POST_NOTIFICATIONS не предоставлено — уведомление об ошибке оплаты не показано");
+            return;
+        }
+
+        notificationManager.notify(notificationId, builder.build());
+        Logger.d(context, TAG, "Уведомление об ошибке оплаты показано, id=" + notificationId);
+    }
+
+    private static void ensurePaymentErrorChannel(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+            if (notificationManager.getNotificationChannel(PAYMENT_ERROR_CHANNEL_ID) == null) {
+                NotificationChannel channel = new NotificationChannel(
+                        PAYMENT_ERROR_CHANNEL_ID,
+                        context.getString(R.string.paymentErrMes),
+                        NotificationManager.IMPORTANCE_HIGH);
+                channel.setDescription(context.getString(R.string.pay_failure_mes));
+                notificationManager.createNotificationChannel(channel);
+            }
+        }
     }
 
 

@@ -12,6 +12,7 @@ import com.google.firebase.messaging.RemoteMessage;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.androidx.startup.MyApplication;
+import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.utils.helpers.LocaleHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
@@ -94,6 +95,12 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             return;
         }
 
+        // Ошибка оплаты (sendNotificationPaymentError с бэкенда)
+        if (isPaymentErrorMessage(data)) {
+            handlePaymentErrorMessage(data);
+            return;
+        }
+
         // Обычное уведомление "Найдено авто"
         String locale = LocaleHelper.getLocale();
         Logger.d(this, TAG, "Текущая локаль: " + locale);
@@ -160,6 +167,55 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 Logger.d(this, TAG, "setCanceledStatus(canceled) для uid=" + uid);
             } else {
                 Logger.d(this, TAG, "Отмена FCM: uid не совпадает с активным заказом (active=" + MainActivity.uid + ")");
+            }
+        });
+    }
+
+    private boolean isPaymentErrorMessage(Map<String, String> data) {
+        if ("payment_error".equals(data.get("type"))) {
+            return true;
+        }
+        return "Declined".equals(data.get("transactionStatus"))
+                || "Declined".equals(data.get("status"));
+    }
+
+    /**
+     * FCM об отклонённой оплате (PaymentStatusNotifier → sendNotificationPaymentError).
+     */
+    private void handlePaymentErrorMessage(Map<String, String> data) {
+        String locale = LocaleHelper.getLocale();
+        Context localizedContext = getLocalizedContext(getApplicationContext(), locale);
+
+        String message = data.get("message_" + locale);
+        if (message == null || message.isEmpty()) {
+            message = data.get("message_uk");
+        }
+        if (message == null || message.isEmpty()) {
+            message = localizedContext.getString(R.string.pay_failure_mes);
+        }
+
+        String title = localizedContext.getString(R.string.paymentErrMes);
+        String uid = data.get("uid");
+
+        Logger.d(this, TAG, "Ошибка оплаты FCM: " + message + ", uid=" + uid);
+
+        applyDeclinedToActiveOrder(uid);
+
+        if (!MyApplication.isInForeground()) {
+            NotificationHelper.sendPaymentErrorNotification(localizedContext, title, message);
+        }
+    }
+
+    private void applyDeclinedToActiveOrder(String uid) {
+        if (uid == null || uid.isEmpty()) {
+            return;
+        }
+        new Handler(Looper.getMainLooper()).post(() -> {
+            if (MainActivity.uid != null
+                    && MainActivity.uid.equals(uid)
+                    && MainActivity.viewModel != null) {
+                MainActivity.viewModel.setTransactionStatus("Declined");
+                Logger.d(this, TAG, "setTransactionStatus(Declined) для uid=" + uid);
             }
         });
     }

@@ -21,6 +21,7 @@ import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
+import com.taxi_pas_4.utils.payment.PendingTransactionHelper;
 import com.taxi_pas_4.utils.pusher.events.TransactionStatusEvent;
 
 import org.greenrobot.eventbus.EventBus;
@@ -492,8 +493,7 @@ public class CentrifugoManager {
                 Log.d(TAG, "   ViewModel UID: " + viewModelUid);
                 Log.d(TAG, "   MainActivity.uid: " + MainActivity.uid);
 
-                // Сохраняем для отладки
-                savePendingTransaction(uid, transactionStatus);
+                PendingTransactionHelper.save(uid, transactionStatus);
             }
         } catch (JSONException e) {
             Log.e(TAG, "❌ JSONException in handleTransactionStatusEvent", e);
@@ -503,14 +503,6 @@ public class CentrifugoManager {
         }
 
         Log.d(TAG, "========== handleTransactionStatusEvent END ==========");
-    }
-
-    // Временный метод для сохранения пропущенных транзакций
-    private void savePendingTransaction(String uid, String status) {
-        Log.d(TAG, "💾 Saving pending transaction - UID: " + uid + ", Status: " + status);
-        sharedPreferencesHelperMain.saveValue("pending_transaction_uid", uid);
-        sharedPreferencesHelperMain.saveValue("pending_transaction_status", status);
-        sharedPreferencesHelperMain.saveValue("pending_transaction_time", String.valueOf(System.currentTimeMillis()));
     }
 
     /**

@@ -2257,6 +2257,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        com.taxi_pas_4.utils.payment.PendingTransactionHelper.consumePendingDeclined(this, null);
     }
 
     @Override
