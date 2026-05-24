@@ -27,6 +27,7 @@ import com.pusher.client.connection.ConnectionStateChange;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
+import com.taxi_pas_4.utils.cost.CostParseHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.payment.PendingTransactionHelper;
@@ -576,7 +577,11 @@ public class PusherManager {
      */
     private void handleOrderCostEvent(String eventData) {
         handleJsonEvent("OrderCost", eventData, json -> {
-            String orderCost = json.optString("order_cost", "0");
+            String rawCost = json.optString("order_cost", "0");
+            String orderCost = CostParseHelper.normalizeCostString(rawCost);
+            if (orderCost == null) {
+                return;
+            }
 
             if (orderCost.equals(lastProcessedCost)) {
                 Log.d(TAG, "Duplicate cost ignored: " + orderCost);

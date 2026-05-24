@@ -267,20 +267,20 @@ public class NotificationHelper {
 
 
     private static final String PAYMENT_ERROR_CHANNEL_ID = "payment_error";
+    /** Один слот в шторке уведомлений — повторный push обновляет, а не дублирует. */
+    private static final int PAYMENT_ERROR_NOTIFICATION_ID = 91042;
 
     public static void sendPaymentErrorNotification(Context context, String title, String message) {
         ensurePaymentErrorChannel(context);
 
-        int notificationId = generateUniqueNotificationId();
-
         Intent intent = new Intent(context, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        intent.putExtra("notification_id", notificationId);
+        intent.putExtra("notification_id", PAYMENT_ERROR_NOTIFICATION_ID);
         intent.putExtra("fcm_action", "payment_error");
 
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 context,
-                notificationId,
+                PAYMENT_ERROR_NOTIFICATION_ID,
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
@@ -300,8 +300,8 @@ public class NotificationHelper {
             return;
         }
 
-        notificationManager.notify(notificationId, builder.build());
-        Logger.d(context, TAG, "Уведомление об ошибке оплаты показано, id=" + notificationId);
+        notificationManager.notify(PAYMENT_ERROR_NOTIFICATION_ID, builder.build());
+        Logger.d(context, TAG, "Уведомление об ошибке оплаты показано, id=" + PAYMENT_ERROR_NOTIFICATION_ID);
     }
 
     private static void ensurePaymentErrorChannel(Context context) {

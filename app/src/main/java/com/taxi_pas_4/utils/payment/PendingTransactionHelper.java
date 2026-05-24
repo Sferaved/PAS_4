@@ -44,6 +44,23 @@ public final class PendingTransactionHelper {
         return data != null && "Declined".equals(data.status);
     }
 
+    /** Есть отложенный Declined для текущего заказа (без снятия — до показа шторки). */
+    public static boolean hasPendingDeclinedForActiveOrder() {
+        PendingData data = peekPending();
+        return data != null && "Declined".equals(data.status) && data.matchesActiveOrder();
+    }
+
+    /** Снять отложенный Declined без UI (результат применит проверка checkStatus на финиш). */
+    public static boolean takePendingDeclinedForActiveOrder() {
+        PendingData data = peekPending();
+        if (data == null || !"Declined".equals(data.status) || !data.matchesActiveOrder()) {
+            return false;
+        }
+        clear();
+        Log.d(TAG, "take pending Declined uid=" + data.uid);
+        return true;
+    }
+
     /**
      * Применить отложенный Declined: ViewModel + UI или push.
      *
@@ -62,14 +79,19 @@ public final class PendingTransactionHelper {
         clear();
         Log.d(TAG, "consume pending Declined uid=" + data.uid);
 
-        if (MainActivity.viewModel != null) {
-            MainActivity.viewModel.setTransactionStatus("Declined");
-        }
-
-        if (showBottomSheet != null) {
-            PaymentDeclinedNotifier.notifyDeclined(context, showBottomSheet);
+        if (showBottomSheet != null && com.taxi_pas_4.androidx.startup.MyApplication.isInForeground()) {
+            PaymentDeclinedNotifier.prepareDeclinedOrderState();
+            if (PaymentDeclinedNotifier.shouldShowSheetNow()) {
+                PaymentDeclinedNotifier.markSheetShown();
+                showBottomSheet.run();
+            }
+        } else if (MainActivity.viewModel != null) {
+            String current = MainActivity.viewModel.getTransactionStatus().getValue();
+            if (!"Declined".equals(current)) {
+                MainActivity.viewModel.setTransactionStatus("Declined");
+            }
         } else if (!com.taxi_pas_4.androidx.startup.MyApplication.isInForeground()) {
-            PaymentDeclinedNotifier.showPaymentErrorNotification(context);
+            PaymentDeclinedNotifier.maybeSendPaymentErrorPush(context, data.uid);
         }
     }
 

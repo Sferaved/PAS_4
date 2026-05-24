@@ -977,8 +977,10 @@ public class MainActivity extends AppCompatActivity {
             });
         }).start(), 8_000);
 
-        sharedPreferencesHelperMain.saveValue("pay_error", "**");
-
+        // Не сбрасываем ошибку оплаты, пока есть активный заказ (иначе шторка на финише не сразу)
+        if (uid == null || uid.isEmpty()) {
+            sharedPreferencesHelperMain.saveValue("pay_error", "**");
+        }
 
         baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
 
@@ -2257,7 +2259,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        com.taxi_pas_4.utils.payment.PendingTransactionHelper.consumePendingDeclined(this, null);
+        // Declined обрабатывает FinishSeparateFragment.refreshPaymentStatusOnEnter (без дубля push)
     }
 
     @Override
@@ -2358,6 +2360,7 @@ public class MainActivity extends AppCompatActivity {
 //                    pusherManager.subscribeToChannel();
                     crispChat();
                     requestNotificationPermissionOnce();
+                    releaseCentrifugoManager();
                     centrifugoManager = new CentrifugoManager(
                             getString(R.string.application),
                             userEmail,
@@ -2619,6 +2622,7 @@ public class MainActivity extends AppCompatActivity {
                         startActivity(intent);
                     }
 
+                    releaseCentrifugoManager();
                     centrifugoManager = new CentrifugoManager(
                             getString(R.string.application),
                             user.getEmail(),
@@ -2979,6 +2983,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
     }
+
+    private void releaseCentrifugoManager() {
+        if (centrifugoManager != null) {
+            centrifugoManager.disconnect();
+            centrifugoManager = null;
+        }
+    }
+
     private void crispChat() {
         // Опционально: установка данных пользователя
         List<String> stringList = logCursor(MainActivity.TABLE_USER_INFO);
@@ -2996,6 +3008,7 @@ public class MainActivity extends AppCompatActivity {
         if (appReviewManager != null) {
             appReviewManager.resetReviewData();
         }
+        releaseCentrifugoManager();
 
         // 1. Разлогиниваем пользователя из Firebase Auth
         try {

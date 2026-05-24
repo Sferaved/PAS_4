@@ -16,6 +16,7 @@ import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.utils.helpers.LocaleHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
+import com.taxi_pas_4.utils.payment.PaymentDeclinedNotifier;
 import com.taxi_pas_4.utils.worker.utils.TokenUtils;
 
 import java.util.Locale;
@@ -194,16 +195,14 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             message = localizedContext.getString(R.string.pay_failure_mes);
         }
 
-        String title = localizedContext.getString(R.string.paymentErrMes);
         String uid = data.get("uid");
 
         Logger.d(this, TAG, "Ошибка оплаты FCM: " + message + ", uid=" + uid);
 
-        applyDeclinedToActiveOrder(uid);
-
         if (!MyApplication.isInForeground()) {
-            NotificationHelper.sendPaymentErrorNotification(localizedContext, title, message);
+            PaymentDeclinedNotifier.maybeSendPaymentErrorPush(localizedContext, uid);
         }
+        applyDeclinedToActiveOrder(uid);
     }
 
     private void applyDeclinedToActiveOrder(String uid) {

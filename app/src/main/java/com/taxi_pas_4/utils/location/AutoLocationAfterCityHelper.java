@@ -26,6 +26,8 @@ public final class AutoLocationAfterCityHelper {
     public static final String KEY_DETECTED_ADDRESS = "auto_location_detected_address";
     /** GPS определён после города, но пользователь ещё не нажал кнопку GPS — показываем крестик. */
     public static final String KEY_GPS_PENDING_USER_APPLY = "auto_location_gps_pending_user_apply";
+    /** При определении по геопозиции пользователь согласился сменить город — снять крестик после перехода. */
+    public static final String KEY_CITY_CHANGED_VIA_GEO = "city_changed_via_geo_pending";
 
     private AutoLocationAfterCityHelper() {
     }
@@ -140,6 +142,18 @@ public final class AutoLocationAfterCityHelper {
 
     public static boolean hasDetectedCoordinates() {
         return getDetectedLat() != 0.0 || getDetectedLon() != 0.0;
+    }
+
+    public static void markCityChangedViaGeo() {
+        sharedPreferencesHelperMain.saveValue(KEY_CITY_CHANGED_VIA_GEO, true);
+    }
+
+    public static boolean isCityChangedViaGeo() {
+        return Boolean.TRUE.equals(sharedPreferencesHelperMain.getValue(KEY_CITY_CHANGED_VIA_GEO, false));
+    }
+
+    public static void clearCityChangedViaGeo() {
+        sharedPreferencesHelperMain.saveValue(KEY_CITY_CHANGED_VIA_GEO, false);
     }
 
 }

@@ -2826,12 +2826,33 @@ public class VisicomFragment extends Fragment {
         }
         maybeAutoApplyLocationAfterCity();
         restoreGpsCrossIfPendingUserApply();
+        dismissGpsCrossAfterGeoCityChangeIfReady();
 
+    }
+
+    /** После смены города по геопозиции — снять крестик, если авто-GPS уже не идёт. */
+    private void dismissGpsCrossAfterGeoCityChangeIfReady() {
+        if (!isAdded() || binding == null) {
+            return;
+        }
+        if (!AutoLocationAfterCityHelper.isCityChangedViaGeo()) {
+            return;
+        }
+        if (AutoLocationAfterCityHelper.isCityReady()
+                && !AutoLocationAfterCityHelper.isPending()
+                && !autoLocationFromCityLoad
+                && !isUpdatingFromGPS) {
+            AutoLocationAfterCityHelper.clearCityChangedViaGeo();
+            finishAutoLocationGpsButtonState();
+        }
     }
 
     /** Крестик: GPS-координаты есть, но пользователь ещё не применил их нажатием на кнопку GPS. */
     private void restoreGpsCrossIfPendingUserApply() {
         if (!isAdded() || binding == null) {
+            return;
+        }
+        if (AutoLocationAfterCityHelper.isCityChangedViaGeo()) {
             return;
         }
         if (AutoLocationAfterCityHelper.isGpsPendingUserApply()) {
@@ -2887,9 +2908,11 @@ public class VisicomFragment extends Fragment {
         if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             Logger.d(context, TAG, "Авто-геолокация после выбора города");
             autoLocationFromCityLoad = true;
-            sharedPreferencesHelperMain.saveValue("setStatusX", true);
-            viewModel.setStatusX(true);
-            updateGpsButtonCross(true);
+            if (!AutoLocationAfterCityHelper.isCityChangedViaGeo()) {
+                sharedPreferencesHelperMain.saveValue("setStatusX", true);
+                viewModel.setStatusX(true);
+                updateGpsButtonCross(true);
+            }
             detectAndStoreAutoLocationAfterCity();
         } else {
             applyLastOrderAddressFromRouteMarker();
@@ -2982,6 +3005,13 @@ public class VisicomFragment extends Fragment {
         progressBar.setVisibility(View.GONE);
         isUpdatingFromGPS = false;
         autoLocationFromCityLoad = false;
+
+        if (AutoLocationAfterCityHelper.isCityChangedViaGeo()) {
+            AutoLocationAfterCityHelper.clearCityChangedViaGeo();
+            finishAutoLocationGpsButtonState();
+            applyLastOrderAddressFromRouteMarker(false);
+            return;
+        }
 
         boolean gpsDetectedNotApplied = AutoLocationAfterCityHelper.hasDetectedCoordinates();
         if (gpsDetectedNotApplied) {
