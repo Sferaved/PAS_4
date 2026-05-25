@@ -199,6 +199,9 @@ public class FinishSeparateFragment extends Fragment {
     Runnable checkTask;
     private boolean isTaskRunning = false;
     private  boolean isTaskCancelled = false;
+    /** Временная пауза опроса (доплата/диалог), без полного stopCycle. */
+    private boolean statusPollPaused = false;
+    private Runnable cancelWatchPoll;
 
     TimeUtils timeUtils;
     private Observer<Boolean> observer;
@@ -355,7 +358,6 @@ public class FinishSeparateFragment extends Fragment {
         textCostMessage = root.findViewById(R.id.text_cost_message);
         Logger.d(context, TAG, "onCreate: textCostMessage" + messageResultCost);
         textCostMessage.setText(messageResultCost);
-        reconcileOrderIdentityFromPersistedState();
 
         textStatus = root.findViewById(R.id.textStatus);
         textStatusCar = root.findViewById(R.id.textStatusCar);
@@ -421,7 +423,10 @@ public class FinishSeparateFragment extends Fragment {
 
         uid_Double = receivedMap.get("dispatching_order_uid_Double");
 
-
+        reconcileOrderIdentityFromPersistedState();
+        if (uid != null && !uid.isEmpty()) {
+            ExecutionStatusViewModel.resetNewOrderSession(uid);
+        }
 
         text_status = root.findViewById(R.id.text_status);
         text_status.setText( context.getString(R.string.ex_st_0));
@@ -494,11 +499,25 @@ public class FinishSeparateFragment extends Fragment {
 //                    }
 //                    HandlerCompat.postDelayed(handlerAddcost, showDialogAddcost, null, timeCheckOutAddCost);
 //                    startCycle();
-                    if (!isTaskCancelled && isAdded()) {
+                    if (!isTaskCancelled && !statusPollPaused && isAdded()) {
                         // Планируем следующий запуск с задержкой
                         HandlerCompat.postDelayed(handlerStatus, this, null, delayMillisStatus);
                     }
                 }
+            }
+        };
+
+        cancelWatchPoll = () -> {
+            if (!isAdded() || canceled || !statusPollPaused) {
+                return;
+            }
+            try {
+                statusOrder();
+            } catch (ParseException e) {
+                Logger.e(context, TAG, "cancelWatchPoll: " + e.getMessage());
+            }
+            if (statusPollPaused && !canceled && isAdded() && handlerStatus != null) {
+                HandlerCompat.postDelayed(handlerStatus, cancelWatchPoll, null, 4000);
             }
         };
 
@@ -818,18 +837,58 @@ public class FinishSeparateFragment extends Fragment {
         }
     }
 
+    private void stopCancelWatchPoll() {
+        if (handlerStatus != null && cancelWatchPoll != null) {
+            handlerStatus.removeCallbacks(cancelWatchPoll);
+        }
+    }
+
+    private void scheduleCancelWatchPoll() {
+        if (handlerStatus == null || cancelWatchPoll == null || canceled || !statusPollPaused) {
+            return;
+        }
+        stopCancelWatchPoll();
+        HandlerCompat.postDelayed(handlerStatus, cancelWatchPoll, null, 4000);
+    }
+
     private void stopCycle() {
         isTaskCancelled = true;
+        statusPollPaused = false;
         if (handlerStatus != null) {
             handlerStatus.removeCallbacks(myTaskStatus);
         }
+        stopCancelWatchPoll();
         isTaskRunning = false; // Сбрасываем флаг выполнения
         Log.d("FinishSeparateFragment", "Cycle stopped");
     }
 
+    /** Пауза опроса statusOrder (доплата/диалог); отмена с сервера всё ещё может прийти по push. */
+    private void pauseStatusPolling() {
+        statusPollPaused = true;
+        if (handlerStatus != null) {
+            handlerStatus.removeCallbacks(myTaskStatus);
+        }
+        isTaskRunning = false;
+        scheduleCancelWatchPoll();
+        Log.d(TAG, "Status polling paused");
+    }
+
+    private void resumeStatusPolling() {
+        statusPollPaused = false;
+        stopCancelWatchPoll();
+        if (!canceled && isAdded()) {
+            startCycle();
+        }
+    }
+
     private void startCycle() {
         Log.d("HandlerDebug startCycle", "startCycle called from: " + new Exception().getStackTrace()[1]);
-        if (isAdded() && handlerStatus != null && myTaskStatus != null && !isTaskRunning && !isTaskCancelled) {
+        if (shouldIgnoreStatusPollingUi()) {
+            Log.d(TAG, "startCycle skipped: cancel UI active");
+            return;
+        }
+        if (isAdded() && handlerStatus != null && myTaskStatus != null && !isTaskRunning
+                && !isTaskCancelled && !statusPollPaused) {
             handlerStatus.removeCallbacks(myTaskStatus);
             long delay = delayMillisStatus > 0 ? delayMillisStatus : 5000;
             Log.d("FinishSeparateFragment", "Starting cycle with delay: " + delay);
@@ -840,7 +899,8 @@ public class FinishSeparateFragment extends Fragment {
                     ", handlerStatus=" + (handlerStatus != null) +
                     ", myTaskStatus=" + (myTaskStatus != null) +
                     ", isTaskRunning=" + isTaskRunning +
-                    ", isTaskCancelled=" + isTaskCancelled);
+                    ", isTaskCancelled=" + isTaskCancelled +
+                    ", statusPollPaused=" + statusPollPaused);
         }
     }
 
@@ -970,9 +1030,6 @@ public class FinishSeparateFragment extends Fragment {
         if (activeUid == null || activeUid.trim().isEmpty()) {
             return null;
         }
-        if (orderInMyVod) {
-            return baseUrl + api + "/android/webordersCancelVod/" + activeUid;
-        }
         if (hasLinkedDoubleOrder()) {
             pay_method = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(4);
             String doubleUid = uid_Double != null ? uid_Double.trim() : "";
@@ -981,6 +1038,9 @@ public class FinishSeparateFragment extends Fragment {
             }
             return baseUrl + api + "/android/webordersCancelDouble/" + activeUid + "/" + doubleUid
                     + "/" + pay_method + "/" + city + "/" + context.getString(R.string.application);
+        }
+        if (orderInMyVod) {
+            return baseUrl + api + "/android/webordersCancelVod/" + activeUid;
         }
         return baseUrl + api + "/android/webordersCancel/" + activeUid + "/" + city
                 + "/" + context.getString(R.string.application);
@@ -1008,6 +1068,8 @@ public class FinishSeparateFragment extends Fragment {
         activeCancelCall = null;
         cancel_btn_click = false;
         canceled = false;
+        statusPollPaused = false;
+        stopCancelWatchPoll();
         if (context == null || !isAdded()) {
             return;
         }
@@ -1043,16 +1105,21 @@ public class FinishSeparateFragment extends Fragment {
             Toast.makeText(context, R.string.error_cancelling_order, Toast.LENGTH_LONG).show();
             return;
         }
+        final String uidToCancel = resolveActiveOrderUid();
         cancelRequestInFlight = true;
         ExecutionStatusViewModel.setCancelInFlightPref(true);
+        cancelShowDialogAddCost();
         setCancelButtonBusy(true);
+        statusPollPaused = true;
         if (handlerStatus != null && myTaskStatus != null) {
             handlerStatus.removeCallbacks(myTaskStatus);
         }
+        isTaskRunning = false;
+        scheduleCancelWatchPoll();
         if (text_status != null) {
             text_status.setText(R.string.sent_cancel_message);
         }
-        Logger.d(context, TAG, "submitOrderCancelRequest: " + url);
+        Logger.d(context, TAG, "submitOrderCancelRequest: " + url + " uid=" + uidToCancel);
         final boolean useDoubleEndpoint = url.contains("webordersCancelDouble")
                 || url.contains("webordersCancelVod");
         activeCancelCall = useDoubleEndpoint
@@ -1070,11 +1137,7 @@ public class FinishSeparateFragment extends Fragment {
                 setCancelButtonBusy(false);
                 if (response.isSuccessful() && response.body() != null) {
                     Logger.d(context, TAG, "submitOrderCancelRequest OK: " + response.body());
-                    clearActiveOrderUidsAfterCancel();
-                    if (isAdded()) {
-                        cancel_btn_click = true;
-                        orderCanceled(successMessage);
-                    }
+                    completeOrderCancelSuccess(successMessage, uidToCancel);
                 } else {
                     Logger.d(context, TAG, "submitOrderCancelRequest HTTP " + response.code());
                     handleCancelRequestFailed();
@@ -1215,7 +1278,21 @@ public class FinishSeparateFragment extends Fragment {
                         Logger.d(context, TAG, "OrderResponse: driverPhone " + time_to_start_point);
                         Logger.d(context, TAG, "OrderResponse: time_to_start_point " + time_to_start_point);
 
+                        if (isOrderCanceledOnServer(orderResponse)) {
+                            if (isAdded() && context != null) {
+                                context.runOnUiThread(
+                                        () -> completeOrderCancelSuccess(
+                                                context.getString(R.string.ex_st_canceled),
+                                                orderResponse.getDispatchingOrderUid()
+                                        ));
+                            }
+                            return;
+                        }
 
+                        if (shouldIgnoreStatusPollingUi()) {
+                            Logger.d(context, TAG, "statusOrder onResponse ignored: cancel in progress");
+                            return;
+                        }
 
                         if (time_to_start_point != null && !time_to_start_point.isEmpty()) {
                             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
@@ -1263,18 +1340,16 @@ public class FinishSeparateFragment extends Fragment {
                 @Override
                 public void onFailure(@NonNull Call<OrderResponse> call, @NonNull Throwable t) {
                     FirebaseCrashlytics.getInstance().recordException(t);
-                    int closeReason = -1;
-                    String executionStatus = "*";
-                    String driverPhone = "*";
-                    String time_to_start_point = "*";
-                    String orderCarInfo = "*";
-                    closeReasonReactNal(
-                            closeReason,
-                            executionStatus,
-                            driverPhone,
-                            time_to_start_point,
-                            orderCarInfo
-                    );
+                    if (!isAdded() || context == null || shouldIgnoreStatusPollingUi()) {
+                        return;
+                    }
+                    context.runOnUiThread(() -> closeReasonReactNal(
+                            -1,
+                            "*",
+                            "*",
+                            "*",
+                            "*"
+                    ));
                 }
             });
         } else {
@@ -1465,6 +1540,10 @@ public class FinishSeparateFragment extends Fragment {
     }
 
     private void carSearch() {
+        if (shouldIgnoreStatusPollingUi()) {
+            Logger.d(context, TAG, "carSearch ignored: cancel UI active");
+            return;
+        }
         sharedPreferencesHelperMain.saveValue("carFound", false);
         viewModel.showCancelButton();
         sharedPreferencesHelperMain.saveValue("bonusExecuted", false);
@@ -1718,12 +1797,6 @@ public class FinishSeparateFragment extends Fragment {
 
              if ("nal_payment".equals(pay_method)) {
 
-                 // Запускаем выполнение через 1 минуты (60 000 миллисекунд)
-//                 if (handlerAddcost != null) {
-//                     handlerAddcost.postDelayed(showDialogAddcost, timeCheckout);
-//                 }
-                 setShowDialogAddCost();
-
                  String text = textCostMessage.getText().toString();
                  Logger.d(getActivity(), TAG, "textCostMessage.getText().toString() " + text);
 
@@ -1732,7 +1805,8 @@ public class FinishSeparateFragment extends Fragment {
 
                  if (matcher.find()) {
                      Logger.d(context, TAG, "amount_to_add: " + matcher.group(1));
-                     stopCycle();
+                     pauseStatusPolling();
+                     ExecutionStatusViewModel.resetNewOrderSession(resolveActiveOrderUid());
                      MyBottomSheetAddCostFragment bottomSheetDialogFragment = new MyBottomSheetAddCostFragment(
                              matcher.group(1),
                              uid,
@@ -1741,10 +1815,7 @@ public class FinishSeparateFragment extends Fragment {
                              viewModel
                      );
     // Устанавливаем слушатель для обработки закрытия
-                     bottomSheetDialogFragment.setOnDismissListener(() -> {
-                         isTaskCancelled = false; // Сбрасываем флаг
-                         startCycle(); // Запускаем задачу после закрытия
-                     });
+                     bottomSheetDialogFragment.setOnDismissListener(this::resumeStatusPolling);
                      bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                  } else {
                      Logger.d(context, TAG, "No numeric value found in the text.");
@@ -1771,6 +1842,11 @@ public class FinishSeparateFragment extends Fragment {
 
             text_status.clearAnimation();
             canceled = true;
+            String activeUid = resolveActiveOrderUid();
+            if (activeUid == null || activeUid.isEmpty()) {
+                activeUid = uid;
+            }
+            ExecutionStatusViewModel.markUserCanceledOrder(activeUid);
            action = null;
 
             // Скрываем ненужные элементы
@@ -1810,6 +1886,87 @@ public class FinishSeparateFragment extends Fragment {
 
 
 
+    private static boolean isCanceledExecutionStatus(@Nullable String executionStatus) {
+        if (executionStatus == null) {
+            return false;
+        }
+        return "Canceled".equalsIgnoreCase(executionStatus)
+                || "Cancelled".equalsIgnoreCase(executionStatus);
+    }
+
+    private static boolean isOrderCanceledOnServer(@Nullable OrderResponse orderResponse) {
+        if (orderResponse == null) {
+            return false;
+        }
+        String executionStatus = orderResponse.getExecutionStatus();
+        int closeReason = orderResponse.getCloseReason();
+        if (orderResponse.isOrderIsArchive() && isCanceledExecutionStatus(executionStatus)) {
+            return true;
+        }
+        if (closeReason >= 1 && closeReason <= 9 && executionStatus != null) {
+            return true;
+        }
+        return closeReason == -1 && isCanceledExecutionStatus(executionStatus);
+    }
+
+    private boolean isCancelUiShown() {
+        return btn_again != null && btn_again.getVisibility() == View.VISIBLE;
+    }
+
+    /** Не перезаписывать UI отмены ответом опроса «ищем авто». */
+    private boolean shouldIgnoreStatusPollingUi() {
+        return canceled || cancelRequestInFlight || isCancelUiShown();
+    }
+
+    private void finishCancelInFlightState() {
+        cancelRequestInFlight = false;
+        ExecutionStatusViewModel.setCancelInFlightPref(false);
+        stopCancelWatchPoll();
+        statusPollPaused = false;
+        if (activeCancelCall != null && !activeCancelCall.isCanceled()) {
+            activeCancelCall.cancel();
+            activeCancelCall = null;
+        }
+        setCancelButtonBusy(false);
+    }
+
+    /**
+     * Заказ отменён (ответ webordersCancel* или опрос historyUIDStatusNew с Canceled).
+     */
+    private void completeOrderCancelSuccess(@NonNull String successMessage, @Nullable String uidToCancel) {
+        if (!isAdded() || context == null) {
+            return;
+        }
+        if (isCancelUiShown()) {
+            finishCancelInFlightState();
+            return;
+        }
+        Logger.d(context, TAG, "completeOrderCancelSuccess uid=" + uidToCancel);
+        finishCancelInFlightState();
+        if (uidToCancel == null || uidToCancel.isEmpty()) {
+            uidToCancel = resolveActiveOrderUid();
+        }
+        if (uidToCancel == null || uidToCancel.isEmpty()) {
+            uidToCancel = uid;
+        }
+        if (uidToCancel != null && !uidToCancel.isEmpty()) {
+            ExecutionStatusViewModel.markUserCanceledOrder(uidToCancel);
+        }
+        cancel_btn_click = true;
+        cancelShowDialogAddCost();
+        orderCanceled(successMessage);
+        clearActiveOrderUidsAfterCancel();
+    }
+
+    private void showOrderCanceledFromServer() {
+        if (!isAdded() || context == null || isCancelUiShown()) {
+            return;
+        }
+        Logger.d(context, TAG, "showOrderCanceledFromServer");
+        cancelShowDialogAddCost();
+        orderCanceled(context.getString(R.string.ex_st_canceled));
+    }
+
     private void closeReasonReactNal(
             int closeReason,
             String executionStatus,
@@ -1817,6 +1974,22 @@ public class FinishSeparateFragment extends Fragment {
             String time_to_start_point,
             String orderCarInfo
     ) {
+        if (shouldIgnoreStatusPollingUi()) {
+            return;
+        }
+        if (closeReason >= 1 && closeReason <= 9) {
+            if (executionStatus != null) {
+                showOrderCanceledFromServer();
+            } else {
+                action = "Поиск авто";
+                carSearch();
+            }
+            return;
+        }
+        if (closeReason == -1 && isCanceledExecutionStatus(executionStatus)) {
+            showOrderCanceledFromServer();
+            return;
+        }
 
         switch (closeReason) {
             case -1:
@@ -2070,12 +2243,9 @@ public class FinishSeparateFragment extends Fragment {
         Log.d("EventBus", "Received canceled status: " + canceledStatus);
         // Обновление UI или выполнение действий
         Logger.d(context,"Pusher eventCanceled", "Finish eventCanceled status set: " + canceledStatus);
-        if (canceledStatus != null) {
-            if ("canceled".equals(canceledStatus)) {
-                viewModel.getOrderResponse().removeObservers(getViewLifecycleOwner());
-                String message = context.getString(R.string.ex_st_canceled);
-                orderCanceled(message);
-            }
+        if (canceledStatus != null && "canceled".equals(canceledStatus)) {
+            viewModel.getOrderResponse().removeObservers(getViewLifecycleOwner());
+            showOrderCanceledFromServer();
         }
     }
 
@@ -2119,14 +2289,16 @@ public class FinishSeparateFragment extends Fragment {
 
         viewModel.getCancelStatus().observe(getViewLifecycleOwner(), status -> {
             Logger.d(context,"Pusher getCancelStatus", "Finish getCancelStatus status set: " + status);
-            if (status != null) {
-                btn_cancel_order.setEnabled(status);
-                if (!status) {
-                    String message = context.getString(R.string.recounting_order) + ". " + context.getString(R.string.cancel_btn_enable);
-                    text_status.setText(message);
-                } else {
-                    startCycle();
-                }
+            if (status == null || canceled || isCancelUiShown()) {
+                return;
+            }
+            btn_cancel_order.setEnabled(status);
+            if (!status) {
+                String message = context.getString(R.string.recounting_order) + ". "
+                        + context.getString(R.string.cancel_btn_enable);
+                text_status.setText(message);
+            } else {
+                resumeStatusPolling();
             }
         });
 
@@ -2149,23 +2321,16 @@ public class FinishSeparateFragment extends Fragment {
             }
         });
 
-        if(!paySystemStatus.equals("nal_payment")) {
-            // Инициализация ViewModel
+        viewModel.getCanceledStatus().removeObservers(getViewLifecycleOwner());
+        viewModel.getCanceledStatus().observe(getViewLifecycleOwner(), status -> {
+            Logger.d(context, "Pusher eventCanceled", "Finish eventCanceled status set: " + status);
+            if (status != null && "canceled".equals(status)) {
+                viewModel.getOrderResponse().removeObservers(getViewLifecycleOwner());
+                showOrderCanceledFromServer();
+            }
+        });
 
-
-
-            viewModel.getCanceledStatus().removeObservers(getViewLifecycleOwner());
-            viewModel.getCanceledStatus().observe(getViewLifecycleOwner(), status -> {
-                Logger.d(context,"Pusher eventCanceled", "Finish eventCanceled status set: " + status);
-                        if (status != null) {
-                            if ("canceled".equals(status)) {
-
-                                viewModel.getOrderResponse().removeObservers(getViewLifecycleOwner());
-                                String message = context.getString(R.string.ex_st_canceled);
-                                orderCanceled(message);
-                            }
-                        }
-            });
+        if (!paySystemStatus.equals("nal_payment")) {
             viewModel.getStatusNalUpdate().observe(getViewLifecycleOwner(), aBoolean -> {
                 Logger.d(context, "startFinishPage","StatusNalUpdate changed: " + aBoolean);
 
@@ -2212,6 +2377,17 @@ public class FinishSeparateFragment extends Fragment {
             uid = newUid;
             MainActivity.uid = newUid;
             Logger.d(context, TAG, "order uid updated: active=" + newUid + " double=" + uid_Double);
+            if (uidChanged) {
+                String canceledUid = ExecutionStatusViewModel.getCanceledOrderUid();
+                boolean lateRecreateAfterCancel = canceledUid != null && canceledUid.equals(previous);
+                if (lateRecreateAfterCancel || (canceled && ExecutionStatusViewModel.isUserCanceledPref())) {
+                    Logger.d(context, TAG, "late uid after cancel — auto-cancel recreated order");
+                    canceled = false;
+                    ExecutionStatusViewModel.resetNewOrderSession(null);
+                    submitOrderCancelRequest(context.getString(R.string.ex_st_canceled));
+                    return;
+                }
+            }
             if (uidChanged && isAdded() && "nal_payment".equals(pay_method)) {
                 try {
                     statusOrder();
@@ -2676,16 +2852,20 @@ public class FinishSeparateFragment extends Fragment {
         Logger.d(context, TAG, "pay_method " + pay_method);
 
         addCheck(context);
+        reconcileOrderIdentityFromPersistedState();
+        if (shouldIgnoreStatusPollingUi()) {
+            Logger.d(context, TAG, "onResume: skip polling — cancel UI active");
+            btn_open.setOnClickListener(v -> btnOpen());
+            return;
+        }
         isTaskRunning = false;
         isTaskCancelled = false;
+        statusPollPaused = false;
         delayMillisStatus = 5 * 1000;
         if (handlerStatus != null) {
             handlerStatus.removeCallbacks(myTaskStatus);
         }
-        reconcileOrderIdentityFromPersistedState();
-        if (!canceled) {
-            refreshPaymentStatusOnEnter();
-        }
+        refreshPaymentStatusOnEnter();
         startCycle();
 
         btn_open.setOnClickListener(v -> btnOpen());
@@ -2723,7 +2903,7 @@ public class FinishSeparateFragment extends Fragment {
     @Override
     public void onHiddenChanged(boolean hidden) {
         super.onHiddenChanged(hidden);
-        if (!hidden && isResumed() && isAdded()) {
+        if (!hidden && isResumed() && isAdded() && !shouldIgnoreStatusPollingUi()) {
             pay_method = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(4);
             isTaskRunning = false;
             isTaskCancelled = false;
@@ -2731,9 +2911,7 @@ public class FinishSeparateFragment extends Fragment {
             if (handlerStatus != null) {
                 handlerStatus.removeCallbacks(myTaskStatus);
             }
-            if (!canceled) {
-                refreshPaymentStatusOnEnter();
-            }
+            refreshPaymentStatusOnEnter();
             startCycle();
         }
     }
@@ -2752,7 +2930,7 @@ public class FinishSeparateFragment extends Fragment {
         }
 
         // Повторный запуск Runnable при возвращении активности
-        if(action != null) {
+        if(action != null && !shouldIgnoreStatusPollingUi()) {
             if(action.equals("Поиск авто")) {
                 if (handler != null && myRunnable != null) {
                     handler.postDelayed(myRunnable, 10000);
@@ -2926,7 +3104,7 @@ public class FinishSeparateFragment extends Fragment {
 
                                 if (matcher.find()) {
                                     Logger.d(context, TAG, "amount_to_add: " + matcher.group(1));
-                                    stopCycle();
+                                    pauseStatusPolling();
                                     MyBottomSheetAddCostFragment bottomSheetDialogFragment = new MyBottomSheetAddCostFragment(
                                             matcher.group(1),
                                             uid,
@@ -2934,10 +3112,8 @@ public class FinishSeparateFragment extends Fragment {
                                             pay_method,
                                             viewModel
                                     );
-                                    bottomSheetDialogFragment.setOnDismissListener(() -> {
-                                        isTaskCancelled = false; // Сбрасываем флаг
-                                        startCycle(); // Запускаем задачу после закрытия
-                                    });
+                                    bottomSheetDialogFragment.setOnDismissListener(
+                                            FinishSeparateFragment.this::resumeStatusPolling);
                                     bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                                 } else {
                                     Logger.d(context, TAG, "No numeric value found in the text.");
@@ -2977,7 +3153,7 @@ public class FinishSeparateFragment extends Fragment {
             return;
         }
         cancelShowDialogAddCost();
-        stopCycle();
+        pauseStatusPolling();
         // Убедитесь, что фрагмент добавлен
 
         if (!isAdded() || getActivity() == null) {
@@ -3011,7 +3187,7 @@ public class FinishSeparateFragment extends Fragment {
 
                         if (matcher.find()) {
                             Logger.d(context, TAG, "amount_to_add: " + matcher.group(1));
-                            stopCycle();
+                            pauseStatusPolling();
                             MyBottomSheetAddCostFragment bottomSheetDialogFragment = new MyBottomSheetAddCostFragment(
                                     matcher.group(1),
                                     uid,
@@ -3019,6 +3195,7 @@ public class FinishSeparateFragment extends Fragment {
                                     pay_method,
                                     viewModel
                             );
+                            bottomSheetDialogFragment.setOnDismissListener(this::resumeStatusPolling);
                             bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                         } else {
                             Logger.d(context, TAG, "No numeric value found in the text.");
@@ -3033,8 +3210,7 @@ public class FinishSeparateFragment extends Fragment {
 //                        handlerAddcost.postDelayed(showDialogAddcost, timeCheckout);
 //                    }
                     setShowDialogAddCost();
-                    isTaskCancelled = false; // Сбрасываем флаг
-                    startCycle();
+                    resumeStatusPolling();
                      dialog.dismiss();
                 });
 

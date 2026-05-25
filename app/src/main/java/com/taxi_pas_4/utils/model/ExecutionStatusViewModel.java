@@ -24,6 +24,8 @@ public class ExecutionStatusViewModel extends ViewModel {
     public static final String PREF_FINISH_DOUBLE_UID = "finish_double_uid";
     public static final String PREF_FINISH_DISPLAY_COST = "finish_display_cost_grivna";
     public static final String PREF_FINISH_CANCEL_IN_FLIGHT = "finish_cancel_in_flight";
+    public static final String PREF_FINISH_USER_CANCELED = "finish_user_canceled";
+    public static final String PREF_FINISH_CANCELED_UID = "finish_canceled_uid";
 
     private final MutableLiveData<String> canceledStatus = new MutableLiveData<>();
     private final MutableLiveData<OrderResponse> orderResponse = new MutableLiveData<>();
@@ -51,9 +53,12 @@ public class ExecutionStatusViewModel extends ViewModel {
     public LiveData<String> getCanceledStatus() {return canceledStatus;}
     public void setCanceledStatus(String canceled) {
         Log.e("Pusher eventCanceled", "setCanceledStatus:" + canceled);
-        canceledStatus.postValue(canceled);
+        if (Looper.getMainLooper().isCurrentThread()) {
+            canceledStatus.setValue(canceled);
+        } else {
+            canceledStatus.postValue(canceled);
+        }
         EventBus.getDefault().post(new CanceledStatusEvent(canceled));
-
     }
     // Добавление стоимости
 
@@ -187,6 +192,54 @@ public class ExecutionStatusViewModel extends ViewModel {
         return v instanceof Boolean && (Boolean) v;
     }
 
+    public static void setUserCanceledPref(boolean canceled) {
+        sharedPreferencesHelperMain.saveValue(PREF_FINISH_USER_CANCELED, canceled);
+    }
+
+    public static boolean isUserCanceledPref() {
+        Object v = sharedPreferencesHelperMain.getValue(PREF_FINISH_USER_CANCELED, false);
+        return v instanceof Boolean && (Boolean) v;
+    }
+
+    @Nullable
+    public static String getCanceledOrderUid() {
+        Object v = sharedPreferencesHelperMain.getValue(PREF_FINISH_CANCELED_UID, "");
+        return v instanceof String && !((String) v).isEmpty() ? (String) v : null;
+    }
+
+    /** Новый заказ / переход на финише — сброс отмены, чтобы доплата не блокировалась. */
+    public static void resetNewOrderSession(@Nullable String activeOrderUid) {
+        setCancelInFlightPref(false);
+        setUserCanceledPref(false);
+        sharedPreferencesHelperMain.saveValue(PREF_FINISH_CANCELED_UID, "");
+        if (activeOrderUid != null && !activeOrderUid.isEmpty()) {
+            MainActivity.uid = activeOrderUid;
+            sharedPreferencesHelperMain.saveValue(PREF_FINISH_ACTIVE_UID, activeOrderUid);
+        }
+    }
+
+    public static void markUserCanceledOrder(@Nullable String orderUid) {
+        setUserCanceledPref(true);
+        if (orderUid != null && !orderUid.isEmpty()) {
+            sharedPreferencesHelperMain.saveValue(PREF_FINISH_CANCELED_UID, orderUid);
+        }
+    }
+
+    /** Блокировать доплату только для отменённого uid или пока идёт запрос отмены. */
+    public static boolean shouldBlockAddCost(@Nullable String orderUid) {
+        if (isCancelInFlightPref()) {
+            return true;
+        }
+        if (!isUserCanceledPref()) {
+            return false;
+        }
+        String canceledUid = getCanceledOrderUid();
+        if (canceledUid == null || canceledUid.isEmpty()) {
+            return false;
+        }
+        return orderUid != null && orderUid.equals(canceledUid);
+    }
+
     @Nullable
     public static String getPersistedActiveUid() {
         Object v = sharedPreferencesHelperMain.getValue(PREF_FINISH_ACTIVE_UID, "");
@@ -214,7 +267,7 @@ public class ExecutionStatusViewModel extends ViewModel {
         }
     }
 
-    /** После успешной отмены на сервере — сброс uid в приложении. */
+    /** После успешной отмены на сервере — сброс uid в приложении (флаги отмены не трогаем). */
     public void clearOrderUid() {
         MainActivity.uid = null;
         MainActivity.uid_Double = null;
