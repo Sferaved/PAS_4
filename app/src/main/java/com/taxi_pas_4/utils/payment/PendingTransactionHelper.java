@@ -81,7 +81,8 @@ public final class PendingTransactionHelper {
 
         if (showBottomSheet != null && com.taxi_pas_4.androidx.startup.MyApplication.isInForeground()) {
             PaymentDeclinedNotifier.prepareDeclinedOrderState();
-            if (PaymentDeclinedNotifier.shouldShowSheetNow()) {
+            if (PaymentDeclinedNotifier.shouldShowSheetNow()
+                    && PaymentErrorSheetHelper.beginShowAttempt()) {
                 PaymentDeclinedNotifier.markSheetShown();
                 showBottomSheet.run();
             }
