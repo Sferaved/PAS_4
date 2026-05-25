@@ -525,6 +525,10 @@ public class CentrifugoManager {
      * Обработка стоимости заказа
      */
     private void handleOrderCostEvent(JSONObject json) throws JSONException {
+        if (MainActivity.currentNavDestination == R.id.nav_finish_separate) {
+            Log.d(TAG, "order-cost ignored on finish screen (use statusOrder)");
+            return;
+        }
         String rawCost = json.optString("order_cost", "0");
         String orderCost = CostParseHelper.normalizeCostString(rawCost);
         Log.d(TAG, "order_cost raw=" + rawCost + " normalized=" + orderCost);

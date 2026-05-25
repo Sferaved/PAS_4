@@ -355,6 +355,7 @@ public class FinishSeparateFragment extends Fragment {
         textCostMessage = root.findViewById(R.id.text_cost_message);
         Logger.d(context, TAG, "onCreate: textCostMessage" + messageResultCost);
         textCostMessage.setText(messageResultCost);
+        reconcileOrderIdentityFromPersistedState();
 
         textStatus = root.findViewById(R.id.textStatus);
         textStatusCar = root.findViewById(R.id.textStatusCar);
@@ -411,7 +412,6 @@ public class FinishSeparateFragment extends Fragment {
         textCarMessage.setVisibility(GONE);
 
         uid = arguments.getString("UID_key");
-
 
         Logger.d(context, TAG, "MainActivity.uid: " + uid);
 
@@ -1004,6 +1004,7 @@ public class FinishSeparateFragment extends Fragment {
 
     private void handleCancelRequestFailed() {
         cancelRequestInFlight = false;
+        ExecutionStatusViewModel.setCancelInFlightPref(false);
         activeCancelCall = null;
         cancel_btn_click = false;
         canceled = false;
@@ -1043,6 +1044,7 @@ public class FinishSeparateFragment extends Fragment {
             return;
         }
         cancelRequestInFlight = true;
+        ExecutionStatusViewModel.setCancelInFlightPref(true);
         setCancelButtonBusy(true);
         if (handlerStatus != null && myTaskStatus != null) {
             handlerStatus.removeCallbacks(myTaskStatus);
@@ -1060,6 +1062,7 @@ public class FinishSeparateFragment extends Fragment {
             @Override
             public void onResponse(@NonNull Call<Status> call, @NonNull Response<Status> response) {
                 cancelRequestInFlight = false;
+                ExecutionStatusViewModel.setCancelInFlightPref(false);
                 activeCancelCall = null;
                 if (context == null || !isAdded()) {
                     return;
@@ -1082,6 +1085,7 @@ public class FinishSeparateFragment extends Fragment {
             public void onFailure(@NonNull Call<Status> call, @NonNull Throwable t) {
                 if (call.isCanceled()) {
                     cancelRequestInFlight = false;
+                    ExecutionStatusViewModel.setCancelInFlightPref(false);
                     activeCancelCall = null;
                     return;
                 }
@@ -2361,11 +2365,54 @@ public class FinishSeparateFragment extends Fragment {
                 + context.getString(R.string.pay_method_message_nal);
         textCostMessage.setText(message);
         amount = costGrivna;
+        if (viewModel != null) {
+            viewModel.persistDisplayCostGrivna(costGrivna);
+        }
         Logger.d(context, TAG, "applyNalCostToFinishUi: " + message);
+    }
+
+    /**
+     * После доплаты / возврата из фона: uid и сумма из prefs/ViewModel, не устаревший bundle.
+     */
+    private void reconcileOrderIdentityFromPersistedState() {
+        if (ExecutionStatusViewModel.isCancelInFlightPref()) {
+            cancelRequestInFlight = true;
+            setCancelButtonBusy(true);
+            if (text_status != null) {
+                text_status.setText(R.string.sent_cancel_message);
+            }
+        }
+        String persistedActive = ExecutionStatusViewModel.getPersistedActiveUid();
+        if (persistedActive != null) {
+            uid = persistedActive;
+            MainActivity.uid = persistedActive;
+            String persistedDouble = ExecutionStatusViewModel.getPersistedDoubleUid();
+            if (persistedDouble != null && !persistedDouble.trim().isEmpty()) {
+                uid_Double = persistedDouble;
+                MainActivity.uid_Double = persistedDouble;
+            }
+            if (viewModel != null) {
+                viewModel.restoreUidFromPersisted(persistedActive, uid_Double);
+            }
+            if (receivedMap != null) {
+                receivedMap.put("dispatching_order_uid", persistedActive);
+                if (uid_Double != null) {
+                    receivedMap.put("dispatching_order_uid_Double", uid_Double);
+                }
+            }
+        }
+        String persistedCost = ExecutionStatusViewModel.getPersistedDisplayCost();
+        if (persistedCost != null && "nal_payment".equals(pay_method) && textCostMessage != null) {
+            applyNalCostToFinishUi(persistedCost);
+        }
     }
 
     @Nullable
     private String resolveActiveOrderUid() {
+        String persisted = ExecutionStatusViewModel.getPersistedActiveUid();
+        if (persisted != null) {
+            return persisted;
+        }
         if (viewModel != null) {
             String vmUid = viewModel.getUid().getValue();
             if (vmUid != null && !vmUid.isEmpty()) {
@@ -2635,6 +2682,7 @@ public class FinishSeparateFragment extends Fragment {
         if (handlerStatus != null) {
             handlerStatus.removeCallbacks(myTaskStatus);
         }
+        reconcileOrderIdentityFromPersistedState();
         if (!canceled) {
             refreshPaymentStatusOnEnter();
         }

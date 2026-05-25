@@ -3,12 +3,16 @@ package com.taxi_pas_4.utils.model;
 import android.os.Looper;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.ui.finish.OrderResponse;
+
+import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 import com.taxi_pas_4.utils.pusher.events.CanceledStatusEvent;
 import com.taxi_pas_4.utils.pusher.events.OrderResponseEvent;
 
@@ -16,6 +20,10 @@ import org.greenrobot.eventbus.EventBus;
 
 public class ExecutionStatusViewModel extends ViewModel {
 
+    public static final String PREF_FINISH_ACTIVE_UID = "finish_active_uid";
+    public static final String PREF_FINISH_DOUBLE_UID = "finish_double_uid";
+    public static final String PREF_FINISH_DISPLAY_COST = "finish_display_cost_grivna";
+    public static final String PREF_FINISH_CANCEL_IN_FLIGHT = "finish_cancel_in_flight";
 
     private final MutableLiveData<String> canceledStatus = new MutableLiveData<>();
     private final MutableLiveData<OrderResponse> orderResponse = new MutableLiveData<>();
@@ -151,6 +159,59 @@ public class ExecutionStatusViewModel extends ViewModel {
         }
         MainActivity.uid = newUid;
         uidLiveData.setValue(newUid);
+        persistFinishOrderSnapshot();
+    }
+
+    public void restoreUidFromPersisted(@Nullable String activeUid, @Nullable String doubleUid) {
+        if (activeUid == null || activeUid.isEmpty()) {
+            return;
+        }
+        MainActivity.uid = activeUid;
+        MainActivity.uid_Double = doubleUid != null ? doubleUid : "";
+        uidLiveData.setValue(activeUid);
+    }
+
+    public void persistDisplayCostGrivna(@Nullable String costGrivna) {
+        if (costGrivna == null || costGrivna.isEmpty()) {
+            return;
+        }
+        sharedPreferencesHelperMain.saveValue(PREF_FINISH_DISPLAY_COST, costGrivna);
+    }
+
+    public static void setCancelInFlightPref(boolean inFlight) {
+        sharedPreferencesHelperMain.saveValue(PREF_FINISH_CANCEL_IN_FLIGHT, inFlight);
+    }
+
+    public static boolean isCancelInFlightPref() {
+        Object v = sharedPreferencesHelperMain.getValue(PREF_FINISH_CANCEL_IN_FLIGHT, false);
+        return v instanceof Boolean && (Boolean) v;
+    }
+
+    @Nullable
+    public static String getPersistedActiveUid() {
+        Object v = sharedPreferencesHelperMain.getValue(PREF_FINISH_ACTIVE_UID, "");
+        return v instanceof String && !((String) v).isEmpty() ? (String) v : null;
+    }
+
+    @Nullable
+    public static String getPersistedDoubleUid() {
+        Object v = sharedPreferencesHelperMain.getValue(PREF_FINISH_DOUBLE_UID, "");
+        return v instanceof String ? (String) v : null;
+    }
+
+    @Nullable
+    public static String getPersistedDisplayCost() {
+        Object v = sharedPreferencesHelperMain.getValue(PREF_FINISH_DISPLAY_COST, "");
+        return v instanceof String && !((String) v).isEmpty() ? (String) v : null;
+    }
+
+    private void persistFinishOrderSnapshot() {
+        if (MainActivity.uid != null && !MainActivity.uid.isEmpty()) {
+            sharedPreferencesHelperMain.saveValue(PREF_FINISH_ACTIVE_UID, MainActivity.uid);
+        }
+        if (MainActivity.uid_Double != null) {
+            sharedPreferencesHelperMain.saveValue(PREF_FINISH_DOUBLE_UID, MainActivity.uid_Double);
+        }
     }
 
     /** После успешной отмены на сервере — сброс uid в приложении. */
@@ -158,6 +219,10 @@ public class ExecutionStatusViewModel extends ViewModel {
         MainActivity.uid = null;
         MainActivity.uid_Double = null;
         uidLiveData.setValue(null);
+        sharedPreferencesHelperMain.saveValue(PREF_FINISH_ACTIVE_UID, "");
+        sharedPreferencesHelperMain.saveValue(PREF_FINISH_DOUBLE_UID, "");
+        sharedPreferencesHelperMain.saveValue(PREF_FINISH_DISPLAY_COST, "");
+        setCancelInFlightPref(false);
     }
 
     // Method to update paySystemStatus
