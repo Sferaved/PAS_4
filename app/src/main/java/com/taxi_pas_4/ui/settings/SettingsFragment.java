@@ -1,9 +1,7 @@
 package com.taxi_pas_4.ui.settings;
 
 import static com.taxi_pas_4.MainActivity.button1;
-import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,7 +12,6 @@ import android.widget.Spinner;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.databinding.FragmentSettingsBinding;
 import com.taxi_pas_4.utils.helpers.LocaleHelper;
@@ -50,20 +47,10 @@ public class SettingsFragment extends Fragment {
         binding.saveButton.setOnClickListener(view -> {
             int selectedIndex = languageSpinner.getSelectedItemPosition();
             String localeCode = LocaleHelper.spinnerIndexToLocaleCode(selectedIndex);
-            applyLocale(localeCode);
+            Logger.i(requireContext(), TAG, "locale Code: " + localeCode);
+            LocaleHelper.changeLanguage(requireActivity(), localeCode);
         });
 
         return root;
-    }
-
-    private void applyLocale(String localeCode) {
-        Logger.i(requireContext(), TAG, "locale Code: " + localeCode);
-        LocaleHelper.persistLocale(requireContext(), localeCode);
-        LocaleHelper.applyAppLocale(requireContext());
-
-        Intent intent = new Intent(requireContext(), MainActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        requireActivity().finish();
     }
 }

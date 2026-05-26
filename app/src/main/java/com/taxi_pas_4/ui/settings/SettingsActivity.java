@@ -32,6 +32,11 @@ import java.util.Locale;
 public class SettingsActivity extends AppCompatActivity {
 
     private static final String TAG = "SettingsActivity";
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(LocaleHelper.wrapContext(newBase));
+    }
     private String city;
     private String newTitle;
 
@@ -239,13 +244,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
     private void setLocale(String localeCode) {
         Logger.i(this, "locale Code", localeCode);
-        LocaleHelper.persistLocale(this, localeCode);
-        LocaleHelper.applyAppLocale(this);
-
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        finish();
+        LocaleHelper.changeLanguage(this, localeCode);
     }
 
 
