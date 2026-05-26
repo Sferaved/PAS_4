@@ -102,6 +102,12 @@ public class CityCheckFragment extends Fragment {
                              ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentCityCheckBinding.inflate(inflater, container, false);
         root = binding.getRoot();
+        androidx.core.widget.NestedScrollView cityScroll = root.findViewById(R.id.city_check_scroll);
+        if (cityScroll != null) {
+            cityScroll.setNestedScrollingEnabled(true);
+            cityScroll.setVerticalScrollBarEnabled(true);
+            cityScroll.setScrollbarFadingEnabled(false);
+        }
         if (button1 != null) {
 
             button1.setVisibility(View.VISIBLE);
