@@ -57,10 +57,8 @@ public class PassengerNotifier {
         apiHelper.getCityInfo(normalizedCity, new CityInfoHelper.CityInfoCallback() {
             @Override
             public void onSuccess(CityInfo info) {
-                // Только тревога и РЭБ с City-Info; погоду — отдельно с OpenWeather (без кеша).
-                Logger.d(context, TAG, "City-Info: airAlarm=" + info.isAirAlarm()
-                        + ", rebActive=" + info.isRebActive()
-                        + ", timeStamp=" + info.getTimeStamp());
+                Logger.d(context, TAG, "API onSuccess: airAlarm=" + info.isAirAlarm() +
+                        ", rebActive=" + info.isRebActive());
 
                 CityInfo alertOnlyInfo = new CityInfo();
                 alertOnlyInfo.setAirAlarm(info.isAirAlarm());

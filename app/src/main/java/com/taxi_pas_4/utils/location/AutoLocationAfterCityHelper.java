@@ -9,8 +9,6 @@ import android.os.Build;
 
 import androidx.core.content.ContextCompat;
 
-import com.taxi_pas_4.MainActivity;
-
 /**
  * Флаги для авто-геолокации после выбора / загрузки города.
  */
@@ -20,7 +18,7 @@ public final class AutoLocationAfterCityHelper {
     public static final String KEY_LOCATION_PROMPT_AFTER_CITY_DONE = "location_permission_prompt_after_city_done";
     public static final String KEY_LOCATION_EVER_GRANTED = "location_permission_ever_granted";
 
-    /** Определённые авто-GPS координаты (не пишутся в ROUT_MARKER до нажатия кнопки GPS). */
+    /** Определённые авто-GPS координаты (не пишутся в ROUT_MARKER). */
     public static final String KEY_DETECTED_LAT = "auto_location_detected_lat";
     public static final String KEY_DETECTED_LON = "auto_location_detected_lon";
     public static final String KEY_DETECTED_ADDRESS = "auto_location_detected_address";

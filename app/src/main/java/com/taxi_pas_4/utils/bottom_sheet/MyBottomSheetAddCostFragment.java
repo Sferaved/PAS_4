@@ -202,7 +202,6 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
                             viewModel.setCancelStatus(true);
                             return;
                         }
-                        // Шторка уже dismiss — ViewModel/EventBus всё равно обновляют финише
                         viewModel.setAddCostViewUpdate(addCost);
                         viewModel.setCancelStatus(true);
                         return;
@@ -226,7 +225,6 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
 
     }
 
-    /** Сервер возвращает null при успехе; текст с «Дублир…» — отказ пересоздания. */
     private static boolean isNalAddCostError(@Nullable String response) {
         if (response == null || response.trim().isEmpty()) {
             return false;

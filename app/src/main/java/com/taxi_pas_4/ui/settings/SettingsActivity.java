@@ -4,7 +4,6 @@ import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHel
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -32,13 +31,13 @@ import java.util.Locale;
 public class SettingsActivity extends AppCompatActivity {
 
     private static final String TAG = "SettingsActivity";
+    private String city;
+    private String newTitle;
 
     @Override
     protected void attachBaseContext(Context newBase) {
         super.attachBaseContext(LocaleHelper.wrapContext(newBase));
     }
-    private String city;
-    private String newTitle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

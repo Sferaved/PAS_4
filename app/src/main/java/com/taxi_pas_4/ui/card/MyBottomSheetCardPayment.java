@@ -48,7 +48,7 @@ import com.taxi_pas_4.ui.wfp.checkStatus.StatusResponse;
 import com.taxi_pas_4.ui.wfp.checkStatus.StatusService;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
-import com.taxi_pas_4.ui.finish.fragm.FinishSeparateFragment;
+import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorPaymentFragment;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.uxcam.UXCam;
@@ -554,7 +554,8 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
                                     MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
                                     callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
 
-                                    FinishSeparateFragment.notifyPaymentDeclinedIfNeeded(context);
+                                    MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
+                                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                                     dismiss();
                             }
                         }
@@ -563,15 +564,15 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
                         MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
                         callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
 
-                        FinishSeparateFragment.notifyPaymentDeclinedIfNeeded(context);
-                        dismiss();
+                        MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
+                        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                     }
                 } else {
                     MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
                     callOrderIdMemory(MainActivity.order_id, MainActivity.uid, pay_method);
 
-                    FinishSeparateFragment.notifyPaymentDeclinedIfNeeded(context);
-                    dismiss();
+                    MyBottomSheetErrorPaymentFragment bottomSheetDialogFragment = new MyBottomSheetErrorPaymentFragment("wfp_payment", messageFondy, amount, context);
+                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
                     Logger.d(getActivity(), TAG, "Request failed:");
 
                 }

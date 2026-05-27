@@ -45,12 +45,14 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.NavDestination;
 import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 import androidx.work.Constraints;
@@ -88,10 +90,6 @@ import com.taxi_pas_4.ui.clear.AppDataUtils;
 import com.taxi_pas_4.ui.finish.OrderResponse;
 import com.taxi_pas_4.ui.home.HomeFragment;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
-import com.taxi_pas_4.utils.ui.CostCalculationProgressBar;
-
-import androidx.fragment.app.Fragment;
-import androidx.navigation.fragment.NavHostFragment;
 import com.taxi_pas_4.ui.weather.WeatherApiHelper;
 import com.taxi_pas_4.ui.weather.WeatherResponse;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
@@ -113,6 +111,7 @@ import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 import com.taxi_pas_4.utils.pusher.PusherManager;
 import com.taxi_pas_4.utils.review.AppReviewManager;
+import com.taxi_pas_4.utils.ui.CostCalculationProgressBar;
 import com.taxi_pas_4.utils.user.del_server.ApiUserService;
 import com.taxi_pas_4.utils.user.del_server.CallbackUser;
 import com.taxi_pas_4.utils.user.del_server.RetrofitClient;
@@ -263,6 +262,8 @@ public class MainActivity extends AppCompatActivity {
     private final Handler networkUiHandler = new Handler(Looper.getMainLooper());
     private Runnable bannerRecheckRunnable;
     private Runnable networkRestoredRunnable;
+    /** true после события «нет сети» — пересчёт заказа только при восстановлении. */
+    private boolean networkWasOfflineForReload;
     private AppReviewManager appReviewManager;
     public AppReviewManager getAppReviewManager() {
         return appReviewManager;
@@ -427,7 +428,12 @@ public class MainActivity extends AppCompatActivity {
         networkMonitor.setListener(isConnected -> runOnUiThread(() -> {
             updateInternetBannerVisibility();
             if (isConnected) {
-                scheduleReloadAfterNetworkRestored();
+                if (networkWasOfflineForReload) {
+                    networkWasOfflineForReload = false;
+                    scheduleReloadAfterNetworkRestored();
+                }
+            } else {
+                networkWasOfflineForReload = true;
             }
         }));
         networkMonitor.startMonitoring();
@@ -839,13 +845,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Обновляет Snackbar при смене фрагмента (чтобы привязать к новому корневому View)
-     */
-    private void refreshSnackbarIfNeeded() {
-        updateInternetBannerVisibility();
-    }
-
     private void openOrderScreen() {
         // Открыть экран заказа такси
     }
@@ -1038,6 +1037,7 @@ public class MainActivity extends AppCompatActivity {
         if (uid == null || uid.isEmpty()) {
             sharedPreferencesHelperMain.saveValue("pay_error", "**");
         }
+
 
         baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
 
@@ -2340,7 +2340,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         syncNetworkBanner();
-        // Declined обрабатывает FinishSeparateFragment.refreshPaymentStatusOnEnter (без дубля push)
     }
 
     @Override
@@ -3064,14 +3063,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
     }
-
-    private void releaseCentrifugoManager() {
-        if (centrifugoManager != null) {
-            centrifugoManager.disconnect();
-            centrifugoManager = null;
-        }
-    }
-
     private void crispChat() {
         // Опционально: установка данных пользователя
         List<String> stringList = logCursor(MainActivity.TABLE_USER_INFO);
@@ -3081,6 +3072,22 @@ public class MainActivity extends AppCompatActivity {
 
         Crisp.setUserEmail(userEmail);
         Crisp.setUserNickname(username);
+    }
+
+    public void resetCentrifugoOrderCostDedup() {
+        if (centrifugoManager != null) {
+            centrifugoManager.resetOrderCostDedup();
+        }
+        if (pusherManager != null) {
+            pusherManager.resetOrderCostDedup();
+        }
+    }
+
+    private void releaseCentrifugoManager() {
+        if (centrifugoManager != null) {
+            centrifugoManager.disconnect();
+            centrifugoManager = null;
+        }
     }
 
     void clearApplication(Context context) {

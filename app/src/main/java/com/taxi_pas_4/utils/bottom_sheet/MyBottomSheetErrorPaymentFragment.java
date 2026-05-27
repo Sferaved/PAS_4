@@ -60,10 +60,9 @@ import com.taxi_pas_4.ui.wfp.purchase.PurchaseService;
 import com.taxi_pas_4.utils.data.DataArr;
 import com.taxi_pas_4.utils.helpers.LocaleHelper;
 import com.taxi_pas_4.utils.log.Logger;
-import com.taxi_pas_4.utils.payment.PaymentErrorSheetHelper;
-import com.taxi_pas_4.utils.payment.PaymentSessionHelper;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.taxi_pas_4.utils.payment.PaymentErrorSheetHelper;
+import com.taxi_pas_4.utils.payment.PaymentSessionHelper;
 import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 import com.taxi_pas_4.utils.worker.InclusiveTransportPreferenceWorker;
@@ -469,7 +468,7 @@ public class MyBottomSheetErrorPaymentFragment extends BottomSheetDialogFragment
     }
 
     void callOrderIdMemory(String orderId, String uid, String paySystem) {
-        com.taxi_pas_4.utils.payment.PaymentSessionHelper.saveWfpOrderRef(uid, orderId);
+        PaymentSessionHelper.saveWfpOrderRef(uid, orderId);
         String baseUrl = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl)

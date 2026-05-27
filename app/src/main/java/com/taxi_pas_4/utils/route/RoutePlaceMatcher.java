@@ -48,7 +48,6 @@ public final class RoutePlaceMatcher {
         return s.replaceAll("[^\\p{L}\\p{N}]+", " ").replaceAll("\\s+", " ").trim();
     }
 
-    /** Последнее значимое слово — часто название населённого пункта (Димер / Дымер). */
     private static String extractPlaceToken(String normalized) {
         if (normalized.isEmpty()) {
             return "";

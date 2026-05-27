@@ -1,5 +1,7 @@
 package com.taxi_pas_4.utils.model;
 
+import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
+
 import android.os.Looper;
 import android.util.Log;
 
@@ -9,10 +11,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.taxi_pas_4.MainActivity;
-import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.ui.finish.OrderResponse;
-
-import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 import com.taxi_pas_4.utils.pusher.events.CanceledStatusEvent;
 import com.taxi_pas_4.utils.pusher.events.OrderResponseEvent;
 
@@ -207,7 +206,6 @@ public class ExecutionStatusViewModel extends ViewModel {
         return v instanceof String && !((String) v).isEmpty() ? (String) v : null;
     }
 
-    /** Новый заказ / переход на финише — сброс отмены, чтобы доплата не блокировалась. */
     public static void resetNewOrderSession(@Nullable String activeOrderUid) {
         setCancelInFlightPref(false);
         setUserCanceledPref(false);
@@ -225,7 +223,6 @@ public class ExecutionStatusViewModel extends ViewModel {
         }
     }
 
-    /** Блокировать доплату только для отменённого uid или пока идёт запрос отмены. */
     public static boolean shouldBlockAddCost(@Nullable String orderUid) {
         if (isCancelInFlightPref()) {
             return true;

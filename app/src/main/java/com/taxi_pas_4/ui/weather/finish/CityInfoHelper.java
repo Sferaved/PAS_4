@@ -33,6 +33,7 @@ public class CityInfoHelper {
 
     public interface CityInfoCallback {
         void onSuccess(CityInfo info);
+
         void onError(String error);
     }
 
@@ -52,7 +53,7 @@ public class CityInfoHelper {
                     .build();
 
             try (Response response = client.newCall(request).execute()) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     String json = response.body().string();
                     CityInfo info = parseJson(json);
                     new Handler(Looper.getMainLooper()).post(() -> callback.onSuccess(info));
@@ -67,33 +68,29 @@ public class CityInfoHelper {
         }).start();
     }
 
-    /**
-     * Получает текущую локаль приложения
-     */
     private String getCurrentLocale() {
         if (context == null) {
-            return "en"; // Значение по умолчанию
+            return "en";
         }
 
         Configuration config = context.getResources().getConfiguration();
-        Locale locale = config.getLocales().get(0);
+        Locale locale;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            locale = config.getLocales().get(0);
+        } else {
+            locale = config.locale;
+        }
         String language = locale.getLanguage();
-
-        // Поддерживаемые языки
         switch (language) {
             case "uk":
                 return "uk";
             case "ru":
                 return "ru";
-            case "en":
             default:
                 return "en";
         }
     }
 
-    /**
-     * Альтернативный метод с явной передачей локали
-     */
     public void getCityInfo(String city, String locale, CityInfoCallback callback) {
         new Thread(() -> {
             String token = MainActivity.utaxKey;
@@ -108,7 +105,7 @@ public class CityInfoHelper {
                     .build();
 
             try (Response response = client.newCall(request).execute()) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     String json = response.body().string();
                     CityInfo info = parseJson(json);
                     new Handler(Looper.getMainLooper()).post(() -> callback.onSuccess(info));

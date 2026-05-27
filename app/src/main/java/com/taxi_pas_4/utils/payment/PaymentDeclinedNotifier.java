@@ -1,25 +1,15 @@
 package com.taxi_pas_4.utils.payment;
 
 
-
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
-
-
 import android.content.Context;
-
 import android.util.Log;
-
-
 
 import androidx.annotation.Nullable;
 
-
-
 import com.taxi_pas_4.MainActivity;
-
 import com.taxi_pas_4.R;
-
 import com.taxi_pas_4.utils.notify.NotificationHelper;
 
 

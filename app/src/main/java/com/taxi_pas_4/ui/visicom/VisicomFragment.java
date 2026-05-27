@@ -46,7 +46,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
-import com.taxi_pas_4.utils.ui.CostCalculationProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -119,13 +118,14 @@ import com.taxi_pas_4.utils.keys.FirestoreHelper;
 import com.taxi_pas_4.utils.location.AutoLocationAfterCityHelper;
 import com.taxi_pas_4.utils.location.TaxiLocationValidator;
 import com.taxi_pas_4.utils.log.Logger;
-import com.taxi_pas_4.utils.route.RoutePlaceMatcher;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.taxi_pas_4.utils.retrofit.cost_json_parser.CostJSONParserRetrofit;
+import com.taxi_pas_4.utils.route.RoutePlaceMatcher;
 import com.taxi_pas_4.utils.sanitizer.InputSanitizerHelper;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 import com.taxi_pas_4.utils.ui.BackPressBlocker;
+import com.taxi_pas_4.utils.ui.CostCalculationProgressBar;
 import com.taxi_pas_4.utils.worker.InclusiveTransportPreferenceWorker;
 import com.taxi_pas_4.utils.worker.TilePreloadWorker;
 import com.uxcam.UXCam;
@@ -138,12 +138,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import retrofit2.Call;
@@ -245,12 +243,12 @@ public class VisicomFragment extends Fragment {
     private String lastCost = null;
     static SwipeRefreshLayout swipeRefreshLayout;
     private LifecycleObserver lifecycleObserver;
-    /** true после ProcessLifecycle ON_STOP (реальный уход в фон). */
     private boolean appProcessWasInBackground = false;
     private static final long VISICOM_COST_DEBOUNCE_MS = 2500;
-    /** Не пересчитывать из lastOrderAddress, если недавно уже был запрос (onResume и т.п.). */
     private static final long VISICOM_COST_LAST_ADDRESS_COOLDOWN_MS = 30_000;
+    private static final long NETWORK_RESTORE_RELOAD_COOLDOWN_MS = 12_000;
     private long lastVisicomCostRequestMs = 0;
+    private long lastCostCalculationFailureMs = 0;
 
     private static final double DEFAULT_LAT = 50.4501; // Киев по умолчанию
     private static final double DEFAULT_LON = 30.5234;
@@ -907,7 +905,6 @@ public class VisicomFragment extends Fragment {
         }
 
         if (CostCalculationProgressBar.isCalculationInProgress()) {
-            // Во время расчёта поле цены и спиннер всегда видны
             binding.textViewCost.setVisibility(VISIBLE);
             progressBar.forceShow();
             setViewsVisibility(visible,
@@ -981,7 +978,8 @@ public class VisicomFragment extends Fragment {
         }
     }
 
-    /** Показать индикатор расчёта стоимости в блоке цены. */
+
+
     private void showCostCalculationProgress() {
         if (!isAdded() || binding == null) {
             return;
@@ -1002,19 +1000,15 @@ public class VisicomFragment extends Fragment {
         binding.schedule.setVisibility(INVISIBLE);
         binding.shedDown.setVisibility(INVISIBLE);
         binding.getRoot().post(this::restoreCostCalculationProgressIfNeeded);
-        Logger.d(context, TAG, "showCostCalculationProgress");
     }
 
-    /** Скрыть индикатор расчёта стоимости. */
     private void hideCostCalculationProgress() {
         CostCalculationProgressBar.setCalculationInProgress(false);
         if (progressBar != null) {
             progressBar.forceHide();
         }
-        Logger.d(context, TAG, "hideCostCalculationProgress");
     }
 
-    /** Если расчёт ещё идёт — вернуть спиннер (после внешних setVisibility). */
     private void restoreCostCalculationProgressIfNeeded() {
         if (!CostCalculationProgressBar.isCalculationInProgress() || binding == null) {
             return;
@@ -1026,10 +1020,8 @@ public class VisicomFragment extends Fragment {
         binding.textViewCost.setVisibility(VISIBLE);
         progressBar.forceShow();
         progressBar.bringToFront();
-        Logger.d(context, TAG, "restoreCostCalculationProgressIfNeeded");
     }
 
-    /** Скрыть кнопки заказа на время расчёта, не трогая блок цены. */
     private void hideOrderControlsDuringCostCalculation() {
         if (binding == null) {
             return;
@@ -1044,14 +1036,12 @@ public class VisicomFragment extends Fragment {
         binding.shedDown.setVisibility(INVISIBLE);
     }
 
-    /** Завершить расчёт: цена уже в text_view_cost — убираем спиннер и показываем кнопки. */
     private void finishCostCalculationWithPrice() {
         if (text_view_cost == null) {
             return;
         }
         CharSequence priceText = text_view_cost.getText();
         if (priceText == null || priceText.toString().trim().isEmpty()) {
-            Logger.w(context, TAG, "finishCostCalculationWithPrice: цена пустая — спиннер оставляем");
             showCostCalculationProgress();
             return;
         }
@@ -1098,22 +1088,20 @@ public class VisicomFragment extends Fragment {
     private void showCostCalculationError(String serverMessage) {
         cancelPendingReserveCost();
         hideCostCalculationProgress();
+        long now = System.currentTimeMillis();
+        lastVisicomCostRequestMs = now;
         if (isNetworkRelatedCostError(serverMessage)) {
+            lastCostCalculationFailureMs = 0;
             btnVisible(GONE);
             Logger.w(context, TAG, "Ошибка сети при расчёте стоимости: " + serverMessage);
             return;
         }
+        lastCostCalculationFailureMs = now;
         btnVisible(VISIBLE);
         if (!isAdded() || isStateSaved()) {
             return;
         }
-        String text = serverMessage;
-        if ("ErrorMessage".equals(serverMessage)) {
-            text = getString(R.string.server_error_connected);
-        } else if ("ErrorCardPayment".equals(serverMessage)) {
-            text = getString(R.string.server_error_card_payment);
-        }
-        MyBottomSheetErrorFragment sheet = new MyBottomSheetErrorFragment(text);
+        MyBottomSheetErrorFragment sheet = new MyBottomSheetErrorFragment(resolveCostErrorMessage(serverMessage));
         sheet.show(getChildFragmentManager(), sheet.getTag());
     }
 
@@ -1142,6 +1130,16 @@ public class VisicomFragment extends Fragment {
         if (!isAdded() || context == null) {
             return;
         }
+        long now = System.currentTimeMillis();
+        if (CostCalculationProgressBar.isCalculationInProgress()) {
+            Logger.d(context, TAG, "reloadOrderAfterNetworkRestored: пропуск — расчёт уже идёт");
+            return;
+        }
+        if (lastVisicomCostRequestMs > 0
+                && now - lastVisicomCostRequestMs < NETWORK_RESTORE_RELOAD_COOLDOWN_MS) {
+            Logger.d(context, TAG, "reloadOrderAfterNetworkRestored: пропуск — недавний расчёт (onResume)");
+            return;
+        }
         resetCostCalculationState("networkRestored");
         requestVisicomCost("networkRestored");
     }
@@ -1150,7 +1148,38 @@ public class VisicomFragment extends Fragment {
         Logger.d(context, TAG, "resetCostCalculationState: " + reason);
         cancelPendingReserveCost();
         hideCostCalculationProgress();
+        lastCostCalculationFailureMs = 0;
         lastVisicomCostRequestMs = 0;
+        lastCost = null;
+        resetRealtimeOrderCostDedup();
+    }
+
+    private void resetRealtimeOrderCostDedup() {
+        if (!isAdded()) {
+            return;
+        }
+        Activity activity = getActivity();
+        if (activity instanceof MainActivity mainActivity) {
+            mainActivity.resetCentrifugoOrderCostDedup();
+        }
+    }
+
+    private String resolveCostErrorMessage(String serverMessage) {
+        if (serverMessage == null || serverMessage.trim().isEmpty()) {
+            return getString(R.string.server_error_connected);
+        }
+        if ("ErrorMessage".equals(serverMessage)) {
+            return getString(R.string.server_error_connected);
+        }
+        if ("ErrorCardPayment".equals(serverMessage)) {
+            return getString(R.string.server_error_card_payment);
+        }
+        if (serverMessage.startsWith("Ошибка подключения")
+                || serverMessage.startsWith("Ошибка от сервера")
+                || serverMessage.toLowerCase().contains("timeout")) {
+            return getString(R.string.server_error_connected);
+        }
+        return serverMessage;
     }
 
     // Вспомогательный метод для логирования (добавьте в класс)
@@ -1423,6 +1452,7 @@ public class VisicomFragment extends Fragment {
                 || trimmed.equals(getString(R.string.on_city));
     }
 
+    /** Восстанавливает «Куда» из БД после возврата с экрана поиска (view мог пересоздаться). */
     private void restoreDestinationFieldFromDatabase() {
         if (!isAdded() || textViewTo == null || context == null) {
             return;
@@ -1717,6 +1747,8 @@ public class VisicomFragment extends Fragment {
             KafkaRequest costRequest = new KafkaRequest();
             costRequest.sendCostMessage(urlKafka);
         }
+        btnVisible(GONE);
+
         database.close();
         return url;
     }
@@ -2915,14 +2947,11 @@ public class VisicomFragment extends Fragment {
 
         } else {
             binding.textwhere.setVisibility(GONE);
-            if (!CostCalculationProgressBar.isCalculationInProgress()) {
-                progressBar.setVisibility(GONE);
-            }
+            progressBar.setVisibility(GONE);
         }
 
         scheduleUpdate();
         addCheck(context);
-        restoreCostCalculationProgressIfNeeded();
 
         View rootView = getView();
         if (rootView != null) {
@@ -2953,7 +2982,6 @@ public class VisicomFragment extends Fragment {
         }
     }
 
-    /** Крестик: GPS-координаты есть, но пользователь ещё не применил их нажатием на кнопку GPS. */
     private void restoreGpsCrossIfPendingUserApply() {
         if (!isAdded() || binding == null) {
             return;
@@ -3227,9 +3255,6 @@ public class VisicomFragment extends Fragment {
         }
     }
 
-    /**
-     * Один пересчёт стоимости с debounce (onResume, фон, последний адрес не дублируют запрос).
-     */
     private void requestVisicomCost(String source) {
         if (!isAdded() || context == null) {
             return;
@@ -3244,9 +3269,14 @@ public class VisicomFragment extends Fragment {
         long now = System.currentTimeMillis();
         boolean forceRetry = isForceRetrySource(source);
 
-        if (!forceRetry && "lastOrderAddress".equals(source)) {
+        if (!forceRetry && ("lastOrderAddress".equals(source) || "foreground".equals(source))) {
             if (CostCalculationProgressBar.isCalculationInProgress()) {
                 Logger.d(context, TAG, "visicomCost пропущен (расчёт идёт), источник: " + source);
+                return;
+            }
+            if (lastCostCalculationFailureMs > 0
+                    && now - lastCostCalculationFailureMs < VISICOM_COST_LAST_ADDRESS_COOLDOWN_MS) {
+                Logger.d(context, TAG, "visicomCost пропущен (после ошибки расчёта), источник: " + source);
                 return;
             }
             if (lastVisicomCostRequestMs > 0
@@ -3262,6 +3292,8 @@ public class VisicomFragment extends Fragment {
             return;
         }
         lastVisicomCostRequestMs = now;
+        lastCost = null;
+        resetRealtimeOrderCostDedup();
         showCostCalculationProgress();
         try {
             Logger.d(context, TAG, "visicomCost, источник: " + source);
@@ -3590,14 +3622,12 @@ public class VisicomFragment extends Fragment {
 
                                         geoText.setText("");
                                         textViewTo.setText("");
-                                        if (!CostCalculationProgressBar.isCalculationInProgress()) {
-                                            btnVisible(GONE);
-                                            if (progressBar != null) {
-                                                progressBar.setVisibility(View.GONE);
-                                                Logger.d(context, TAG, "   ├─ progressBar.setVisibility(GONE)");
-                                            }
+                                        btnVisible(GONE);
+                                        if (progressBar != null) {
+                                            progressBar.setVisibility(View.GONE);
+                                            Logger.d(context, TAG, "   ├─ progressBar.setVisibility(GONE)");
                                         } else {
-                                            Logger.d(context, TAG, "   ├─ расчёт цены — progressBar оставлен");
+                                            Logger.w(context, TAG, "   ├─ ⚠️ progressBar = null, пропускаем");
                                         }
                                         Logger.d(context, TAG, "   └─ btnVisible(VISIBLE) - кнопки восстановлены");
                                     }
@@ -4090,7 +4120,7 @@ public class VisicomFragment extends Fragment {
             public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
                 FirebaseCrashlytics.getInstance().recordException(t);
                 Logger.e(context, TAG, "Ошибка подключения к серверу: " + t.getMessage());
-                applyDiscountAndUpdateUI("0", context);
+                showCostCalculationError("Ошибка подключения: " + t.getLocalizedMessage());
             }
         });
     }
@@ -4176,6 +4206,8 @@ public class VisicomFragment extends Fragment {
             Logger.e(context, TAG, "NumberFormatException в applyDiscountAndUpdateUI: " + e.getMessage());
             showCostCalculationProgress();
         }
+
+        btnVisible(View.VISIBLE);
     }
 
 
@@ -4828,7 +4860,9 @@ public class VisicomFragment extends Fragment {
                     if ("success".equals(orderResponse.getStatus()) && orderResponse.getMessage() != null) {
                         String message = orderResponse.getMessage();
                         // Проверяем, что сообщение не "Заказ снят" или "Заказ не найден"
-                        if (!message.equals("Заказ снят") && !message.equals("Заказ не найден") && !message.equals("Автоматический заказ не найден")) {
+                        if (message.equals("Заказ снят")
+                                || message.equals("Заказ не найден")
+                                || message.equals("Автоматический заказ не найден")) {
                             sharedPreferencesHelperMain.saveValue("uid_fcm", "");
                         }
                     }

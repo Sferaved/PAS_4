@@ -24,7 +24,6 @@ import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.payment.PendingTransactionHelper;
 
-import org.greenrobot.eventbus.EventBus;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -87,6 +86,10 @@ public class CentrifugoManager {
     private final CentrifugoHandler mainHandler;
 
     private String lastProcessedCost = "";
+
+    public void resetOrderCostDedup() {
+        lastProcessedCost = "";
+    }
     private boolean isShuttingDown = false;
     private int reconnectAttempts = 0;
     // Флаг для отслеживания состояния подключения

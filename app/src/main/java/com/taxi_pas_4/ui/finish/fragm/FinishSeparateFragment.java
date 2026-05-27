@@ -64,9 +64,9 @@ import com.taxi_pas_4.ui.finish.BonusResponse;
 import com.taxi_pas_4.ui.finish.FinishCostResponse;
 import com.taxi_pas_4.ui.finish.OrderResponse;
 import com.taxi_pas_4.ui.finish.Status;
+import com.taxi_pas_4.ui.weather.finish.PassengerNotifier;
 import com.taxi_pas_4.ui.wfp.checkStatus.StatusResponse;
 import com.taxi_pas_4.ui.wfp.checkStatus.StatusService;
-import com.taxi_pas_4.ui.weather.finish.PassengerNotifier;
 import com.taxi_pas_4.utils.animation.car.CarProgressBar;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetAddCostFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
@@ -79,13 +79,13 @@ import com.taxi_pas_4.utils.hold.HoldResponse;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
-import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
-import com.taxi_pas_4.utils.pusher.events.AddCostUpdateEvent;
-import com.taxi_pas_4.utils.pusher.events.CanceledStatusEvent;
 import com.taxi_pas_4.utils.payment.PaymentDeclinedNotifier;
 import com.taxi_pas_4.utils.payment.PaymentErrorSheetHelper;
 import com.taxi_pas_4.utils.payment.PaymentSessionHelper;
 import com.taxi_pas_4.utils.payment.PendingTransactionHelper;
+import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
+import com.taxi_pas_4.utils.pusher.events.AddCostUpdateEvent;
+import com.taxi_pas_4.utils.pusher.events.CanceledStatusEvent;
 import com.taxi_pas_4.utils.review.AppReviewManager;
 import com.taxi_pas_4.utils.time_ut.TimeUtils;
 import com.taxi_pas_4.utils.ui.BackPressBlocker;
@@ -199,7 +199,6 @@ public class FinishSeparateFragment extends Fragment {
     Runnable checkTask;
     private boolean isTaskRunning = false;
     private  boolean isTaskCancelled = false;
-    /** Временная пауза опроса (доплата/диалог), без полного stopCycle. */
     private boolean statusPollPaused = false;
     private Runnable cancelWatchPoll;
 
@@ -415,6 +414,7 @@ public class FinishSeparateFragment extends Fragment {
 
         uid = arguments.getString("UID_key");
 
+
         Logger.d(context, TAG, "MainActivity.uid: " + uid);
 
         if (uid != null && MainActivity.order_id != null && !MainActivity.order_id.isEmpty()) {
@@ -520,8 +520,6 @@ public class FinishSeparateFragment extends Fragment {
                 HandlerCompat.postDelayed(handlerStatus, cancelWatchPoll, null, 4000);
             }
         };
-
-
 
         btn_again = root.findViewById(R.id.btn_again);
         btn_again.setOnClickListener(v -> {
@@ -858,11 +856,10 @@ public class FinishSeparateFragment extends Fragment {
             handlerStatus.removeCallbacks(myTaskStatus);
         }
         stopCancelWatchPoll();
-        isTaskRunning = false; // Сбрасываем флаг выполнения
+        isTaskRunning = false;
         Log.d("FinishSeparateFragment", "Cycle stopped");
     }
 
-    /** Пауза опроса statusOrder (доплата/диалог); отмена с сервера всё ещё может прийти по push. */
     private void pauseStatusPolling() {
         statusPollPaused = true;
         if (handlerStatus != null) {
@@ -1261,8 +1258,11 @@ public class FinishSeparateFragment extends Fragment {
                 @Override
                 public void onResponse(@NonNull Call<OrderResponse> call, @NonNull Response<OrderResponse> response) {
                     if (response.isSuccessful() && response.body() != null) {
+                        // Получаем объект OrderResponse из успешного ответа
                         OrderResponse orderResponse = response.body();
 
+                        // Далее вы можете использовать полученные данные из orderResponse
+                        // например:
                         String executionStatus = orderResponse.getExecutionStatus();
 
                         String orderCarInfo = orderResponse.getOrderCarInfo();
@@ -1344,11 +1344,7 @@ public class FinishSeparateFragment extends Fragment {
                         return;
                     }
                     context.runOnUiThread(() -> closeReasonReactNal(
-                            -1,
-                            "*",
-                            "*",
-                            "*",
-                            "*"
+                            -1, "*", "*", "*", "*"
                     ));
                 }
             });
@@ -2425,7 +2421,6 @@ public class FinishSeparateFragment extends Fragment {
     // Добавьте этот метод в класс FinishSeparateFragment
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onAddCostUpdateEvent(AddCostUpdateEvent event) {
-        // Доплата наличными идёт через getAddCostViewUpdate().observe (без дубля EventBus)
         Logger.d(context, "EventBus", "AddCostUpdateEvent ignored (LiveData path): " + event.getAddCost());
     }
 
@@ -2493,7 +2488,6 @@ public class FinishSeparateFragment extends Fragment {
         }
     }
 
-    /** Сумма на финише после пересоздания заказа (нал): order_cost + add_cost с сервера. */
     private void refreshFinishCostFromOrder(@Nullable OrderResponse orderResponse) {
         if (orderResponse == null || textCostMessage == null || !"nal_payment".equals(pay_method)) {
             return;
@@ -2509,7 +2503,6 @@ public class FinishSeparateFragment extends Fragment {
             return;
         }
         try {
-            // order_cost после пересоздания — уже итог для поиска; add_cost не суммируем повторно
             int total = (int) Math.round(Double.parseDouble(baseCost.replace(',', '.').trim()));
             int displayed = parseDisplayedCostGrivna();
             if (total != displayed) {

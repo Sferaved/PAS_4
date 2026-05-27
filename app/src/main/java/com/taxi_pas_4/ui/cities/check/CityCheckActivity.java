@@ -96,9 +96,6 @@ public class CityCheckActivity extends AppCompatActivity {
     String countryState;
     SharedPreferencesHelper sharedPreferencesHelper;
 
-    /**
-     * Honor/MIUI и крупный масштаб шрифта: insets + явная прокрутка списка городов.
-     */
     private void setupCityListScrolling() {
         NestedScrollView scroll = findViewById(R.id.city_check_scroll);
         if (scroll == null) {
@@ -127,7 +124,6 @@ public class CityCheckActivity extends AppCompatActivity {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                // Не менять город при «Назад» — оставить текущий выбор (Test, Киев и т.д.)
                 sharedPreferencesHelperMain.saveValue("CityCheckActivity", "**");
                 finish();
             }
