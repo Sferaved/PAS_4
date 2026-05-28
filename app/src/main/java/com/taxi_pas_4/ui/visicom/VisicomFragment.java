@@ -2699,9 +2699,6 @@ public class VisicomFragment extends Fragment {
 
         textViewTo = binding.textTo;
         textViewTo.setOnClickListener(v -> {
-            textViewTo.setText("");
-            updateRouteSettings();
-
             Bundle bundle = new Bundle();
             bundle.putString("start", "no");
             bundle.putString("end", "ok");

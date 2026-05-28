@@ -19,6 +19,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
+import com.taxi_pas_4.ui.weather.finish.PassengerNotifier;
 import com.taxi_pas_4.utils.cost.CostParseHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
@@ -446,6 +447,11 @@ public class CentrifugoManager {
         mainHandler.postSafe(() -> {
             MainActivity.uid_Double = orderDouble;
             MainActivity.paySystemStatus = paySystemStatus;
+            if (orderDouble != null && !orderDouble.trim().isEmpty()) {
+                com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain.saveValue(
+                        ExecutionStatusViewModel.PREF_FINISH_DOUBLE_UID, orderDouble.trim());
+            }
+            PassengerNotifier.syncWeatherNoticeWithFinishUids(MainActivity.uid, orderDouble);
         });
     }
 

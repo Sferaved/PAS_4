@@ -16,6 +16,9 @@ import com.taxi_pas_4.ui.weather.WeatherApiHelper;
 import com.taxi_pas_4.ui.weather.WeatherResponse;
 import com.taxi_pas_4.utils.keys.FirestoreHelper;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
+
+import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,10 +26,16 @@ import java.util.Locale;
 
 public class PassengerNotifier {
     private static final String TAG = "PassengerNotifier";
+    private static final String PREF_LAST_WEATHER_NOTICE_ORDER_UID = "weather_notice_last_order_uid";
+    private static final String PREF_LAST_WEATHER_NOTICE_ORDER_UID_ALT = "weather_notice_last_order_uid_alt";
     private CityInfoHelper apiHelper;
     private long searchStartTime;
     private Context appContext;
     private String pendingCity;
+    private String pendingOrderUid;
+    /** Инкремент при новом checkAndNotify или cancelPendingWeatherRequests — отменяет устаревшие колбэки API. */
+    private int activeWeatherRequestGeneration = 0;
+    private int currentRequestGeneration = 0;
 
     public PassengerNotifier(Context context) {
         this.appContext = context.getApplicationContext();
@@ -39,20 +48,40 @@ public class PassengerNotifier {
         Logger.d(appContext, TAG, "onSearchStarted: поиск начат, время старта=" + searchStartTime);
     }
 
+    /** Отменяет отложенные и уже запущенные запросы погоды (при уходе с экрана finish). */
+    public void cancelPendingWeatherRequests() {
+        activeWeatherRequestGeneration++;
+    }
+
+    public static boolean isWeatherAlreadyShownForOrder(@Nullable String orderUid) {
+        return isWeatherNoticeAlreadyShown(normalizeOrderUid(orderUid));
+    }
+
+    public static void clearWeatherNoticePrefs() {
+        MyApplication.sharedPreferencesHelperMain.saveStringCommit(
+                PREF_LAST_WEATHER_NOTICE_ORDER_UID, "");
+        MyApplication.sharedPreferencesHelperMain.saveStringCommit(
+                PREF_LAST_WEATHER_NOTICE_ORDER_UID_ALT, "");
+    }
+
+    /**
+     * Один заказ -> один показ погоды. Идентификатор заказа должен быть стабильным (uid заказа).
+     */
+    public void checkAndNotify(Context context, String city, String orderUid) {
+        this.pendingOrderUid = normalizeOrderUid(orderUid);
+        if (isWeatherNoticeAlreadyShown(pendingOrderUid)) {
+            Logger.d(context, TAG, "checkAndNotify: погода уже показана для заказа " + pendingOrderUid);
+            return;
+        }
+        checkAndNotify(context, city);
+    }
+
     public void checkAndNotify(Context context, String city) {
         this.pendingCity = city;
         String normalizedCity = normalizeCityName(city);
+        currentRequestGeneration = ++activeWeatherRequestGeneration;
 
-        long currentTime = System.currentTimeMillis();
-        long elapsedMs = currentTime - searchStartTime;
-        long elapsedSeconds = elapsedMs / 1000;
-
-        Logger.d(context, TAG, "checkAndNotify: elapsedSeconds=" + elapsedSeconds);
-
-        if (elapsedSeconds > 120) {
-            Logger.d(context, TAG, "checkAndNotify: превышен лимит 120 секунд");
-            return;
-        }
+        Logger.d(context, TAG, "checkAndNotify: запрос погоды, generation=" + currentRequestGeneration);
 
         apiHelper.getCityInfo(normalizedCity, new CityInfoHelper.CityInfoCallback() {
             @Override
@@ -173,7 +202,19 @@ public class PassengerNotifier {
         });
     }
 
+    private boolean isWeatherRequestStale() {
+        return currentRequestGeneration != activeWeatherRequestGeneration;
+    }
+
     private void showFinalNotification(Context context, CityInfo alertInfo, String weather, int temperature) {
+        if (isWeatherRequestStale()) {
+            Logger.d(context, TAG, "showFinalNotification: устаревший ответ API, пропуск");
+            return;
+        }
+        if (!shouldShowWeatherNoticeForOrder()) {
+            Logger.d(context, TAG, "showFinalNotification: пропускаем (уже показано для этого заказа)");
+            return;
+        }
         // Сохраняем текущую локаль ДО создания fullInfo
         String currentLocale = getLanguage(context);
         Logger.d(context, TAG, "showFinalNotification: текущая локаль=" + currentLocale);
@@ -192,10 +233,176 @@ public class PassengerNotifier {
 
         // Передаём сохранённую локаль в buildNotificationMessage
         String message = buildNotificationMessage(fullInfo, currentLocale);
+        if (resolvePrimaryOrderUidForWeatherMark() != null) {
+            markWeatherNoticeShownForOrder();
+        }
         if (message != null) {
             Logger.d(context, TAG, "Показываем уведомление: " + message);
             showNotification(context, message);
         }
+    }
+
+    @Nullable
+    private static String normalizeOrderUid(@Nullable String orderUid) {
+        if (orderUid == null) {
+            return null;
+        }
+        String trimmed = orderUid.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private static String getStoredWeatherUid(String prefKey) {
+        Object last = MyApplication.sharedPreferencesHelperMain.getValue(prefKey, "");
+        return last != null ? String.valueOf(last).trim() : "";
+    }
+
+    private static boolean uidEquals(@Nullable String a, @Nullable String b) {
+        return a != null && b != null && a.equals(b);
+    }
+
+    /**
+     * Погода уже показана для этого заказа, в т.ч. после доплаты (второй uid) или повторного входа на экран.
+     */
+    private static boolean isWeatherNoticeAlreadyShown(@Nullable String orderUid) {
+        String storedPrimary = getStoredWeatherUid(PREF_LAST_WEATHER_NOTICE_ORDER_UID);
+        if (storedPrimary.isEmpty()) {
+            return false;
+        }
+        String storedAlt = getStoredWeatherUid(PREF_LAST_WEATHER_NOTICE_ORDER_UID_ALT);
+        return hasUidOverlap(collectFinishOrderUidCandidates(orderUid), storedPrimary, storedAlt);
+    }
+
+    private static boolean hasUidOverlap(
+            List<String> candidates,
+            String storedPrimary,
+            String storedAlt) {
+        for (String candidate : candidates) {
+            if (uidEquals(candidate, storedPrimary) || uidEquals(candidate, storedAlt)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static List<String> collectFinishOrderUidCandidates(@Nullable String orderUid) {
+        List<String> out = new ArrayList<>();
+        addUniqueUid(out, normalizeOrderUid(orderUid));
+        addUniqueUid(out, normalizeOrderUid(ExecutionStatusViewModel.getPersistedActiveUid()));
+        addUniqueUid(out, normalizeOrderUid(ExecutionStatusViewModel.getPersistedDoubleUid()));
+        addUniqueUid(out, normalizeOrderUid(MainActivity.uid));
+        addUniqueUid(out, normalizeOrderUid(MainActivity.uid_Double));
+        return out;
+    }
+
+    private static void addUniqueUid(List<String> out, @Nullable String uid) {
+        if (uid == null) {
+            return;
+        }
+        for (String existing : out) {
+            if (existing.equals(uid)) {
+                return;
+            }
+        }
+        out.add(uid);
+    }
+
+    /** После смены uid (доплата) — связать новый uid с уже показанной погодой. */
+    public static void linkFinishOrderUidsAfterUidChange(@Nullable String previousUid, @Nullable String newUid) {
+        String prev = normalizeOrderUid(previousUid);
+        String next = normalizeOrderUid(newUid);
+        if (prev == null || next == null || prev.equals(next)) {
+            return;
+        }
+        String storedPrimary = getStoredWeatherUid(PREF_LAST_WEATHER_NOTICE_ORDER_UID);
+        if (storedPrimary.isEmpty()) {
+            return;
+        }
+        String storedAlt = getStoredWeatherUid(PREF_LAST_WEATHER_NOTICE_ORDER_UID_ALT);
+        if (!uidEquals(prev, storedPrimary) && !uidEquals(prev, storedAlt)
+                && !uidEquals(next, storedPrimary) && !uidEquals(next, storedAlt)) {
+            return;
+        }
+        MyApplication.sharedPreferencesHelperMain.saveStringCommit(
+                PREF_LAST_WEATHER_NOTICE_ORDER_UID, next);
+        MyApplication.sharedPreferencesHelperMain.saveStringCommit(
+                PREF_LAST_WEATHER_NOTICE_ORDER_UID_ALT, prev);
+    }
+
+    /**
+     * При повторном входе на finish: active + double из prefs связываются с сохранённым uid погоды.
+     */
+    public static void syncWeatherNoticeWithFinishUids(@Nullable String activeUid, @Nullable String doubleUid) {
+        String storedPrimary = getStoredWeatherUid(PREF_LAST_WEATHER_NOTICE_ORDER_UID);
+        if (storedPrimary.isEmpty()) {
+            return;
+        }
+        String storedAlt = getStoredWeatherUid(PREF_LAST_WEATHER_NOTICE_ORDER_UID_ALT);
+        String active = normalizeOrderUid(activeUid);
+        String doubleNorm = normalizeOrderUid(doubleUid);
+
+        if (hasUidOverlap(collectFinishOrderUidCandidates(active), storedPrimary, storedAlt)) {
+            return;
+        }
+
+        if (doubleNorm != null
+                && (uidEquals(doubleNorm, storedPrimary) || uidEquals(doubleNorm, storedAlt))
+                && active != null
+                && !uidEquals(active, storedPrimary)) {
+            MyApplication.sharedPreferencesHelperMain.saveStringCommit(
+                    PREF_LAST_WEATHER_NOTICE_ORDER_UID, active);
+            String altToStore = uidEquals(storedPrimary, doubleNorm) ? storedAlt : storedPrimary;
+            if (altToStore.isEmpty() || uidEquals(altToStore, active)) {
+                altToStore = doubleNorm;
+            }
+            if (!altToStore.isEmpty()) {
+                MyApplication.sharedPreferencesHelperMain.saveStringCommit(
+                        PREF_LAST_WEATHER_NOTICE_ORDER_UID_ALT, altToStore);
+            }
+        }
+    }
+
+    private boolean shouldShowWeatherNoticeForOrder() {
+        return !isWeatherNoticeAlreadyShown(pendingOrderUid);
+    }
+
+    private void markWeatherNoticeShownForOrder() {
+        String primary = resolvePrimaryOrderUidForWeatherMark();
+        if (primary == null) {
+            return;
+        }
+        MyApplication.sharedPreferencesHelperMain.saveStringCommit(
+                PREF_LAST_WEATHER_NOTICE_ORDER_UID, primary);
+        String linked = resolveLinkedOrderUid(primary);
+        if (linked != null) {
+            MyApplication.sharedPreferencesHelperMain.saveStringCommit(
+                    PREF_LAST_WEATHER_NOTICE_ORDER_UID_ALT, linked);
+        }
+    }
+
+    @Nullable
+    private String resolvePrimaryOrderUidForWeatherMark() {
+        String uid = normalizeOrderUid(pendingOrderUid);
+        if (uid != null) {
+            return uid;
+        }
+        uid = normalizeOrderUid(ExecutionStatusViewModel.getPersistedActiveUid());
+        if (uid != null) {
+            return uid;
+        }
+        return normalizeOrderUid(MainActivity.uid);
+    }
+
+    @Nullable
+    private static String resolveLinkedOrderUid(String primaryUid) {
+        String doubleUid = normalizeOrderUid(ExecutionStatusViewModel.getPersistedDoubleUid());
+        if (doubleUid != null && !doubleUid.equals(primaryUid)) {
+            return doubleUid;
+        }
+        doubleUid = normalizeOrderUid(MainActivity.uid_Double);
+        if (doubleUid != null && !doubleUid.equals(primaryUid)) {
+            return doubleUid;
+        }
+        return null;
     }
 
 
@@ -361,6 +568,13 @@ public class PassengerNotifier {
     }
 
     private void showNotification(Context context, String message) {
+        if (context instanceof android.app.Activity) {
+            android.app.Activity activity = (android.app.Activity) context;
+            if (activity.isFinishing() || activity.isDestroyed()) {
+                Logger.d(context, TAG, "showNotification: activity недоступна");
+                return;
+            }
+        }
         Logger.d(context, TAG, "showNotification: показываем кастомный AlertDialog");
 
         View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_weather_notice, null);
