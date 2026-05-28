@@ -77,6 +77,7 @@ import com.taxi_pas_4.utils.data.DataArr;
 import com.taxi_pas_4.utils.hold.APIHoldService;
 import com.taxi_pas_4.utils.hold.HoldResponse;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.taxi_pas_4.utils.payment.PaymentDeclinedNotifier;
@@ -1648,8 +1649,15 @@ public class FinishSeparateFragment extends Fragment {
             String time_to_start_point,
             String orderCarInfo
     ) {
+        boolean wasCarFound = (boolean) sharedPreferencesHelperMain.getValue("carFound", false);
 
         sharedPreferencesHelperMain.saveValue("carFound", true);
+
+        if (!wasCarFound && !com.taxi_pas_4.androidx.startup.MyApplication.isInForeground()
+                && uid != null && !uid.isEmpty()) {
+            NotificationHelper.showNotificationFindAutoMessage(
+                    context, context.getString(R.string.ex_st_2), uid);
+        }
 //        if (handlerAddcost != null) {
 //            handlerAddcost.removeCallbacks(showDialogAddcost);
 //        }

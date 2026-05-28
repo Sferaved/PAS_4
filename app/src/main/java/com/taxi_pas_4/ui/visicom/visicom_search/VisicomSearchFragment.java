@@ -1775,11 +1775,13 @@ public class VisicomSearchFragment extends Fragment {
                 List<String> settings = new ArrayList<>();
                 settings.add(String.valueOf(originLat));
                 settings.add(String.valueOf(originLon));
-                settings.add(String.valueOf(originLat));
-                settings.add(String.valueOf(originLon));
+                settings.add("0");
+                settings.add("0");
                 settings.add(startAddress);
                 settings.add("");
                 updateRoutMarker(settings);
+                sharedPreferencesHelperMain.saveValue("order_cost", "0");
+                MainActivity.orderViewModel.setOrderCost("0");
             }
         } catch (Exception e) {
             Logger.e(context, TAG, "clearFinishAddressOnSearch: " + e.getMessage());
