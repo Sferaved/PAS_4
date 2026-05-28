@@ -35,7 +35,14 @@ Write-Host ""
 
 # ===== 2. Increment version =====
 $newVersionCode = $currentVersionCode + 1
-$newVersionName = "4." + $newVersionCode.ToString().Substring($newVersionCode.ToString().Length - 3)
+# ВАЖНО: первая цифра версии фиксированная "4.", а хвост идёт 999 -> 1000 -> 1001 ...
+# Для PAS_4 исторически versionCode = 4xxx, а отображаемая часть = versionCode - 4000
+$visibleSuffix = $newVersionCode - 4000
+if ($visibleSuffix -lt 0) {
+    Write-Host "ERROR: versionCode too small for PAS_4 scheme (expected >= 4000)" -ForegroundColor Red
+    exit 1
+}
+$newVersionName = "4.$visibleSuffix"
 
 Write-Host "New versionCode: $newVersionCode"
 Write-Host "New versionName: $newVersionName"
