@@ -1669,6 +1669,9 @@ public class VisicomFragment extends Fragment {
             }
 
             String clientCost = text_view_cost.getText().toString();
+            if (clientCost == null || clientCost.trim().isEmpty()) {
+                clientCost = " ";
+            }
             if((boolean)sharedPreferencesHelperMain.getValue("black_list_45", false)) {
                 long cost = Long.parseLong(clientCost); // Convert string to double
                 cost += 45; // Add 45
