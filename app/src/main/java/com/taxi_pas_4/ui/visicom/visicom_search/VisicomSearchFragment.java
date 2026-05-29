@@ -59,6 +59,7 @@ import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.FragmentVisicomSearchBinding;
+import com.taxi_pas_4.utils.location.AutoLocationAfterCityHelper;
 import com.taxi_pas_4.ui.cities.Kyiv.KyivRegion;
 import com.taxi_pas_4.ui.cities.Kyiv.KyivRegionRu;
 import com.taxi_pas_4.ui.keyboard.KeyboardUtils;
@@ -1933,6 +1934,9 @@ public class VisicomSearchFragment extends Fragment {
 
     private void updateRoutMarker(List<String> settings) {
         Logger.d(context, TAG, "updateRoutMarker: " + settings.toString());
+        Logger.d(context, "AddrGuard", "searchManual: clearStartAddressSource — пользователь выбрал адрес вручную, start='"
+                + (settings.size() > 4 ? settings.get(4) : "?") + "'");
+        AutoLocationAfterCityHelper.clearStartAddressSource();
         ContentValues cv = new ContentValues();
 
         cv.put("startLat", Double.parseDouble(settings.get(0)));
