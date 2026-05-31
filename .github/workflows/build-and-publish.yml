@@ -100,7 +100,7 @@ jobs:
 #          packageName: com.taxi_pas_4
 #          releaseFiles: app/build/outputs/bundle/release/app-release.aab
 #          track: internal
-#          whatsNewDirectory: app/src/main/play
+#          whatsNewDirectory: app/play
 
       - name: Publish to Google Play
         run: |
@@ -152,9 +152,9 @@ jobs:
           [ -z "$VERSION_CODE" ] && { echo "❌ Upload failed"; exit 1; }
           
           # Release notes
-          EN_NOTES=$(jq -Rs . < "app/src/main/play/en-US/whatsnew.txt" 2>/dev/null || echo "\"Release ${{ steps.build.outputs.version_name }}\"")
-          RU_NOTES=$(jq -Rs . < "app/src/main/play/ru-RU/whatsnew.txt" 2>/dev/null || echo "\"Релиз ${{ steps.build.outputs.version_name }}\"")
-          UK_NOTES=$(jq -Rs . < "app/src/main/play/uk/whatsnew.txt" 2>/dev/null || echo "\"Реліз ${{ steps.build.outputs.version_name }}\"")
+          EN_NOTES=$(jq -Rs . < "app/play/en-US/whatsnew.txt" 2>/dev/null || echo "\"Release ${{ steps.build.outputs.version_name }}\"")
+          RU_NOTES=$(jq -Rs . < "app/play/ru-RU/whatsnew.txt" 2>/dev/null || echo "\"Релиз ${{ steps.build.outputs.version_name }}\"")
+          UK_NOTES=$(jq -Rs . < "app/play/uk/whatsnew.txt" 2>/dev/null || echo "\"Реліз ${{ steps.build.outputs.version_name }}\"")
           
           # Обновление треков
           #   for TRACK in internal alpha beta production; do
@@ -187,7 +187,7 @@ jobs:
         with:
           files: ${{ env.AAB_PATH }}
           name: Release ${{ steps.build.outputs.version_name }}
-          body_path: app/src/main/play/en-US/whatsnew.txt
+          body_path: app/play/en-US/whatsnew.txt
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
