@@ -23,12 +23,10 @@ public final class RoutePlaceMatcher {
         if (from.equals(to)) {
             return true;
         }
-        if (from.contains(to) || to.contains(from)) {
-            return true;
-        }
-        String fromCore = extractPlaceToken(from);
-        String toCore = extractPlaceToken(to);
-        return !fromCore.isEmpty() && fromCore.equals(toCore);
+        // Короткая подстрока — только для uk/ru вариантов одного адреса, не для разных улиц в одном городе.
+        String shorter = from.length() <= to.length() ? from : to;
+        String longer = from.length() <= to.length() ? to : from;
+        return shorter.length() >= 12 && longer.contains(shorter);
     }
 
     private static String safe(String value) {
@@ -48,16 +46,4 @@ public final class RoutePlaceMatcher {
         return s.replaceAll("[^\\p{L}\\p{N}]+", " ").replaceAll("\\s+", " ").trim();
     }
 
-    private static String extractPlaceToken(String normalized) {
-        if (normalized.isEmpty()) {
-            return "";
-        }
-        String[] parts = normalized.split(" ");
-        for (int i = parts.length - 1; i >= 0; i--) {
-            if (parts[i].length() >= 3) {
-                return parts[i];
-            }
-        }
-        return parts[parts.length - 1];
-    }
 }
