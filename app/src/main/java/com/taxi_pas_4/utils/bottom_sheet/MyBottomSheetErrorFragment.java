@@ -46,6 +46,7 @@ import com.taxi_pas_4.ui.cities.api.CityService;
 import com.taxi_pas_4.ui.home.ButtonVisibilityCallback;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
+import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.helpers.TelegramUtils;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
@@ -773,6 +774,9 @@ public class MyBottomSheetErrorFragment extends BottomSheetDialogFragment {
 
     public static void showScheduledTripsNotice(@Nullable FragmentManager fragmentManager, @NonNull Context context) {
         if (fragmentManager == null) {
+            return;
+        }
+        if (!new DatabaseHelperUid(context).hasUpcomingScheduledOrders()) {
             return;
         }
         Fragment existing = fragmentManager.findFragmentByTag(TAG_SCHEDULED_TRIPS);
