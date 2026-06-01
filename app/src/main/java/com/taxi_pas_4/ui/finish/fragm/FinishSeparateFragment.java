@@ -653,7 +653,11 @@ public class FinishSeparateFragment extends Fragment {
 
         Logger.d(context, TAG, "OrderResponse: action " +action + ", closeReason " + closeReason);
         if (action == null && isExternalApiCompletedCloseReason(closeReason)) {
-            action = "Заказ выполнен";
+            if (isExecutedExecutionStatus(orderResponse.getExecutionStatus())) {
+                action = "Заказ выполнен";
+            } else {
+                action = "Поиск авто";
+            }
         }
         if(action != null) {
             if (time_to_start_point != null && !time_to_start_point.isEmpty()) {
@@ -1250,6 +1254,17 @@ public class FinishSeparateFragment extends Fragment {
         }
     }
 
+    private boolean isSuccessfulCancelResponse(@NonNull Status status) {
+        String responseText = status.getResponse();
+        if (responseText == null || responseText.isEmpty()) {
+            return false;
+        }
+        String lower = responseText.toLowerCase(java.util.Locale.ROOT);
+        return !lower.contains("не вдалося")
+                && !lower.contains("не вдалось")
+                && !lower.contains("did not cancel");
+    }
+
     private void handleCancelRequestFailed() {
         cancelRequestInFlight = false;
         ExecutionStatusViewModel.setCancelInFlightPref(false);
@@ -1337,9 +1352,13 @@ public class FinishSeparateFragment extends Fragment {
                     return;
                 }
                 setCancelButtonBusy(false);
-                if (response.isSuccessful() && response.body() != null) {
+                if (response.isSuccessful() && response.body() != null
+                        && isSuccessfulCancelResponse(response.body())) {
                     Logger.d(context, TAG, "submitOrderCancelRequest OK: " + response.body());
                     completeOrderCancelSuccess(successMessage, uidToCancel);
+                } else if (response.isSuccessful() && response.body() != null) {
+                    Logger.d(context, TAG, "submitOrderCancelRequest rejected by server: " + response.body());
+                    handleCancelRequestFailed();
                 } else {
                     Logger.d(context, TAG, "submitOrderCancelRequest HTTP " + response.code());
                     handleCancelRequestFailed();
@@ -2120,6 +2139,10 @@ public class FinishSeparateFragment extends Fragment {
                 || "Cancelled".equalsIgnoreCase(executionStatus);
     }
 
+    private static boolean isExecutedExecutionStatus(@Nullable String executionStatus) {
+        return "Executed".equals(executionStatus);
+    }
+
     private static boolean isOrderCanceledOnServer(@Nullable OrderResponse orderResponse) {
         if (orderResponse == null) {
             return false;
@@ -2315,9 +2338,11 @@ public class FinishSeparateFragment extends Fragment {
                 }
                 break;
             case 0:
-                if (executionStatus != null) {
+                if (isExecutedExecutionStatus(executionStatus)) {
                     action = "Заказ выполнен";
                     orderComplete();
+                } else if (isCanceledExecutionStatus(executionStatus)) {
+                    showOrderCanceledFromServer();
                 } else {
                     action = "Поиск авто";
                     carSearch();
@@ -2340,7 +2365,7 @@ public class FinishSeparateFragment extends Fragment {
             return;
         }
         if (closeReason == 0 || closeReason == 9) {
-            if ("Executed".equals(lastExecutionStatus) || lastExecutionStatus == null) {
+            if (isExecutedExecutionStatus(lastExecutionStatus)) {
                 orderComplete();
                 return;
             }
