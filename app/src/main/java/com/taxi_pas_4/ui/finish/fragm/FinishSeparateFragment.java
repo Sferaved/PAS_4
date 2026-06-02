@@ -643,7 +643,7 @@ public class FinishSeparateFragment extends Fragment {
 
         String time_to_start_point = orderResponse.getTimeToStartPoint();
 
-       action = orderResponse.getAction();
+       action = resolveActionFromOrderResponse(orderResponse);
         lastExecutionStatus = orderResponse.getExecutionStatus();
         if (isOrderDispatched()) {
             clearDeclinedPaymentUi();
@@ -682,6 +682,36 @@ public class FinishSeparateFragment extends Fragment {
             );
         }
 
+    }
+
+    @Nullable
+    private String resolveActionFromOrderResponse(@NonNull OrderResponse orderResponse) {
+        String resolvedAction = orderResponse.getAction();
+        if (resolvedAction != null && !resolvedAction.isEmpty()) {
+            return resolvedAction;
+        }
+        String executionStatus = orderResponse.getExecutionStatus();
+        if (executionStatus == null) {
+            return "Поиск авто";
+        }
+        switch (executionStatus) {
+            case "CarFound":
+                return "Авто найдено";
+            case "WaitingAtAddress":
+            case "AtAddress":
+                return "На месте";
+            case "Running":
+            case "InRoute":
+                return "В пути";
+            case "Executed":
+                return "Заказ выполнен";
+            case "Canceled":
+                return "Заказ снят";
+            case "SearchesForCar":
+            case "WaitingCarSearch":
+            default:
+                return "Поиск авто";
+        }
     }
 
     public void handleTransactionStatusDeclined(String status, Context context) {
@@ -2694,7 +2724,7 @@ public class FinishSeparateFragment extends Fragment {
                     return;
                 }
             }
-            if (uidChanged && isAdded() && "nal_payment".equals(pay_method)) {
+            if (uidChanged && isAdded()) {
                 try {
                     statusOrder();
                 } catch (ParseException e) {
