@@ -34,7 +34,6 @@ import com.taxi_pas_4.utils.hold.APIHoldService;
 import com.taxi_pas_4.utils.hold.HoldResponse;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
-import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.uxcam.UXCam;
 
 import java.util.ArrayList;
@@ -347,7 +346,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
         OkHttpClient client = new OkHttpClient.Builder()
-                .addInterceptor(new RetryInterceptor())
+                // Доплата — одна попытка без RetryInterceptor, чтобы не дублировать CHARGE на сервере.
                 .addInterceptor(interceptor)
                 .connectTimeout(30, TimeUnit.SECONDS) // Тайм-аут на соединение
                 .readTimeout(30, TimeUnit.SECONDS)    // Тайм-аут на чтение данных
@@ -433,7 +432,6 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
 
         // Создание клиента OkHttpClient с подключенным логгером
         OkHttpClient httpClient = new OkHttpClient.Builder()
-                .addInterceptor(new RetryInterceptor())
                 .addInterceptor(loggingInterceptor)
                 .connectTimeout(30, TimeUnit.SECONDS) // Тайм-аут на соединение
                 .readTimeout(30, TimeUnit.SECONDS)    // Тайм-аут на чтение данных
