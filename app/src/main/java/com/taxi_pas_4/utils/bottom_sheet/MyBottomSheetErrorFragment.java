@@ -38,6 +38,7 @@ import androidx.navigation.Navigation;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.ui.cities.api.CityApiClient;
@@ -779,6 +780,9 @@ public class MyBottomSheetErrorFragment extends BottomSheetDialogFragment {
     /** Показывает шторку о заказах в работе / запланированных поездках. */
     public static void showScheduledTripsNotice(@Nullable FragmentManager fragmentManager, @NonNull Context context) {
         if (fragmentManager == null) {
+            return;
+        }
+        if (ExecutionStatusViewModel.shouldSuppressActiveOrderNotice()) {
             return;
         }
         DatabaseHelperUid db = new DatabaseHelperUid(context);
