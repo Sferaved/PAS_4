@@ -27,6 +27,7 @@ import com.taxi_pas_4.utils.log.Logger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import com.taxi_pas_4.utils.db.CursorReadHelper;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -231,8 +232,8 @@ public class SettingsActivity extends AppCompatActivity {
             do {
                 str = "";
                 for (String cn : c.getColumnNames()) {
-                    str = str.concat(cn + " = " + c.getString(c.getColumnIndex(cn)) + "; ");
-                    list.add(c.getString(c.getColumnIndex(cn)));
+                    str = str.concat(cn + " = " + CursorReadHelper.getString(c, cn) + "; ");
+                    list.add(CursorReadHelper.getString(c, cn));
 
                 }
 

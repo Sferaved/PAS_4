@@ -50,6 +50,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import com.taxi_pas_4.utils.db.CursorReadHelper;
 
 /**
  * Управляет подключением к Pusher и обработкой событий в реальном времени
@@ -900,7 +901,7 @@ public class PusherManager {
             if (c.moveToFirst()) {
                 do {
                     for (String cn : c.getColumnNames()) {
-                        list.add(c.getString(c.getColumnIndex(cn)));
+                        list.add(CursorReadHelper.getString(c, cn));
                     }
                 } while (c.moveToNext());
             }
