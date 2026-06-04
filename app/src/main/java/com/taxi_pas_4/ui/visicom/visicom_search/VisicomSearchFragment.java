@@ -45,6 +45,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
@@ -139,11 +140,9 @@ public class VisicomSearchFragment extends Fragment {
     private boolean location_update;
     private View scrollButtonDown, scrollButtonUp;
     private ListScrollPaginationHelper addressScrollPagination;
-    private final int desiredHeight = 630;
     private final int max_length_string_size = 4;
     List<String> addressesList;
     AppCompatButton btnCallAdmin;
-    ViewGroup.LayoutParams layoutParams;
     String countryState;
 
     View root;
@@ -201,6 +200,33 @@ public class VisicomSearchFragment extends Fragment {
     private void scrollSetVisibility() {
         if (addressesList != null && addressAdapter != null) {
             addressListView.getViewTreeObserver().addOnGlobalLayoutListener(this::updateScrollButtonsVisibility);
+        }
+    }
+
+    private void applyFlexibleListHeight() {
+        if (addressListView == null) {
+            return;
+        }
+        ViewGroup.LayoutParams lp = addressListView.getLayoutParams();
+        if (lp instanceof ConstraintLayout.LayoutParams) {
+            ConstraintLayout.LayoutParams clp = (ConstraintLayout.LayoutParams) lp;
+            clp.height = 0;
+            clp.matchConstraintMaxHeight = 0;
+            addressListView.setLayoutParams(clp);
+            addressListView.post(this::updateScrollButtonsVisibility);
+        }
+    }
+
+    private void applyCompactListHeight() {
+        if (addressListView == null) {
+            return;
+        }
+        int compactPx = (int) (200 * getResources().getDisplayMetrics().density);
+        ViewGroup.LayoutParams lp = addressListView.getLayoutParams();
+        if (lp instanceof ConstraintLayout.LayoutParams) {
+            ConstraintLayout.LayoutParams clp = (ConstraintLayout.LayoutParams) lp;
+            clp.height = compactPx;
+            addressListView.setLayoutParams(clp);
         }
     }
 
@@ -675,9 +701,7 @@ public class VisicomSearchFragment extends Fragment {
 //            startActivity(new Intent(context, MainActivity.class));
         });
 
-        layoutParams = addressListView.getLayoutParams();
-        layoutParams.height = desiredHeight;
-        addressListView.setLayoutParams(layoutParams);
+        applyFlexibleListHeight();
 
         btnCallAdmin = root.findViewById(R.id.btnCallAdmin);
         btnCallAdmin.setOnClickListener(view -> {
@@ -750,8 +774,7 @@ public class VisicomSearchFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
 
-                layoutParams.height = desiredHeight;
-                addressListView.setLayoutParams(layoutParams);
+                applyFlexibleListHeight();
                 btnCallAdmin.setVisibility(View.GONE);
 
                 String inputString = charSequence.toString();
@@ -799,8 +822,7 @@ public class VisicomSearchFragment extends Fragment {
             }
             @Override
             public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
-                layoutParams.height = desiredHeight;
-                addressListView.setLayoutParams(layoutParams);
+                applyFlexibleListHeight();
                 btnCallAdmin.setVisibility(View.GONE);
 
                 // Вызывается при изменении текста
@@ -1673,13 +1695,11 @@ public class VisicomSearchFragment extends Fragment {
         if (foundAddress.contains("\t")) {
             errorView.setVisibility(View.GONE);
             btnCallAdmin.setVisibility(View.GONE);
-            layoutParams.height = desiredHeight;
-            addressListView.setLayoutParams(layoutParams);
+            applyFlexibleListHeight();
             return;
         }
         hideAddressScrollControls();
-        layoutParams.height = desiredHeight / 3;
-        addressListView.setLayoutParams(layoutParams);
+        applyCompactListHeight();
         btnCallAdmin.setVisibility(View.VISIBLE);
         if (foundAddress.contains("\f")) {
             errorView.setVisibility(View.VISIBLE);
