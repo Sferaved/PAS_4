@@ -28,6 +28,8 @@ public class ExecutionStatusViewModel extends ViewModel {
     public static final String PREF_FINISH_CANCELED_UID = "finish_canceled_uid";
     /** Не показывать «заказ в работе» сразу после отмены, пока сервер обрабатывает запрос. */
     public static final String PREF_SUPPRESS_ACTIVE_ORDER_NOTICE_UNTIL = "finish_suppress_active_order_notice_until";
+    /** Доплата картой в процессе (WFP chargeActiveTokenAddCost). */
+    public static final String PREF_FINISH_ADD_COST_IN_FLIGHT = "finish_add_cost_in_flight";
     public static final String PREF_UID_FCM = "uid_fcm";
     private static final long ACTIVE_ORDER_NOTICE_SUPPRESS_MS = 90_000L;
 
@@ -263,6 +265,20 @@ public class ExecutionStatusViewModel extends ViewModel {
     public static boolean shouldSuppressActiveOrderNotice() {
         Object v = sharedPreferencesHelperMain.getValue(PREF_SUPPRESS_ACTIVE_ORDER_NOTICE_UNTIL, 0L);
         return v instanceof Long && System.currentTimeMillis() < (Long) v;
+    }
+
+    /** Явный переход на «В работе» или закрытие экрана заказа — снова показывать актуальный список. */
+    public static void clearActiveOrderNoticeSuppress() {
+        sharedPreferencesHelperMain.saveValue(PREF_SUPPRESS_ACTIVE_ORDER_NOTICE_UNTIL, 0L);
+    }
+
+    public static void setAddCostInFlightPref(boolean inFlight) {
+        sharedPreferencesHelperMain.saveValue(PREF_FINISH_ADD_COST_IN_FLIGHT, inFlight);
+    }
+
+    public static boolean isAddCostInFlightPref() {
+        Object v = sharedPreferencesHelperMain.getValue(PREF_FINISH_ADD_COST_IN_FLIGHT, false);
+        return v instanceof Boolean && (Boolean) v;
     }
 
     public static boolean shouldBlockAddCost(@Nullable String orderUid) {

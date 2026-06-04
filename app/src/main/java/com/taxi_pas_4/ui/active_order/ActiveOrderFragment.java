@@ -58,6 +58,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import com.taxi_pas_4.utils.db.CursorReadHelper;
+import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 
 
 public class ActiveOrderFragment extends Fragment {
@@ -163,9 +164,6 @@ public class ActiveOrderFragment extends Fragment {
             scrollPagination.update();
         }
 
-        databaseHelper.clearTableCancel();
-        databaseHelperUid.clearTableCancel();
-
         routeList = new ArrayList<>();
 
         upd_but.setText(context.getString(R.string.cancel_gps));
@@ -212,6 +210,11 @@ public class ActiveOrderFragment extends Fragment {
                         }
 
                     } else {
+                        clearCancelTables();
+                        listView.setVisibility(View.GONE);
+                        if (scrollPagination != null) {
+                            scrollPagination.update();
+                        }
                         textUid.setVisibility(VISIBLE);
                         textUid.setText(R.string.no_routs);
                     }
@@ -251,10 +254,17 @@ public class ActiveOrderFragment extends Fragment {
         }
     }
 
+    private void clearCancelTables() {
+        databaseHelper.clearTableCancel();
+        databaseHelperUid.clearTableCancel();
+    }
+
     private void processCancelList() {
         // Фильтрация дубликатов по уникальному uid
         Set<String> uniqueUids = new HashSet<>();
         routeList.removeIf(route -> !uniqueUids.add(route.getUid())); // Удаляем дубликаты
+
+        clearCancelTables();
 
         // Создайте массив строк
         array = new String[routeList.size()];
@@ -441,7 +451,10 @@ public class ActiveOrderFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-
+        ExecutionStatusViewModel.clearActiveOrderNoticeSuppress();
+        if (email != null && context != null && isAdded()) {
+            fetchRoutesCancel(email);
+        }
     }
      @SuppressLint("Range")
     public List<String> logCursor(String table, Context context) {
