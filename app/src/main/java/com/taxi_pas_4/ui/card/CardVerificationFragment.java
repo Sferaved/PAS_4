@@ -14,7 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
+import android.webkit.WebView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -35,8 +35,8 @@ import com.taxi_pas_4.ui.wfp.revers.ReversResponse;
 import com.taxi_pas_4.ui.wfp.revers.ReversService;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
-import com.taxi_pas_4.utils.helpers.BrowserIntentHelper;
 import com.taxi_pas_4.utils.helpers.LocaleHelper;
+import com.taxi_pas_4.utils.helpers.WfpWebViewHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.uxcam.UXCam;
@@ -67,12 +67,12 @@ public class CardVerificationFragment extends Fragment {
 
     private FragmentManager fragmentManager;
     private Context context;
+    private WebView webView;
     private String messageFondy;
-    private boolean awaitingPaymentResult;
     private boolean statusCheckInProgress;
     private boolean paymentFlowFinished;
 
-    @SuppressLint("MissingInflatedId")
+    @SuppressLint({"MissingInflatedId", "SetJavaScriptEnabled"})
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -83,10 +83,8 @@ public class CardVerificationFragment extends Fragment {
         }
         View view = inflater.inflate(R.layout.activity_fondy_payment, container, false);
         context = requireActivity();
-        View webView = view.findViewById(R.id.webView);
-        webView.setVisibility(View.GONE);
-        TextView paymentBrowserHint = view.findViewById(R.id.payment_browser_hint);
-        paymentBrowserHint.setVisibility(View.VISIBLE);
+        webView = view.findViewById(R.id.webView);
+        view.findViewById(R.id.payment_browser_hint).setVisibility(View.GONE);
         baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
         email = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
         amount = "1";
@@ -99,15 +97,6 @@ public class CardVerificationFragment extends Fragment {
 
         return view;
     }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (awaitingPaymentResult && !paymentFlowFinished && !statusCheckInProgress) {
-            getStatusWfp();
-        }
-    }
-
 
     private void getUrlToPaymentWfp() {
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
@@ -156,7 +145,7 @@ public class CardVerificationFragment extends Fragment {
                     String checkoutUrl = invoiceResponse.getInvoiceUrl();
                     Logger.d(context, TAG, "onResponse: Invoice URL: " + checkoutUrl);
                     if(checkoutUrl != null) {
-                        openPaymentInBrowser(checkoutUrl);
+                        payWfp(checkoutUrl);
                     } else {
                         Logger.d(context, TAG,"Response body is null");
                     }
@@ -174,16 +163,9 @@ public class CardVerificationFragment extends Fragment {
 
     }
     
-    private void openPaymentInBrowser(String checkoutUrl) {
-        if (BrowserIntentHelper.openUrl(requireActivity(), checkoutUrl)) {
-            awaitingPaymentResult = true;
-            Logger.d(context, TAG, "Payment page opened in browser: " + checkoutUrl);
-            return;
-        }
-
-        Logger.e(context, TAG, "Failed to open payment page in browser");
-        Toast.makeText(context, R.string.card_verification_no_browser, Toast.LENGTH_LONG).show();
-        dismiss();
+    private void payWfp(String checkoutUrl) {
+        WfpWebViewHelper.loadPaymentUrl(webView, checkoutUrl, this::getStatusWfp);
+        Logger.d(context, TAG, "Payment page loaded in WebView: " + checkoutUrl);
     }
 
     private void getStatusWfp() {
@@ -235,7 +217,6 @@ public class CardVerificationFragment extends Fragment {
                         case "Approved":
                         case "WaitingAuthComplete":
                             paymentFlowFinished = true;
-                            awaitingPaymentResult = false;
                             sharedPreferencesHelperMain.saveValue("pay_error", "**");
                             getReversWfp(city);
                             getCardTokenWfp();

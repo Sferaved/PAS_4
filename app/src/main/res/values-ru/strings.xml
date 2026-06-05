@@ -264,8 +264,8 @@
     <string name="link_card">Привязать карту</string>
     <string name="delink_card">Удалить привязку</string>
     <string name="link_card_succesfuly">Ваша карта проверена и готова к оплате путешествий.</string>
-    <string name="card_verification_browser_hint">Оплата открыта в браузере. После завершения вернитесь в приложение — мы проверим привязку карты.</string>
-    <string name="payment_browser_hint">Оплата открыта в браузере. После завершения вернитесь в приложение.</string>
+    <string name="card_verification_browser_hint">Оплата открыта в Chrome. После завершения вернитесь в приложение — мы проверим привязку карты.</string>
+    <string name="payment_browser_hint">Оплата открыта в Chrome. После завершения вернитесь в приложение.</string>
     <string name="card_verification_no_browser">Не найден браузер для открытия страницы оплаты.</string>
     <string name="un_link_token">Привязка платежной карты удалена из приложения.</string>
     <string name="cancel_card">Завершить</string>

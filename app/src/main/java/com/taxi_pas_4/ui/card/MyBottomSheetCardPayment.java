@@ -51,7 +51,7 @@ import com.taxi_pas_4.ui.wfp.checkStatus.StatusService;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorPaymentFragment;
-import com.taxi_pas_4.utils.helpers.BrowserIntentHelper;
+import com.taxi_pas_4.utils.helpers.WfpWebViewHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.uxcam.UXCam;
@@ -107,7 +107,6 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
     private CountDownTimer paymentTimer;
     private FragmentManager fragmentManager;
     private View rootView;
-    private boolean awaitingPaymentResult;
     private boolean statusCheckInProgress;
     private boolean paymentFlowFinished;
 
@@ -233,21 +232,12 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
         return view;
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (awaitingPaymentResult && !paymentFlowFinished && !statusCheckInProgress) {
-            getStatusWfp(order_id);
-        }
-    }
-
     private void paymentView(String orderReference) {
         pay_method = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(4);
         baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
         switch (pay_method) {
             case "wfp_payment":
-                showBrowserPaymentHint();
-                openWfpPaymentInBrowser(checkoutUrl);
+                payWfp(checkoutUrl);
                 break;
             case "fondy_payment":
 
@@ -469,25 +459,13 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
 //        });
 //    }
 
-    private void showBrowserPaymentHint() {
-        if (rootView == null) {
-            return;
+    private void payWfp(String paymentUrl) {
+        if (rootView != null) {
+            rootView.findViewById(R.id.payment_browser_hint).setVisibility(View.GONE);
+            webView.setVisibility(View.VISIBLE);
         }
-        rootView.findViewById(R.id.webView).setVisibility(View.GONE);
-        TextView hint = rootView.findViewById(R.id.payment_browser_hint);
-        hint.setText(R.string.payment_browser_hint);
-        hint.setVisibility(View.VISIBLE);
-    }
-
-    private void openWfpPaymentInBrowser(String paymentUrl) {
-        if (getActivity() != null && BrowserIntentHelper.openUrl(getActivity(), paymentUrl)) {
-            awaitingPaymentResult = true;
-            Logger.d(context, TAG, "Payment page opened in browser: " + paymentUrl);
-            return;
-        }
-        Logger.e(context, TAG, "Failed to open payment page in browser");
-        Toast.makeText(context, R.string.card_verification_no_browser, Toast.LENGTH_LONG).show();
-        dismiss();
+        WfpWebViewHelper.loadPaymentUrl(webView, paymentUrl, () -> getStatusWfp(order_id));
+        Logger.d(context, TAG, "Payment page loaded in WebView: " + paymentUrl);
     }
 
     private void getStatusWfp(String order_id) {
@@ -550,7 +528,6 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
                                 case "Approved":
                                 case "WaitingAuthComplete":
                                     paymentFlowFinished = true;
-                                    awaitingPaymentResult = false;
                                     sharedPreferencesHelperMain.saveValue("pay_error", "**");
                                     getCardTokenWfp(city);
                                     hold = true;
