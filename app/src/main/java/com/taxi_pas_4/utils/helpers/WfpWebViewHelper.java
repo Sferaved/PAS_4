@@ -1,7 +1,6 @@
 package com.taxi_pas_4.utils.helpers;
 
 import android.app.AlertDialog;
-import android.net.Uri;
 import android.os.Message;
 import android.webkit.URLUtil;
 import android.webkit.WebChromeClient;
@@ -9,6 +8,9 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+
+import androidx.webkit.WebSettingsCompat;
+import androidx.webkit.WebViewFeature;
 
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.utils.log.Logger;
@@ -26,11 +28,7 @@ public final class WfpWebViewHelper {
     }
 
     public static void loadPaymentUrl(WebView webView, String checkoutUrl, ClosingUrlListener listener) {
-        WebSettings webSettings = webView.getSettings();
-        webSettings.setJavaScriptEnabled(true);
-        webSettings.setDomStorageEnabled(true);
-        webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
-        webSettings.setSupportMultipleWindows(true);
+        configureWebSettings(webView.getSettings());
 
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
@@ -38,11 +36,7 @@ public final class WfpWebViewHelper {
                 Logger.d(view.getContext(), TAG, "onCreateWindow triggered");
                 try {
                     WebView popupWebView = new WebView(view.getContext());
-                    WebSettings popupSettings = popupWebView.getSettings();
-                    popupSettings.setJavaScriptEnabled(true);
-                    popupSettings.setDomStorageEnabled(true);
-                    popupSettings.setJavaScriptCanOpenWindowsAutomatically(true);
-                    popupSettings.setSupportMultipleWindows(true);
+                    configureWebSettings(popupWebView.getSettings());
 
                     popupWebView.setWebViewClient(new WebViewClient());
                     popupWebView.setWebChromeClient(this);
@@ -80,6 +74,16 @@ public final class WfpWebViewHelper {
             webView.loadUrl(checkoutUrl);
         } else {
             Logger.e(webView.getContext(), TAG, "Checkout URL is null or invalid");
+        }
+    }
+
+    private static void configureWebSettings(WebSettings webSettings) {
+        webSettings.setJavaScriptEnabled(true);
+        webSettings.setDomStorageEnabled(true);
+        webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
+        webSettings.setSupportMultipleWindows(true);
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.PAYMENT_REQUEST)) {
+            WebSettingsCompat.setPaymentRequestEnabled(webSettings, true);
         }
     }
 
