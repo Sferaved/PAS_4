@@ -17,10 +17,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.webkit.URLUtil;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -62,6 +62,7 @@ import com.taxi_pas_4.ui.wfp.revers.ReversService;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
+import com.taxi_pas_4.utils.helpers.BrowserIntentHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.uxcam.UXCam;
@@ -100,6 +101,11 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
 
     String city;
     FragmentManager fragmentManager;
+    private View rootView;
+    private boolean awaitingPaymentResult;
+    private boolean statusCheckInProgress;
+    private boolean paymentFlowFinished;
+
     public MyBottomSheetCardVerification(String checkoutUrl, String amount) {
         this.checkoutUrl = checkoutUrl;
         this.amount = amount;
@@ -115,6 +121,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
             button1.setVisibility(View.VISIBLE);
         }
         View view = inflater.inflate(R.layout.activity_fondy_payment, container, false);
+        rootView = view;
         fragmentManager = getParentFragmentManager();
         baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
 
@@ -153,6 +160,14 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
         return view;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (awaitingPaymentResult && !paymentFlowFinished && !statusCheckInProgress) {
+            getStatusWfp();
+        }
+    }
+
     private int dpToPx(int dp) {
         return (int) (dp * getResources().getDisplayMetrics().density + 0.5f);
     }
@@ -162,6 +177,10 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
      */
 
     private void getStatusWfp() {
+        if (statusCheckInProgress || paymentFlowFinished) {
+            return;
+        }
+        statusCheckInProgress = true;
         Logger.d(context, TAG, "getStatusWfp: ");
         List<String> stringList = logCursor(MainActivity.CITY_INFO);
         String city = stringList.get(1);
@@ -195,6 +214,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
         call.enqueue(new Callback<StatusResponse>() {
             @Override
             public void onResponse(@NonNull Call<StatusResponse> call, @NonNull Response<StatusResponse> response) {
+                statusCheckInProgress = false;
 
                 if (response.isSuccessful() && response.body() != null) {
                     StatusResponse statusResponse = response.body();
@@ -204,6 +224,8 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                         switch (orderStatus) {
                             case "Approved":
                             case "WaitingAuthComplete":
+                                paymentFlowFinished = true;
+                                awaitingPaymentResult = false;
                                 sharedPreferencesHelperMain.saveValue("pay_error", "**");
                                 getCardTokenWfp(city);
                                 break;
@@ -240,6 +262,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
 
             @Override
             public void onFailure(@NonNull Call<StatusResponse> call, @NonNull Throwable t) {
+                statusCheckInProgress = false;
                 FirebaseCrashlytics.getInstance().recordException(t);
                 getReversWfp(city);
                 if (isAdded()) { //
@@ -843,6 +866,27 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
         }
     }
 
+    private void showBrowserPaymentHint() {
+        if (rootView == null) {
+            return;
+        }
+        rootView.findViewById(R.id.webView).setVisibility(View.GONE);
+        TextView hint = rootView.findViewById(R.id.payment_browser_hint);
+        hint.setText(R.string.payment_browser_hint);
+        hint.setVisibility(View.VISIBLE);
+    }
+
+    private void openWfpPaymentInBrowser(String paymentUrl) {
+        if (BrowserIntentHelper.openUrl(requireActivity(), paymentUrl)) {
+            awaitingPaymentResult = true;
+            Logger.d(context, TAG, "Payment page opened in browser: " + paymentUrl);
+            return;
+        }
+        Logger.e(context, TAG, "Failed to open payment page in browser");
+        Toast.makeText(context, R.string.card_verification_no_browser, Toast.LENGTH_LONG).show();
+        dismiss();
+    }
+
     private void pay_system() {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl)
@@ -862,51 +906,8 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
                     switch (paymentCode) {
                         case "wfp":
                             pay_method = "wfp_payment";
-                            webView.setWebViewClient(new WebViewClient() {
-                                @Override
-                                public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                                    String url = request.getUrl().toString();
-                                    Logger.d(context, TAG, "Загружен URL: " + url);
-
-                                    if (url.contains("https://secure.wayforpay.com/invoice")) {
-                                        return false; // разрешаем загрузить
-                                    }
-
-                                    if (url.contains("https://secure.wayforpay.com/closing")) {
-                                        getStatusWfp();
-                                        return true; // перехватываем загрузку
-                                    }
-
-                                    return false;
-                                }
-
-                                // Для совместимости с API < 24 можно оставить устаревший метод,
-                                // чтобы поддержать старые устройства:
-                                @Override
-                                @SuppressWarnings("deprecation")
-                                public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                                    Logger.d(context, TAG, "Загружен URL: " + url);
-
-                                    if (url.contains("https://secure.wayforpay.com/invoice")) {
-                                        return false;
-                                    }
-
-                                    if (url.contains("https://secure.wayforpay.com/closing")) {
-                                        getStatusWfp();
-                                        return true;
-                                    }
-
-                                    return false;
-                                }
-                            });
-
-                            // Ensure checkoutUrl is not null and valid before loading it
-                            if (checkoutUrl != null && URLUtil.isValidUrl(checkoutUrl)) {
-                                webView.loadUrl(checkoutUrl);
-                            } else {
-                                Logger.d(context, TAG, "Checkout URL is null or invalid");
-                                // Handle the error appropriately, e.g., show an error message to the user
-                            }
+                            showBrowserPaymentHint();
+                            openWfpPaymentInBrowser(checkoutUrl);
                             break;
                         case "fondy":
                             pay_method = "fondy_payment";

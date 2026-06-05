@@ -259,6 +259,9 @@
     <string name="link_card">Link card</string>
     <string name="delink_card">Remove link</string>
     <string name="link_card_succesfuly">Your card has been verified and is ready to pay for travel.</string>
+    <string name="card_verification_browser_hint">Payment opened in the browser. When finished, return to the app and we will verify your card.</string>
+    <string name="payment_browser_hint">Payment opened in the browser. When finished, return to the app.</string>
+    <string name="card_verification_no_browser">No browser found to open the payment page.</string>
     <string name="un_link_token">The payment card link has been removed from the application.</string>
     <string name="cancel_card">Finish</string>
     <string name="mono_payment">Monobank</string>

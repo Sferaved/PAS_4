@@ -5,24 +5,16 @@ import static com.taxi_pas_4.MainActivity.button1;
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.URLUtil;
-import android.webkit.WebChromeClient;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -43,6 +35,7 @@ import com.taxi_pas_4.ui.wfp.revers.ReversResponse;
 import com.taxi_pas_4.ui.wfp.revers.ReversService;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
+import com.taxi_pas_4.utils.helpers.BrowserIntentHelper;
 import com.taxi_pas_4.utils.helpers.LocaleHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
@@ -50,9 +43,7 @@ import com.uxcam.UXCam;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
@@ -69,7 +60,6 @@ public class CardVerificationFragment extends Fragment {
 
     private final String TAG = "CardVerificationFragment";
 
-    private WebView webView;
     private String order_id;
     private String amount;
     String email;
@@ -78,8 +68,11 @@ public class CardVerificationFragment extends Fragment {
     private FragmentManager fragmentManager;
     private Context context;
     private String messageFondy;
+    private boolean awaitingPaymentResult;
+    private boolean statusCheckInProgress;
+    private boolean paymentFlowFinished;
 
-    @SuppressLint({"MissingInflatedId", "SetJavaScriptEnabled"})
+    @SuppressLint("MissingInflatedId")
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -90,7 +83,10 @@ public class CardVerificationFragment extends Fragment {
         }
         View view = inflater.inflate(R.layout.activity_fondy_payment, container, false);
         context = requireActivity();
-        webView = view.findViewById(R.id.webView);
+        View webView = view.findViewById(R.id.webView);
+        webView.setVisibility(View.GONE);
+        TextView paymentBrowserHint = view.findViewById(R.id.payment_browser_hint);
+        paymentBrowserHint.setVisibility(View.VISIBLE);
         baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
         email = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
         amount = "1";
@@ -99,52 +95,17 @@ public class CardVerificationFragment extends Fragment {
         
         fragmentManager = getParentFragmentManager();
 
-         // Настройка WebView
-
-
-        WebSettings webSettings = webView.getSettings();
-        webSettings.setJavaScriptEnabled(true);
-        webSettings.setDomStorageEnabled(true); // Включает DOM-хранилище
-        webSettings.setJavaScriptCanOpenWindowsAutomatically(true); // Разрешает открытие новых окон
-        webSettings.setSupportMultipleWindows(true);
-
-//        webView.getSettings().setJavaScriptEnabled(true);
-        webView.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public boolean onCreateWindow(WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
-                Logger.d(view.getContext(), "WebChromeClient", "onCreateWindow triggered");
-                try {
-                    WebView newWebView = new WebView(view.getContext());
-                    WebSettings webSettings = newWebView.getSettings();
-                    webSettings.setJavaScriptEnabled(true);
-                    webSettings.setDomStorageEnabled(true);
-                    webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
-                    webSettings.setSupportMultipleWindows(true);
-
-                    newWebView.setWebViewClient(new WebViewClient());
-                    newWebView.setWebChromeClient(this);
-
-                    AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
-                    builder.setView(newWebView);
-                    builder.setPositiveButton(R.string.close, (dialog, which) -> newWebView.destroy());
-                    builder.show();
-
-                    WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
-                    transport.setWebView(newWebView);
-                    resultMsg.sendToTarget();
-                    return true;
-                } catch (Exception e) {
-                    Logger.e(view.getContext(), "WebChromeClient", "Ошибка в onCreateWindow: " + e.getMessage());
-                    return false;
-                }
-            }
-
-        });
-
-
         getUrlToPaymentWfp();
 
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (awaitingPaymentResult && !paymentFlowFinished && !statusCheckInProgress) {
+            getStatusWfp();
+        }
     }
 
 
@@ -195,7 +156,7 @@ public class CardVerificationFragment extends Fragment {
                     String checkoutUrl = invoiceResponse.getInvoiceUrl();
                     Logger.d(context, TAG, "onResponse: Invoice URL: " + checkoutUrl);
                     if(checkoutUrl != null) {
-                        payWfp(checkoutUrl);
+                        openPaymentInBrowser(checkoutUrl);
                     } else {
                         Logger.d(context, TAG,"Response body is null");
                     }
@@ -213,49 +174,23 @@ public class CardVerificationFragment extends Fragment {
 
     }
     
-    private void payWfp (String checkoutUrl)
-    {
-        webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                String url = request.getUrl().toString();
-                Logger.d(context, TAG, "Загружен URL: " + url);
-
-                if (url.contains("https://secure.wayforpay.com/invoice")) {
-                    return false; // Разрешаем загрузку
-                }
-                if (url.contains("https://secure.wayforpay.com/closing")) {
-                    getStatusWfp();
-                    return false; // Разрешаем загрузку
-                }
-                return false; // По умолчанию разрешаем загрузку
-            }
-
-            // Для совместимости, если старый метод всё ещё вызовется, можно его перенаправить на новый
-            @Override
-            @Deprecated
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                return shouldOverrideUrlLoading(view, new WebResourceRequest() {
-                    @Override public Uri getUrl() { return Uri.parse(url); }
-                    @Override public boolean isForMainFrame() { return true; }
-                    @Override public boolean isRedirect() { return false; }
-                    @Override public boolean hasGesture() { return false; }
-                    @Override public String getMethod() { return "GET"; }
-                    @Override public Map<String, String> getRequestHeaders() { return Collections.emptyMap(); }
-                });
-            }
-        });
-
-        // Ensure checkoutUrl is not null and valid before loading it
-        if (checkoutUrl != null && URLUtil.isValidUrl(checkoutUrl)) {
-            webView.loadUrl(checkoutUrl);
-        } else {
-            Logger.e(context,"MyBottomSheetCardVerification", "Checkout URL is null or invalid");
-            // Handle the error appropriately, e.g., show an error message to the user
+    private void openPaymentInBrowser(String checkoutUrl) {
+        if (BrowserIntentHelper.openUrl(requireActivity(), checkoutUrl)) {
+            awaitingPaymentResult = true;
+            Logger.d(context, TAG, "Payment page opened in browser: " + checkoutUrl);
+            return;
         }
+
+        Logger.e(context, TAG, "Failed to open payment page in browser");
+        Toast.makeText(context, R.string.card_verification_no_browser, Toast.LENGTH_LONG).show();
+        dismiss();
     }
 
     private void getStatusWfp() {
+        if (statusCheckInProgress || paymentFlowFinished) {
+            return;
+        }
+        statusCheckInProgress = true;
         Logger.d(context, TAG, "getStatusWfp: ");
 
         List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
@@ -290,30 +225,24 @@ public class CardVerificationFragment extends Fragment {
         call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<StatusResponse> call, @NonNull Response<StatusResponse> response) {
-
+                statusCheckInProgress = false;
                 if (response.isSuccessful() && response.body() != null) {
                     StatusResponse statusResponse = response.body();
-                    if (statusResponse != null) {
-                        String orderStatus = statusResponse.getTransactionStatus();
-                        Logger.d(context, TAG, "Transaction Status: " + orderStatus);
+                    String orderStatus = statusResponse.getTransactionStatus();
+                    Logger.d(context, TAG, "Transaction Status: " + orderStatus);
 
-                        switch (orderStatus) {
-                            case "Approved":
-                            case "WaitingAuthComplete":
-                                sharedPreferencesHelperMain.saveValue("pay_error", "**");
-                                getReversWfp(city);
-//                                dismiss();
-                                getCardTokenWfp();
-//                                MainActivity.navController.navigate(R.id.nav_card, null, new NavOptions.Builder()
-//                                        .setPopUpTo(R.id.nav_card, true)
-//                                        .build());
-                                break;
-                            default:
-                                sharedPreferencesHelperMain.saveValue("pay_error", "pay_error");
-                        }
-                        // Другие данные можно также получить из statusResponse
-                    } else {
-                        Logger.d(context, TAG, "Response body is null");
+                    switch (orderStatus) {
+                        case "Approved":
+                        case "WaitingAuthComplete":
+                            paymentFlowFinished = true;
+                            awaitingPaymentResult = false;
+                            sharedPreferencesHelperMain.saveValue("pay_error", "**");
+                            getReversWfp(city);
+                            getCardTokenWfp();
+                            break;
+                        default:
+                            sharedPreferencesHelperMain.saveValue("pay_error", "pay_error");
+                            break;
                     }
                 } else {
                     Logger.d(context, TAG, "Request failed:5");
@@ -322,6 +251,7 @@ public class CardVerificationFragment extends Fragment {
 
             @Override
             public void onFailure(@NonNull Call<StatusResponse> call, @NonNull Throwable t) {
+                statusCheckInProgress = false;
                 Logger.d(context, TAG, "Request failed:6" + t.getMessage());
                 FirebaseCrashlytics.getInstance().recordException(t);
                 Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();

@@ -263,6 +263,9 @@
     <string name="link_card">Прив\'язати карту</string>
     <string name="delink_card">Видалити прив\'язку</string>
     <string name="link_card_succesfuly">Ваша карта перевірена та готова до оплати подорожей.</string>
+    <string name="card_verification_browser_hint">Оплата відкрита в браузері. Після завершення поверніться в додаток — ми перевіримо прив\'язку карти.</string>
+    <string name="payment_browser_hint">Оплата відкрита в браузері. Після завершення поверніться в додаток.</string>
+    <string name="card_verification_no_browser">Не знайдено браузер для відкриття сторінки оплати.</string>
     <string name="un_link_token">Прив\'язка платіжної картки видалена з додатку.</string>
     <string name="cancel_card">Завершити</string>
     <string name="mono_payment">Монобанк</string>
