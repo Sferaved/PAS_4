@@ -912,7 +912,8 @@ public class FinishSeparateFragment extends Fragment {
                     String pendingAmount = ExecutionStatusViewModel.getPendingAddCostAmountPref();
                     ExecutionStatusViewModel.setAddCostInFlightPref(false);
                     ExecutionStatusViewModel.clearPendingAddCostAmountPref();
-                    if (pendingAmount != null && !pendingAmount.equals("0")) {
+                    if (pendingAmount != null && !pendingAmount.equals("0")
+                            && !"wfp_payment".equals(pay_method)) {
                         viewModel.setAddCostViewUpdate(pendingAmount);
                     }
                     viewModel.setCancelStatus(true);
@@ -2813,6 +2814,14 @@ public class FinishSeparateFragment extends Fragment {
         viewModel.getAddCostViewUpdate().observe(getViewLifecycleOwner(), addCost -> {
             if (addCost != null && !addCost.equals("0")) {
                 Logger.d(context, TAG, "addCostViewUpdate observe: " + addCost);
+                if ("wfp_payment".equals(pay_method)) {
+                    Logger.d(context, TAG, "addCostViewUpdate skipped for wfp (absolute cost from server)");
+                    pendingAddCost = "0";
+                    sharedPreferencesHelperMain.saveValue("pendingAddCost", "0");
+                    viewModel.setAddCostViewUpdate("0");
+                    onAddCostProcessingFinished();
+                    return;
+                }
                 pendingAddCost = addCost;
                 sharedPreferencesHelperMain.saveValue("pendingAddCost", addCost);
                 addCostView(addCost);
@@ -2883,10 +2892,11 @@ public class FinishSeparateFragment extends Fragment {
                         || (pendingAmount != null && !pendingAmount.equals("0"));
                 ExecutionStatusViewModel.setAddCostInFlightPref(false);
                 clearDeclinedPaymentUi();
-                if (pendingAmount != null && !pendingAmount.equals("0")) {
+                if (pendingAmount != null && !pendingAmount.equals("0")
+                        && !"wfp_payment".equals(pay_method)) {
                     viewModel.setAddCostViewUpdate(pendingAmount);
-                    ExecutionStatusViewModel.clearPendingAddCostAmountPref();
                 }
+                ExecutionStatusViewModel.clearPendingAddCostAmountPref();
                 if (addCostPending) {
                     onAddCostProcessingFinished();
                 }
@@ -3021,7 +3031,7 @@ public class FinishSeparateFragment extends Fragment {
         }
 
         // Если есть необработанное обновление - применяем его
-        if (!costToApply.equals("0")) {
+        if (!costToApply.equals("0") && !"wfp_payment".equals(pay_method)) {
             final String finalCostToApply = costToApply; // ✅ Создаем final переменную
 
             Logger.d(context, TAG, "applyPendingAddCostIfNeeded: Applying pending cost update: " + finalCostToApply);

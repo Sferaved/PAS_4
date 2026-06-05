@@ -407,7 +407,10 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
                         case "WaitingAuthComplete":
                             ExecutionStatusViewModel.setAddCostInFlightPref(false);
                             ExecutionStatusViewModel.clearPendingAddCostAmountPref();
-                            viewModel.setAddCostViewUpdate(amount);
+                            // WFP recreate: full cost comes via order_uid_new / finishAbsoluteCost
+                            if (!"wfp_payment".equals(pay_method)) {
+                                viewModel.setAddCostViewUpdate(amount);
+                            }
                             viewModel.setCancelStatus(true);
                             break;
                         case "InProcessing":
