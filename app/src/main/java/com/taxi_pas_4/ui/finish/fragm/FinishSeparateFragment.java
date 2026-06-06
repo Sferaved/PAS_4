@@ -861,7 +861,10 @@ public class FinishSeparateFragment extends Fragment {
         if (!isAdded() || context == null) {
             return;
         }
-        String orderRef = MainActivity.order_id;
+        String orderRef = ExecutionStatusViewModel.getPendingAddCostOrderRefPref();
+        if (orderRef == null || orderRef.isEmpty()) {
+            orderRef = MainActivity.order_id;
+        }
         if (orderRef == null || orderRef.isEmpty()) {
             orderRef = resolveWfpOrderReference();
         }
@@ -2248,7 +2251,17 @@ public class FinishSeparateFragment extends Fragment {
             setVisibility(GONE, textStatusCar, textCarMessage);
         }
     }
-     private void btnAddCost (int timeCheckout) {
+     private void resumePendingAddCostIfInFlight() {
+        if (!ExecutionStatusViewModel.isAddCostInFlightPref()) {
+            return;
+        }
+        Logger.d(context, TAG, "[addCost] pending add-cost in flight — polling status");
+        showAddCostProcessingNotice();
+        scheduleAddCostProcessingNotices();
+        checkPendingAddCostPaymentStatus();
+    }
+
+    private void btnAddCost (int timeCheckout) {
          btn_add_cost.setText(context.getString(R.string.add_cost_btn));
          btn_add_cost.setOnClickListener( view -> {
              Logger.d(context, TAG,
@@ -2289,6 +2302,11 @@ public class FinishSeparateFragment extends Fragment {
                  }
              }  else if ("wfp_payment".equals(pay_method)) {
 
+                 if (ExecutionStatusViewModel.isAddCostInFlightPref()) {
+                     Logger.d(context, TAG, "[addCost] btn_add_cost blocked: add-cost in flight");
+                     resumePendingAddCostIfInFlight();
+                     return;
+                 }
                  Logger.d(context, TAG, "[addCost] wfp_payment: verifyOldHold()");
                  verifyOldHold();
 
@@ -3774,6 +3792,11 @@ public class FinishSeparateFragment extends Fragment {
     }
 
     private void verifyOldHold() {
+        if (ExecutionStatusViewModel.isAddCostInFlightPref()) {
+            Logger.d(context, TAG, "[addCost] verifyOldHold skipped: add-cost in flight");
+            resumePendingAddCostIfInFlight();
+            return;
+        }
         Logger.d(context, TAG,
                 "[addCost] verifyOldHold start"
                         + " uid=" + uid
@@ -3812,6 +3835,11 @@ public class FinishSeparateFragment extends Fragment {
                         HoldResponse holdResponse = response.body();
                         String result = holdResponse.getResult();
                         Logger.d(context, TAG, "verifyOldHold  result: " + result);
+                        if ("pending_add_cost".equals(result)) {
+                            ExecutionStatusViewModel.setAddCostInFlightPref(true);
+                            new Handler(Looper.getMainLooper()).post(this::resumePendingAddCostIfInFlight);
+                            return;
+                        }
                         if (result.equals("hold")) {
                             // Обработка неуспешного ответа
                             new Handler(Looper.getMainLooper()).post(() -> {
@@ -3848,7 +3876,11 @@ public class FinishSeparateFragment extends Fragment {
 
                         } else {
                             Logger.w(context, TAG,
-                                    "[addCost] verifyOldHold: not hold (" + result + ") -> show add-cost sheet anyway");
+                                    "[addCost] verifyOldHold: not hold (" + result + ")");
+                            if (ExecutionStatusViewModel.isAddCostInFlightPref()) {
+                                new Handler(Looper.getMainLooper()).post(this::resumePendingAddCostIfInFlight);
+                                return;
+                            }
                             new Handler(Looper.getMainLooper()).post(() -> {
                                 String text = textCostMessage.getText().toString();
                                 Logger.d(getActivity(), TAG, "textCostMessage.getText().toString() " + text);
