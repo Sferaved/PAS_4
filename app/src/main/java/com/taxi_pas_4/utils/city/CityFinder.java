@@ -27,6 +27,7 @@ import com.taxi_pas_4.utils.ip.ApiServiceCountry;
 import com.taxi_pas_4.utils.ip.CountryResponse;
 import com.taxi_pas_4.utils.location.AutoLocationAfterCityHelper;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.worker.utils.WfpUtils;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -783,6 +784,7 @@ public class CityFinder {
 
             sharedPreferencesHelperMain.saveValue("CityCheckActivity", "run");
             AutoLocationAfterCityHelper.markCityLoaded();
+            WfpUtils.enqueueCardTokenFetch(context, city);
 
             // Навигация
             Activity activity = activityRef.get();
