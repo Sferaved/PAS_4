@@ -429,7 +429,7 @@ public class VisicomSearchFragment extends Fragment {
                         citySearch = "Mykolaiv";
                         break;
                     case "Chernivtsi":
-                        citySearch = "Сhernivtsi";
+                        citySearch = "Chernivtsi";
                         break;
                     case "Lutsk":
                         citySearch = "Lutsk";

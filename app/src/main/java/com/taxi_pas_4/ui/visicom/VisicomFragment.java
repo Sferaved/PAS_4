@@ -3116,7 +3116,7 @@ public class VisicomFragment extends Fragment {
             case "Mykolaiv":
                 cityMenu = context.getString(R.string.city_mykolaiv);
                 break;
-            case "Chernivtsi":  // Обрати внимание, тут "С" кириллицей
+            case "Chernivtsi":
                 cityMenu = context.getString(R.string.city_chernivtsi);
                 break;
             case "Lutsk":

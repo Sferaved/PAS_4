@@ -614,7 +614,7 @@ public class CityCheckFragment extends Fragment {
                                 .setDuration(100)
                                 .start();
                         sharedPreferencesHelperMain.saveValue("countryState", "UA");
-                        city = "Сhernivtsi";
+                        city = "Chernivtsi";
                         phoneNumber = Kyiv_City_phone;
                         cityMenu = getString(R.string.city_chernivtsi);
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
@@ -928,8 +928,19 @@ public class CityCheckFragment extends Fragment {
     }
 
 
-    private void cityMaxPay(String city) {
+    private void showCityMaxPayError() {
+        if (!isAdded() || fragmentManager == null) {
+            return;
+        }
+        MyBottomSheetErrorFragment bottomSheetDialogFragment =
+                new MyBottomSheetErrorFragment(getString(R.string.error_message));
+        bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+    }
 
+    private void cityMaxPay(String city) {
+        if ("Сhernivtsi".equals(city)) {
+            city = "Chernivtsi";
+        }
 
         String BASE_URL =sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
 
@@ -963,9 +974,7 @@ public class CityCheckFragment extends Fragment {
                     // Добавьте здесь код для обработки полученных значений
                 } else {
                     Logger.d(requireActivity(), TAG, "Failed. Error code: " + response.code());
-
-                    MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.error_message));
-                    bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                    showCityMaxPayError();
                 }
             }
 
@@ -973,8 +982,7 @@ public class CityCheckFragment extends Fragment {
             public void onFailure(@NonNull Call<CityResponse> call, @NonNull Throwable t) {
                 FirebaseCrashlytics.getInstance().recordException(t);
                 Logger.d(requireActivity(), TAG, "Failed. Error message: " + t.getMessage());
-                MyBottomSheetErrorFragment bottomSheetDialogFragment = new MyBottomSheetErrorFragment(getString(R.string.error_message));
-                bottomSheetDialogFragment.show(fragmentManager, bottomSheetDialogFragment.getTag());
+                showCityMaxPayError();
             }
         });
     }
