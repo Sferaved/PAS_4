@@ -45,6 +45,7 @@ import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.data.DataArr;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.sanitizer.InputSanitizerHelper;
+import com.taxi_pas_4.utils.ui.ScreenInsetsHelper;
 import com.taxi_pas_4.utils.worker.InclusiveTransportPreferenceWorker;
 import com.uxcam.UXCam;
 
@@ -288,6 +289,8 @@ public class OptionsFragment extends Fragment {
 
         tvSelectedDate.setOnClickListener(v -> showDataPickerDialog());
         setupSanitizers();
+        ScreenInsetsHelper.applyScrollableScreenPadding(view);
+        listView.setClipToPadding(false);
         return view;
     }
     private void setupSanitizers() {
