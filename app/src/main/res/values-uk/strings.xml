@@ -241,6 +241,9 @@
     <string name="e_invalid_description">Введіть опис</string>
     <string name="e_google_pay_unsupported">GooglePay не підтримується</string>
     <string name="e_google_pay_canceled">GooglePay скасовано</string>
+    <string name="google_pay_or_card">або оплата карткою нижче</string>
+    <string name="google_pay_processing">Обробка Google Pay…</string>
+    <string name="google_pay_unavailable">Google Pay недоступний на цьому пристрої</string>
     <string name="update_count">Перевірити баланс</string>
     <string name="pay_count">Поповнити рахунок</string>
     <string name="my_card_pay">Оплата</string>

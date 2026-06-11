@@ -237,6 +237,9 @@
     <string name="e_invalid_description">Enter a description</string>
     <string name="e_google_pay_unsupported">GooglePay is not supported</string>
     <string name="e_google_pay_canceled">GooglePay has been canceled</string>
+    <string name="google_pay_or_card">or pay by card below</string>
+    <string name="google_pay_processing">Processing Google Pay…</string>
+    <string name="google_pay_unavailable">Google Pay is not available on this device</string>
     <string name="update_count">Check balance</string>
     <string name="pay_count">Top up account</string>
     <string name="my_card_pay">Payment</string>
