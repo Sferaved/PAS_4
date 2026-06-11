@@ -91,6 +91,7 @@ import com.google.android.play.core.install.model.UpdateAvailability;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.dialog.UklonAlertDialog;
 import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.FragmentVisicomBinding;
 import com.taxi_pas_4.service.OrderServiceResponse;
@@ -839,11 +840,12 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
         if (!isAdded()) {
             return; // Фрагмент не прикреплен
         }
-        new MaterialAlertDialogBuilder(requireContext())
+        new UklonAlertDialog(requireContext())
+                .setIcon(R.drawable.ic_info)
                 .setTitle(R.string.upd_available)
                 .setMessage(R.string.upd_available_promt)
                 .setCancelable(false)
-                .setPositiveButton(R.string.upd_available_ok, (dialog, which) -> {
+                .setPositiveButton(R.string.upd_available_ok, dialog -> {
                     MainActivity mainActivity = (MainActivity) requireActivity();
                     AppUpdater appUpdater = new AppUpdater(
                             mainActivity,
@@ -852,9 +854,7 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
                     );
                     appUpdater.startUpdate();
                 })
-                .setNegativeButton(R.string.upd_available_cancel, (dialog, which) -> {
-                    dialog.dismiss();
-                })
+                .setNegativeButton(R.string.upd_available_cancel, dialog -> dialog.dismiss())
                 .show();
     }
 
