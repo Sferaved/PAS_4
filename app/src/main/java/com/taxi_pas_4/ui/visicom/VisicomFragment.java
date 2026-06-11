@@ -100,6 +100,7 @@ import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
 import com.taxi_pas_4.utils.animation.car.CarProgressBar;
 import com.taxi_pas_4.utils.auth.FirebaseConsentManager;
 import com.taxi_pas_4.utils.blacklist.BlacklistManager;
+import com.taxi_pas_4.ui.home.ButtonVisibilityCallback;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetBonusFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGPSFragment;
@@ -151,7 +152,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import com.taxi_pas_4.utils.db.CursorReadHelper;
 
-public class VisicomFragment extends Fragment {
+public class VisicomFragment extends Fragment implements ButtonVisibilityCallback {
 
 
     @SuppressLint("StaticFieldLeak")
@@ -4059,6 +4060,9 @@ public class VisicomFragment extends Fragment {
             case "wfp_payment":
                 btnBonusName = context.getString(R.string.btn_card);
                 break;
+            case "google_pay_payment":
+                btnBonusName = context.getString(R.string.btn_pay_google);
+                break;
             default:
                 btnBonusName = context.getString(R.string.btn_cache);
         }
@@ -5724,5 +5728,10 @@ public class VisicomFragment extends Fragment {
                 FirebaseCrashlytics.getInstance().recordException(t);
             }
         });
+    }
+
+    @Override
+    public void onShowButtons(int visibility) {
+        btnVisible(visibility);
     }
 }

@@ -592,6 +592,12 @@
     <string name="category_about">About the application</string>
     <string name="my_cards">My cards</string>
     <string name="cards_management_info">Management of linked cards</string>
+    <string name="payment_methods_title">Payment methods</string>
+    <string name="payment_default_section">Default payment for orders</string>
+    <string name="payment_add_card">Add card</string>
+    <string name="payment_cash_subtitle">Cash to driver</string>
+    <string name="payment_google_pay_subtitle">Pay with Google Pay wallet</string>
+    <string name="pay_method_message_google">Google Pay</string>
     <string name="payment_page">Payment by card</string>
     <string name="refresh_cards">Refresh cards</string>
     <string name="webview_error_loading">Page loading error</string>
