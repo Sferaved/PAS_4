@@ -1,0 +1,300 @@
+1.1028 - 2.2985 - 3.065 - 4.1066 12.06.2026 14:00
+
+Проблема
+
+taxialfa@gmail.com, PAS_4, Kyiv City, оплата картой (Google Pay), маршрут с. Димер.
+
+После назначения автомобиля экран заказа ещё около минуты показывал «Поиск авто», хотя в диспетчерской машина уже была найдена. Затем статус сменился на «Авто найдено» с телефоном водителя. Дальше экран долго оставался на «Авто найдено» и не переходил к следующим этапам поездки.
+
+Исправление
+
+Разбор по логам приложения и сервера. Исправление не выкатывалось — зафиксирована задержка синхронизации статусов между диспетчерской и приложением после назначения авто, а также краткий сбой, когда сервер на секунду вернул «Поиск авто» при уже найденном авто.
+
+Версия
+
+Ожидается в следующем обновлении (приложение и/или сервер).
+
+Проверка
+
+1. Оформите тестовый заказ с оплатой картой в Kyiv City.
+2. Дождитесь назначения авто.
+3. Убедитесь, что в течение нескольких секунд появляется «Авто найдено», данные машины и телефон водителя.
+4. При поездке проверьте, что статус дальше меняется (подача, в пути, завершение).
+
+
+════════════════════════════════════════════════════════════════════════════════
+ВНУТРЕННИЙ РАЗБОР (не для клиента)
+Статус заказа после нахождения авто — taxialfa@gmail.com, PAS_4
+Дата: 12.06.2026
+Источники: app_log (6).txt, laravel (2).log, laravel.log,
+            Действия статусы.xlsx, OrderStatusController.php, UIDController.php
+════════════════════════════════════════════════════════════════════════════════
+
+СУТЬ
+
+Жалоба: «не меняет статус заказа после нахождения авто».
+
+По логам:
+  • переход «Поиск авто» → «Авто найдено» произошёл, но с задержкой ~52 с от создания
+    заказа и ~21 с после push о назначении авто в диспетчерской;
+  • дальнейших смен («На месте», «В пути», «Заказ выполнен») в сессии не было;
+  • один раз сервер вернул противоречивую пару action=«Поиск авто» + closeReason=-1
+    при уже найденном авто (22:00:00, 11.06).
+
+────────────────────────────────────────────────────────────────────────────────
+ЗАКАЗЫ В РАЗБОРЕ
+────────────────────────────────────────────────────────────────────────────────
+
+1) Вечер 11.06.2026 — основной кейс
+   UID:        79f1c4ea180145b48d881603264be359
+   Double UID: ba823e3339a54e658ee1b8d62ba473c8
+   Оплата:     wfp_payment (карта / Google Pay)
+   Маршрут:    вул. Благовісна (Боженка), буд.12, с. Димер → по місту
+   Стоимость:  62 грн
+   Версия app: 4.1063 (в логах)
+
+2) Утро 12.06.2026 — повторная проверка
+   UID:        76e2a9f2edfd4f4898cb8c1a90b54acc
+   Double UID: 1855275079344f959900c6314bde8f6b
+   Оплата:     wfp_payment
+   Авто:       AC4453CM, Renault Logan, +380933464747
+   Версия app: 4.1064 (в логах)
+
+3) Старый предзаказ (контекст, не основная жалоба)
+   UID:        3b2fcbc1c9fd48b5bc6c7ab48cdfcedc
+   Бронь:      07.07.2026 21:47
+   Статус:     WaitingCarSearch / «Поиск авто» — ожидаемо для предзаказа
+
+────────────────────────────────────────────────────────────────────────────────
+ХРОНОЛОГИЯ СМЕН СТАТУСА (заказ 79f1c4ea…, 11.06.2026)
+────────────────────────────────────────────────────────────────────────────────
+
+Время (телефон) | Ответ API (action / closeReason)     | События
+----------------|--------------------------------------|----------------------------------
+21:58:12        | Поиск авто / 0                       | Создание заказа, push order_uid_new
+21:58:13        | —                                    | WFP checkStatus failed, hold ещё нет
+21:58:17        | Поиск авто / 0                       | Опрос getOrderStatusMessageResultPush
+21:58:20        | —                                    | Push transactionStatus: WaitingAuthComplete
+21:58:43        | —                                    | Push orderAuto (авто в диспетчерской)
+21:59:02        | —                                    | Пользователь вернулся в приложение, hold OK
+21:59:04        | Авто найдено / -1                    | Первый корректный ответ + driverPhone
+21:59:08–33     | Авто найдено / -1                    | Опрос каждые ~5 с
+22:00:00        | Поиск авто / -1                      | Сбой сервера; app: carSearch ignored
+22:02:02        | Авто найдено / -1                    | Восстановление
+
+Задержка «Поиск авто» после назначения авто: 21:58:43 → 21:59:04 = 21 с.
+Задержка от создания заказа до «Авто найдено»: 21:58:12 → 21:59:04 = 52 с.
+
+────────────────────────────────────────────────────────────────────────────────
+ЛОГИ ОТВЕТОВ API (выдержки)
+────────────────────────────────────────────────────────────────────────────────
+
+Опрос статуса (приложение):
+  GET https://m.easy-order-taxi.site/getOrderStatusMessageResultPush/79f1c4ea180145b48d881603264be359
+
+  21:58:12  → action: Поиск авто,   closeReason: 0
+  21:58:17  → action: Поиск авто,   closeReason: 0
+  21:59:04  → action: Авто найдено, closeReason: -1
+  21:59:08  → action: Авто найдено, closeReason: -1
+  22:00:00  → action: Поиск авто,   closeReason: -1  (отклонено приложением)
+  22:02:02  → action: Авто найдено, closeReason: -1
+
+Позиция водителя:
+  GET …/apiTest/android/drivercarposition/79f1c4ea…/Kyiv City/PAS4
+  → driverPhone: +380933464747
+
+Активные заказы (фон):
+  GET …/apiTest/android/searchAutoOrderServiceAll/taxialfa@gmail.com/PAS4/yes_mes
+  → HTTP 200, orders: 1, UID: 79f1c4ea…
+
+Сервер 12.06.2026 09:01:59 (заказ 76e2a9f2…), сырые статусы API такси:
+
+  Наличное плечо (double 18552750…):
+    execution_status: Running
+    order_car_info:   AC4453CM, Белый, Renault Logan, +380933464747
+    driver_phone:     +380933464747
+    close_reason:     -1
+
+  Карточное плечо (76e2a9f2…):
+    execution_status: Canceled
+    close_reason:     1
+    order_is_archive: true
+
+  Итог сервера: nalState: Running, cardState: Canceled
+  → action: «Авто найдено» (соответствует таблице и коду)
+
+Push-события (11.06):
+  order_uid_new        → 79f1c4ea…
+  transactionStatus    → WaitingAuthComplete
+  orderAuto            → назначение авто в диспетчерской
+  orderDouble-status   → ba823e3339…
+
+────────────────────────────────────────────────────────────────────────────────
+ТАБЛИЦА «ДЕЙСТВИЯ СТАТУСЫ» (Excel) — СТРУКТУРА
+────────────────────────────────────────────────────────────────────────────────
+
+Файл: Действия статусы.xlsx
+
+Колонки (по смыслу):
+  • Текущий статус НАЛ (наличное / double плечо)
+  • Текущий статус КАРТА (карточное / bonus плечо)
+  • Предыдущий статус НАЛ
+  • Предыдущий статус КАРТА
+  • Действие: ничего / отмена / перезапуск / …
+
+Статусы execution_status в API такси (оба плеча):
+  SearchesForCar    — поиск авто
+  WaitingCarSearch  — ожидание поиска (предзаказ / отложенный)
+  CarFound          — авто найдено
+  Running           — в работе (подача / поездка)
+  CostCalculation   — расчёт / закрытие
+  Canceled          — отменён
+  Executed          — выполнен
+
+Действия, которые сервер отдаёт приложению (поле action в ответе):
+  Поиск авто
+  Авто найдено
+  Заказ выполнен
+  Заказ снят
+
+Примечание: «На месте» и «В пути» в action сервера для карточных заказов не формируются.
+В приложении они доступны только при closeReason 102/103 (ветка order_in_my_vod),
+которую сервер для wfp_payment в разобранных сессиях не выставлял.
+
+────────────────────────────────────────────────────────────────────────────────
+ТЕКУЩАЯ ЛОГИКА НА СЕРВЕРЕ
+────────────────────────────────────────────────────────────────────────────────
+
+Точки входа:
+  • GET /getOrderStatusMessageResultPush/{uid}
+    → OrderStatusController::getOrderStatusMessageResultPush
+    → UIDController::getOrderStatusMessageResultPush (ожидание uid_history до 60 с)
+  • Внутренний расчёт: getOrderStatusMessageResult(nalJson, cardJson)
+    (дублируется в UIDController.php, блоки 1–4)
+
+Источник данных:
+  • Таблица uid_history: поля double_status (нал) и bonus_status (карта) — JSON от API такси
+  • Из JSON берётся execution_status → nalState / cardState
+  • Результат пишется в orderweb (closeReason, auto) и возвращается приложению
+
+После выбора action:
+  • OrderStatusController::syncOrderwebAfterStatusPush()
+    — для активных action («Поиск авто», «Авто найдено», «На месте», «В пути»)
+      при живом плече заказа: closeReason принудительно = -1
+    — для «Заказ снят»: applyCanceledOrderweb()
+
+Маппинг в коде (OrderStatusController.php / UIDController.php, идентичные блоки):
+
+БЛОК 1 — «Поиск авто»
+  nal ∈ {SearchesForCar, WaitingCarSearch}  И  card ∈ {SearchesForCar, WaitingCarSearch}
+  nal=SearchesForCar                       И  card=CostCalculation
+  nal=CostCalculation                      И  card=SearchesForCar
+  nal=Canceled                             И  card ∈ {SearchesForCar, WaitingCarSearch}
+  nal ∈ {SearchesForCar, WaitingCarSearch} И  card=Canceled
+  nal=CostCalculation                      И  card ∈ {SearchesForCar, WaitingCarSearch}
+  nal ∈ {SearchesForCar, WaitingCarSearch} И  card=CostCalculation
+
+БЛОК 2 — «Авто найдено»
+  nal=SearchesForCar                       И  card ∈ {CarFound, Running}
+  nal ∈ {CarFound, Running}                И  card=SearchesForCar
+  nal=WaitingCarSearch                     И  card ∈ {CarFound, Running}
+  nal ∈ {CarFound, Running}                И  card=WaitingCarSearch
+  nal=CarFound                             И  card ∈ {CarFound, Running}
+  nal=Running                              И  card=CarFound
+  nal=Running                              И  card=Running
+  nal=Canceled                             И  card ∈ {CarFound, Running}   ← кейс 12.06
+  nal ∈ {CarFound, Running}                И  card=Canceled               ← кейс 12.06
+  nal=CostCalculation                      И  card ∈ {CarFound, Running}
+  nal ∈ {CarFound, Running}                И  card=CostCalculation
+
+БЛОК 3 — «Заказ выполнен»
+  nal=Executed  И  card ∈ {SearchesForCar, WaitingCarSearch, CarFound, Running}
+  nal ∈ {SearchesForCar, WaitingCarSearch, CarFound, Running}  И  card=Executed
+  nal=Executed  И  card=CostCalculation
+  nal=CostCalculation  И  card=Executed
+
+БЛОК 4 — «Заказ снят» / откат в поиск
+  nal=Canceled  И  card=CostCalculation     → снят если close_reason нал ≠ -1, иначе поиск
+  nal=CostCalculation  И  card=Canceled     → аналогично по карте
+  nal=CostCalculation  И  card=CostCalculation → снят если оба close_reason ≠ -1
+  nal=Canceled  И  card=Canceled           → снят если оба close_reason ≠ -1
+
+FALLBACK (else):
+  action = «Поиск авто», closeReason = -1, auto = null
+  ⚠ Любая неперечисленная комбинация статусов попадает сюда.
+
+────────────────────────────────────────────────────────────────────────────────
+СВЕРКА ТАБЛИЦЫ СТАТУСОВ С КОДОМ СЕРВЕРА
+────────────────────────────────────────────────────────────────────────────────
+
+Соответствует таблице и логам:
+  ✓ SearchesForCar + SearchesForCar           → Поиск авто
+  ✓ SearchesForCar + WaitingCarSearch       → Поиск авто
+  ✓ WaitingCarSearch + CarFound/Running     → Авто найдено
+  ✓ Running + Canceled (карта закрыта)      → Авто найдено  [факт 12.06 09:01:59]
+  ✓ Canceled + Running (нал закрыт)          → Авто найдено
+  ✓ Executed + *                            → Заказ выполнен
+  ✓ Canceled + Canceled (оба close≠-1)      → Заказ снят
+
+Расхождения / риски:
+
+1) FALLBACK → «Поиск авто» при closeReason=-1
+   Таблица: при активном заказе с найденным авто ожидается продолжение (Авто найдено),
+   а не возврат в поиск.
+   Факт: 11.06 22:00:00 — action «Поиск авто», closeReason -1 при уже найденном авто.
+   Вероятная причина: промежуточная комбинация nal/card не попала ни в один elseif,
+   сработал блок else (строка 508–510 OrderStatusController.php).
+
+2) Задержка синхронизации uid_history
+   Push orderAuto (21:58:43) приходит раньше, чем в uid_history обновляются
+   execution_status обоих плеч до CarFound/Running.
+   getOrderStatusMessageResultPush опрашивает uid_history в цикле до 60 с.
+   Пока оба плеча в SearchesForCar/WaitingCarSearch — ответ «Поиск авто».
+
+3) Оплата картой блокирует отображение
+   До подтверждения hold (21:58:13 no_hold → 21:59:04 hold) приложение
+   не переводит UI в финальное состояние «Авто найдено» даже при готовом ответе API.
+
+4) «На месте» / «В пути» не в серверном action
+   Таблица Excel описывает переходы execution_status (в т.ч. Running).
+   Код сервера сводит CarFound и Running к одному action «Авто найдено».
+   Дальнейшая детализация (102/103) в разобранных логах не передавалась.
+   Пользователь видит «застывший» статус «Авто найдено».
+
+5) closeReason всегда -1 для активных заказов
+   syncOrderwebAfterStatusPush принудительно ставит closeReason=-1 для
+   «Поиск авто» и «Авто найдено». Коды 101–104 из диспетчерской не доходят
+   до приложения по карточному сценарию.
+
+────────────────────────────────────────────────────────────────────────────────
+ПОВЕДЕНИЕ ПРИЛОЖЕНИЯ (PAS_4, справочно)
+────────────────────────────────────────────────────────────────────────────────
+
+FinishSeparateFragment.closeReasonReactCard():
+  • action «Авто найдено» → carFound()
+  • action «Поиск авто»   → carSearch()
+  • shouldIgnoreStatusDowngrade(): если заказ уже dispatched и пришло
+    «Поиск авто» — откат игнорируется (лог 22:00:00: carSearch ignored)
+  • carSearch() при dispatched=true не меняет UI назад на поиск
+
+Вывод: краткий сбой 22:00:00 на экране мог не отразиться; основная жалоба —
+долгий «Поиск авто» до 21:59:04 и отсутствие следующих статусов после «Авто найдено».
+
+────────────────────────────────────────────────────────────────────────────────
+РЕКОМЕНДАЦИИ (для следующего этапа, не выполнялись)
+────────────────────────────────────────────────────────────────────────────────
+
+Сервер:
+  1. Убрать или сузить fallback else → логировать неизвестные пары nal/card
+     и не отдавать «Поиск авто» если хотя бы одно плечо в CarFound/Running.
+  2. Ускорить запись uid_history после orderAuto / UIDStatusReview.
+  3. Рассмотреть отдельные action «На месте»/«В пути» при Running + этап поездки
+     или прокидывать closeReason 102/103 из диспетчерской.
+
+Приложение:
+  4. По push orderAuto сразу запрашивать статус (не ждать 5-секундный poll).
+  5. Показывать «Авто найдено» по orderAuto до подтверждения hold, с пометкой об оплате.
+
+────────────────────────────────────────────────────────────────────────────────
+КОНЕЦ ОТЧЁТА
+────────────────────────────────────────────────────────────────────────────────
