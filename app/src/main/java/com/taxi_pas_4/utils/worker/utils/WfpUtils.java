@@ -46,6 +46,8 @@ import androidx.annotation.Nullable;
 
 import androidx.work.Data;
 
+import androidx.work.ExistingWorkPolicy;
+
 import androidx.work.OneTimeWorkRequest;
 
 import androidx.work.WorkManager;
@@ -83,6 +85,8 @@ public class WfpUtils {
 
 
     private static final String TAG = "WfpUtils";
+
+    public static final String CARD_TOKEN_FETCH_WORK = "wfp_card_token_fetch";
 
 
 
@@ -170,6 +174,39 @@ public class WfpUtils {
 
 
 
+    public static void cancelCardTokenFetches(Context context) {
+        WorkManager.getInstance(context).cancelUniqueWork(CARD_TOKEN_FETCH_WORK);
+        Logger.d(context, TAG, "cancelCardTokenFetches");
+    }
+
+    public static void prepareForCardDeletion(Context context, String rectoken) {
+        WfpCardSyncGuard.invalidatePendingFetches();
+        cancelCardTokenFetches(context);
+        removeCardFromDatabase(context, rectoken);
+        Logger.d(context, TAG, "prepareForCardDeletion: rectoken=" + rectoken);
+    }
+
+    public static void removeCardFromDatabase(Context context, String rectoken) {
+        if (rectoken == null || rectoken.isEmpty()) {
+            return;
+        }
+        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+        try {
+            database.delete(MainActivity.TABLE_WFP_CARDS, "rectoken=?", new String[]{rectoken});
+        } finally {
+            database.close();
+        }
+    }
+
+    private static boolean applyFetchResultIfCurrent(Context context, List<CardInfo> cards, long fetchGeneration) {
+        if (!WfpCardSyncGuard.shouldApplyFetchResult(fetchGeneration)) {
+            Logger.d(context, TAG, "applyFetchResultIfCurrent: skip stale fetch gen=" + fetchGeneration);
+            return false;
+        }
+        saveWfpCardsToDatabase(context, cards);
+        return true;
+    }
+
     public static void enqueueCardTokenFetch(Context context, String city) {
 
         if (!isCityValidForCardFetch(city)) {
@@ -186,7 +223,11 @@ public class WfpUtils {
 
                 .build();
 
-        WorkManager.getInstance(context).enqueue(request);
+        WorkManager.getInstance(context).enqueueUniqueWork(
+                CARD_TOKEN_FETCH_WORK,
+                ExistingWorkPolicy.REPLACE,
+                request
+        );
 
     }
 
@@ -228,6 +269,8 @@ public class WfpUtils {
 
         );
 
+        final long fetchGeneration = WfpCardSyncGuard.captureFetchGeneration();
+
         call.enqueue(new Callback<CallbackResponseWfp>() {
 
             @Override
@@ -238,7 +281,7 @@ public class WfpUtils {
 
                 if (success) {
 
-                    saveWfpCardsToDatabase(context, response.body().getCards());
+                    success = applyFetchResultIfCurrent(context, response.body().getCards(), fetchGeneration);
 
                 } else {
 
@@ -310,6 +353,8 @@ public class WfpUtils {
 
 
 
+        final long fetchGeneration = WfpCardSyncGuard.captureFetchGeneration();
+
         try {
 
             Response<CallbackResponseWfp> response = call.execute();
@@ -322,7 +367,7 @@ public class WfpUtils {
 
                 Logger.d(context, TAG, "onResponse: cards" + cards);
 
-                saveWfpCardsToDatabase(context, cards);
+                applyFetchResultIfCurrent(context, cards, fetchGeneration);
 
             } else {
 
