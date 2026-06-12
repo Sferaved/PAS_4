@@ -10,8 +10,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.network.ApiGsonHelper;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
@@ -36,9 +36,7 @@ public class ToJSONParserRetrofit {
     private final APIService apiService;
     String baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
     public ToJSONParserRetrofit() {
-        Gson gson = new GsonBuilder()
-                .setLenient()
-                .create();
+        Gson gson = ApiGsonHelper.create();
         // Создайте interceptor для логирования
         HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
         loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY); // Логирование тела запроса/ответа
