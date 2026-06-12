@@ -109,6 +109,7 @@ import com.taxi_pas_4.utils.db.DatabaseHelper;
 import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
+import com.taxi_pas_4.utils.orders.OrderHistoryStatusHelper;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.taxi_pas_4.utils.retrofit.cost_json_parser.CostJSONParserRetrofit;
@@ -2389,8 +2390,6 @@ private void cost() {
         databaseHelper.clearTableCancel();
         databaseHelperUid.clearTableCancel();
 
-        String closeReasonText = getString(R.string.close_resone_def);
-
         for (int i = 0; i < routeListCancel.size(); i++) {
             RouteResponseCancel route = routeListCancel.get(i);
             String uid = route.getUid();
@@ -2409,53 +2408,13 @@ private void cost() {
             String comment_info = route.getComment_info();
             String extra_charge_codes = route.getExtra_charge_codes();
 
-            switch (closeReason) {
-                case "101":
-                case "-1":
-                    closeReasonText = context.getString(R.string.close_resone_in_work);
-                    break;
-                case "102":
-                    closeReasonText = context.getString(R.string.close_resone_in_start_point);
-                    break;
-                case "103":
-                    closeReasonText = context.getString(R.string.close_resone_in_rout);
-                    break;
-                case "104":
-                case "8":
-                    closeReasonText = context.getString(R.string.close_resone_8);
-                    break;
-                case "0":
-                    closeReasonText = context.getString(R.string.close_resone_0);
-                    break;
-                case "1":
-                    closeReasonText = context.getString(R.string.close_resone_1);
-                    break;
-                case "2":
-                    closeReasonText = context.getString(R.string.close_resone_2);
-                    break;
-                case "3":
-                    closeReasonText = context.getString(R.string.close_resone_3);
-                    break;
-                case "4":
-                    closeReasonText = context.getString(R.string.close_resone_4);
-                    break;
-                case "5":
-                    closeReasonText = context.getString(R.string.close_resone_5);
-                    break;
-                case "6":
-                    closeReasonText = context.getString(R.string.close_resone_6);
-                    break;
-                case "7":
-                    closeReasonText = context.getString(R.string.close_resone_7);
-                    break;
-                case "9":
-                    closeReasonText = context.getString(R.string.close_resone_9);
-                    break;
-                default:
-                    // оставляем closeReasonText как есть
-                    break;
-            }
-
+            String closeReasonText = OrderHistoryStatusHelper.resolveStatusText(
+                    context,
+                    closeReason,
+                    route.getExecution_status(),
+                    required_time,
+                    uid
+            );
 
             if (routeFrom.equals("Місце відправлення")) {
                 routeFrom = getString(R.string.start_point_text);
