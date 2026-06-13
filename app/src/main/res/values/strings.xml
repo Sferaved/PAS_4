@@ -744,6 +744,7 @@
     <string name="error_message_too_long">Повідомлення занадто довге (макс. 500 символів)</string>
     <string name="error_message_empty">Введіть повідомлення</string>
     <string name="report_sent">Звіт надіслано</string>
+    <string name="google_pay_hold_failed_message">Оплату Google Pay не підтверджено (наприклад, недостатньо коштів на картці). Замовте з оплатою готівкою або змініть спосіб оплати.</string>
     <string name="card_payment_false">" На даний момент сплатити можливо лише готівкою за Ваш маршрут. Оплата карткою відновиться найближчим часом, ми вже працюємо над цим"</string>
     <!-- Інклюзивний транспорт -->
     <string name="inclusive_transport_title">Інклюзивний транспорт</string>

@@ -737,6 +737,7 @@
     <string name="error_message_too_long">Сообщение слишком длинное (макс. 500 символов)</string>
     <string name="error_message_empty">Введите сообщение</string>
     <string name="report_sent">Отчет отправлен</string>
+    <string name="google_pay_hold_failed_message">Оплату Google Pay не подтвердили (например, недостаточно средств на карте). Закажите с оплатой наличными или смените способ оплаты.</string>
     <string name="card_payment_false">" На сейчас оплатить возможно только наличными за Ваш маршрут. Оплата картой восстановиться в ближайшее время, мы уже работаем над этим"</string>
     <!-- Инклюзивный транспорт -->
     <string name="inclusive_transport_title">Инклюзивный транспорт</string>

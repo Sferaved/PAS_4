@@ -35,6 +35,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.AppCompatButton;
 import androidx.appcompat.widget.Toolbar;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.widget.NestedScrollView;
@@ -91,7 +92,8 @@ import com.taxi_pas_4.utils.db.CursorReadHelper;
 public class CardFragment extends Fragment {
 
     private FragmentCardBinding binding;
-    public static MaterialButton btnCardLink, btnOrder;
+    public static MaterialButton btnCardLink;
+    public static AppCompatButton btnOrder;
 
     private String baseUrl;
 
@@ -141,15 +143,19 @@ public class CardFragment extends Fragment {
         context = requireActivity();
         firestoreHelper = new FirestoreHelper(context);
         fragmentManager = getParentFragmentManager();
-        binding.btnClose.setOnClickListener(v -> {
-            if (MainActivity.navController != null) {
-                MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
-                        .setPopUpTo(R.id.nav_visicom, true)
-                        .build());
-            }
-        });
+        View.OnClickListener backToVisicomListener = v -> navigateBackToVisicom();
+        binding.btnClose.setOnClickListener(backToVisicomListener);
+        binding.btnOrder.setOnClickListener(backToVisicomListener);
         checkCardPaymentForCity();
         return root;
+    }
+
+    private void navigateBackToVisicom() {
+        if (MainActivity.navController != null) {
+            MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                    .setPopUpTo(R.id.nav_visicom, true)
+                    .build());
+        }
     }
     private void checkCardPaymentForCity() {
         List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
@@ -662,10 +668,21 @@ public class CardFragment extends Fragment {
         String city = logCursor(MainActivity.CITY_INFO, context).get(1);
         if (!WfpUtils.isCityValidForCardFetch(city)) {
             progressBar.setVisibility(View.GONE);
+            stopSwipeRefresh();
             return;
         }
         progressBar.setVisibility(VISIBLE);
-        WfpUtils.fetchCardTokenWfpAsync(city, context, success -> refreshCardUiAfterSync());
+        WfpUtils.fetchCardTokenWfpAsync(city, context, success -> {
+            refreshCardUiAfterSync();
+            stopSwipeRefresh();
+        });
+    }
+
+    private void stopSwipeRefresh() {
+        if (binding != null) {
+            binding.swipeRefreshLayout.setRefreshing(false);
+            binding.svButton.setVisibility(VISIBLE);
+        }
     }
 
     @SuppressLint("SourceLockedOrientationActivity")
@@ -702,19 +719,6 @@ public class CardFragment extends Fragment {
 
         listView = binding.listView;
 
-        // Кнопка Заказа
-        btnOrder.setOnClickListener(v -> {
-            if (NetworkUtils.isNetworkAvailable(requireContext()) && isAdded()) {
-                Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
-                Logger.w(context, TAG, "NO INTERNET - Showing toast message");
-            }
-            sharedPreferencesHelperMain.saveValue("gps_upd", true);
-            MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
-                    .setPopUpTo(R.id.nav_visicom, true)
-                    .build());
-        });
-
-        // Кнопка Звонка
         btnCallAdmin.setOnClickListener(v -> {
             PhoneCallHelper.callWithFallback(() -> {
                 List<String> stringListPhone = logCursor(MainActivity.CITY_INFO, requireContext());
@@ -775,14 +779,13 @@ public class CardFragment extends Fragment {
 
             if (isWebViewVisible && webView != null) {
                 webView.reload();
+                swipeRefreshLayout.postDelayed(() -> {
+                    swipeRefreshLayout.setRefreshing(false);
+                    svButton.setVisibility(VISIBLE);
+                }, 500);
             } else {
                 getCardTokenWfp();
             }
-
-            swipeRefreshLayout.postDelayed(() -> {
-                swipeRefreshLayout.setRefreshing(false);
-                svButton.setVisibility(VISIBLE);
-            }, 500);
         });
 
         try {
@@ -853,6 +856,12 @@ public class CardFragment extends Fragment {
             webView.destroy();
             webView = null;
         }
+        cardsRecycler = null;
+        cardsAdapter = null;
+        rowCashView = null;
+        rowGooglePayView = null;
+        rowAddCardView = null;
+        isWebViewVisible = false;
         binding = null;
     }
 }
