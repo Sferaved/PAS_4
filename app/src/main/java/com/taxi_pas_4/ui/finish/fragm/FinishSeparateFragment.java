@@ -80,6 +80,7 @@ import com.taxi_pas_4.utils.hold.HoldResponse;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
+import com.taxi_pas_4.utils.order.EarlyOrderNavigationHelper;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.taxi_pas_4.utils.payment.PaymentDeclinedNotifier;
 import com.taxi_pas_4.utils.payment.PaymentErrorSheetHelper;
@@ -1198,6 +1199,8 @@ public class FinishSeparateFragment extends Fragment {
     private void navigateToNewOrder() {
         MainActivity.order_id = null;
         sharedPreferencesHelperMain.saveValue("carFound", false);
+        EarlyOrderNavigationHelper.clearSubmitState();
+        sharedPreferencesHelperMain.saveValue("cost_recalc_from_finish", true);
         updateAddCost(String.valueOf(0));
         if (handlerStatus != null) {
             handlerStatus.removeCallbacks(myTaskStatus);
@@ -1239,6 +1242,8 @@ public class FinishSeparateFragment extends Fragment {
         } else if (activeOrderCloseMode) {
             sharedPreferencesHelperMain.saveValue("carFound", false);
         }
+        EarlyOrderNavigationHelper.clearSubmitState();
+        sharedPreferencesHelperMain.saveValue("cost_recalc_from_finish", true);
         startActivity(new Intent(context, MainActivity.class));
     }
 

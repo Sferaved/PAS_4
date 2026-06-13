@@ -54,6 +54,7 @@ import com.taxi_pas_4.utils.db.DatabaseHelper;
 import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.dialog.UklonAlertDialog;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.orders.OrderCreatedAtDisplayHelper;
 import com.taxi_pas_4.utils.orders.OrderHistoryStatusHelper;
 import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.taxi_pas_4.utils.sanitizer.InputSanitizerHelper;
@@ -463,7 +464,7 @@ public class AccountFragment extends Fragment {
             String routeTo = route.getRouteTo();
             String routeTonumber = route.getRouteToNumber();
             String webCost = route.getWebCost();
-            String createdAt = route.getCreatedAt();
+            String createdAt = OrderCreatedAtDisplayHelper.formatForDisplay(route.getCreatedAt());
             String closeReason = route.getCloseReason();
             String auto = route.getAuto();
             String dispatchingOrderUidDouble = route.getDispatchingOrderUidDouble();
