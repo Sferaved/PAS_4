@@ -88,7 +88,7 @@ if ($taxiRepo.Path -and (Test-Path $taxiRepo.Path)) {
 if (-not $env:SETUP_GIT_SKIP_PAT_PROMPT) {
     Write-Host ""
     Write-Host "Store Personal Access Tokens (classic, scope: repo)." -ForegroundColor Cyan
-    Write-Host "Leave empty to skip — Windows will ask once per account on first push." -ForegroundColor Gray
+    Write-Host "Leave empty to skip - Windows will ask once per account on first push." -ForegroundColor Gray
     $pasPat = Read-Host "PAT for sferaved@gmail.com (PAS repos)"
     $taxiPat = Read-Host "PAT for andrey18051@gmail.com (taxi_repo)"
 
@@ -105,9 +105,9 @@ if (-not $env:SETUP_GIT_SKIP_PAT_PROMPT) {
 Write-Host ""
 Write-Host "Verify (no real push):" -ForegroundColor Cyan
 if (Test-Path $pas4Root) {
-    Write-Host "  PAS_4:  git -C `"$pas4Root`" push --dry-run"
+    Write-Host ('  PAS_4:  git -C "' + $pas4Root + '" push --dry-run')
 }
 if ($taxiRepo.Path -and (Test-Path $taxiRepo.Path)) {
-    Write-Host "  taxi:   git -C `"$($taxiRepo.Path)`" push --dry-run"
+    Write-Host ('  taxi:   git -C "' + $taxiRepo.Path + '" push --dry-run')
 }
 Write-Host "Done." -ForegroundColor Green
