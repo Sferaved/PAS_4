@@ -22,11 +22,14 @@ git config --global credential.useHttpPath true
 
 ## Починка / первичная настройка
 
-Из корня PAS_4 (интерактивно, один раз):
+Из папки PAS_4 (интерактивно, один раз):
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File "C:\Users\Lenovo\AndroidStudioProjects\PAS_4\scripts\setup_git_accounts.ps1"
+cd PAS_4
+powershell -ExecutionPolicy Bypass -File "scripts\setup_git_accounts.ps1"
 ```
+
+Пути в скрипте берутся от расположения `PAS_4\scripts\` (соседние PAS_1–3 и `PhpstormProjects\taxi_repo`).
 
 Скрипт: remote URL, local `user.email`, удаление старого общего credential, опционально сохранение двух PAT.
 
@@ -47,7 +50,7 @@ powershell -ExecutionPolicy Bypass -File "C:\Users\Lenovo\AndroidStudioProjects\
 Перед push в `taxi_repo` не использовать credential PAS. Проверка:
 
 ```powershell
-git -C C:\Users\Lenovo\PhpstormProjects\taxi_repo remote get-url origin
+git -C "$env:USERPROFILE\PhpstormProjects\taxi_repo" remote get-url origin
 # must contain andrey18051@
 ```
 
