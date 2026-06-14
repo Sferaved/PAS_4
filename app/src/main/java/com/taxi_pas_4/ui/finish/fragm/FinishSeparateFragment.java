@@ -83,6 +83,7 @@ import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.order.EarlyOrderNavigationHelper;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.taxi_pas_4.utils.payment.PaymentDeclinedNotifier;
+import com.taxi_pas_4.utils.payment.PaymentTypeHelper;
 import com.taxi_pas_4.utils.payment.PaymentErrorSheetHelper;
 import com.taxi_pas_4.utils.payment.PaymentSessionHelper;
 import com.taxi_pas_4.utils.payment.PendingTransactionHelper;
@@ -476,7 +477,7 @@ public class FinishSeparateFragment extends Fragment {
 
 
 
-        if (pay_method.equals("wfp_payment")) {
+        if (PaymentTypeHelper.usesWalletHold(pay_method)) {
             amount = receivedMap.get("order_cost");
         }
         if (pay_method.equals("fondy_payment")) {
@@ -918,7 +919,7 @@ public class FinishSeparateFragment extends Fragment {
                     ExecutionStatusViewModel.setAddCostInFlightPref(false);
                     ExecutionStatusViewModel.clearPendingAddCostAmountPref();
                     if (pendingAmount != null && !pendingAmount.equals("0")
-                            && !"wfp_payment".equals(pay_method)) {
+                            && !PaymentTypeHelper.usesWalletHold(pay_method)) {
                         viewModel.setAddCostViewUpdate(pendingAmount);
                     }
                     viewModel.setCancelStatus(true);
@@ -2306,14 +2307,14 @@ public class FinishSeparateFragment extends Fragment {
                  } else {
                      Logger.d(context, TAG, "No numeric value found in the text.");
                  }
-             }  else if ("wfp_payment".equals(pay_method)) {
+             }  else if (PaymentTypeHelper.usesWalletHold(pay_method)) {
 
                  if (ExecutionStatusViewModel.isAddCostInFlightPref()) {
                      Logger.d(context, TAG, "[addCost] btn_add_cost blocked: add-cost in flight");
                      resumePendingAddCostIfInFlight();
                      return;
                  }
-                 Logger.d(context, TAG, "[addCost] wfp_payment: verifyOldHold()");
+                 Logger.d(context, TAG, "[addCost] wallet hold: verifyOldHold() pay=" + pay_method);
                  verifyOldHold();
 
 
@@ -2838,8 +2839,8 @@ public class FinishSeparateFragment extends Fragment {
         viewModel.getAddCostViewUpdate().observe(getViewLifecycleOwner(), addCost -> {
             if (addCost != null && !addCost.equals("0")) {
                 Logger.d(context, TAG, "addCostViewUpdate observe: " + addCost);
-                if ("wfp_payment".equals(pay_method)) {
-                    Logger.d(context, TAG, "addCostViewUpdate skipped for wfp (absolute cost from server)");
+                if (PaymentTypeHelper.usesWalletHold(pay_method)) {
+                    Logger.d(context, TAG, "addCostViewUpdate skipped for wallet hold (absolute cost from server)");
                     pendingAddCost = "0";
                     sharedPreferencesHelperMain.saveValue("pendingAddCost", "0");
                     viewModel.setAddCostViewUpdate("0");
@@ -2917,7 +2918,7 @@ public class FinishSeparateFragment extends Fragment {
                 ExecutionStatusViewModel.setAddCostInFlightPref(false);
                 clearDeclinedPaymentUi();
                 if (pendingAmount != null && !pendingAmount.equals("0")
-                        && !"wfp_payment".equals(pay_method)) {
+                        && !PaymentTypeHelper.usesWalletHold(pay_method)) {
                     viewModel.setAddCostViewUpdate(pendingAmount);
                 }
                 ExecutionStatusViewModel.clearPendingAddCostAmountPref();
@@ -3059,7 +3060,7 @@ public class FinishSeparateFragment extends Fragment {
         }
 
         // Если есть необработанное обновление - применяем его
-        if (!costToApply.equals("0") && !"wfp_payment".equals(pay_method)) {
+        if (!costToApply.equals("0") && !PaymentTypeHelper.usesWalletHold(pay_method)) {
             final String finalCostToApply = costToApply; // ✅ Создаем final переменную
 
             Logger.d(context, TAG, "applyPendingAddCostIfNeeded: Applying pending cost update: " + finalCostToApply);
@@ -3391,7 +3392,7 @@ public class FinishSeparateFragment extends Fragment {
         if (!isAdded() || canceled || uid == null || uid.isEmpty()) {
             return;
         }
-        if (!"wfp_payment".equals(pay_method)) {
+        if (!PaymentTypeHelper.usesWalletHold(pay_method)) {
             return;
         }
 
@@ -3796,7 +3797,7 @@ public class FinishSeparateFragment extends Fragment {
 //            handlerAddcost = new Handler(Looper.getMainLooper());
             handlerAddcost = HandlerCompat.createAsync(Looper.getMainLooper());
             if (need_20_add) {
-                if ("nal_payment".equals(pay_method) || "wfp_payment".equals(pay_method)) {
+                if ("nal_payment".equals(pay_method) || PaymentTypeHelper.usesWalletHold(pay_method)) {
                     Logger.e(context, TAG, "status pay_method" + pay_method);
                     Logger.e(context, TAG, "status need_20_add" + need_20_add);
         
@@ -4028,7 +4029,7 @@ public class FinishSeparateFragment extends Fragment {
                 .setTitle(R.string.add_cost_fin)
                 .setCancelable(false)
                 .setPositiveButton(R.string.ok_button, d -> {
-                    if ("wfp_payment".equals(pay_method)) {
+                    if (PaymentTypeHelper.usesWalletHold(pay_method)) {
                         verifyOldHold();
                         return;
                     }
@@ -4249,8 +4250,11 @@ public class FinishSeparateFragment extends Fragment {
                         if(pay_method.equals("nal_payment")) {
                             messageResultCost += " " + getString(R.string.pay_method_message_nal);
                         }
-                        if(pay_method.equals("wfp_payment")) {
-                            messageResultCost += " " + getString(R.string.pay_method_message_card);
+                        if (PaymentTypeHelper.usesWalletHold(pay_method)) {
+                            messageResultCost += " " + getString(
+                                    PaymentTypeHelper.isGooglePay(pay_method)
+                                            ? R.string.pay_method_message_google
+                                            : R.string.pay_method_message_card);
                         }
                         if(pay_method.equals("bonus_payment")) {
                             messageResultCost += " " + getString(R.string.pay_method_message_bonus);
