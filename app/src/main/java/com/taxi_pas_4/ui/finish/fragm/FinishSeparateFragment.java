@@ -717,6 +717,9 @@ public class FinishSeparateFragment extends Fragment {
             case "Executed":
                 return "Заказ выполнен";
             case "Canceled":
+                if (orderResponse.getCloseReason() == -1) {
+                    return "Поиск авто";
+                }
                 return "Заказ снят";
             case "SearchesForCar":
             case "WaitingCarSearch":
@@ -2429,7 +2432,7 @@ public class FinishSeparateFragment extends Fragment {
         if (closeReason >= 1 && closeReason <= 9 && closeReason != 8 && executionStatus != null) {
             return true;
         }
-        return closeReason == -1 && isCanceledExecutionStatus(executionStatus);
+        return false;
     }
 
     /** Экран уже в финальном состоянии «заказ отменён» (не путать с кнопкой «Закрыть» при активном заказе). */
@@ -2534,10 +2537,6 @@ public class FinishSeparateFragment extends Fragment {
                 action = "Поиск авто";
                 carSearch();
             }
-            return;
-        }
-        if (closeReason == -1 && isCanceledExecutionStatus(executionStatus)) {
-            showOrderCanceledFromServer();
             return;
         }
         if (closeReason == 8) {
@@ -2705,7 +2704,11 @@ public class FinishSeparateFragment extends Fragment {
                     orderComplete();
                     break;
                 case "Заказ снят":
-
+                    if (closeReason == -1) {
+                        action = "Поиск авто";
+                        carSearch();
+                        break;
+                    }
                     message = context.getString(R.string.ex_st_canceled);
                     orderCanceled(message);
                     break;
