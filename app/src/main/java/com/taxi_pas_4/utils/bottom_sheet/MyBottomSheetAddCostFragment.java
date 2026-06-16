@@ -28,6 +28,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.ui.finish.AddCostBottomUpdateResponse;
 import com.taxi_pas_4.ui.finish.ApiService;
 import com.taxi_pas_4.ui.finish.Status;
 import com.taxi_pas_4.ui.finish.fragm.FinishSeparateFragment;
@@ -72,6 +73,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
     private ActivityResultLauncher<IntentSenderRequest> googlePayLauncher;
     @Nullable
     private String pendingGooglePayAddCostOrderRef;
+    private boolean googlePayAddCostAwaitingWallet;
 
     public MyBottomSheetAddCostFragment(
             String cost,
@@ -179,18 +181,21 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
                 return;
             }
             if (currentAddCost[0] > 0) {
-                // Проверка на null
                 if (viewModel == null) {
                     Logger.e(getActivity(), TAG, "viewModel is null in btn_ok");
                     return;
                 }
                 viewModel.setCancelStatus(false);
-                startAddCostUpdate(
-                        uid,
-                        String.valueOf(currentAddCost[0])
-                );
+                String addCostDelta = String.valueOf(currentAddCost[0]);
+                boolean googlePayAddCost = PaymentTypeHelper.isGooglePay(pay_method);
+                startAddCostUpdate(uid, addCostDelta);
+                // Google Pay: шторку не закрываем до кошелька — launcher привязан к фрагменту.
+                if (!googlePayAddCost) {
+                    dismiss();
+                }
+            } else {
+                dismiss();
             }
-            dismiss();
         });
 
     }
@@ -227,40 +232,55 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
 
             ApiService apiService = retrofit.create(ApiService.class);
 
-            Call<Status> call = apiService.startAddCostWithAddBottomUpdate(uid, addCost);
+            Call<AddCostBottomUpdateResponse> call = apiService.startAddCostWithAddBottomUpdate(uid, addCost);
             String url = call.request().url().toString();
             Logger.d(context, TAG, "URL запроса nal_payment: " + url);
 
             // Выполняем асинхронный запрос
             call.enqueue(new Callback<>() {
                 @Override
-                public void onResponse(@NonNull Call<Status> call, @NonNull Response<Status> response) {
+                public void onResponse(@NonNull Call<AddCostBottomUpdateResponse> call,
+                                       @NonNull Response<AddCostBottomUpdateResponse> response) {
                     if (ExecutionStatusViewModel.shouldBlockAddCost(uid)) {
                         Logger.d(context, TAG, "startAddCost response ignored: order canceled uid=" + uid);
                         return;
                     }
-                    if (response.isSuccessful() && response.body() != null) {
-                        String responseStatus = response.body().getResponse();
-                        Logger.d(context, TAG, "startAddCostUpdate nal_payment: " + responseStatus);
-                        if (isNalAddCostError(responseStatus)) {
-                            if (isAdded()) {
-                                showNalAddCostError(responseStatus);
-                            }
-                            viewModel.setCancelStatus(true);
-                            return;
+                    if (!response.isSuccessful() || response.body() == null) {
+                        if (isAdded()) {
+                            showNalAddCostError(null);
                         }
-                        viewModel.setAddCostViewUpdate(addCost);
                         viewModel.setCancelStatus(true);
                         return;
                     }
-                    if (isAdded()) {
-                        showNalAddCostError(null);
+
+                    AddCostBottomUpdateResponse body = response.body();
+                    if (body.hasRecreatedOrder()) {
+                        String displayCost = body.resolveDisplayCostGrivna();
+                        Logger.d(context, TAG, "startAddCostUpdate nal_payment ok uid="
+                                + body.getUid() + " cost=" + displayCost);
+                        if (displayCost != null) {
+                            viewModel.setFinishAbsoluteCostGrivna(displayCost);
+                        } else {
+                            viewModel.setAddCostViewUpdate(addCost);
+                        }
+                        viewModel.setCancelStatus(true);
+                        return;
+                    }
+
+                    String responseStatus = body.getResponse();
+                    Logger.d(context, TAG, "startAddCostUpdate nal_payment error: " + responseStatus);
+                    if (isNalAddCostError(responseStatus)) {
+                        if (isAdded()) {
+                            showNalAddCostError(responseStatus);
+                        }
+                    } else if (isAdded()) {
+                        showNalAddCostError(responseStatus);
                     }
                     viewModel.setCancelStatus(true);
                 }
 
                 @Override
-                public void onFailure(@NonNull Call<Status> call, @NonNull Throwable t) {
+                public void onFailure(@NonNull Call<AddCostBottomUpdateResponse> call, @NonNull Throwable t) {
                     FirebaseCrashlytics.getInstance().recordException(t);
                     Logger.e(context, TAG, "startAddCostWithUpdate failed: " + t.getMessage());
                     if (isAdded()) {
@@ -315,6 +335,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
     }
 
     private void startAddCostGooglePayUpdate(String addCost) {
+        Logger.d(context, TAG, "startAddCostGooglePayUpdate: addCost=" + addCost + " uid=" + uid);
         if (ExecutionStatusViewModel.isAddCostInFlightPref()) {
             Logger.d(context, TAG, "startAddCostGooglePayUpdate skipped: add-cost in flight");
             Toast.makeText(context, R.string.recounting_order, Toast.LENGTH_LONG).show();
@@ -334,9 +355,15 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
         ExecutionStatusViewModel.setPendingAddCostOrderRefPref(MainActivity.order_id);
         ExecutionStatusViewModel.setAddCostInFlightPref(true);
         viewModel.setCancelStatus(false);
+        googlePayAddCostAwaitingWallet = true;
+        setAddCostButtonsEnabled(false);
+        if (getDialog() != null) {
+            getDialog().setCancelable(false);
+            getDialog().setCanceledOnTouchOutside(false);
+        }
 
         WfpGooglePayHelper.checkReady(googlePayPaymentsClient, ready -> {
-            if (!isAdded()) {
+            if (!ensureAddedForGooglePayAddCost("checkReady")) {
                 return;
             }
             if (!ready) {
@@ -354,7 +381,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
                     new GooglePayOrderHelper.ConfigCallback() {
                         @Override
                         public void onSuccess(@NonNull String merchantAccount) {
-                            if (!isAdded()) {
+                            if (!ensureAddedForGooglePayAddCost("fetchMerchantConfig")) {
                                 return;
                             }
                             WfpGooglePayHelper.requestPayment(
@@ -392,7 +419,12 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
     }
 
     private void submitGooglePayAddCostCharge(@NonNull String paymentDataJson) {
-        if (!isAdded() || pendingGooglePayAddCostOrderRef == null) {
+        if (pendingGooglePayAddCostOrderRef == null) {
+            onGooglePayAddCostFailed("missing_order_ref");
+            return;
+        }
+        if (!isAdded()) {
+            onGooglePayAddCostFailed("fragment_detached");
             return;
         }
         String pendingAmount = ExecutionStatusViewModel.getPendingAddCostAmountPref();
@@ -423,13 +455,15 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
                 new GooglePayOrderHelper.ChargeCallback() {
                     @Override
                     public void onHoldSuccess(@NonNull String orderReference) {
-                        if (!isAdded()) {
-                            return;
-                        }
                         MainActivity.order_id = orderReference;
-                        Logger.d(context, TAG, "Google Pay add-cost hold ok: " + orderReference);
-                        viewModel.setCancelStatus(false);
-                        Toast.makeText(context, R.string.add_cost_processing, Toast.LENGTH_LONG).show();
+                        Logger.d(context, TAG, "Google Pay add-cost hold ok: " + orderReference
+                                + " amount=" + amountUah);
+                        googlePayAddCostAwaitingWallet = false;
+                        if (isAdded()) {
+                            viewModel.setCancelStatus(false);
+                            Toast.makeText(context, R.string.add_cost_processing, Toast.LENGTH_LONG).show();
+                            dismissAddCostSheetSafely();
+                        }
                         enableCancelButtonIfAddCostNotInFlight();
                     }
 
@@ -444,7 +478,10 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
     private void onGooglePayAddCostCancelled() {
         Logger.d(context, TAG, "Google Pay add-cost cancelled");
         clearGooglePayAddCostInFlight(true);
-        Toast.makeText(context, R.string.e_google_pay_canceled, Toast.LENGTH_SHORT).show();
+        if (isAdded()) {
+            Toast.makeText(context, R.string.e_google_pay_canceled, Toast.LENGTH_SHORT).show();
+            dismissAddCostSheetSafely();
+        }
     }
 
     private void onGooglePayAddCostFailed(@Nullable String message) {
@@ -456,10 +493,50 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
         }
         if (isAdded()) {
             Toast.makeText(context, R.string.add_cost_payment_failed, Toast.LENGTH_LONG).show();
+            dismissAddCostSheetSafely();
+        }
+    }
+
+    private boolean ensureAddedForGooglePayAddCost(@NonNull String stage) {
+        if (isAdded()) {
+            return true;
+        }
+        Logger.w(context, TAG, "Google Pay add-cost aborted at " + stage + ": fragment detached");
+        onGooglePayAddCostFailed("fragment_detached");
+        return false;
+    }
+
+    private void dismissAddCostSheetSafely() {
+        googlePayAddCostAwaitingWallet = false;
+        setAddCostButtonsEnabled(true);
+        if (getDialog() != null) {
+            getDialog().setCancelable(true);
+            getDialog().setCanceledOnTouchOutside(true);
+        }
+        if (!isAdded()) {
+            return;
+        }
+        try {
+            dismiss();
+        } catch (IllegalStateException e) {
+            Logger.w(context, TAG, "dismissAddCostSheetSafely: " + e.getMessage());
+        }
+    }
+
+    private void setAddCostButtonsEnabled(boolean enabled) {
+        if (btn_ok != null) {
+            btn_ok.setEnabled(enabled);
+        }
+        if (btn_plus != null) {
+            btn_plus.setEnabled(enabled);
+        }
+        if (btn_minus != null) {
+            btn_minus.setEnabled(enabled);
         }
     }
 
     private void clearGooglePayAddCostInFlight(boolean enableCancel) {
+        googlePayAddCostAwaitingWallet = false;
         ExecutionStatusViewModel.setAddCostInFlightPref(false);
         ExecutionStatusViewModel.clearPendingAddCostAmountPref();
         pendingGooglePayAddCostOrderRef = null;
@@ -467,6 +544,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
             viewModel.setCancelStatus(true);
         }
         enableCancelButtonIfAddCostNotInFlight();
+        setAddCostButtonsEnabled(true);
     }
 
     @SuppressLint("Range")

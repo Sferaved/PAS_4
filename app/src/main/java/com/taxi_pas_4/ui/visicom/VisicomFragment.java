@@ -5070,8 +5070,17 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
 
     private void applyDiscountAndUpdateUI(String orderCost, Context context, boolean finalizeUi) {
         Logger.d(context, TAG, "applyDiscountAndUpdateUI() start — orderCost = " + orderCost);
-        double costValue = Double.parseDouble(orderCost);
-        orderCost = String.valueOf(Math.round(costValue));
+        long roundedCost;
+        try {
+            double costValue = Double.parseDouble(orderCost);
+            roundedCost = Math.round(costValue);
+        } catch (NumberFormatException e) {
+            FirebaseCrashlytics.getInstance().recordException(e);
+            Logger.e(context, TAG, "NumberFormatException в applyDiscountAndUpdateUI: " + e.getMessage());
+            showCostCalculationProgress();
+            return;
+        }
+        orderCost = String.valueOf(roundedCost);
 
         String discountText = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(3);
         Logger.d(context, TAG, "Retrieved discountText = " + discountText);
@@ -5098,26 +5107,39 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
             cursor.close();
             database.close();
             long discountInt = Long.parseLong(discountText);
-            long discount;
+            long discount = 0;
 
             firstCost = Long.parseLong(orderCost);
-            if (firstCost != 0) {
-                if ((boolean) sharedPreferencesHelperMain.getValue("verifyUserOrder", false)) {
-                    firstCost = firstCost + 45;
-                }
+            if (firstCost != 0 && (boolean) sharedPreferencesHelperMain.getValue("verifyUserOrder", false)) {
+                firstCost = firstCost + 45;
             }
-            discount = firstCost * discountInt / 100;
-            firstCost = firstCost + discount;
+
+            // В активном заказе цена уже финальная/поднятая оператором — не применяем скидку повторно.
+            boolean hasActiveOrderUid = MainActivity.uid != null && !MainActivity.uid.trim().isEmpty();
+            if (!hasActiveOrderUid) {
+                discount = firstCost * discountInt / 100;
+                firstCost = firstCost + discount;
+            }
 
             Logger.d(context, TAG, "Calculated firstCost = " + firstCost + ", discount = " + discount);
 
-            updateAddCost(String.valueOf(discount), context);
-            text_view_cost.setText(String.valueOf(firstCost));
-            text_view_cost.setAlpha(1f);
+            // Скидка не является "доплатой": addCost хранится отдельно и не должен сбрасываться,
+            // иначе при пересчёте/пушах цены пропадает ручная доплата (+10/+5 и т.п.).
+            List<String> settingsInfo = logCursor(MainActivity.TABLE_SETTINGS_INFO, context);
+            String persistedAddCost = settingsInfo.size() > 5 ? settingsInfo.get(5) : "0";
+            if (persistedAddCost == null || persistedAddCost.trim().isEmpty()) {
+                persistedAddCost = "0";
+            }
+
+            // Важно: updateAddCost использует startCost. Сначала обновляем базовую стоимость,
+            // затем применяем сохранённую доплату.
+            startCost = firstCost;
+            updateAddCost(persistedAddCost.trim(), context);
+            if (text_view_cost != null) {
+                text_view_cost.setAlpha(1f);
+            }
 
             if (finalizeUi) {
-                startCost = firstCost;
-                finalCost = firstCost;
                 MIN_COST_VALUE = (long) (firstCost * 0.6);
                 firstCostForMin = firstCost;
 
@@ -5130,10 +5152,11 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
                 finishCostCalculationWithPrice();
             }
 
-        } catch (NumberFormatException e) {
+        } catch (Exception e) {
             FirebaseCrashlytics.getInstance().recordException(e);
-            Logger.e(context, TAG, "NumberFormatException в applyDiscountAndUpdateUI: " + e.getMessage());
+            Logger.e(context, TAG, "Ошибка в applyDiscountAndUpdateUI: " + e.getMessage());
             showCostCalculationProgress();
+            return;
         }
 
         if (finalizeUi) {

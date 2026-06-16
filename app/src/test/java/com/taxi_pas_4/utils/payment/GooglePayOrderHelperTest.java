@@ -29,6 +29,12 @@ public class GooglePayOrderHelperTest {
     }
 
     @Test
+    public void parseAmountUah_parsesAddCostDeltaOnly() {
+        assertEquals(5, GooglePayOrderHelper.parseAmountUah("5"));
+        assertEquals(5, GooglePayOrderHelper.parseAmountUah(" 5 "));
+    }
+
+    @Test
     public void usesWalletHold_coversWfpAndGooglePay() {
         assertTrue(PaymentTypeHelper.usesWalletHold(PaymentTypeHelper.CARD));
         assertTrue(PaymentTypeHelper.usesWalletHold(PaymentTypeHelper.GOOGLE_PAY));
