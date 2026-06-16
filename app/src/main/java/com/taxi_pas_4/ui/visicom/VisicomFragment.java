@@ -124,6 +124,7 @@ import com.taxi_pas_4.utils.kafka.KafkaRequest;
 import com.taxi_pas_4.utils.order.EarlyOrderNavigationHelper;
 import com.taxi_pas_4.utils.keys.FirestoreHelper;
 import com.taxi_pas_4.utils.location.AutoLocationAfterCityHelper;
+import com.taxi_pas_4.utils.location.GpsGeocodeHelper;
 import com.taxi_pas_4.utils.location.TaxiLocationValidator;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.orders.OrderCreatedAtDisplayHelper;
@@ -1688,6 +1689,57 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
         return start != null
                 && !start.trim().isEmpty()
                 && !isCityOnlyFinishInDatabase(start);
+    }
+
+    private boolean isGpsPlaceholderAddress(String address) {
+        return GpsGeocodeHelper.isPlaceholderAddress(requireContext(), address);
+    }
+
+    /**
+     * После смены города по GPS (OdessaTest → Киев и т.п.) — повторный геокод уже на сервере нового города.
+     */
+    private void applyPendingGeoRegeocodeAfterCityChange() {
+        if (!isAdded() || binding == null || context == null) {
+            return;
+        }
+        if (!AutoLocationAfterCityHelper.hasPendingGeoRegeocode()) {
+            return;
+        }
+        if (!AutoLocationAfterCityHelper.isCityReady()) {
+            return;
+        }
+        if (isUpdatingFromGPS) {
+            return;
+        }
+
+        final double latitude = AutoLocationAfterCityHelper.getPendingGeoRegeocodeLat();
+        final double longitude = AutoLocationAfterCityHelper.getPendingGeoRegeocodeLon();
+        AutoLocationAfterCityHelper.clearPendingGeoRegeocode();
+        AutoLocationAfterCityHelper.clearPending();
+
+        Logger.d(context, TAG, String.format(Locale.US,
+                "Повторный геокод после смены города: lat=%.6f, lon=%.6f", latitude, longitude));
+
+        isUpdatingFromGPS = true;
+        progressBar.setVisibility(View.VISIBLE);
+
+        fetchGpsAddressFromServer(latitude, longitude, address -> {
+            if (!isAdded() || binding == null) {
+                isUpdatingFromGPS = false;
+                return;
+            }
+            String resolved = address;
+            if (isGpsPlaceholderAddress(resolved)) {
+                resolved = getString(R.string.startPoint);
+            }
+            applyGpsLocationToOrder(latitude, longitude, resolved);
+            AutoLocationAfterCityHelper.clearCityChangedViaGeo();
+        });
+    }
+
+    private void fetchGpsAddressFromServer(double latitude, double longitude,
+                                           java.util.function.Consumer<String> onAddress) {
+        GpsGeocodeHelper.reverseGeocode(context, latitude, longitude, onAddress);
     }
 
     /** singleTask: в UI может остаться адрес прошлого города, хотя в БД start уже пустой. */
@@ -3554,6 +3606,7 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
         } else {
             new Handler(Looper.getMainLooper()).postDelayed(this::updateApp, 8_000);
         }
+        applyPendingGeoRegeocodeAfterCityChange();
         maybeAutoApplyLocationAfterCity();
         restoreGpsCrossIfPendingUserApply();
         dismissGpsCrossAfterGeoCityChangeIfReady();
@@ -3716,34 +3769,21 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
                     Logger.d(context, TAG, String.format(Locale.US,
                             "Авто-GPS: координаты определены lat=%.6f, lon=%.6f", latitude, longitude));
 
-                    List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
-                    String api = stringList.get(2);
-                    String language = Locale.getDefault().getLanguage();
-                    baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
-                    String urlFrom = baseUrl + "/" + api + "/android/fromSearchGeoLocal/"
-                            + latitude + "/" + longitude + "/" + language;
-                    Logger.d(context, TAG, "Авто-GPS: запрос адреса по координатам: " + urlFrom);
-
-                    FromJSONParserRetrofit.sendURL(urlFrom, result -> {
+                    fetchGpsAddressFromServer(latitude, longitude, address -> {
                         if (!isAdded()) {
                             isUpdatingFromGPS = false;
                             return;
                         }
-                        String address = null;
-                        if (result != null) {
-                            address = result.get("route_address_from");
-                            if (address != null && address.contains("Точка на карте")) {
-                                address = context.getString(R.string.startPoint);
-                            }
-                        }
-                        if (address != null && !address.trim().isEmpty()) {
+                        if (address != null && !address.trim().isEmpty() && !isGpsPlaceholderAddress(address)) {
                             Logger.d(context, TAG, "Авто-GPS: найденный адрес по GPS: \"" + address + "\"");
                         } else {
                             Logger.w(context, TAG, "Авто-GPS: адрес по GPS не получен (пустой ответ геокодера)");
                         }
                         AutoLocationAfterCityHelper.saveDetectedCoordinates(latitude, longitude, address);
                         logAutoDetectedRouteAndPath(latitude, longitude, address);
-                        if (address != null && !address.trim().isEmpty() && isAdded() && binding != null) {
+                        if (address != null && !address.trim().isEmpty()
+                                && !isGpsPlaceholderAddress(address)
+                                && isAdded() && binding != null) {
                             gpsClickAwaitingAutoDetected = false;
                             Logger.d(context, ADDR_GUARD,
                                     "autoGps: координаты сохранены в prefs — к заказу только по нажатию GPS");
@@ -4234,18 +4274,11 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
 
                         Logger.d(context, TAG, "getCurrentLocation: " + latitude + ", " + longitude);
 
-                        List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
-                        String api = stringList.get(2);
-                        String language = Locale.getDefault().getLanguage();
-
-                        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
-                        String urlFrom = baseUrl + "/" + api + "/android/fromSearchGeoLocal/" + latitude + "/" + longitude + "/" + language;
-
                         // ✅ Сохраняем уникальный ключ запроса
                         final String requestKey = latitude + "_" + longitude + "_";
                         pendingAddressRequest = requestKey;
 
-                        FromJSONParserRetrofit.sendURL(urlFrom, result -> {
+                        fetchGpsAddressFromServer(latitude, longitude, FromAdressString -> {
                             // ✅ Проверяем, что это последний запрос
                             if (!requestKey.equals(pendingAddressRequest)) {
                                 Logger.d(context, TAG, "Ignoring stale address response");
@@ -4256,25 +4289,13 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
 
                             if (!isAdded()) {
                                 isUpdatingFromGPS = false;
-                                pendingAddressRequest = null; // ✅ Сбрасываем запрос
+                                pendingAddressRequest = null;
                                 return;
                             }
 
-                            if (result != null) {
-                                String FromAdressString = result.get("route_address_from");
+                            if (FromAdressString != null) {
                                 Logger.d(context, TAG, "FromAdressString: " + FromAdressString);
-
-                                if (FromAdressString != null && FromAdressString.contains("Точка на карте")) {
-                                    FromAdressString = context.getString(R.string.startPoint);
-                                }
-
-                                // ✅ Проверяем, не тот же ли это адрес
-
-
-                                // ✅ Обновляем UI
-//                                geoText.setText(FromAdressString);
                                 lastProcessedAddress = FromAdressString;
-
 
                                 if (CityFinder.isCityFinderBusy()) {
                                     Logger.d(context, TAG, "CityFinder занят, пропускаем обновление города");
@@ -4346,24 +4367,30 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
                                         Logger.d(context, TAG, "───────────────────────────────────────────");
                                         Logger.d(context, TAG, "🔄 НАЧАЛО обновления данных:");
                                         setCityAppbar();
-                                        // Обновление координат в БД
-                                        Logger.d(context, TAG, "   1️⃣ Обновление координат в БД...");
-                                        Logger.d(context, TAG, "      ├─ Вызов updateCoordinatesInDatabase(" + finalLatitude + ", " + finalLongitude + ", '" + finalAddress + "')");
+                                        if (cityChanged && userConfirmed) {
+                                            Logger.d(context, TAG,
+                                                    "Город сменён по GPS — адрес будет получен после перезагрузки экрана");
+                                            finishAutoLocationGpsButtonState();
+                                        } else {
+                                            // Обновление координат в БД
+                                            Logger.d(context, TAG, "   1️⃣ Обновление координат в БД...");
+                                            Logger.d(context, TAG, "      ├─ Вызов updateCoordinatesInDatabase(" + finalLatitude + ", " + finalLongitude + ", '" + finalAddress + "')");
 
-                                        long dbStartTime = System.currentTimeMillis();
-                                        updateCoordinatesInDatabase(finalLatitude, finalLongitude, finalAddress);
-                                        AutoLocationAfterCityHelper.markGpsStartApplied();
-                                        long dbEndTime = System.currentTimeMillis();
-                                        Logger.d(context, TAG, "      └─ ✅ БД обновлена за " + (dbEndTime - dbStartTime) + " мс");
+                                            long dbStartTime = System.currentTimeMillis();
+                                            updateCoordinatesInDatabase(finalLatitude, finalLongitude, finalAddress);
+                                            AutoLocationAfterCityHelper.markGpsStartApplied();
+                                            long dbEndTime = System.currentTimeMillis();
+                                            Logger.d(context, TAG, "      └─ ✅ БД обновлена за " + (dbEndTime - dbStartTime) + " мс");
 
-                                        // Пересчёт стоимости
-                                        Logger.d(context, TAG, "   2️⃣ Пересчёт стоимости...");
-                                        Logger.d(context, TAG, "      ├─ Вызов visicomCost()");
-                                        finishAutoLocationGpsButtonState();
-                                        long costStartTime = System.currentTimeMillis();
-                                        requestVisicomCostAfterRouteChange();
-                                        long costEndTime = System.currentTimeMillis();
-                                        Logger.d(context, TAG, "      └─ ✅ Запрос пересчёта стоимости за " + (costEndTime - costStartTime) + " мс");
+                                            // Пересчёт стоимости
+                                            Logger.d(context, TAG, "   2️⃣ Пересчёт стоимости...");
+                                            Logger.d(context, TAG, "      ├─ Вызов visicomCost()");
+                                            finishAutoLocationGpsButtonState();
+                                            long costStartTime = System.currentTimeMillis();
+                                            requestVisicomCostAfterRouteChange();
+                                            long costEndTime = System.currentTimeMillis();
+                                            Logger.d(context, TAG, "      └─ ✅ Запрос пересчёта стоимости за " + (costEndTime - costStartTime) + " мс");
+                                        }
 
                                         Logger.d(context, TAG, "🔄 ЗАВЕРШЕНО обновление данных");
 
