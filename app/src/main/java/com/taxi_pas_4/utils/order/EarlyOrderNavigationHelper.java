@@ -14,6 +14,7 @@ import androidx.navigation.NavOptions;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
+import com.taxi_pas_4.utils.analytics.AdsConversionHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.payment.PaymentSessionHelper;
@@ -142,6 +143,7 @@ public final class EarlyOrderNavigationHelper {
 
         markEarlyDone(orderUid);
         Logger.d(context, TAG, "early navigate uid=" + orderUid);
+        reportOrderConversion(context, orderUid, map);
 
         MainActivity.navController.navigate(
                 R.id.nav_finish_separate,
@@ -209,6 +211,24 @@ public final class EarlyOrderNavigationHelper {
         String cost = merged.get("order_cost");
         persistDisplayCostGrivna(cost);
         Logger.d(context, TAG, "applyHttpEnrichment uid=" + uid);
+    }
+
+    /** Конверсия «заказ» для Google Ads через Firebase purchase. */
+    public static void reportOrderConversion(
+            Context context,
+            String orderUid,
+            Map<String, String> sendUrlMap
+    ) {
+        if (context == null || TextUtils.isEmpty(orderUid) || sendUrlMap == null) {
+            return;
+        }
+        AdsConversionHelper.logOrderPlaced(
+                context,
+                orderUid,
+                sendUrlMap.get("order_cost"),
+                sendUrlMap.get("currency"),
+                sendUrlMap.get("pay_method")
+        );
     }
 
     private static void markEarlyDone(String orderUid) {

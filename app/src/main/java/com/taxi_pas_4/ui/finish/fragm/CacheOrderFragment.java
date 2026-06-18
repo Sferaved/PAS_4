@@ -61,6 +61,7 @@ import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.taxi_pas_4.utils.payment.PaymentErrorSheetHelper;
+import com.taxi_pas_4.utils.order.EarlyOrderNavigationHelper;
 import com.taxi_pas_4.utils.payment.PaymentSessionHelper;
 import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
@@ -794,6 +795,8 @@ public class CacheOrderFragment extends Fragment {
             bundle.putString("UID_key", Objects.requireNonNull(sendUrlMap.get("dispatching_order_uid")));
 
             viewModel.setStatusNalUpdate(true); //наюлюдение за опросом статусом нала
+            String orderUidForConversion = sendUrlMap.get("dispatching_order_uid");
+            EarlyOrderNavigationHelper.reportOrderConversion(context, orderUidForConversion, sendUrlMap);
             postIfAttached(() -> {
                 if (MainActivity.navController == null) {
                     return;

@@ -118,6 +118,7 @@ import com.taxi_pas_4.utils.user.del_server.CallbackUser;
 import com.taxi_pas_4.utils.user.del_server.RetrofitClient;
 import com.taxi_pas_4.utils.user.del_server.UserFindResponse;
 import com.taxi_pas_4.utils.user.user_verify.VerifyUserTask;
+import com.taxi_pas_4.utils.analytics.AdsConversionHelper;
 import com.taxi_pas_4.utils.worker.AddUserNoNameWorker;
 import com.taxi_pas_4.utils.worker.CheckPushPermissionWorker;
 import com.taxi_pas_4.utils.worker.GetCardTokenWfpWorker;
@@ -2622,6 +2623,7 @@ public class MainActivity extends AppCompatActivity {
                     usernameForTest = "username";
 
                     settingsNewUser(user.getEmail());
+                    AdsConversionHelper.logSignUpIfNewUser(this, user);
                     crispChat();
 
                     requestNotificationPermissionOnce();

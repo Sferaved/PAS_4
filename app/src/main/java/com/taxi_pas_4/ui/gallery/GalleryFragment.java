@@ -44,6 +44,7 @@ import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetGalleryFragment;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.data.DataArr;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.order.EarlyOrderNavigationHelper;
 import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 import com.taxi_pas_4.utils.ui.ListScrollPaginationHelper;
@@ -495,6 +496,11 @@ public class GalleryFragment extends Fragment {
                     bundle.putString("UID_key", Objects.requireNonNull(sendUrlMap.get("dispatching_order_uid")));
 
 // Установите Bundle как аргументы фрагмента
+                    EarlyOrderNavigationHelper.reportOrderConversion(
+                            context,
+                            sendUrlMap.get("dispatching_order_uid"),
+                            sendUrlMap
+                    );
                     MainActivity.navController.navigate(R.id.nav_finish_separate, bundle, new NavOptions.Builder()
                             .setPopUpTo(R.id.nav_visicom, true)
                             .build());
