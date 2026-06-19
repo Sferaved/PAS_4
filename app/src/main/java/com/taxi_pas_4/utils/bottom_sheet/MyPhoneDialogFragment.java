@@ -12,6 +12,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.telephony.TelephonyManager;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,7 +30,6 @@ import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.app.ActivityCompat;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
-import com.redmadrobot.inputmask.MaskedTextChangedListener;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.home.ButtonVisibilityCallback;
@@ -36,19 +37,19 @@ import com.taxi_pas_4.ui.home.HomeFragment;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.phone.PhoneNumberHelper;
+import com.taxi_pas_4.utils.sanitizer.InputSanitizerHelper;
 import com.taxi_pas_4.utils.user.save_firebase.FirebaseUserManager;
 import com.uxcam.UXCam;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.regex.Pattern;
+
 import com.taxi_pas_4.utils.db.CursorReadHelper;
 
 public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
 
     private static final String ARG_PAGE = "page_arg";
-    private static final String PHONE_PATTERN = "\\+38 \\d{3} \\d{3} \\d{2} \\d{2}";
     private static final String TAG = "MyPhoneDialogFragment";
 
     private EditText phoneNumber;
@@ -91,16 +92,25 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
         // Инициализация с использованием requireContext()
         phoneFull();
 
+        setupSanitizedTextWatcher(phoneNumber, InputSanitizerHelper.InputType.PHONE);
+
         button.setOnClickListener(v -> {
-            String phone = PhoneNumberHelper.normalizeAndFormat(phoneNumber.getText().toString());
-            if (!PhoneNumberHelper.isValid(phone)) {
+            String rawPhone = phoneNumber.getText().toString();
+            String normalized = PhoneNumberHelper.normalizeAndFormat(rawPhone);
+            String safePhone = InputSanitizerHelper.sanitize(normalized, InputSanitizerHelper.InputType.PHONE);
+
+            if (!PhoneNumberHelper.isValid(safePhone)) {
                 Toast.makeText(requireContext(), getString(R.string.format_phone), Toast.LENGTH_SHORT).show();
                 return;
             }
-            PhoneNumberHelper.showConfirmDialog(requireContext(), phone,
+            if (InputSanitizerHelper.containsSqlInjectionPatterns(safePhone)) {
+                Toast.makeText(requireContext(), R.string.invalid_input_detected, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            PhoneNumberHelper.showConfirmDialog(requireContext(), safePhone,
                     confirmedPhone -> savePhoneAndContinue(confirmedPhone),
                     () -> {
-                        phoneNumber.setText(phone);
+                        phoneNumber.setText(safePhone);
                         phoneNumber.requestFocus();
                         phoneNumber.setSelection(phoneNumber.getText().length());
                     });
@@ -109,6 +119,37 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
         PhoneNumberHelper.setupPhoneInput(phoneNumber);
 
         return view;
+    }
+
+    private void setupSanitizedTextWatcher(EditText editText, InputSanitizerHelper.InputType inputType) {
+        editText.addTextChangedListener(new TextWatcher() {
+            private boolean isSanitizing = false;
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (isSanitizing) return;
+
+                String original = s.toString();
+                String sanitized = InputSanitizerHelper.sanitize(original, inputType);
+
+                if (InputSanitizerHelper.containsSqlInjectionPatterns(original)) {
+                    sanitized = "";
+                    Toast.makeText(requireContext(), R.string.invalid_input_detected, Toast.LENGTH_SHORT).show();
+                }
+
+                if (!sanitized.equals(original)) {
+                    isSanitizing = true;
+                    s.replace(0, s.length(), sanitized);
+                    isSanitizing = false;
+                }
+            }
+        });
     }
     @Override
     public void onAttach(@NonNull Context context) {
