@@ -17,6 +17,7 @@ import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.utils.payment.PaymentDeclinedNotifier;
+import com.taxi_pas_4.utils.payment.PaymentDeclinedUiHelper;
 import com.taxi_pas_4.utils.worker.utils.TokenUtils;
 
 import java.util.Locale;
@@ -211,12 +212,14 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         Logger.d(this, TAG, "Ошибка оплаты FCM: " + message + ", uid=" + uid);
 
-        if (!MyApplication.isInForeground() && shouldShowOrderPushForUid(uid)) {
-            PaymentDeclinedNotifier.maybeSendPaymentErrorPush(localizedContext, uid);
-        } else if (!shouldShowOrderPushForUid(uid)) {
-            Logger.d(this, TAG, "Оплата FCM: push не показан — uid не относится к активному заказу PAS4");
+        if (!PaymentDeclinedUiHelper.isRelevantOrderUid(uid)) {
+            Logger.d(this, TAG, "Оплата FCM: uid не относится к активному заказу PAS4");
+            return;
         }
-        applyDeclinedToActiveOrder(uid);
+        if (!MyApplication.isInForeground()) {
+            PaymentDeclinedNotifier.maybeSendPaymentErrorPush(localizedContext, uid);
+        }
+        PaymentDeclinedUiHelper.handleDeclined(getApplicationContext(), uid);
     }
 
     /** Push только для PAS4 (поле target_app с бэкенда). */
@@ -249,20 +252,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         }
         Object uidFcm = MyApplication.sharedPreferencesHelperMain.getValue("uid_fcm", "");
         return uid.equals(String.valueOf(uidFcm));
-    }
-
-    private void applyDeclinedToActiveOrder(String uid) {
-        if (uid == null || uid.isEmpty()) {
-            return;
-        }
-        new Handler(Looper.getMainLooper()).post(() -> {
-            if (MainActivity.uid != null
-                    && MainActivity.uid.equals(uid)
-                    && MainActivity.viewModel != null) {
-                MainActivity.viewModel.setTransactionStatus("Declined");
-                Logger.d(this, TAG, "setTransactionStatus(Declined) для uid=" + uid);
-            }
-        });
     }
 
     private void notifyCancel(String message, String uid) {

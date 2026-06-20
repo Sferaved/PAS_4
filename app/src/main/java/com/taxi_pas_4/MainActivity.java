@@ -89,6 +89,7 @@ import com.taxi_pas_4.ui.cities.api.CityService;
 import com.taxi_pas_4.ui.cities.check.CityCheckActivity;
 import com.taxi_pas_4.ui.clear.AppDataUtils;
 import com.taxi_pas_4.ui.finish.OrderResponse;
+import com.taxi_pas_4.ui.finish.fragm.FinishSeparateFragment;
 import com.taxi_pas_4.ui.home.HomeFragment;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.ui.weather.WeatherApiHelper;
@@ -1054,6 +1055,7 @@ public class MainActivity extends AppCompatActivity {
         }
         sharedPreferencesHelperMain.saveValue("gps_upd", gps_upd);
 
+        FinishSeparateFragment.notifyPaymentDeclinedIfNeeded(this);
     }
 
     @Override
