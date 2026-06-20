@@ -735,6 +735,8 @@ Tap "Settings" to check.</string>
     <string name="error_message_empty">Enter a message</string>
     <string name="report_sent">Report sent</string>
     <string name="google_pay_hold_failed_message">Google Pay payment was not confirmed (for example, insufficient funds). Order with cash or change your payment method.</string>
+    <string name="google_pay_hold_server_error_message">Google Pay could not be confirmed due to a temporary server error. Try again in a minute or order with cash.</string>
+    <string name="google_pay_hold_network_error_message">Google Pay could not be confirmed because of a network problem. Check your connection and try again.</string>
     <string name="card_payment_false">"Currently, you can only pay in cash for your route. Card payments will be restored soon; we\'re already working on it."</string>
     <!-- Inclusive transport -->
     <string name="inclusive_transport_title">Inclusive Transport</string>
