@@ -744,6 +744,8 @@
     <string name="google_pay_hold_server_error_message">Оплату Google Pay временно не удалось подтвердить из-за ошибки сервера. Попробуйте ещё раз через минуту или закажите с оплатой наличными.</string>
     <string name="google_pay_hold_network_error_message">Не удалось подтвердить оплату Google Pay из-за проблем с интернетом. Проверьте соединение и попробуйте ещё раз.</string>
     <string name="google_pay_hold_duplicate_order_message">Не удалось оплатить повторно тем же номером заказа. Попробуйте ещё раз — будет создан новый платёж.</string>
+    <string name="google_pay_hold_timeout_message">Оплату Google Pay ещё обрабатывают. Подождите или проверьте банк — если средства заблокированы, закажите снова или обратитесь в поддержку.</string>
+    <string name="google_pay_order_processing">Подтверждаем оплату Google Pay. Подождите, пожалуйста…</string>
     <string name="card_payment_false">" На сейчас оплатить возможно только наличными за Ваш маршрут. Оплата картой восстановиться в ближайшее время, мы уже работаем над этим"</string>
     <!-- Инклюзивный транспорт -->
     <string name="inclusive_transport_title">Инклюзивный транспорт</string>
