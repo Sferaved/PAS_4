@@ -85,6 +85,7 @@ import com.taxi_pas_4.utils.helpers.WfpGooglePayHelper;
 import com.taxi_pas_4.utils.hold.APIHoldService;
 import com.taxi_pas_4.utils.hold.HoldResponse;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.payment.FinishCostReconcileHelper;
 import com.taxi_pas_4.utils.payment.GooglePayOrderHelper;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
@@ -2961,6 +2962,7 @@ public class FinishSeparateFragment extends Fragment {
             }
             Logger.d(context, TAG, "finishAbsoluteCost observe: " + absoluteCost);
             applyDisplayCostToFinishUi(absoluteCost);
+            ExecutionStatusViewModel.clearWalletAddCostFloorGrivna();
             ExecutionStatusViewModel.setAddCostInFlightPref(false);
             ExecutionStatusViewModel.clearPendingAddCostAmountPref();
             pendingAddCost = "0";
@@ -3022,6 +3024,10 @@ public class FinishSeparateFragment extends Fragment {
                 ExecutionStatusViewModel.setAddCostInFlightPref(false);
                 clearDeclinedPaymentUi();
                 if (pendingAmount != null && !pendingAmount.equals("0")
+                        && PaymentTypeHelper.usesWalletHold(pay_method)) {
+                    applyWalletAddCostOptimisticTotal(
+                            GooglePayOrderHelper.parseAmountUah(pendingAmount));
+                } else if (pendingAmount != null && !pendingAmount.equals("0")
                         && !PaymentTypeHelper.usesWalletHold(pay_method)) {
                     viewModel.setAddCostViewUpdate(pendingAmount);
                 }
@@ -3175,7 +3181,44 @@ public class FinishSeparateFragment extends Fragment {
                     addCostView(finalCostToApply); // ✅ Используем final переменную
                 }
             }, 200);
+        } else {
+            restoreWalletAddCostFloorIfNeeded();
         }
+    }
+
+    /** После фона: восстановить сумму GPay-доплаты, пока status API ещё отдаёт старую. */
+    private void restoreWalletAddCostFloorIfNeeded() {
+        if (!PaymentTypeHelper.usesWalletHold(pay_method)) {
+            return;
+        }
+        Integer floor = ExecutionStatusViewModel.getWalletAddCostFloorGrivnaInt();
+        if (floor == null || floor <= 0) {
+            return;
+        }
+        int displayed = parseDisplayedCostGrivna();
+        if (displayed >= floor) {
+            return;
+        }
+        Logger.d(context, TAG, "restoreWalletAddCostFloorIfNeeded: " + displayed + " -> " + floor);
+        applyDisplayCostToFinishUi(String.valueOf(floor));
+    }
+
+    private void applyWalletAddCostOptimisticTotal(int addCostUah) {
+        if (addCostUah <= 0 || !PaymentTypeHelper.usesWalletHold(pay_method)) {
+            return;
+        }
+        int newTotal = FinishCostReconcileHelper.computeOptimisticWalletTotal(
+                parseDisplayedCostGrivna(),
+                addCostUah,
+                ExecutionStatusViewModel.getWalletAddCostFloorGrivnaInt());
+        if (newTotal <= 0) {
+            return;
+        }
+        String totalStr = String.valueOf(newTotal);
+        applyDisplayCostToFinishUi(totalStr);
+        ExecutionStatusViewModel.setWalletAddCostFloorGrivna(totalStr);
+        Logger.d(context, TAG, "applyWalletAddCostOptimisticTotal: floor=" + totalStr
+                + " add=" + addCostUah);
     }
     private void showCancelErrorDialog() {
         if (isAdded()) {
@@ -3233,12 +3276,23 @@ public class FinishSeparateFragment extends Fragment {
             if (serverTotal <= 0) {
                 return;
             }
+            Integer walletFloor = ExecutionStatusViewModel.getWalletAddCostFloorGrivnaInt();
+            if (FinishCostReconcileHelper.serverConfirmedWalletFloor(serverTotal, walletFloor)) {
+                ExecutionStatusViewModel.clearWalletAddCostFloorGrivna();
+            }
             // order_cost from status API is the billable total; add_cost is metadata only.
             // Summing them duplicated +5 UAH after add-cost (60+5 showed as 70).
             if (displayed > 0 && serverTotal < displayed) {
-                if (ExecutionStatusViewModel.isAddCostInFlightPref() || addCostSheetShowing) {
+                if (FinishCostReconcileHelper.shouldKeepDisplayedCostOverServer(
+                        displayed,
+                        serverTotal,
+                        PaymentTypeHelper.usesWalletHold(pay_method),
+                        ExecutionStatusViewModel.isAddCostInFlightPref(),
+                        addCostSheetShowing,
+                        walletFloor)) {
                     Logger.d(context, TAG, "refreshFinishCostFromOrder keep client cost="
                             + displayed + " server=" + serverTotal
+                            + " floor=" + walletFloor
                             + " add_cost(meta)=" + orderResponse.getAddCost());
                     return;
                 }
@@ -3726,6 +3780,7 @@ public class FinishSeparateFragment extends Fragment {
 
         addCheck(context);
         reconcileOrderIdentityFromPersistedState();
+        restoreWalletAddCostFloorIfNeeded();
         if (shouldIgnoreStatusPollingUi()) {
             if (isViewingCompletedOrder()) {
                 Logger.d(context, TAG, "onResume: archived completed order — read-only");
@@ -3795,6 +3850,7 @@ public class FinishSeparateFragment extends Fragment {
             if (handlerStatus != null) {
                 handlerStatus.removeCallbacks(myTaskStatus);
             }
+            restoreWalletAddCostFloorIfNeeded();
             refreshPaymentStatusOnEnter();
             if (!canceled && !isOrderDispatched()) {
                 isTaskCancelled = false;
@@ -4112,6 +4168,7 @@ public class FinishSeparateFragment extends Fragment {
                         MainActivity.order_id = orderReference;
                         Logger.d(context, TAG, "Google Pay add-cost hold ok: " + orderReference
                                 + " amount=" + amountUah);
+                        applyWalletAddCostOptimisticTotal(amountUah);
                         clearGooglePayAddCostAwaiting();
                         viewModel.setCancelStatus(false);
                         Toast.makeText(context, R.string.add_cost_processing, Toast.LENGTH_LONG).show();
@@ -4161,6 +4218,7 @@ public class FinishSeparateFragment extends Fragment {
         clearGooglePayAddCostAwaiting();
         ExecutionStatusViewModel.setAddCostInFlightPref(false);
         ExecutionStatusViewModel.clearPendingAddCostAmountPref();
+        ExecutionStatusViewModel.clearWalletAddCostFloorGrivna();
         if (enableCancel) {
             viewModel.setCancelStatus(true);
         }
