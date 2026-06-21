@@ -64,6 +64,7 @@ import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.FragmentFinishSeparateBinding;
+import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.ui.finish.BonusResponse;
 import com.taxi_pas_4.ui.finish.FinishCostResponse;
@@ -2561,7 +2562,9 @@ public class FinishSeparateFragment extends Fragment {
         }
         if (uidToCancel != null && !uidToCancel.isEmpty()) {
             ExecutionStatusViewModel.markUserCanceledOrderPair(uidToCancel, uid_Double);
+            PaymentSessionHelper.clearWfpOrderRef(uidToCancel);
         }
+        MainActivity.order_id = UniqueNumberGenerator.generateUniqueNumber(context);
         cancel_btn_click = true;
         cancelShowDialogAddCost();
         orderCanceled(successMessage);
