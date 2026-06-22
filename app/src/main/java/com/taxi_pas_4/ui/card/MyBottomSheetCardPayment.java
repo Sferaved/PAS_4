@@ -53,6 +53,7 @@ import com.taxi_pas_4.ui.wfp.token.CallbackServiceWfp;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorPaymentFragment;
 import com.taxi_pas_4.utils.helpers.WfpWebViewHelper;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.worker.utils.WfpUtils;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.uxcam.UXCam;
 
@@ -638,32 +639,7 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
                     if (callbackResponse != null) {
                         List<CardInfo> cards = callbackResponse.getCards();
                         Logger.d(context, TAG, "onResponse: cards" + cards);
-                        String tableName = MainActivity.TABLE_WFP_CARDS; // Например, "wfp_cards"
-
-// Открываем или создаем базу данных
-                        SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
-
-                         if (cards != null && !cards.isEmpty()) {
-                            for (CardInfo cardInfo : cards) {
-                                String masked_card = cardInfo.getMasked_card(); // Маска карты
-                                String card_type = cardInfo.getCard_type(); // Тип карты
-                                String bank_name = cardInfo.getBank_name(); // Название банка
-                                String rectoken = cardInfo.getRectoken(); // Токен карты
-                                String merchant = cardInfo.getMerchant(); //
-                                String  active = cardInfo.getActive();
-
-                                Logger.d(context, TAG, "onResponse: card_token: " + rectoken);
-                                ContentValues cv = new ContentValues();
-                                cv.put("masked_card", masked_card);
-                                cv.put("card_type", card_type);
-                                cv.put("bank_name", bank_name);
-                                cv.put("rectoken", rectoken);
-                                cv.put("merchant", merchant);
-                                cv.put("rectoken_check", active);
-                                database.insert(MainActivity.TABLE_WFP_CARDS, null, cv);
-                            }
-                        }
-                        database.close();
+                        WfpUtils.saveWfpCardsToDatabase(context, cards);
                     }
 
                 }

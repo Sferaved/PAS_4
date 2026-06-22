@@ -107,6 +107,56 @@ public class WfpUtils {
 
 
 
+    public static final String PREF_USER_SELECTED_WFP_RECTOKEN = "user_selected_wfp_rectoken";
+
+
+
+    public static void saveUserSelectedWfpRectoken(Context context, String rectoken) {
+
+        if (rectoken == null || rectoken.isEmpty()) {
+
+            return;
+
+        }
+
+        sharedPreferencesHelperMain.saveValue(PREF_USER_SELECTED_WFP_RECTOKEN, rectoken);
+
+        Logger.d(context, TAG, "saveUserSelectedWfpRectoken: " + rectoken);
+
+    }
+
+
+
+    @NonNull
+
+    public static String getUserSelectedWfpRectoken(Context context) {
+
+        Object value = sharedPreferencesHelperMain.getValue(PREF_USER_SELECTED_WFP_RECTOKEN, "");
+
+        return value != null ? value.toString() : "";
+
+    }
+
+
+
+    private static String resolveRectokenCheckForSync(Context context, CardInfo cardInfo) {
+
+        String selected = getUserSelectedWfpRectoken(context);
+
+        String rectoken = cardInfo.getRectoken();
+
+        if (!selected.isEmpty() && selected.equals(rectoken)) {
+
+            return "1";
+
+        }
+
+        return "0";
+
+    }
+
+
+
     public static String normalizeActiveFlag(String active) {
 
         if (active == null) {
@@ -128,6 +178,14 @@ public class WfpUtils {
 
 
     public static void saveWfpCardsToDatabase(Context context, List<CardInfo> cards) {
+
+        saveWfpCardsToDatabase(context, cards, false);
+
+    }
+
+
+
+    public static void saveWfpCardsToDatabase(Context context, List<CardInfo> cards, boolean trustServerActiveForManualLink) {
 
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
 
@@ -159,7 +217,25 @@ public class WfpUtils {
 
                 cv.put("merchant", cardInfo.getMerchant());
 
-                cv.put("rectoken_check", normalizeActiveFlag(cardInfo.getActive()));
+                String rectokenCheck;
+
+                if (trustServerActiveForManualLink) {
+
+                    rectokenCheck = normalizeActiveFlag(cardInfo.getActive());
+
+                    if ("1".equals(rectokenCheck)) {
+
+                        saveUserSelectedWfpRectoken(context, cardInfo.getRectoken());
+
+                    }
+
+                } else {
+
+                    rectokenCheck = resolveRectokenCheckForSync(context, cardInfo);
+
+                }
+
+                cv.put("rectoken_check", rectokenCheck);
 
                 database.insert(MainActivity.TABLE_WFP_CARDS, null, cv);
 
