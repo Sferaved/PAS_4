@@ -47,7 +47,8 @@ powershell -ExecutionPolicy Bypass -File "scripts\setup_git_accounts.ps1"
 
 ## Агент / CI
 
-Перед push в `taxi_repo` не использовать credential PAS. Проверка:
+- **Не** проверять auth перед каждой задачей (`ls-remote`, повторный вход в браузер, скрипты верификации). PAT в Credential Manager сохраняется один раз через `setup_git_accounts.ps1`.
+- Перед push в `taxi_repo` не использовать credential PAS. При сомнении — только локально:
 
 ```powershell
 git -C "$env:USERPROFILE\PhpstormProjects\taxi_repo" remote get-url origin
