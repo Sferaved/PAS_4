@@ -63,6 +63,7 @@ import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.taxi_pas_4.utils.payment.PaymentErrorSheetHelper;
 import com.taxi_pas_4.utils.order.EarlyOrderNavigationHelper;
 import com.taxi_pas_4.utils.payment.PaymentSessionHelper;
+import com.taxi_pas_4.utils.worker.utils.WfpUtils;
 import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 import com.taxi_pas_4.utils.ui.BackPressBlocker;
@@ -550,6 +551,9 @@ public class CacheOrderFragment extends Fragment {
     }
     @SuppressLint("Range")
     private String getCheckRectoken(String table, Context context) {
+        if (MainActivity.TABLE_WFP_CARDS.equals(table)) {
+            return WfpUtils.resolveActiveWfpRectoken(context);
+        }
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
 
         String[] columns = {"rectoken"}; // Указываем нужное поле

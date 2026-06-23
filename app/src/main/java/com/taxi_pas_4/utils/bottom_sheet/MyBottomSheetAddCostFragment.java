@@ -37,6 +37,7 @@ import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.payment.GooglePayOrderHelper;
 import com.taxi_pas_4.utils.payment.PaymentTypeHelper;
+import com.taxi_pas_4.utils.worker.utils.WfpUtils;
 import com.uxcam.UXCam;
 
 import java.lang.ref.WeakReference;
@@ -352,6 +353,9 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
 
     @SuppressLint("Range")
     private String getCheckRectoken(String table) {
+        if (MainActivity.TABLE_WFP_CARDS.equals(table)) {
+            return WfpUtils.resolveActiveWfpRectoken(context);
+        }
         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
 
         String[] columns = {"rectoken"}; // Указываем нужное поле
