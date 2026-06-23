@@ -90,6 +90,7 @@ import com.taxi_pas_4.utils.payment.GooglePayOrderHelper;
 import com.taxi_pas_4.utils.notify.NotificationHelper;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.order.EarlyOrderNavigationHelper;
+import com.taxi_pas_4.utils.orders.OrderHistoryStatusHelper;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.taxi_pas_4.utils.payment.PaymentDeclinedNotifier;
 import com.taxi_pas_4.utils.payment.PaymentDeclinedUiHelper;
@@ -239,6 +240,7 @@ public class FinishSeparateFragment extends Fragment {
     private String lastKnownPaymentStatus;
     @Nullable
     private String lastExecutionStatus;
+    private int lastCloseReason = -1;
 
     private ExecutionStatusViewModel viewModel;
     private String action;
@@ -722,11 +724,11 @@ public class FinishSeparateFragment extends Fragment {
         }
         action = resolvedAction;
         lastExecutionStatus = executionStatus;
+        int closeReason = orderResponse.getCloseReason();
+        lastCloseReason = closeReason;
         if (isOrderDispatched()) {
             clearDeclinedPaymentUi();
         }
-
-        int closeReason = orderResponse.getCloseReason();
 
         Logger.d(context, TAG, "OrderResponse: action " +action + ", closeReason " + closeReason);
         if (action == null && isExternalApiCompletedCloseReason(closeReason)) {
@@ -1609,7 +1611,8 @@ public class FinishSeparateFragment extends Fragment {
         if (context == null || !isAdded()) {
             return;
         }
-        if (isCanceledExecutionStatus(lastExecutionStatus)) {
+        if (OrderHistoryStatusHelper.isCanceled(
+                String.valueOf(lastCloseReason), lastExecutionStatus, resolveActiveOrderUid())) {
             Logger.d(context, TAG, "resumeStatusPollingAfterCancelFailure: order canceled on server");
             showOrderCanceledFromServer();
             return;
@@ -1851,6 +1854,7 @@ public class FinishSeparateFragment extends Fragment {
                         }
 
                         lastExecutionStatus = executionStatus;
+                        lastCloseReason = closeReason;
                         if (isOrderDispatched()) {
                             clearDeclinedPaymentUi();
                         }
@@ -2529,12 +2533,10 @@ public class FinishSeparateFragment extends Fragment {
         if (orderResponse == null) {
             return false;
         }
-        String executionStatus = orderResponse.getExecutionStatus();
         int closeReason = orderResponse.getCloseReason();
-        if (isCanceledExecutionStatus(executionStatus)) {
-            return true;
-        }
-        if (orderResponse.isOrderIsArchive() && isCanceledExecutionStatus(executionStatus)) {
+        String executionStatus = orderResponse.getExecutionStatus();
+        if (OrderHistoryStatusHelper.isCanceled(
+                String.valueOf(closeReason), executionStatus, orderResponse.getDispatchingOrderUid())) {
             return true;
         }
         if (closeReason >= 1 && closeReason <= 9 && closeReason != 8 && executionStatus != null) {
@@ -2625,6 +2627,9 @@ public class FinishSeparateFragment extends Fragment {
         if (!isAdded() || context == null || isCancelUiShown()) {
             return;
         }
+        if (navigationOrderUid != null && !navigationOrderUid.isEmpty()) {
+            return;
+        }
         String activeUid = resolveActiveOrderUid();
         if (activeUid == null || activeUid.isEmpty()) {
             return;
@@ -2705,7 +2710,8 @@ public class FinishSeparateFragment extends Fragment {
                         orderComplete();
                         break;
                     default:
-                        if (isCanceledExecutionStatus(executionStatus)) {
+                        if (OrderHistoryStatusHelper.isCanceled(
+                                String.valueOf(closeReason), executionStatus, uid)) {
                             showOrderCanceledFromServer();
                         } else {
                             action = "Поиск авто";
@@ -2760,7 +2766,8 @@ public class FinishSeparateFragment extends Fragment {
                 if (isExecutedExecutionStatus(executionStatus)) {
                     action = "Заказ выполнен";
                     orderComplete();
-                } else if (isCanceledExecutionStatus(executionStatus)) {
+                } else if (OrderHistoryStatusHelper.isCanceled(
+                        String.valueOf(closeReason), executionStatus, uid)) {
                     showOrderCanceledFromServer();
                 } else {
                     action = "Поиск авто";
@@ -2783,7 +2790,8 @@ public class FinishSeparateFragment extends Fragment {
             orderComplete();
             return;
         }
-        if (isCanceledExecutionStatus(lastExecutionStatus)) {
+        if (OrderHistoryStatusHelper.isCanceled(
+                String.valueOf(lastCloseReason), lastExecutionStatus, resolveActiveOrderUid())) {
             showOrderCanceledFromServer();
             return;
         }
@@ -2792,7 +2800,8 @@ public class FinishSeparateFragment extends Fragment {
                 orderComplete();
                 return;
             }
-            if (isCanceledExecutionStatus(lastExecutionStatus)) {
+            if (OrderHistoryStatusHelper.isCanceled(
+                    String.valueOf(lastCloseReason), lastExecutionStatus, resolveActiveOrderUid())) {
                 showOrderCanceledFromServer();
                 return;
             }
@@ -3657,6 +3666,12 @@ public class FinishSeparateFragment extends Fragment {
             }
             Logger.d(context, TAG, "reconcile: switched to selected order " + navigationOrderUid);
         } else if (explicitSelection) {
+            canceled = false;
+            cancel_btn_click = false;
+            cancelRequestInFlight = false;
+            setCancelButtonBusy(false);
+            ExecutionStatusViewModel.setCancelInFlightPref(false);
+            ExecutionStatusViewModel.setUserCanceledPref(false);
             uid = navigationOrderUid;
             MainActivity.uid = navigationOrderUid;
             if (uid_Double == null && receivedMap != null) {
