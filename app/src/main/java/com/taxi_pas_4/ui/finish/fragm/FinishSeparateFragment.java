@@ -1648,10 +1648,10 @@ public class FinishSeparateFragment extends Fragment {
         if (viewModel != null) {
             viewModel.setStatusNalUpdate(false);
         }
-        cancelFailureWatchRemaining = 8;
+        cancelFailureWatchRemaining = CANCEL_WATCH_INDEFINITE;
         statusPollPaused = true;
         scheduleCancelWatchPoll();
-        Logger.d(context, TAG, "handleCancelRequestFailed: watching status before resume, polls=" + cancelFailureWatchRemaining);
+        Logger.d(context, TAG, "handleCancelRequestFailed: HTTP failed, keep status watch");
     }
 
     private void resumeStatusPollingAfterCancelFailure() {
@@ -2614,7 +2614,8 @@ public class FinishSeparateFragment extends Fragment {
     private boolean shouldIgnoreStatusPollingUi() {
         return canceled
                 || cancelRequestInFlight
-                || cancelFailureWatchRemaining > 0
+                || cancelFailureWatchRemaining != 0
+                || ExecutionStatusViewModel.isCancelInFlightPref()
                 || isViewingCompletedOrder();
     }
 
