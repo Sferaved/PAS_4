@@ -58,13 +58,25 @@ git config --global credential.helper manager
 git config --global credential.useHttpPath true
 Write-Host "OK: credential.useHttpPath=true (separate tokens per repo path)" -ForegroundColor Green
 
-$legacyTarget = "LegacyGeneric:target=git:https://github.com"
-$legacy = cmdkey /list 2>$null | Select-String -SimpleMatch $legacyTarget
-if ($legacy) {
-    Write-Host "Removing old shared GitHub credential ($legacyTarget)..." -ForegroundColor Yellow
-    cmdkey /delete:$legacyTarget 2>$null | Out-Null
-    Write-Host "OK: removed. Store two PATs below (or on first push)." -ForegroundColor Green
+function Remove-LegacyGitCredential {
+    param([string]$Target)
+    $found = cmdkey /list 2>$null | Select-String -SimpleMatch $Target
+    if ($found) {
+        Write-Host "Removing legacy credential: $Target" -ForegroundColor Yellow
+        cmdkey /delete:$Target 2>$null | Out-Null
+    }
 }
+
+# Host-only entries conflict with credential.useHttpPath (per-repo PAT).
+foreach ($legacyTarget in @(
+        "LegacyGeneric:target=git:https://github.com",
+        "LegacyGeneric:target=git:https://sferaved@github.com",
+        "LegacyGeneric:target=git:https://Sferaved@github.com",
+        "LegacyGeneric:target=git:https://andrey18051@github.com"
+    )) {
+    Remove-LegacyGitCredential -Target $legacyTarget
+}
+Write-Host "OK: legacy host-only GitHub credentials removed (if any)." -ForegroundColor Green
 
 foreach ($repo in $pasRepos) {
     if (-not (Test-Path $repo.Path)) {
@@ -104,11 +116,5 @@ if (-not $env:SETUP_GIT_SKIP_PAT_PROMPT) {
 }
 
 Write-Host ""
-Write-Host "Verify (no real push):" -ForegroundColor Cyan
-if (Test-Path $pas4Root) {
-    Write-Host ('  PAS_4:  git -C "' + $pas4Root + '" push --dry-run')
-}
-if ($taxiRepo.Path -and (Test-Path $taxiRepo.Path)) {
-    Write-Host ('  taxi:   git -C "' + $taxiRepo.Path + '" push --dry-run')
-}
+Write-Host "Remotes updated. PAT is in Credential Manager - no need to test with ls-remote or push --dry-run." -ForegroundColor Green
 Write-Host "Done." -ForegroundColor Green
