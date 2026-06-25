@@ -11,9 +11,20 @@ $pasRepos = @(
     @{ Name = "PAS_1"; Path = Join-Path $workspaceRoot "PAS_1"; Remote = "https://sferaved@github.com/Sferaved/TaxiEasyUaMain.git" },
     @{ Name = "PAS_2"; Path = Join-Path $workspaceRoot "PAS_2"; Remote = "https://sferaved@github.com/Sferaved/PAS2FINAL.git" },
     @{ Name = "PAS_3"; Path = Join-Path $workspaceRoot "PAS_3"; Remote = "https://sferaved@github.com/Sferaved/PAS_3.git" },
-    @{ Name = "PAS_4"; Path = $pas4Root; Remote = "https://sferaved@github.com/Sferaved/PAS_4.git" },
-    @{ Name = "Taxi_dariver"; Path = Join-Path $workspaceRoot "Taxi_dariver"; Remote = "https://sferaved@github.com/Sferaved/taxi_driver.git" }
+    @{ Name = "PAS_4"; Path = $pas4Root; Remote = "https://sferaved@github.com/Sferaved/PAS_4.git" }
 )
+
+function Resolve-TaxiDriverPath {
+    param([string]$Root)
+    foreach ($folder in @("Taxi_driver", "Taxi_dariver")) {
+        $candidate = Join-Path $Root $folder
+        if (Test-Path $candidate) { return $candidate }
+    }
+    return Join-Path $Root "Taxi_driver"
+}
+
+$pasRepos += @(
+    @{ Name = "Taxi_driver"; Path = (Resolve-TaxiDriverPath -Root $workspaceRoot); Remote = "https://sferaved@github.com/Sferaved/taxi_driver.git" }
 
 $taxiRepoPath = $null
 foreach ($candidate in @(
@@ -112,6 +123,12 @@ if (-not $env:SETUP_GIT_SKIP_PAT_PROMPT) {
     }
     if ($taxiRepo.Path -and (Test-Path $taxiRepo.Path) -and -not [string]::IsNullOrWhiteSpace($taxiPat)) {
         Save-GitCredential -Username "andrey18051" -Pat $taxiPat -PathSuffix "andrey18051/taxi_repo.git"
+    }
+} else {
+    $registerScript = Join-Path $PSScriptRoot "register_taxi_driver_git.ps1"
+    if (Test-Path $registerScript) {
+        Write-Host "Copying PAS PAT to Taxi_driver (if available)..." -ForegroundColor Gray
+        & $registerScript
     }
 }
 
