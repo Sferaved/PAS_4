@@ -123,7 +123,9 @@ public final class OrderHistoryStatusHelper {
             @Nullable String orderUid
     ) {
         String cr = closeReason != null ? closeReason.trim() : "";
-        if (isCanceledExecutionStatus(executionStatus)) {
+        // Dispatch may briefly report execution_status=Canceled while close_reason stays -1
+        // during car search; real cancel is persisted as closeReason 1+ on orderweb.
+        if (isCanceledExecutionStatus(executionStatus) && !"-1".equals(cr)) {
             return true;
         }
 
