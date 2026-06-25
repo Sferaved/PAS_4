@@ -11,7 +11,8 @@ $pasRepos = @(
     @{ Name = "PAS_1"; Path = Join-Path $workspaceRoot "PAS_1"; Remote = "https://sferaved@github.com/Sferaved/TaxiEasyUaMain.git" },
     @{ Name = "PAS_2"; Path = Join-Path $workspaceRoot "PAS_2"; Remote = "https://sferaved@github.com/Sferaved/PAS2FINAL.git" },
     @{ Name = "PAS_3"; Path = Join-Path $workspaceRoot "PAS_3"; Remote = "https://sferaved@github.com/Sferaved/PAS_3.git" },
-    @{ Name = "PAS_4"; Path = $pas4Root; Remote = "https://sferaved@github.com/Sferaved/PAS_4.git" }
+    @{ Name = "PAS_4"; Path = $pas4Root; Remote = "https://sferaved@github.com/Sferaved/PAS_4.git" },
+    @{ Name = "Taxi_dariver"; Path = Join-Path $workspaceRoot "Taxi_dariver"; Remote = "https://sferaved@github.com/Sferaved/taxi_driver.git" }
 )
 
 $taxiRepoPath = $null
