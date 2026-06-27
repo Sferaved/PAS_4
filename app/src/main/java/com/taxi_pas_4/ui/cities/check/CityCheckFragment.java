@@ -36,6 +36,7 @@ import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetErrorFragment;
 import com.taxi_pas_4.utils.ip.ApiServiceCountry;
 import com.taxi_pas_4.utils.ip.CountryResponse;
 import com.taxi_pas_4.utils.ip.RetrofitClient;
+import com.taxi_pas_4.utils.city.CityChangeRestartHelper;
 import com.taxi_pas_4.utils.location.AutoLocationAfterCityHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
@@ -924,14 +925,9 @@ public class CityCheckFragment extends Fragment {
         database.close();
         sharedPreferencesHelperMain.saveValue("CityCheckActivity", "run");
         AutoLocationAfterCityHelper.markCityLoaded();
-        if (requireActivity() instanceof MainActivity) {
-            requireActivity().recreate();
-        } else {
-            Intent intent = new Intent(requireActivity(), MainActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            startActivity(intent);
-            requireActivity().finish();
-        }
+        MainActivity.firstStart = false;
+        startTilePreloadWorker();
+        CityChangeRestartHelper.restartForNewCity(requireActivity());
     }
 
 

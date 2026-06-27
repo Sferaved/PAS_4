@@ -87,6 +87,7 @@ import com.taxi_pas_4.ui.cities.api.CityApiClient;
 import com.taxi_pas_4.ui.cities.api.CityResponse;
 import com.taxi_pas_4.ui.cities.api.CityService;
 import com.taxi_pas_4.ui.cities.check.CityCheckActivity;
+import com.taxi_pas_4.utils.city.CityChangeRestartHelper;
 import com.taxi_pas_4.ui.clear.AppDataUtils;
 import com.taxi_pas_4.ui.finish.OrderResponse;
 import com.taxi_pas_4.ui.finish.fragm.FinishSeparateFragment;
@@ -378,6 +379,7 @@ public class MainActivity extends AppCompatActivity {
         if (getIntent() != null && getIntent().getBooleanExtra("open_weather", false)) {
             navController.navigate(R.id.nav_visicom);
         }
+        CityChangeRestartHelper.openOrderScreenIfCityChanged(this, navController);
         // Инициализация меню и элементов
         navMenu = navigationView.getMenu();
         navVisicomMenuItem = navMenu.findItem(R.id.nav_visicom);

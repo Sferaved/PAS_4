@@ -38,6 +38,7 @@ import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetMessageFragment;
 import com.taxi_pas_4.utils.ip.ApiServiceCountry;
 import com.taxi_pas_4.utils.ip.CountryResponse;
 import com.taxi_pas_4.utils.ip.RetrofitClient;
+import com.taxi_pas_4.utils.city.CityChangeRestartHelper;
 import com.taxi_pas_4.utils.location.AutoLocationAfterCityHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
@@ -990,7 +991,7 @@ public class CityCheckActivity extends AppCompatActivity {
 
         startTilePreloadWorker();
 
-        startActivity(new Intent(this, MainActivity.class));
+        CityChangeRestartHelper.restartForNewCity(this);
     }
 
     private void startTilePreloadWorker() {
