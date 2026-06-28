@@ -134,6 +134,7 @@ import com.taxi_pas_4.utils.orders.OrderHistoryStatusHelper;
 import com.taxi_pas_4.utils.orders.RequiredTimeParseHelper;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.payment.PaymentSessionHelper;
+import com.taxi_pas_4.utils.payment.PaymentTypeHelper;
 import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.taxi_pas_4.utils.retrofit.cost_json_parser.CostJSONParserRetrofit;
 import com.taxi_pas_4.utils.route.RoutePlaceMatcher;
@@ -5808,6 +5809,42 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
         Logger.d(context, TAG, "restoreFrozenGooglePayOrderCost: total=" + totalUah
                 + " startCost=" + startCost + " addCost=" + addCost
                 + " frozenAdd=" + frozenSubmitAddCost);
+    }
+
+    @Nullable
+    public static VisicomFragment findActiveInstance(@NonNull Context context) {
+        if (!(context instanceof AppCompatActivity activity)) {
+            return null;
+        }
+        Fragment navHost = activity.getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment_content_main);
+        if (navHost == null) {
+            return null;
+        }
+        Fragment current = navHost.getChildFragmentManager().getPrimaryNavigationFragment();
+        if (current instanceof VisicomFragment) {
+            return (VisicomFragment) current;
+        }
+        return null;
+    }
+
+    /** После выбора GPay на шторке «нет карт»: смена способа оплаты и сразу холд через кошелёк. */
+    public static void resumeOrderWithGooglePay(@NonNull Context context) {
+        PaymentTypeHelper.setGooglePay(context);
+        btnStaticVisible(VISIBLE);
+        VisicomFragment fragment = findActiveInstance(context);
+        if (fragment == null) {
+            return;
+        }
+        new Handler(Looper.getMainLooper()).post(() -> {
+            if (fragment.isAdded()) {
+                fragment.triggerGooglePayOrderHold();
+            }
+        });
+    }
+
+    public void triggerGooglePayOrderHold() {
+        pay_method = PaymentTypeHelper.GOOGLE_PAY;
+        startGooglePayHoldBeforeOrder();
     }
 
     private void startGooglePayHoldBeforeOrder() {

@@ -9,6 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.ui.home.HomeFragment;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 
 public final class PaymentTypeHelper {
@@ -35,6 +36,9 @@ public final class PaymentTypeHelper {
         db.close();
         if (VisicomFragment.buttonBonus != null) {
             VisicomFragment.setBtnBonusName(context);
+        }
+        if (HomeFragment.buttonBonus != null) {
+            HomeFragment.setBtnBonusName(context);
         }
     }
 
