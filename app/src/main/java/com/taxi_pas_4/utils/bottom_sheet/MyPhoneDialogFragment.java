@@ -33,7 +33,6 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.home.ButtonVisibilityCallback;
-import com.taxi_pas_4.ui.home.HomeFragment;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.phone.PhoneNumberHelper;
@@ -181,13 +180,6 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
 
         switch (page) {
             case "home":
-                if (callback != null) {
-                    callback.onShowButtons(View.INVISIBLE);
-                }
-
-                HomeFragment.btn_order.performClick();
-                dismiss();
-                break;
             case "visicom":
                 VisicomFragment.btnStaticVisible(View.INVISIBLE);
                 VisicomFragment.btnOrder.performClick();
@@ -233,13 +225,9 @@ public class MyPhoneDialogFragment extends BottomSheetDialogFragment {
     private void restoreButtonVisibility() {
         if (page == null) return;
         switch (page) {
+            case "home":
             case "visicom":
                 VisicomFragment.btnStaticVisible(View.VISIBLE);
-                break;
-            case "home":
-                if (callback != null) {
-                    callback.onShowButtons(View.VISIBLE);
-                }
                 break;
         }
     }
