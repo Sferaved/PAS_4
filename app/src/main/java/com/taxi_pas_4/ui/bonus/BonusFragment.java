@@ -43,6 +43,7 @@ import com.taxi_pas_4.ui.finish.BonusResponse;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.auth.FirebaseConsentManager;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
+import com.taxi_pas_4.utils.inclusive.InclusiveTransportPromptCoordinator;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.uxcam.UXCam;
@@ -316,6 +317,7 @@ public class BonusFragment extends Fragment {
             Logger.d(context, TAG, "onSignInResult: result.getResultCode() " + resultCode);
             if (result.getResultCode() == Activity.RESULT_OK) {
                 Logger.d(context,"SignIn", "Успешная авторизация!");
+                InclusiveTransportPromptCoordinator.onAuthSucceeded();
                 NavController navController = MainActivity.navController;
                 navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
                         .setPopUpTo(R.id.nav_visicom, true)

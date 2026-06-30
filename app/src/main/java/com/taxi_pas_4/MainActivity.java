@@ -124,6 +124,7 @@ import com.taxi_pas_4.utils.worker.AddUserNoNameWorker;
 import com.taxi_pas_4.utils.worker.CheckPushPermissionWorker;
 import com.taxi_pas_4.utils.worker.GetCardTokenWfpWorker;
 import com.taxi_pas_4.utils.worker.utils.WfpUtils;
+import com.taxi_pas_4.utils.inclusive.InclusiveTransportPromptCoordinator;
 import com.taxi_pas_4.utils.worker.InclusiveTransportPreferenceWorker;
 import com.taxi_pas_4.utils.worker.InsertPushDateWorker;
 import com.taxi_pas_4.utils.worker.UpdatePushDateWorker;
@@ -277,6 +278,7 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean isVerificationRequired = false;  // Флаг, что требуется верификация
     private AlertDialog verificationDialog = null;   // Ссылка на диалог
+    private AlertDialog inclusiveTransportDialog = null;
     private boolean isWaitingForVerification = false;
 
     @SuppressLint("SourceLockedOrientationActivity")
@@ -1004,15 +1006,6 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         syncNetworkBanner();
 
-        if (!InclusiveTransportPreferenceWorker.hasBeenAsked() && !firstStart) {
-            String KEY_INCLUSIVE_TRANSPORT_ASKED = "inclusive_transport_asked";
-            sharedPreferencesHelperMain.saveValue(KEY_INCLUSIVE_TRANSPORT_ASKED, true);
-
-            // Отложенный показ на 500 мс
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                runOnUiThread(this::showInclusiveTransportDialog);
-            }, 3000); // задержка в миллисекундах
-        }
         // ✅ ИСПРАВЛЕННЫЙ БЛОК - Toast показываются ТОЛЬКО ПРИ ПЕРВОМ ЗАПУСКЕ
         if (firstStart) {
             showFirstStartToasts();
@@ -2651,6 +2644,7 @@ public class MainActivity extends AppCompatActivity {
 
                     // Разблокируем UI
                     unblockUiAfterVerification();
+                    InclusiveTransportPromptCoordinator.onAuthSucceeded();
                 }
             } else {
                 handleSignInFailure(result);
@@ -3310,15 +3304,32 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    private void showInclusiveTransportDialog() {
+    public boolean isBlockingInclusiveTransportPrompt() {
+        return isWaitingForVerification
+                || isVerificationRequired
+                || (verificationDialog != null && verificationDialog.isShowing());
+    }
+
+    public boolean isInclusiveTransportDialogShowing() {
+        return inclusiveTransportDialog != null && inclusiveTransportDialog.isShowing();
+    }
+
+    public void showInclusiveTransportDialog() {
         Logger.d(this, TAG, "showInclusiveTransportDialog вызван");
 
         if (isFinishing() || isDestroyed()) {
             return;
         }
+        if (isInclusiveTransportDialogShowing()) {
+            return;
+        }
 
         runOnUiThread(() -> {
+            if (isInclusiveTransportDialogShowing()) {
+                return;
+            }
             try {
+                final boolean[] savedViaButton = {false};
                 // Создаем кастомный layout программно
                 LinearLayout layout = new LinearLayout(this);
                 layout.setOrientation(LinearLayout.VERTICAL);
@@ -3411,11 +3422,19 @@ public class MainActivity extends AppCompatActivity {
                         .setCancelable(true);
 
                 AlertDialog dialog = builder.create();
+                inclusiveTransportDialog = dialog;
+                dialog.setOnDismissListener(d -> {
+                    inclusiveTransportDialog = null;
+                    if (!savedViaButton[0]) {
+                        InclusiveTransportPreferenceWorker.saveUserPreference(false);
+                    }
+                });
                 dialog.show();
 
                 // Обработчик сохранения
                 saveButton.setOnClickListener(v -> {
                     boolean newValue = switchBtn.isChecked();
+                    savedViaButton[0] = true;
                     InclusiveTransportPreferenceWorker.saveUserPreference(newValue);
                     dialog.dismiss();
 

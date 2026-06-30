@@ -142,6 +142,7 @@ import com.taxi_pas_4.utils.sanitizer.InputSanitizerHelper;
 import com.taxi_pas_4.utils.to_json_parser.ToJSONParserRetrofit;
 import com.taxi_pas_4.utils.ui.BackPressBlocker;
 import com.taxi_pas_4.utils.ui.CostCalculationProgressBar;
+import com.taxi_pas_4.utils.inclusive.InclusiveTransportPromptCoordinator;
 import com.taxi_pas_4.utils.worker.InclusiveTransportPreferenceWorker;
 import com.taxi_pas_4.utils.worker.TilePreloadWorker;
 import com.taxi_pas_4.utils.worker.utils.WfpUtils;
@@ -346,6 +347,7 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
                         AutoLocationAfterCityHelper.clearPending();
                         applyLastOrderAddressFromRouteMarker();
                     }
+                    maybeShowInclusiveTransportPrompt();
                 }
         );
         googlePayPaymentsClient = WfpGooglePayHelper.createPaymentsClient(this);
@@ -3704,6 +3706,7 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
         }
         applyPendingGeoRegeocodeAfterCityChange();
         maybeAutoApplyLocationAfterCity();
+        maybeShowInclusiveTransportPrompt();
         restoreGpsCrossIfPendingUserApply();
         dismissGpsCrossAfterGeoCityChangeIfReady();
         syncGpsCrossAfterResume();
@@ -3770,6 +3773,13 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
      * После загрузки города (флаг pending): один раз запросить геолокацию.
      * При отказе или без разрешения — адрес из последнего заказа в ROUT_MARKER.
      */
+    private void maybeShowInclusiveTransportPrompt() {
+        if (!isAdded() || !(requireActivity() instanceof MainActivity)) {
+            return;
+        }
+        InclusiveTransportPromptCoordinator.tryShowOnMapReady((MainActivity) requireActivity());
+    }
+
     private void maybeAutoApplyLocationAfterCity() {
         if (!isAdded() || binding == null || context == null) {
             return;

@@ -39,3 +39,9 @@ generated/
 app/keystore/service-account.json
 keystore/service-account.json
 
+# Credentials at repository root (local machine only)
+/*.json
+/*.jks
+/*.pem
+/*.7z
+
