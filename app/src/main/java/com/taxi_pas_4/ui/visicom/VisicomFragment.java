@@ -124,6 +124,7 @@ import com.taxi_pas_4.utils.from_json_parser.FromJSONParserRetrofit;
 import com.taxi_pas_4.utils.ip.RetrofitClient;
 import com.taxi_pas_4.utils.kafka.KafkaRequest;
 import com.taxi_pas_4.utils.order.EarlyOrderNavigationHelper;
+import com.taxi_pas_4.utils.orders.ActiveOrdersNoticeHelper;
 import com.taxi_pas_4.utils.keys.FirestoreHelper;
 import com.taxi_pas_4.utils.location.AutoLocationAfterCityHelper;
 import com.taxi_pas_4.utils.location.GpsGeocodeHelper;
@@ -5471,10 +5472,23 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
         dismissStuckGooglePaySubmitIfOrderClosed();
         if (array != null && array.length > 0) {
             NavController navController = Navigation.findNavController(context, R.id.nav_host_fragment_content_main);
-            int currentDestination = navController.getCurrentDestination().getId();
+            int currentDestination = MainActivity.currentNavDestination;
+            if (navController.getCurrentDestination() != null) {
+                currentDestination = navController.getCurrentDestination().getId();
+            }
 
-            if (currentDestination == R.id.nav_visicom
-                    && !ExecutionStatusViewModel.shouldSuppressActiveOrderNotice()) {
+            if (ActiveOrdersNoticeHelper.shouldOfferOnOrderPage(
+                    ExecutionStatusViewModel.shouldSuppressActiveOrderNotice(),
+                    currentDestination,
+                    R.id.nav_visicom,
+                    R.id.nav_finish_separate,
+                    R.id.nav_cacheOrder,
+                    EarlyOrderNavigationHelper.isSubmitInProgress(),
+                    EarlyOrderNavigationHelper.isEarlyNavigationDone(),
+                    isGooglePaySubmitFrozen(),
+                    googlePayOrderProcessingUiShown,
+                    ExecutionStatusViewModel.getPersistedActiveUid() != null
+            )) {
                 MyBottomSheetErrorFragment.showScheduledTripsNotice(fragmentManager, context);
             }
 

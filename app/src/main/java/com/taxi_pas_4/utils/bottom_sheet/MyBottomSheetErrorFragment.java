@@ -48,6 +48,7 @@ import com.taxi_pas_4.ui.cities.api.CityApiClient;
 import com.taxi_pas_4.ui.cities.api.CityResponse;
 import com.taxi_pas_4.ui.cities.api.CityService;
 import com.taxi_pas_4.ui.home.ButtonVisibilityCallback;
+import com.taxi_pas_4.utils.order.EarlyOrderNavigationHelper;
 import com.taxi_pas_4.utils.payment.GooglePayAvailabilityHelper;
 import com.taxi_pas_4.utils.payment.PaymentTypeHelper;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
@@ -882,12 +883,34 @@ public class MyBottomSheetErrorFragment extends BottomSheetDialogFragment {
         this.onDismissListener = listener;
     }
 
+    /** Скрывает шторку «Замовлення в роботі», если она уже открыта. */
+    public static void dismissScheduledTripsNotice(@Nullable FragmentManager fragmentManager) {
+        if (fragmentManager == null) {
+            return;
+        }
+        Fragment existing = fragmentManager.findFragmentByTag(TAG_SCHEDULED_TRIPS);
+        if (existing instanceof MyBottomSheetErrorFragment) {
+            ((MyBottomSheetErrorFragment) existing).dismissAllowingStateLoss();
+        }
+    }
+
     /** Показывает шторку о заказах в работе / запланированных поездках. */
     public static void showScheduledTripsNotice(@Nullable FragmentManager fragmentManager, @NonNull Context context) {
         if (fragmentManager == null) {
             return;
         }
         if (ExecutionStatusViewModel.shouldSuppressActiveOrderNotice()) {
+            return;
+        }
+        if (MainActivity.currentNavDestination == R.id.nav_finish_separate
+                || MainActivity.currentNavDestination == R.id.nav_cacheOrder) {
+            return;
+        }
+        if (EarlyOrderNavigationHelper.isSubmitInProgress()
+                || EarlyOrderNavigationHelper.isEarlyNavigationDone()) {
+            return;
+        }
+        if (ExecutionStatusViewModel.getPersistedActiveUid() != null) {
             return;
         }
         DatabaseHelperUid db = new DatabaseHelperUid(context);
