@@ -5425,9 +5425,6 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
             }
             String routeInfo;
 
-            if (auto == null) {
-                auto = "??";
-            }
             String routeHead;
             if (routeFrom.equals(routeTo)) {
                 routeHead = routeFrom + " " + routefromnumber
@@ -5444,7 +5441,8 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
                     auto,
                     createdAt,
                     route.getRequired_time(),
-                    closeReasonText
+                    closeReasonText,
+                    pay_method
             );
 
             databaseHelper.addRouteCancel(uid, routeInfo);

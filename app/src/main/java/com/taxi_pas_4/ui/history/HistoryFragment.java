@@ -42,6 +42,7 @@ import com.taxi_pas_4.utils.db.DatabaseHelperUid;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.orders.OrderCreatedAtDisplayHelper;
 import com.taxi_pas_4.utils.orders.OrderHistoryStatusHelper;
+import com.taxi_pas_4.utils.orders.RequiredTimeParseHelper;
 import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.taxi_pas_4.utils.ui.ListScrollPaginationHelper;
 import com.uxcam.UXCam;
@@ -342,6 +343,7 @@ public class HistoryFragment extends Fragment {
             String createdAt = OrderCreatedAtDisplayHelper.formatForDisplay(route.getCreatedAt());
             String closeReason = route.getCloseReason();
             String auto = route.getAuto();
+            String pay_method = route.getPay_method();
             String startLat = route.getStartLat();
             String startLan = route.getStartLan();
             String to_lat = route.getTo_lat();
@@ -370,30 +372,26 @@ public class HistoryFragment extends Fragment {
             }
             String routeInfo;
 
-            if(auto == null) {
-                auto = "??";
-            }
-
-            if(routeFrom.equals(routeTo)) {
-                routeInfo = routeFrom + " " + routefromnumber
+            String routeHead;
+            if (routeFrom.equals(routeTo)) {
+                routeHead = routeFrom + " " + routefromnumber
                         + context.getString(R.string.close_resone_to)
-                        + context.getString(R.string.on_city)  + "#"
-                        + webCost  + "#"
-                     //   + context.getString(R.string.close_resone_cost) + webCost + " " + context.getString(R.string.UAH)  + "#"
-                        + context.getString(R.string.auto_info) + " " + auto + "#"
-                        + context.getString(R.string.close_resone_time) + createdAt + "#"
-                        + context.getString(R.string.close_resone_text) + closeReasonText;
+                        + context.getString(R.string.on_city);
             } else {
-                routeInfo = routeFrom + " " + routefromnumber
-                        + context.getString(R.string.close_resone_to) + routeTo + " " + routeTonumber  + "#"
-                        + webCost + "#"
-//                        + context.getString(R.string.close_resone_cost) + webCost + " " + context.getString(R.string.UAH)  + "#"
-                        + context.getString(R.string.auto_info) + " " + auto + "#"
-                        + context.getString(R.string.close_resone_time) + createdAt + "#"
-                        + context.getString(R.string.close_resone_text) + closeReasonText;
+                routeHead = routeFrom + " " + routefromnumber
+                        + context.getString(R.string.close_resone_to) + routeTo + " " + routeTonumber + ".";
             }
+            routeInfo = RequiredTimeParseHelper.buildCancelListRouteInfo(
+                    context,
+                    routeHead,
+                    webCost,
+                    auto,
+                    createdAt,
+                    null,
+                    closeReasonText,
+                    pay_method
+            );
 
-//                array[i] = routeInfo;
             databaseHelper.addRouteInfo(routeInfo);
             List<String> settings = new ArrayList<>();
 

@@ -330,10 +330,7 @@ public class ActiveOrderFragment extends Fragment {
                 routeTo = context.getString(R.string.on_city);
             }
 
-            String routeInfo = "";
-            if (auto == null) {
-                auto = "??";
-            }
+            String routeInfo;
 
             String routeHead;
             if (routeFrom.equals(routeTo)) {
@@ -351,7 +348,8 @@ public class ActiveOrderFragment extends Fragment {
                     auto,
                     createdAt,
                     required_time,
-                    closeReasonText
+                    closeReasonText,
+                    pay_method
             );
 
             array[i] = routeInfo;

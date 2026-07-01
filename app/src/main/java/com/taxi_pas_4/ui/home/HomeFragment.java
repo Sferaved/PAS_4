@@ -2438,11 +2438,7 @@ private void cost() {
             if (routeTo.contains("по місту")) {
                 routeTo = getString(R.string.on_city);
             }
-            String routeInfo = "";
-
-            if (auto == null) {
-                auto = "??";
-            }
+            String routeInfo;
 
             String routeHead;
             if (routeFrom.equals(routeTo)) {
@@ -2460,7 +2456,8 @@ private void cost() {
                     auto,
                     createdAt,
                     required_time,
-                    closeReasonText
+                    closeReasonText,
+                    pay_method
             );
 
             databaseHelper.addRouteCancel(uid, routeInfo);
