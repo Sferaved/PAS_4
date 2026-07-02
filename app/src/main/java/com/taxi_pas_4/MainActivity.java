@@ -2403,6 +2403,9 @@ public class MainActivity extends AppCompatActivity {
             }
             Toast.makeText(MainActivity.this, R.string.checking, Toast.LENGTH_SHORT).show();
 
+            // Одно напоминание "не вошёл" на завтра 07:00 (Europe/Kyiv) — планируется на сервере
+            TokenUtils.scheduleLoginReminderIfNeeded(getApplicationContext());
+
             // Блокируем UI до верификации
             blockUiUntilVerification();
 
@@ -2695,6 +2698,9 @@ public class MainActivity extends AppCompatActivity {
         SaveIPWithEmailUtils.startWorker(emailUser, app, getApplicationContext());
         // Сохраняем email (если ещё не сохранён)
         MyApplication.sharedPreferencesHelperMain.saveValue("userEmail", emailUser);
+
+        // Успешный вход — отменяем напоминание "не вошёл"
+        TokenUtils.cancelLoginReminder(getApplicationContext());
 
 // Отправляем актуальный токен
         sendCurrentFcmToken();
