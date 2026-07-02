@@ -1,0 +1,52 @@
+# MantisBT для баг-репортов PAS (отдельный контейнер на prod-сервере)
+# Документация: docs/mantis-docker-deploy.md
+
+services:
+  mantisbt:
+    image: xlrl/mantisbt:2.28.0
+    container_name: mantisbt
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8989:80"   # только localhost; снаружи — через nginx
+    environment:
+      MANTIS_TIMEZONE: "Europe/Kyiv"
+      MANTIS_ENABLE_ADMIN: "1"   # после установки поставить "0"
+      PHP_MAX_UPLOAD_SIZE: "10M"
+    volumes:
+      - mantis-config:/var/www/html/config
+      - mantis-custom:/var/www/html/custom
+      - mantis-upload:/var/www/html/upload
+    depends_on:
+      mantis-db:
+        condition: service_healthy
+    networks:
+      - mantis-net
+
+  mantis-db:
+    image: mariadb:11.7
+    container_name: mantisbt-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: "CHANGE_ME_ROOT"
+      MARIADB_DATABASE: "bugtracker"
+      MARIADB_USER: "mantisbt"
+      MARIADB_PASSWORD: "CHANGE_ME_MANTIS"
+    volumes:
+      - mantis-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mantis-net
+
+volumes:
+  mantis-config:
+  mantis-custom:
+  mantis-upload:
+  mantis-db-data:
+
+networks:
+  mantis-net:
+    driver: bridge
