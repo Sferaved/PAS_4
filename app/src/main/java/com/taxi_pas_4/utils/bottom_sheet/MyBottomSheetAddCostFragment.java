@@ -229,14 +229,20 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
 
                     AddCostBottomUpdateResponse body = response.body();
                     if (body.hasRecreatedOrder()) {
+                        String newUid = body.getUid();
                         String displayCost = body.resolveDisplayCostGrivna();
                         Logger.d(context, TAG, "startAddCostUpdate nal_payment ok uid="
-                                + body.getUid() + " cost=" + displayCost);
+                                + newUid + " cost=" + displayCost);
+                        if (newUid != null && !newUid.trim().isEmpty()) {
+                            viewModel.updateUid(newUid.trim());
+                        }
                         if (displayCost != null) {
+                            viewModel.persistDisplayCostGrivna(displayCost);
                             viewModel.setFinishAbsoluteCostGrivna(displayCost);
                         } else {
                             viewModel.setAddCostViewUpdate(addCost);
                         }
+                        ExecutionStatusViewModel.setAddCostInFlightPref(false);
                         viewModel.setCancelStatus(true);
                         return;
                     }
