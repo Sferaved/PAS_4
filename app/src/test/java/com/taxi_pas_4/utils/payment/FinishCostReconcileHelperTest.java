@@ -97,6 +97,23 @@ public class FinishCostReconcileHelperTest {
     }
 
     @Test
+    public void keepDisplayed_walletCostCorrectionWithinTolerance() {
+        // Bug #13: card order shows 7, dispatch returns 6 (costCorrection=1)
+        assertTrue(FinishCostReconcileHelper.shouldKeepDisplayedCostOverServer(
+                7, 6, true, false, false, null, false));
+        // Also for costCorrection=2
+        assertTrue(FinishCostReconcileHelper.shouldKeepDisplayedCostOverServer(
+                8, 6, true, false, false, null, false));
+    }
+
+    @Test
+    public void allowServerUpdate_walletLargeDifference() {
+        // Difference > 2 without floor: server is authoritative (not costCorrection)
+        assertFalse(FinishCostReconcileHelper.shouldKeepDisplayedCostOverServer(
+                20, 10, true, false, false, null, false));
+    }
+
+    @Test
     public void applyFinishAbsoluteCostObserver_alwaysForCash() {
         assertTrue(FinishCostReconcileHelper.shouldApplyFinishAbsoluteCostObserver(
                 false, "old-uid", false));
