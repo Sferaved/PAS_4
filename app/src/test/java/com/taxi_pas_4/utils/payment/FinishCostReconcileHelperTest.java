@@ -126,4 +126,19 @@ public class FinishCostReconcileHelperTest {
         assertTrue(FinishCostReconcileHelper.shouldApplyFinishAbsoluteCostObserver(
                 true, "uid-1", true));
     }
+
+    @Test
+    public void allowServerUpdate_nalStaleDisplayedAfterNewOrder() {
+        // Bug #16: stale cost 17 from previous order, new order costs 7 (nal_payment).
+        // After resetNewOrderSession clears walletApplied, server should override.
+        assertFalse(FinishCostReconcileHelper.shouldKeepDisplayedCostOverServer(
+                17, 7, false, false, false, null, false));
+    }
+
+    @Test
+    public void keepDisplayed_nalDuringAddCostSheet() {
+        // While add-cost bottom sheet is showing, don't overwrite displayed cost
+        assertTrue(FinishCostReconcileHelper.shouldKeepDisplayedCostOverServer(
+                17, 7, false, false, true, null, false));
+    }
 }

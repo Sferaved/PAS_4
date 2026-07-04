@@ -45,3 +45,5 @@ generated/
 /*.pem
 /*.7z
 
+
+mantis_*_log_raw.txt
