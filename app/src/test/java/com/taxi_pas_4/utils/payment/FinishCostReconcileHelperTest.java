@@ -143,6 +143,14 @@ public class FinishCostReconcileHelperTest {
     }
 
     @Test
+    public void orderUidNewCost_notCompleteForWalletHold() {
+        assertFalse(FinishCostReconcileHelper
+                .shouldTreatOrderUidNewCostAsWalletSurchargeComplete(true));
+        assertTrue(FinishCostReconcileHelper
+                .shouldTreatOrderUidNewCostAsWalletSurchargeComplete(false));
+    }
+
+    @Test
     public void walletCheckoutSurcharge_notSkippedAfterInitialHoldOnly() {
         // Bug #21: GPay hold 11 грн — доплата +5 ещё нужна
         assertFalse(FinishCostReconcileHelper.shouldSkipWalletCheckoutSurchargePrompt(
