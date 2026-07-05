@@ -740,6 +740,7 @@ Tap "Settings" to check.</string>
     <string name="google_pay_hold_network_error_message">Google Pay could not be confirmed because of a network problem. Check your connection and try again.</string>
     <string name="google_pay_hold_duplicate_order_message">Google Pay payment could not use the same order number again. Try again — a new payment will be created.</string>
     <string name="google_pay_hold_timeout_message">Google Pay is still processing your payment. Please wait or check your bank — if funds are held, try ordering again or contact support.</string>
+    <string name="google_pay_waiting">Opening Google Pay. Please wait…</string>
     <string name="google_pay_order_processing">Confirming Google Pay payment. Please wait…</string>
     <string name="card_payment_false">"Currently, you can only pay in cash for your route. Card payments will be restored soon; we\'re already working on it."</string>
     <!-- Inclusive transport -->
