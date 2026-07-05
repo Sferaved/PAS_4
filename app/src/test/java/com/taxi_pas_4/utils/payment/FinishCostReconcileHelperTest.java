@@ -141,4 +141,23 @@ public class FinishCostReconcileHelperTest {
         assertTrue(FinishCostReconcileHelper.shouldKeepDisplayedCostOverServer(
                 17, 7, false, false, true, null, false));
     }
+
+    @Test
+    public void walletCheckoutSurcharge_notSkippedAfterInitialHoldOnly() {
+        // Bug #21: GPay hold 11 грн — доплата +5 ещё нужна
+        assertFalse(FinishCostReconcileHelper.shouldSkipWalletCheckoutSurchargePrompt(
+                true, false, false, null, 11));
+    }
+
+    @Test
+    public void walletCheckoutSurcharge_skippedWhenAlreadyApplied() {
+        assertTrue(FinishCostReconcileHelper.shouldSkipWalletCheckoutSurchargePrompt(
+                true, false, true, null, 16));
+    }
+
+    @Test
+    public void walletCheckoutSurcharge_skippedWhenFloorOnScreen() {
+        assertTrue(FinishCostReconcileHelper.shouldSkipWalletCheckoutSurchargePrompt(
+                true, false, false, 16, 16));
+    }
 }
