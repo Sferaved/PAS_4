@@ -47,3 +47,6 @@ generated/
 
 
 mantis_*_log_raw.txt
+mantis_*_app_log.txt
+mantis_*_decoded.txt
+GoogleAds-Refund/
