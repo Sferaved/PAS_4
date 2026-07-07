@@ -26,6 +26,11 @@ public final class VisicomGeocodeCategoriesHelper {
     private VisicomGeocodeCategoriesHelper() {
     }
 
+    /** POI only — cafes, restaurants, stations, etc. (no streets/settlements). */
+    public static String categoriesForPoiSearch() {
+        return "categories=" + POI_CATEGORIES;
+    }
+
     /** Free-text search: streets, settlements and POI (no house numbers in Visicom). */
     public static String categoriesForFreeTextSearch() {
         return "categories="

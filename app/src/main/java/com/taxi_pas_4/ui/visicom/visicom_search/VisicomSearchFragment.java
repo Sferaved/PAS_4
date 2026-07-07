@@ -62,6 +62,7 @@ import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.FragmentVisicomSearchBinding;
 import com.taxi_pas_4.utils.location.AddressSearchDisplayHelper;
 import com.taxi_pas_4.utils.location.AutoLocationAfterCityHelper;
+import com.taxi_pas_4.utils.location.AutoLocationAfterCityHelper;
 import com.taxi_pas_4.ui.cities.Kyiv.KyivRegion;
 import com.taxi_pas_4.ui.cities.Kyiv.KyivRegionRu;
 import com.taxi_pas_4.ui.keyboard.KeyboardUtils;
@@ -77,7 +78,7 @@ import com.taxi_pas_4.ui.visicom.visicom_search.key_visicom.ApiResponse;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.helpers.LocaleHelper;
 import com.taxi_pas_4.utils.log.Logger;
-import com.taxi_pas_4.utils.visicom.VisicomGeocodeCategoriesHelper;
+import com.taxi_pas_4.utils.visicom.VisicomGeocodeQueryHelper;
 import com.taxi_pas_4.utils.visicom.VisicomPoiCityMatchHelper;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
@@ -125,6 +126,9 @@ public class VisicomSearchFragment extends Fragment {
     private boolean verifyBuildingFinish;
     private TextView textGeoError, text_toError;
     private String citySearch;
+    private String cityCode;
+    private double routeStartLat;
+    private double routeStartLon;
     private String[] kyivRegionArr;
     private int positionChecked;
     private String zone;
@@ -600,6 +604,8 @@ public class VisicomSearchFragment extends Fragment {
 
         client = new OkHttpClient();
         List<String> stringList = logCursor(MainActivity.CITY_INFO);
+        cityCode = stringList.size() > 1 ? stringList.get(1) : null;
+        loadRouteStartCoordinates();
 
         if(MainActivity.apiKey == null) {
             visicomKey();
@@ -1200,11 +1206,30 @@ public class VisicomSearchFragment extends Fragment {
         }
     }
 
+    private void loadRouteStartCoordinates() {
+        routeStartLat = 0;
+        routeStartLon = 0;
+        try {
+            SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+            Cursor cursor = database.rawQuery(
+                    "SELECT startLat, startLan FROM " + MainActivity.ROUT_MARKER + " LIMIT 1",
+                    null);
+            if (cursor.moveToFirst()) {
+                routeStartLat = CursorReadHelper.getDouble(cursor, "startLat");
+                routeStartLon = CursorReadHelper.getDouble(cursor, "startLan");
+            }
+            cursor.close();
+            database.close();
+        } catch (Exception e) {
+            FirebaseCrashlytics.getInstance().recordException(e);
+        }
+    }
+
     private void performAddressSearch(String inputText, String point) {
 
         try {
             String apiUrl = "https://api.visicom.ua/data-api/5.0/";
-            String url = apiUrl  + LocaleHelper.getLocale() + "/geocode.json";
+            String url = apiUrl + LocaleHelper.getLocale() + "/geocode.json";
             Logger.d(context, TAG, "performAddressSearch: LocaleHelper.getLocale() " + LocaleHelper.getLocale());
 
             if (point.equals("start")) {
@@ -1212,30 +1237,30 @@ public class VisicomSearchFragment extends Fragment {
             } else {
                 verifyBuildingFinish = false;
             }
-            String modifiedText = "";
-            Logger.d(context, TAG, "performAddressSearch:modifiedText " + modifiedText);
-            if (!inputText.substring(3).contains("\f")) {
+            boolean streetWithHouse = inputText.length() > 3 && inputText.substring(3).contains("\f");
+            String modifiedText;
+            Logger.d(context, TAG, "performAddressSearch: streetWithHouse " + streetWithHouse);
+            if (!streetWithHouse) {
                 modifiedText = inputText.replaceAll("[\f\t]", " ");
-                url = url
-                        + "?"
-                        + VisicomGeocodeCategoriesHelper.categoriesForFreeTextSearch()
-//                        + "&l=10"
-                        + "&text=" + modifiedText + "&key=" + MainActivity.apiKey;
-
             } else {
                 Logger.d(context, TAG, "performAddressSearch:positionChecked  " + positionChecked);
-                String number = numbers(modifiedText);
+                String number = numbers(inputText.replaceAll("[\f\t]", " "));
 
                 if (positionChecked != 0) {
                     inputText = inputTextBuild() + ", " + number;
                 }
                 modifiedText = inputText.replaceAll("[\f\t]", " ");
-                url = url + "?" + VisicomGeocodeCategoriesHelper.categoriesForStreetWithHouse()
-                        + "&text=" + modifiedText
-//                        + "&l=15"
-                        + "&key=" + MainActivity.apiKey;
-
             }
+
+            String queryParams = VisicomGeocodeQueryHelper.buildQueryParams(
+                    modifiedText,
+                    streetWithHouse,
+                    cityCode,
+                    AutoLocationAfterCityHelper.getDetectedLat(),
+                    AutoLocationAfterCityHelper.getDetectedLon(),
+                    routeStartLat,
+                    routeStartLon);
+            url = url + "?" + queryParams + "&key=" + MainActivity.apiKey;
 
             Request request = new Request.Builder()
                     .url(url)

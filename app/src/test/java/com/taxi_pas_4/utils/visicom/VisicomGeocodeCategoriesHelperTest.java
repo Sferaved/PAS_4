@@ -15,6 +15,15 @@ public class VisicomGeocodeCategoriesHelperTest {
     }
 
     @Test
+    public void poiSearch_excludesStreets() {
+        String categories = VisicomGeocodeCategoriesHelper.categoriesForPoiSearch();
+        assertTrue(categories.contains("poi_cafe_bar"));
+        assertTrue(categories.contains("poi_restaurant"));
+        assertTrue(!categories.contains("adr_street"));
+        assertTrue(!categories.contains("adm_settlement"));
+    }
+
+    @Test
     public void streetWithHouse_includesAddressesAndExpressMail() {
         String categories = VisicomGeocodeCategoriesHelper.categoriesForStreetWithHouse();
         assertTrue(categories.contains("adr_address"));
