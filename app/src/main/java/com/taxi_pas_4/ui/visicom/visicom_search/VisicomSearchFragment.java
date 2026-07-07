@@ -77,6 +77,8 @@ import com.taxi_pas_4.ui.visicom.visicom_search.key_visicom.ApiResponse;
 import com.taxi_pas_4.utils.connect.NetworkUtils;
 import com.taxi_pas_4.utils.helpers.LocaleHelper;
 import com.taxi_pas_4.utils.log.Logger;
+import com.taxi_pas_4.utils.visicom.VisicomGeocodeCategoriesHelper;
+import com.taxi_pas_4.utils.visicom.VisicomPoiCityMatchHelper;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.taxi_pas_4.utils.ui.ListScrollPaginationHelper;
@@ -1216,25 +1218,7 @@ public class VisicomSearchFragment extends Fragment {
                 modifiedText = inputText.replaceAll("[\f\t]", " ");
                 url = url
                         + "?"
-                        + "categories=poi_railway_station"
-                        + ",adm_settlement"
-                        + ",poi_bus_station"
-                        + ",poi_airport_terminal"
-                        + ",poi_airport"
-                        + ",poi_shopping_centre"
-                        + ",poi_night_club"
-                        + ",poi_hotel_and_motel"
-                        + ",poi_cafe_bar"
-                        + ",poi_restaurant"
-                        + ",poi_entertaining_complex"
-                        + ",poi_supermarket"
-                        + ",poi_grocery"
-                        + ",poi_swimming_pool"
-                        + ",poi_sports_complexe"
-                        + ",poi_post_office"
-                        + ",poi_underground_railway_station"
-                        + ",poi_hospital"
-                        + ",adr_street"
+                        + VisicomGeocodeCategoriesHelper.categoriesForFreeTextSearch()
 //                        + "&l=10"
                         + "&text=" + modifiedText + "&key=" + MainActivity.apiKey;
 
@@ -1246,7 +1230,8 @@ public class VisicomSearchFragment extends Fragment {
                     inputText = inputTextBuild() + ", " + number;
                 }
                 modifiedText = inputText.replaceAll("[\f\t]", " ");
-                url = url + "?categories=adr_address&text=" + modifiedText
+                url = url + "?" + VisicomGeocodeCategoriesHelper.categoriesForStreetWithHouse()
+                        + "&text=" + modifiedText
 //                        + "&l=15"
                         + "&key=" + MainActivity.apiKey;
 
@@ -1556,28 +1541,12 @@ public class VisicomSearchFragment extends Fragment {
                             case "poi_bus_station":
                             case "poi_airport_terminal":
                             case "poi_post_office":
+                            case "poi_express_mail":
                             case "poi_airport":
-                                settlement = properties.optString("address", "").toLowerCase();
-                                city = citySearch.toLowerCase();
-
-                                if (settlement.contains(city)) {
-                                    Logger.d(context, TAG, "poi_railway_station" + properties);
-                                    address = String.format("%s %s\t",
-                                            properties.getString("vitrine"),
-                                            properties.getString("address"));
-
-                                    double longitude = geoCentroid.getJSONArray("coordinates").getDouble(0);
-                                    double latitude = geoCentroid.getJSONArray("coordinates").getDouble(1);
-                                    Logger.d(context, TAG, "processAddressData: latitude longitude" + latitude + " " + longitude);
-
-                                    addAddressOne(
-                                            address,
-                                            "",
-                                            "",
-                                            "",
-                                            longitude,
-                                            latitude);
-                                } else if (citySearch.equals("FC")) {
+                                if (VisicomPoiCityMatchHelper.matches(
+                                        properties.optString("address", ""),
+                                        citySearch,
+                                        kyivRegionArr)) {
                                     Logger.d(context, TAG, "poi_railway_station" + properties);
                                     address = String.format("%s %s\t",
                                             properties.getString("vitrine"),
@@ -1595,26 +1564,13 @@ public class VisicomSearchFragment extends Fragment {
                                             longitude,
                                             latitude);
                                 }
+                                break;
 
                             default:
-                                settlement = properties.optString("address", "").toLowerCase();
-                                city = citySearch.toLowerCase();
-
-                                if (settlement.contains(city)) {
-                                    address = String.format("%s %s\t",
-                                            properties.getString("vitrine"),
-                                            properties.getString("address"));
-
-                                    double longitude = geoCentroid.getJSONArray("coordinates").getDouble(0);
-                                    double latitude = geoCentroid.getJSONArray("coordinates").getDouble(1);
-                                    addAddressOne(
-                                            address,
-                                            "",
-                                            "",
-                                            "",
-                                            longitude,
-                                            latitude);
-                                } else if (citySearch.equals("FC")) {
+                                if (VisicomPoiCityMatchHelper.matches(
+                                        properties.optString("address", ""),
+                                        citySearch,
+                                        kyivRegionArr)) {
                                     address = String.format("%s %s\t",
                                             properties.getString("vitrine"),
                                             properties.getString("address"));
