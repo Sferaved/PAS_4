@@ -521,7 +521,8 @@
     <string name="search_address">Address search</string>
     <string name="err_nal_reoder_mes">Unfortunately, cash orders are currently unavailable. Please select another payment method.</string>
     <string name="clearApp">🧹 Clear data</string>
-    <string name="clearAppMess">Warning! Clearing app data will delete all settings, databases, internal and external cache, and the app will be restarted. This action is irreversible and may affect the functionality of the app. Make sure you have saved important data before continuing. Continue?</string>
+    <string name="clearAppTitle">Clear data</string>
+    <string name="clearAppMess">All settings, databases, internal and external cache will be deleted, and the app will restart. This action is irreversible and may affect how the app works. Make sure you have saved important data. Continue?</string>
     <string name="email_history_order">Request history</string>
     <string name="scroll_list_up">Up</string>
     <string name="scroll_list_down">Down</string>
@@ -963,5 +964,25 @@ Tap "Settings" to check.</string>
     <string name="support_subject">Taxi app support</string>
     <string name="support">Support</string>
     <string name="start">Start</string>
+
+    <string name="landing_greeting">Welcome!</string>
+    <string name="landing_greeting_subtitle_guest">Book a ride easily — sign in or pick an option below</string>
+    <string name="landing_greeting_named">Good to see you, %1$s!</string>
+    <string name="landing_greeting_back">Good to see you again!</string>
+    <string name="landing_greeting_subtitle_user">Where are we going today?</string>
+    <string name="landing_quick_order">Book a ride</string>
+    <string name="landing_login_title">Sign in to your account</string>
+    <string name="landing_login_subtitle">Keep your addresses and payment in one place</string>
+    <string name="landing_login_button">Sign in</string>
+    <string name="landing_services_title">Or choose something else</string>
+    <string name="landing_action_order">Order</string>
+    <string name="landing_action_calculation">Fare estimate</string>
+    <string name="landing_action_city">Choose city</string>
+    <string name="landing_action_payment">Payment</string>
+    <string name="landing_action_language">Language</string>
+    <string name="landing_action_operator">Call operator</string>
+    <string name="landing_action_driver">Work as a driver</string>
+    <string name="landing_action_exit">Exit</string>
+    <string name="landing_auth_required">Sign in is required for this action</string>
 
 </resources>

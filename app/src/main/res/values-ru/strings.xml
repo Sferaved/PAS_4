@@ -525,7 +525,8 @@
     <string name="search_address">Поиск адреса</string>
     <string name="err_nal_reoder_mes">К сожалению заказ за наличные в данный момент не возможен. Выберите другой способ оплаты.</string>
     <string name="clearApp">🧹 Очистить данные</string>
-    <string name="clearAppMess">Внимание! Очистка данных приложения удалит все настройки, базы данных, внутренний и внешний кэш, после чего приложение будет перезапущено. Это действие необратимо и может повлиять на работу приложения. Убедитесь, что вы сохранили важные данные перед продолжением. Продолжить?</string>
+    <string name="clearAppTitle">Очистка данных</string>
+    <string name="clearAppMess">Будут удалены все настройки, базы данных, внутренний и внешний кэш, после чего приложение будет перезапущено. Действие необратимо и может повлиять на работу приложения. Убедитесь, что сохранили важные данные. Продолжить?</string>
     <string name="email_history_order">Запросить историю</string>
     <string name="scroll_list_up">Вверх</string>
     <string name="scroll_list_down">Вниз</string>
@@ -973,5 +974,25 @@
     <string name="support_subject">Поддержка приложения Такси</string>
     <string name="support">Поддержка</string>
     <string name="start">Старт</string>
+
+    <string name="landing_greeting">Добро пожаловать!</string>
+    <string name="landing_greeting_subtitle_guest">Заказывайте такси удобно — войдите или выберите действие ниже</string>
+    <string name="landing_greeting_named">Рады видеть вас, %1$s!</string>
+    <string name="landing_greeting_back">Рады видеть вас снова!</string>
+    <string name="landing_greeting_subtitle_user">Куда поедем сегодня?</string>
+    <string name="landing_quick_order">Заказать такси</string>
+    <string name="landing_login_title">Войти в аккаунт</string>
+    <string name="landing_login_subtitle">Сохраняйте адреса и оплату в одном месте</string>
+    <string name="landing_login_button">Войти</string>
+    <string name="landing_services_title">Или выберите другое</string>
+    <string name="landing_action_order">Заказ</string>
+    <string name="landing_action_calculation">Просчёт</string>
+    <string name="landing_action_city">Выбор города</string>
+    <string name="landing_action_payment">Оплата</string>
+    <string name="landing_action_language">Язык</string>
+    <string name="landing_action_operator">Звонок оператору</string>
+    <string name="landing_action_driver">Работа водителем</string>
+    <string name="landing_action_exit">Выход</string>
+    <string name="landing_auth_required">Для этого действия нужен вход в аккаунт</string>
 
 </resources>
