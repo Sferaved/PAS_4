@@ -993,6 +993,11 @@
     <string name="landing_action_operator">Звонок оператору</string>
     <string name="landing_action_driver">Работа водителем</string>
     <string name="landing_action_exit">Выход</string>
+    <string name="landing_language_dialog_title">Смена языка</string>
+    <string name="landing_language_dialog_subtitle">Выберите язык интерфейса</string>
+    <string name="landing_language_label_en">English</string>
+    <string name="landing_language_label_ru">Русский</string>
+    <string name="landing_language_label_uk">Українська</string>
     <string name="landing_auth_required">Для этого действия нужен вход в аккаунт</string>
 
 </resources>

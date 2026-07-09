@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/uklon_bg"
     android:clipToPadding="false"
     android:fillViewport="true"
-    android:scrollbars="none">
+    android:overScrollMode="ifContentScrolls"
+    android:scrollbars="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -15,7 +16,7 @@
         android:paddingStart="16dp"
         android:paddingTop="20dp"
         android:paddingEnd="16dp"
-        android:paddingBottom="28dp">
+        android:paddingBottom="32dp">
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/landingHeroCard"
@@ -151,7 +152,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="@dimen/landing_action_row_height"
             android:layout_marginBottom="10dp"
             android:baselineAligned="false"
             android:orientation="horizontal"
@@ -161,7 +162,7 @@
                 android:id="@+id/actionOrder"
                 layout="@layout/item_landing_action"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_marginEnd="6dp"
                 android:layout_weight="1" />
 
@@ -169,7 +170,7 @@
                 android:id="@+id/actionCalculation"
                 layout="@layout/item_landing_action"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_marginEnd="6dp"
                 android:layout_weight="1" />
 
@@ -177,13 +178,13 @@
                 android:id="@+id/actionCity"
                 layout="@layout/item_landing_action"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="@dimen/landing_action_row_height"
             android:layout_marginBottom="10dp"
             android:baselineAligned="false"
             android:orientation="horizontal"
@@ -193,7 +194,7 @@
                 android:id="@+id/actionPayment"
                 layout="@layout/item_landing_action"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_marginEnd="6dp"
                 android:layout_weight="1" />
 
@@ -201,7 +202,7 @@
                 android:id="@+id/actionLanguage"
                 layout="@layout/item_landing_action"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_marginEnd="6dp"
                 android:layout_weight="1" />
 
@@ -209,13 +210,13 @@
                 android:id="@+id/actionOperator"
                 layout="@layout/item_landing_action"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="@dimen/landing_action_row_height"
             android:baselineAligned="false"
             android:orientation="horizontal"
             android:weightSum="3">
@@ -224,7 +225,7 @@
                 android:id="@+id/actionDriver"
                 layout="@layout/item_landing_action"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_marginEnd="6dp"
                 android:layout_weight="1" />
 
@@ -232,14 +233,16 @@
                 android:id="@+id/actionExit"
                 layout="@layout/item_landing_action"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_marginEnd="6dp"
                 android:layout_weight="1" />
 
-            <Space
+            <View
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" />
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:importantForAccessibility="no"
+                android:visibility="invisible" />
         </LinearLayout>
     </LinearLayout>
-</ScrollView>
+</androidx.core.widget.NestedScrollView>

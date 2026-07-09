@@ -996,6 +996,11 @@
     <string name="landing_action_operator">Дзвінок оператору</string>
     <string name="landing_action_driver">Робота водієм</string>
     <string name="landing_action_exit">Вихід</string>
+    <string name="landing_language_dialog_title">Зміна мови</string>
+    <string name="landing_language_dialog_subtitle">Оберіть мову інтерфейсу</string>
+    <string name="landing_language_label_en">English</string>
+    <string name="landing_language_label_ru">Русский</string>
+    <string name="landing_language_label_uk">Українська</string>
     <string name="landing_auth_required">Для цієї дії потрібен вхід у обліковий запис</string>
 
 </resources>

@@ -10,9 +10,11 @@ public final class LandingNavigationHelper {
     private LandingNavigationHelper() {
     }
 
-    /** Звонок оператору и приложение водителя доступны без входа. */
+    /** Звонок оператору, приложение водителя и смена языка — без входа. */
     public static boolean requiresAuth(@Nullable LandingAction action) {
-        return action != LandingAction.OPERATOR && action != LandingAction.DRIVER;
+        return action != LandingAction.OPERATOR
+                && action != LandingAction.DRIVER
+                && action != LandingAction.LANGUAGE;
     }
 
     /**

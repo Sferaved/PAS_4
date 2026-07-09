@@ -167,6 +167,7 @@ import com.taxi_pas_4.utils.db.CursorReadHelper;
 import com.taxi_pas_4.ui.landing.LandingAction;
 import com.taxi_pas_4.ui.landing.LandingCityHelper;
 import com.taxi_pas_4.ui.landing.LandingFragment;
+import com.taxi_pas_4.ui.landing.LandingLanguageHelper;
 import com.taxi_pas_4.ui.landing.LandingNavigationHelper;
 import com.taxi_pas_4.utils.auth.GuestSessionHelper;
 
@@ -3881,6 +3882,10 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
         return LandingCityHelper.isCitySelectionPending(sharedPreferencesHelperMain);
     }
 
+    private void showLandingLanguagePicker() {
+        LandingLanguageHelper.showLanguagePicker(this);
+    }
+
     private void navigateLandingAction(@NonNull LandingAction action) {
         switch (action) {
             case ORDER:
@@ -3888,7 +3893,7 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
                 safeNavigate(R.id.nav_visicom);
                 break;
             case LANGUAGE:
-                safeNavigate(R.id.nav_settings);
+                showLandingLanguagePicker();
                 break;
             case CITY:
                 safeNavigate(R.id.nav_city);
@@ -4014,6 +4019,10 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
         }
         if (action == LandingAction.DRIVER) {
             openDriverScreen();
+            return;
+        }
+        if (action == LandingAction.LANGUAGE) {
+            showLandingLanguagePicker();
             return;
         }
         if (isGuestSession()) {

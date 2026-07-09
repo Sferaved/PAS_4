@@ -8,9 +8,10 @@ import org.junit.Test;
 public class LandingNavigationHelperTest {
 
     @Test
-    public void requiresAuth_operatorAndDriverFalse_otherTrue() {
+    public void requiresAuth_operatorDriverLanguageFalse_otherTrue() {
         assertFalse(LandingNavigationHelper.requiresAuth(LandingAction.OPERATOR));
         assertFalse(LandingNavigationHelper.requiresAuth(LandingAction.DRIVER));
+        assertFalse(LandingNavigationHelper.requiresAuth(LandingAction.LANGUAGE));
         assertTrue(LandingNavigationHelper.requiresAuth(LandingAction.ORDER));
         assertTrue(LandingNavigationHelper.requiresAuth(LandingAction.CITY));
         assertTrue(LandingNavigationHelper.requiresAuth(null));
