@@ -4040,11 +4040,7 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
     @Override
     public void onLandingExitRequested() {
         hideBlockingOverlay();
-        if (isGuestSession()) {
-            finishAffinity();
-            return;
-        }
-        performLandingLogout();
+        finishAffinity();
     }
 
     private void hideBlockingOverlay() {
@@ -4055,24 +4051,21 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
         }
     }
 
-    private void performLandingLogout() {
-        releaseCentrifugoManager();
-        try {
-            AuthUI.getInstance().signOut(this);
-            FirebaseAuth.getInstance().signOut();
-        } catch (Exception e) {
-            Logger.e(this, TAG, "performLandingLogout signOut: " + e.getMessage());
+    /** После смены города — экран заказа, без перезапуска приложения и лендинга. */
+    public void openVisicomAfterCityChange() {
+        if (navController == null) {
+            return;
         }
-        MyApplication.sharedPreferencesHelperMain.removeValue("userEmail");
-        updateRecordsUser("email", "email");
-        pendingLandingAction = null;
-        isWaitingForVerification = false;
-        isVerificationRequired = false;
-        if (verificationDialog != null && verificationDialog.isShowing()) {
-            verificationDialog.dismiss();
-            verificationDialog = null;
+        hideBlockingOverlay();
+        suppressGuestNavGuard = true;
+        navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                .setLaunchSingleTop(true)
+                .setPopUpTo(R.id.nav_visicom, true)
+                .build());
+        suppressGuestNavGuard = false;
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().show();
         }
-        applyLandingEntryRestrictions();
-        showLandingPage();
+        binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
     }
 }
