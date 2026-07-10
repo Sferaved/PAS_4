@@ -6,6 +6,7 @@ import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHel
 
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -955,6 +956,13 @@ public class CityCheckFragment extends Fragment {
         call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<CityResponse> call, @NonNull Response<CityResponse> response) {
+                if (!isAdded()) {
+                    return;
+                }
+                Context context = getContext();
+                if (context == null) {
+                    return;
+                }
                 if (response.isSuccessful() && response.body() != null) {
                     CityResponse cityResponse = response.body();
                     int cardMaxPay = cityResponse.getCardMaxPay();
@@ -966,7 +974,7 @@ public class CityCheckFragment extends Fragment {
                     cv.put("bonus_max_pay", bonusMaxPay);
                     sharedPreferencesHelperMain.saveValue("black_list", black_list);
 
-                    SQLiteDatabase database = requireActivity().openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
+                    SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
                     database.update(MainActivity.CITY_INFO, cv, "id = ?",
                             new String[]{"1"});
 
@@ -975,7 +983,7 @@ public class CityCheckFragment extends Fragment {
 
                     // Добавьте здесь код для обработки полученных значений
                 } else {
-                    Logger.d(requireActivity(), TAG, "Failed. Error code: " + response.code());
+                    Logger.d(context, TAG, "Failed. Error code: " + response.code());
                     showCityMaxPayError();
                 }
             }
@@ -983,7 +991,13 @@ public class CityCheckFragment extends Fragment {
             @Override
             public void onFailure(@NonNull Call<CityResponse> call, @NonNull Throwable t) {
                 FirebaseCrashlytics.getInstance().recordException(t);
-                Logger.d(requireActivity(), TAG, "Failed. Error message: " + t.getMessage());
+                if (!isAdded()) {
+                    return;
+                }
+                Context context = getContext();
+                if (context != null) {
+                    Logger.d(context, TAG, "Failed. Error message: " + t.getMessage());
+                }
                 showCityMaxPayError();
             }
         });
@@ -1018,9 +1032,15 @@ public class CityCheckFragment extends Fragment {
         call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<CountryResponse> call, @NonNull Response<CountryResponse> response) {
+                if (!isAdded()) {
+                    return;
+                }
                 if (response.isSuccessful() && response.body() != null) {
                     CountryResponse countryResponse = response.body();
-                    Logger.d(requireActivity(), TAG, "onResponse:countryResponse.getCountry(); " + countryResponse.getCountry());
+                    Context context = getContext();
+                    if (context != null) {
+                        Logger.d(context, TAG, "onResponse:countryResponse.getCountry(); " + countryResponse.getCountry());
+                    }
                     countryState = countryResponse.getCountry();
                 } else {
                     countryState = "UA";
@@ -1030,9 +1050,17 @@ public class CityCheckFragment extends Fragment {
 
             @Override
             public void onFailure(@NonNull Call<CountryResponse> call, @NonNull Throwable t) {
-                Logger.d(requireActivity(), TAG, "Error: " + t.getMessage());
                 FirebaseCrashlytics.getInstance().recordException(t);
-                VisicomFragment.progressBar.setVisibility(View.GONE);
+                if (!isAdded()) {
+                    return;
+                }
+                Context context = getContext();
+                if (context != null) {
+                    Logger.d(context, TAG, "Error: " + t.getMessage());
+                }
+                if (VisicomFragment.progressBar != null) {
+                    VisicomFragment.progressBar.setVisibility(View.GONE);
+                }
                 sharedPreferencesHelperMain.saveValue("countryState", "UA");
             }
         });
@@ -1060,17 +1088,25 @@ public class CityCheckFragment extends Fragment {
         call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<CityLastAddressResponse> call, @NonNull Response<CityLastAddressResponse> response) {
+                if (!isAdded()) {
+                    return;
+                }
+                Context context = getContext();
                 if (response.isSuccessful() && response.body() != null) {
                     CityLastAddressResponse cityResponse = response.body();
-                    Logger.d(requireActivity(), TAG, "onResponse: cityResponse" + cityResponse);
+                    if (context != null) {
+                        Logger.d(context, TAG, "onResponse: cityResponse" + cityResponse);
+                    }
                     String routefrom = cityResponse.getRoutefrom();
                     String startLat = cityResponse.getStartLat();
                     String startLan = cityResponse.getStartLan();
 
 
-                    Logger.d(requireActivity(), TAG, "lastAddressUser: routefrom" + routefrom);
-                    Logger.d(requireActivity(), TAG, "lastAddressUser: startLat" + startLat);
-                    Logger.d(requireActivity(), TAG, "lastAddressUser: startLan" + startLan);
+                    if (context != null) {
+                        Logger.d(context, TAG, "lastAddressUser: routefrom" + routefrom);
+                        Logger.d(context, TAG, "lastAddressUser: startLat" + startLat);
+                        Logger.d(context, TAG, "lastAddressUser: startLan" + startLan);
+                    }
                     if (com.taxi_pas_4.utils.city.CityLastAddressHelper.shouldApplyLastAddress(
                             cityString, startLat, startLan, routefrom)) {
                         updateMyLatsPosition(routefrom, startLat, startLan, cityString);
@@ -1079,16 +1115,26 @@ public class CityCheckFragment extends Fragment {
                     }
 
                 } else {
-                    Logger.d(requireActivity(), TAG, "Failed. Error code: " + response.code());
+                    if (context != null) {
+                        Logger.d(context, TAG, "Failed. Error code: " + response.code());
+                    }
                     updateMyPosition();
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<CityLastAddressResponse> call, Throwable t) {
-                Logger.d(requireActivity(), TAG, "Failed. Error message: " + t.getMessage());
                 FirebaseCrashlytics.getInstance().recordException(t);
-                VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
+                if (!isAdded()) {
+                    return;
+                }
+                Context context = getContext();
+                if (context != null) {
+                    Logger.d(context, TAG, "Failed. Error message: " + t.getMessage());
+                }
+                if (VisicomFragment.progressBar != null) {
+                    VisicomFragment.progressBar.setVisibility(View.INVISIBLE);
+                }
                 updateMyPosition();
             }
         });
