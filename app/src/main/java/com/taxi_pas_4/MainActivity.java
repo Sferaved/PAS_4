@@ -167,6 +167,7 @@ import com.taxi_pas_4.utils.db.CursorReadHelper;
 import com.taxi_pas_4.ui.landing.LandingAction;
 import com.taxi_pas_4.ui.landing.LandingCityHelper;
 import com.taxi_pas_4.ui.landing.LandingFragment;
+import com.taxi_pas_4.ui.landing.LandingIntroHelper;
 import com.taxi_pas_4.ui.landing.LandingLanguageHelper;
 import com.taxi_pas_4.ui.landing.LandingNavigationHelper;
 import com.taxi_pas_4.utils.auth.GuestSessionHelper;
@@ -289,6 +290,9 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
     private boolean isWaitingForVerification = false;
     private LandingAction pendingLandingAction = null;
     private boolean suppressGuestNavGuard = false;
+    /** showLandingPage вызвали до готовности NavController — показать позже. */
+    private boolean pendingShowLanding = false;
+    private static final String PREF_LANDING_INTRO_VERSION = "landing_intro_version_code";
 
     @SuppressLint("SourceLockedOrientationActivity")
     @Override
@@ -356,6 +360,7 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
         DrawerLayout drawer = binding.drawerLayout;
         navigationView = binding.navView;
         navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+        flushPendingLandingIfNeeded();
 
         // Добавляем слушатель изменения направления
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
@@ -469,7 +474,13 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
             DB_INIT_EXECUTOR.execute(() -> {
                 try {
                     initDB();
-                    runOnUiThread(() -> newUser());
+                    runOnUiThread(() -> {
+                        if (NetworkUtils.isNetworkAvailable(MainActivity.this)) {
+                            newUser();
+                        } else {
+                            showLandingPage();
+                        }
+                    });
                 } catch (MalformedURLException | JSONException | InterruptedException e) {
                     runOnUiThread(() -> FirebaseCrashlytics.getInstance().recordException(e));
                 }
@@ -1073,6 +1084,8 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
 
         FinishSeparateFragment.notifyPaymentDeclinedIfNeeded(this);
         tryFulfillPendingLandingAction();
+        flushPendingLandingIfNeeded();
+        ensureLandingIntroAfterUpdate();
         ensureGuestLandingOnResume();
     }
 
@@ -3696,6 +3709,42 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
         showLandingPage();
     }
 
+    /**
+     * После обновления с магазина (без очистки данных) один раз показать лендинг
+     * и гостю, и авторизованному — иначе остаётся старый экран заказа.
+     */
+    private void ensureLandingIntroAfterUpdate() {
+        if (isWaitingForVerification) {
+            return;
+        }
+        if (verificationDialog != null && verificationDialog.isShowing()) {
+            return;
+        }
+        if (!LandingIntroHelper.shouldShowIntroAfterUpdate(
+                readLandingIntroVersionCode(), BuildConfig.VERSION_CODE)) {
+            return;
+        }
+        showLandingPage();
+    }
+
+    private int readLandingIntroVersionCode() {
+        Object raw = sharedPreferencesHelperMain.getValue(PREF_LANDING_INTRO_VERSION, 0);
+        if (raw instanceof Number) {
+            return ((Number) raw).intValue();
+        }
+        return 0;
+    }
+
+    private void markLandingIntroShownForCurrentVersion() {
+        sharedPreferencesHelperMain.saveValue(PREF_LANDING_INTRO_VERSION, BuildConfig.VERSION_CODE);
+    }
+
+    private void flushPendingLandingIfNeeded() {
+        if (pendingShowLanding) {
+            showLandingPage();
+        }
+    }
+
     private boolean shouldShowGuestLandingNow() {
         if (!isGuestSession()) {
             return false;
@@ -3711,8 +3760,10 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
 
     private void showLandingPage() {
         if (navController == null) {
+            pendingShowLanding = true;
             return;
         }
+        pendingShowLanding = false;
         applyLandingEntryRestrictions();
         suppressGuestNavGuard = true;
         if (navController.getCurrentDestination() == null
@@ -3722,6 +3773,7 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
                     .build());
         }
         suppressGuestNavGuard = false;
+        markLandingIntroShownForCurrentVersion();
     }
 
     private void updateShellForDestination(int destinationId) {
