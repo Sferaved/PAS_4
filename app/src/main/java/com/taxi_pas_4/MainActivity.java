@@ -3852,9 +3852,8 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
             if (pendingLandingAction != null
                     && LandingNavigationHelper.shouldPromptCityBeforeAction(pendingLandingAction)) {
                 launchCityCheckActivity();
-            } else {
-                leaveLandingAfterAuthIfNeeded();
             }
+            // Иначе остаёмся на лендинге — город выберут с кнопки «Город».
             return;
         }
         if (pendingLandingAction != null) {
@@ -3863,7 +3862,9 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
             navigateLandingAction(action);
             return;
         }
-        leaveLandingAfterAuthIfNeeded();
+        if (LandingNavigationHelper.shouldAutoLeaveLandingToMain(null)) {
+            safeNavigate(R.id.nav_visicom);
+        }
     }
 
     private void continueLandingAction(@NonNull LandingAction action) {
@@ -3907,39 +3908,10 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
         setCityAppbar();
     }
 
-    private void leaveLandingIfShowing() {
-        if (navController == null) {
-            return;
-        }
-        NavDestination current = navController.getCurrentDestination();
-        if (current != null && current.getId() == R.id.nav_landing) {
-            suppressGuestNavGuard = true;
-            navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
-                    .setLaunchSingleTop(true)
-                    .build());
-            suppressGuestNavGuard = false;
-        }
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().show();
-        }
-        binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-        hideBlockingOverlay();
-    }
-
     private void launchCityCheckActivity() {
         Intent intent = new Intent(this, CityCheckActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
-    }
-
-    private void leaveLandingAfterAuthIfNeeded() {
-        if (navController == null) {
-            return;
-        }
-        NavDestination current = navController.getCurrentDestination();
-        if (current != null && current.getId() == R.id.nav_landing) {
-            safeNavigate(R.id.nav_visicom);
-        }
     }
 
     private boolean isCitySelectionPending() {
