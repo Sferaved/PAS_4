@@ -128,6 +128,12 @@ public class FinishCostReconcileHelperTest {
     }
 
     @Test
+    public void applyFinishAbsoluteCostObserver_walletAllowsDuringAddCost() {
+        assertTrue(FinishCostReconcileHelper.shouldApplyFinishAbsoluteCostObserver(
+                true, "uid-1", false, true));
+    }
+
+    @Test
     public void allowServerUpdate_nalStaleDisplayedAfterNewOrder() {
         // Bug #16: stale cost 17 from previous order, new order costs 7 (nal_payment).
         // After resetNewOrderSession clears walletApplied, server should override.

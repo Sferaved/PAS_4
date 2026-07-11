@@ -3712,6 +3712,7 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
     /**
      * После обновления с магазина (без очистки данных) один раз показать лендинг
      * и гостю, и авторизованному — иначе остаётся старый экран заказа.
+     * Не перебивать активный заказ (Mantis #30).
      */
     private void ensureLandingIntroAfterUpdate() {
         if (isWaitingForVerification) {
@@ -3722,6 +3723,15 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
         }
         if (!LandingIntroHelper.shouldShowIntroAfterUpdate(
                 readLandingIntroVersionCode(), BuildConfig.VERSION_CODE)) {
+            return;
+        }
+        boolean onFinish = navController != null
+                && navController.getCurrentDestination() != null
+                && navController.getCurrentDestination().getId() == R.id.nav_finish_separate;
+        String activeUid = ExecutionStatusViewModel.getPersistedActiveUid();
+        boolean hasActiveOrder = activeUid != null && !activeUid.trim().isEmpty();
+        if (LandingIntroHelper.shouldBlockIntroDuringActiveOrder(hasActiveOrder, onFinish)) {
+            Logger.d(this, TAG, "landing intro deferred: active order uid=" + activeUid);
             return;
         }
         showLandingPage();

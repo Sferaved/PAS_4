@@ -16,4 +16,17 @@ public final class LandingIntroHelper {
     public static boolean shouldShowIntroAfterUpdate(int storedVersionCode, int currentVersionCode) {
         return storedVersionCode < currentVersionCode;
     }
+
+    /**
+     * Не уводить с экрана активного заказа на лендинг после обновления (Mantis #30).
+     *
+     * @param hasActiveOrderUid есть сохранённый uid активного заказа
+     * @param onFinishScreen сейчас открыт экран заказа
+     */
+    public static boolean shouldBlockIntroDuringActiveOrder(
+            boolean hasActiveOrderUid,
+            boolean onFinishScreen
+    ) {
+        return hasActiveOrderUid || onFinishScreen;
+    }
 }

@@ -26,4 +26,19 @@ public class LandingIntroHelperTest {
     public void skipsWhenStoredAheadOfCurrent() {
         assertFalse(LandingIntroHelper.shouldShowIntroAfterUpdate(1200, 1147));
     }
+
+    @Test
+    public void blocksIntroWhenActiveOrderUidPresent() {
+        assertTrue(LandingIntroHelper.shouldBlockIntroDuringActiveOrder(true, false));
+    }
+
+    @Test
+    public void blocksIntroWhenOnFinishScreen() {
+        assertTrue(LandingIntroHelper.shouldBlockIntroDuringActiveOrder(false, true));
+    }
+
+    @Test
+    public void allowsIntroWithoutActiveOrder() {
+        assertFalse(LandingIntroHelper.shouldBlockIntroDuringActiveOrder(false, false));
+    }
 }
