@@ -463,9 +463,11 @@ public class CentrifugoManager {
                                 // mark до setFinishAbsolute: observer проверяет flag по текущему uid
                                 ExecutionStatusViewModel.markWalletAddCostApplied(orderUid);
                                 viewModel.setFinishAbsoluteCostGrivna(orderCost);
-                                if (clearAddCostGate) {
-                                    viewModel.setCancelStatus(true);
-                                }
+                                // Всегда снимаем gate и возобновляем опрос — даже если inFlight
+                                // уже сброшен HTTP-путём (Mantis #31).
+                                ExecutionStatusViewModel.setAddCostInFlightPref(false);
+                                ExecutionStatusViewModel.clearPendingAddCostAmountPref();
+                                viewModel.setCancelStatus(true);
                             }
                             EarlyOrderNavigationHelper.tryEarlyNavigateToFinish(
                                     activity, orderUid, paySystemStatus);

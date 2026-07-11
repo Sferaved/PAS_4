@@ -37,6 +37,7 @@ import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.payment.GooglePayOrderHelper;
 import com.taxi_pas_4.utils.payment.PaymentTypeHelper;
+import com.taxi_pas_4.utils.payment.WalletAddCostHttpRecreateHelper;
 import com.taxi_pas_4.utils.worker.utils.WfpUtils;
 import com.uxcam.UXCam;
 
@@ -510,7 +511,14 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
                     switch (orderStatus) {
                         case "Approved":
                         case "WaitingAuthComplete":
-                            // WFP: держим in-flight до finishAbsoluteCost / order_uid_new
+                            // Сервер уже вернул новый uid в HTTP (startAddCostSimpleCashless) —
+                            // применяем сразу, не завися от Centrifugo (Mantis #31).
+                            if (WalletAddCostHttpRecreateHelper.shouldApplyHttpRecreateOnHoldSuccess(
+                                    orderStatus, statusResponse.getUid())) {
+                                applyWalletAddCostHttpRecreate(statusResponse, amount);
+                                break;
+                            }
+                            // Иначе держим in-flight до finishAbsoluteCost / order_uid_new
                             if (!PaymentTypeHelper.usesWalletHold(pay_method)) {
                                 ExecutionStatusViewModel.setAddCostInFlightPref(false);
                                 ExecutionStatusViewModel.clearPendingAddCostAmountPref();
@@ -553,6 +561,39 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
         });
 
     }
+    /**
+     * Доплата картой: сервер уже пересоздал заказ и вернул uid/cost в HTTP-ответе.
+     * Применяем как для готівки — иначе UI ждёт Centrifugo и зависает (Mantis #31).
+     */
+    private void applyWalletAddCostHttpRecreate(
+            @NonNull PurchaseResponse statusResponse,
+            @Nullable String fallbackAddCost
+    ) {
+        String newUid = statusResponse.getUid();
+        String displayCost = statusResponse.resolveDisplayCostGrivna();
+        Logger.d(context, TAG, "startAddCostUpdate wfp_payment ok uid="
+                + newUid + " cost=" + displayCost);
+        if (newUid != null && !newUid.trim().isEmpty()) {
+            String trimmed = newUid.trim();
+            ExecutionStatusViewModel.markWalletAddCostApplied(trimmed);
+            viewModel.updateUid(trimmed);
+        }
+        ExecutionStatusViewModel.clearActiveOrderNoticeSuppress();
+        ExecutionStatusViewModel.setUserCanceledPref(false);
+        sharedPreferencesHelperMain.saveValue(
+                ExecutionStatusViewModel.PREF_FINISH_CANCELED_UID, "");
+        if (displayCost != null) {
+            viewModel.persistDisplayCostGrivna(displayCost);
+            viewModel.setFinishAbsoluteCostGrivna(displayCost);
+        } else if (fallbackAddCost != null && !fallbackAddCost.trim().isEmpty()) {
+            viewModel.setAddCostViewUpdate(fallbackAddCost);
+        }
+        ExecutionStatusViewModel.setAddCostInFlightPref(false);
+        ExecutionStatusViewModel.clearPendingAddCostAmountPref();
+        ExecutionStatusViewModel.clearWalletAddCostFloorGrivna();
+        viewModel.setCancelStatus(true);
+    }
+
     private void enableCancelButtonIfAddCostNotInFlight() {
         if (ExecutionStatusViewModel.isAddCostInFlightPref()) {
             return;

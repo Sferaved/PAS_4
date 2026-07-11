@@ -1,6 +1,10 @@
 package com.taxi_pas_4.ui.wfp.purchase;
 
+import androidx.annotation.Nullable;
+
+import com.google.gson.JsonElement;
 import com.google.gson.annotations.SerializedName;
+import com.taxi_pas_4.utils.payment.WalletAddCostHttpRecreateHelper;
 
 public class PurchaseResponse {
     @SerializedName("merchantAccount")
@@ -8,6 +12,19 @@ public class PurchaseResponse {
 
     @SerializedName("orderReference")
     private String orderReference;
+
+    /** Новый uid после пересоздания заказа при доплате (startAddCostSimpleCashless). */
+    @Nullable
+    @SerializedName("uid")
+    private String uid;
+
+    @Nullable
+    @SerializedName("client_cost")
+    private JsonElement clientCost;
+
+    @Nullable
+    @SerializedName("web_cost")
+    private JsonElement webCost;
 
     @SerializedName("merchantSignature")
     private String merchantSignature;
@@ -127,6 +144,20 @@ public class PurchaseResponse {
 
     public String getTransactionStatus() {
         return transactionStatus;
+    }
+
+    @Nullable
+    public String getUid() {
+        return uid;
+    }
+
+    public boolean hasRecreatedOrder() {
+        return WalletAddCostHttpRecreateHelper.hasRecreatedOrder(uid);
+    }
+
+    @Nullable
+    public String resolveDisplayCostGrivna() {
+        return WalletAddCostHttpRecreateHelper.resolveDisplayCostGrivna(clientCost, webCost);
     }
 
     public String getReason() {
