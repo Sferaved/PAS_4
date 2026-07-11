@@ -18,15 +18,11 @@ public final class LandingIntroHelper {
     }
 
     /**
-     * Не уводить с экрана активного заказа на лендинг после обновления (Mantis #30).
+     * Холодный старт Activity: лендинг сразу, без ожидания newUser / onResume.
      *
-     * @param hasActiveOrderUid есть сохранённый uid активного заказа
-     * @param onFinishScreen сейчас открыт экран заказа
+     * @param savedInstanceStateNull {@code savedInstanceState == null} в {@code onCreate}
      */
-    public static boolean shouldBlockIntroDuringActiveOrder(
-            boolean hasActiveOrderUid,
-            boolean onFinishScreen
-    ) {
-        return hasActiveOrderUid || onFinishScreen;
+    public static boolean shouldOpenLandingOnColdStart(boolean savedInstanceStateNull) {
+        return savedInstanceStateNull;
     }
 }

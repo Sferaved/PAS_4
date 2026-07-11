@@ -171,6 +171,7 @@ import com.taxi_pas_4.ui.landing.LandingIntroHelper;
 import com.taxi_pas_4.ui.landing.LandingLanguageHelper;
 import com.taxi_pas_4.ui.landing.LandingNavigationHelper;
 import com.taxi_pas_4.utils.auth.GuestSessionHelper;
+import com.taxi_pas_4.utils.order.EarlyOrderNavigationHelper;
 
 
 public class MainActivity extends AppCompatActivity implements LandingFragment.LandingHost {
@@ -360,7 +361,14 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
         DrawerLayout drawer = binding.drawerLayout;
         navigationView = binding.navView;
         navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        flushPendingLandingIfNeeded();
+        // Лендинг — стартовая страница: сбросить стек/флаги заказа, не восстанавливать finish.
+        if (LandingIntroHelper.shouldOpenLandingOnColdStart(savedInstanceState == null)) {
+            EarlyOrderNavigationHelper.clearSubmitState();
+            navController.setGraph(R.navigation.mobile_navigation);
+            showLandingPage();
+        } else {
+            flushPendingLandingIfNeeded();
+        }
 
         // Добавляем слушатель изменения направления
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
@@ -370,6 +378,7 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
         });
 
         mAppBarConfiguration = new AppBarConfiguration.Builder(
+                R.id.nav_landing,
                 R.id.nav_visicom,
                 R.id.nav_cancel,
                 R.id.nav_about,
@@ -3712,7 +3721,6 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
     /**
      * После обновления с магазина (без очистки данных) один раз показать лендинг
      * и гостю, и авторизованному — иначе остаётся старый экран заказа.
-     * Не перебивать активный заказ (Mantis #30).
      */
     private void ensureLandingIntroAfterUpdate() {
         if (isWaitingForVerification) {
@@ -3723,15 +3731,6 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
         }
         if (!LandingIntroHelper.shouldShowIntroAfterUpdate(
                 readLandingIntroVersionCode(), BuildConfig.VERSION_CODE)) {
-            return;
-        }
-        boolean onFinish = navController != null
-                && navController.getCurrentDestination() != null
-                && navController.getCurrentDestination().getId() == R.id.nav_finish_separate;
-        String activeUid = ExecutionStatusViewModel.getPersistedActiveUid();
-        boolean hasActiveOrder = activeUid != null && !activeUid.trim().isEmpty();
-        if (LandingIntroHelper.shouldBlockIntroDuringActiveOrder(hasActiveOrder, onFinish)) {
-            Logger.d(this, TAG, "landing intro deferred: active order uid=" + activeUid);
             return;
         }
         showLandingPage();
@@ -3776,14 +3775,17 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
         pendingShowLanding = false;
         applyLandingEntryRestrictions();
         suppressGuestNavGuard = true;
-        if (navController.getCurrentDestination() == null
-                || navController.getCurrentDestination().getId() != R.id.nav_landing) {
+        NavDestination current = navController.getCurrentDestination();
+        if (current == null || current.getId() != R.id.nav_landing) {
+            // popUpTo graph: убрать восстановленный экран заказа из стека без мелькания назад.
             navController.navigate(R.id.nav_landing, null, new NavOptions.Builder()
+                    .setPopUpTo(navController.getGraph().getId(), true)
                     .setLaunchSingleTop(true)
                     .build());
         }
         suppressGuestNavGuard = false;
         markLandingIntroShownForCurrentVersion();
+        updateShellForDestination(R.id.nav_landing);
     }
 
     private void updateShellForDestination(int destinationId) {

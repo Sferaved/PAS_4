@@ -28,17 +28,8 @@ public class LandingIntroHelperTest {
     }
 
     @Test
-    public void blocksIntroWhenActiveOrderUidPresent() {
-        assertTrue(LandingIntroHelper.shouldBlockIntroDuringActiveOrder(true, false));
-    }
-
-    @Test
-    public void blocksIntroWhenOnFinishScreen() {
-        assertTrue(LandingIntroHelper.shouldBlockIntroDuringActiveOrder(false, true));
-    }
-
-    @Test
-    public void allowsIntroWithoutActiveOrder() {
-        assertFalse(LandingIntroHelper.shouldBlockIntroDuringActiveOrder(false, false));
+    public void opensLandingOnColdStart() {
+        assertTrue(LandingIntroHelper.shouldOpenLandingOnColdStart(true));
+        assertFalse(LandingIntroHelper.shouldOpenLandingOnColdStart(false));
     }
 }
