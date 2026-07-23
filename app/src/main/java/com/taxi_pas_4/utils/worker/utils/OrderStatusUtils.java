@@ -14,6 +14,7 @@ import androidx.annotation.NonNull;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
 import com.taxi_pas_4.service.AutoOrderResponse;
 import com.taxi_pas_4.ui.finish.ApiClient;
 import com.taxi_pas_4.utils.log.Logger;
@@ -51,7 +52,7 @@ public class OrderStatusUtils {
             Logger.d(context, TAG, "Полученные значения -> API: " + api + ", Email: " + email);
 
             // Формируем URL
-            String baseUrl = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
+            String baseUrl = BaseUrlHelper.fromPrefsWithSlash(sharedPreferencesHelperMain);
             String url = baseUrl + api + "/android/searchAutoOrderServiceAll/" + email + "/" + context.getString(R.string.application) + "/yes_mes";
 
             Logger.d(context, TAG, "Сформированный URL для запроса: " + url);

@@ -94,6 +94,7 @@ import com.google.android.play.core.install.model.UpdateAvailability;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
 import com.taxi_pas_4.utils.dialog.UklonAlertDialog;
 import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.FragmentVisicomBinding;
@@ -2618,7 +2619,7 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
 
     private void dispatchOrderFinishedRequest(Context ctx) {
             ToJSONParserRetrofit parser = new ToJSONParserRetrofit();
-            baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+            baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
             Logger.d(ctx, TAG, "orderFinished: " + baseUrl + urlOrder); // ← ctx
 
             parser.sendURLChannel(urlOrder, new Callback<>() {
@@ -3308,7 +3309,7 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
 
         databaseHelper = new DatabaseHelper(context);
         databaseHelperUid = new DatabaseHelperUid(context);
-        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+        baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
 //        new Thread(this::fetchRoutesCancel).start();
         try {
             statusOrder();
@@ -5339,11 +5340,10 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
 
             routeListCancel = new ArrayList<>();
 
-//            String baseUrl = "https://m.easy-order-taxi.site";
 
             List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
             String city = stringList.get(1);
-            baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+            baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
             String url = baseUrl + "/android/UIDStatusShowEmailCancelApp/" + userEmail + "/" + city + "/" + context.getString(R.string.application);
 
             Call<List<RouteResponseCancel>> call = ApiClient.getApiService().getRoutesCancel(url);
@@ -5941,8 +5941,7 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
             }
             List<String> cityInfo = logCursor(MainActivity.CITY_INFO, context);
             String city = cityInfo.size() > 1 ? cityInfo.get(1) : "";
-            String appBaseUrl = (String) sharedPreferencesHelperMain.getValue(
-                    "baseUrl", "https://m.easy-order-taxi.site");
+            String appBaseUrl = (String) BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
             GooglePayOrderHelper.fetchMerchantConfig(
                     appBaseUrl,
                     context.getString(R.string.application),
@@ -6002,8 +6001,7 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
                 pendingGooglePayAmount != null ? pendingGooglePayAmount : "0");
         Logger.d(context, TAG, "submitGooglePayHoldCharge: amountUah=" + amountUah
                 + " ref=" + pendingGooglePayOrderReference);
-        String appBaseUrl = (String) sharedPreferencesHelperMain.getValue(
-                "baseUrl", "https://m.easy-order-taxi.site");
+        String appBaseUrl = (String) BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
         String displayCost = resolveOrderDisplayCostForSubmit();
         if (displayCost == null) {
             displayCost = pendingGooglePayAmount;
@@ -6473,7 +6471,7 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
         }
         String api = listCity.get(2);
 
-        String baseUrl = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
+        String baseUrl = BaseUrlHelper.fromPrefsWithSlash(sharedPreferencesHelperMain);
         String url = baseUrl  + api + "/android/searchAutoOrderService/" + uid +"/no_mes";
 
         Call<OrderServiceResponse> call = ApiClient.getApiService().searchAutoOrderService(url);

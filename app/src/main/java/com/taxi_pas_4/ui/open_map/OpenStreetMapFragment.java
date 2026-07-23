@@ -76,6 +76,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
 import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.FragmentOpenstreetmapBinding;
 import com.taxi_pas_4.ui.maps.FromJSONParser;
@@ -1148,7 +1149,7 @@ public class OpenStreetMapFragment extends Fragment {
 
     // Инициализация API сервиса
     private void apiServiceActivate() {
-        String BASE_URL = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
+        String BASE_URL = BaseUrlHelper.fromPrefsWithSlash(sharedPreferencesHelperMain);
         HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(message -> Logger.d(ctx, TAG, message));
         loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 

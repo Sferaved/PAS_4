@@ -1,5 +1,7 @@
 package com.taxi_pas_4;
 
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
+
 import static android.view.View.GONE;
 import static com.taxi_pas_4.androidx.startup.MyApplication.getContext;
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
@@ -1087,7 +1089,7 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
         }
 
 
-        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+        baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
 
         boolean gps_upd;
         if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION)
@@ -1323,13 +1325,27 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
     }
 
     private void cityMaxPay() {
+        cityMaxPayAttempt(0);
+    }
 
-        String BASE_URL = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
+    private void cityMaxPayAttempt(int attempt) {
+        String baseUrl = BaseUrlHelper.fromPrefsWithSlash(sharedPreferencesHelperMain);
+        CityApiClient cityApiClient = new CityApiClient(baseUrl);
+        Retrofit retrofit = cityApiClient.getClient();
+        if (retrofit == null) {
+            if (attempt < 20) {
+                Logger.d(getApplication(), TAG,
+                        "cityMaxPay: baseUrl not ready, retry " + (attempt + 1));
+                new Handler(Looper.getMainLooper()).postDelayed(
+                        () -> cityMaxPayAttempt(attempt + 1), 500);
+            } else {
+                Logger.e(getApplication(), TAG,
+                        "cityMaxPay: give up — keys/base_urls still empty");
+            }
+            return;
+        }
+        CityService cityService = retrofit.create(CityService.class);
 
-        CityApiClient cityApiClient = new CityApiClient(BASE_URL);
-        CityService cityService = cityApiClient.getClient().create(CityService.class);
-
-        // Замените "your_city" на фактическое название города
         Call<CityResponse> call = cityService.getMaxPayValues("Kyiv City", getString(R.string.application));
 
         call.enqueue(new Callback<CityResponse>() {
@@ -1951,10 +1967,15 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
                 Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
             }
 
-            // Fallback: открыть email
+            // Fallback: открыть email (адрес из Firestore keys/mail)
             try {
+                String support = supportEmail;
+                if (support == null || support.trim().isEmpty()) {
+                    Logger.e(this, TAG, "supportEmail empty — skip mailto fallback");
+                    return;
+                }
                 Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
-                emailIntent.setData(Uri.parse("mailto:support@easy-order-taxi.site"));
+                emailIntent.setData(Uri.parse("mailto:" + support.trim()));
                 emailIntent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.support_subject));
                 startActivity(Intent.createChooser(emailIntent, getString(R.string.support)));
             } catch (Exception emailError) {
@@ -2205,7 +2226,6 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
 //
 //        // Создаем Retrofit
 //        Retrofit retrofit = new Retrofit.Builder()
-//                .baseUrl("https://t.easy-order-taxi.site/") // ваш сервер
 //                .addConverterFactory(ScalarsConverterFactory.create()) // для получения plain text
 //                .build();
 //
@@ -2282,7 +2302,6 @@ public class MainActivity extends AppCompatActivity implements LandingFragment.L
 //
 //        // Настройка Retrofit
 //        Retrofit retrofit = new Retrofit.Builder()
-//                .baseUrl("https://t.easy-order-taxi.site/") // твой сервер
 //                .addConverterFactory(GsonConverterFactory.create())
 //                .build();
 //

@@ -32,6 +32,7 @@ import androidx.navigation.Navigation;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
 import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.FragmentHistoryBinding;
 import com.taxi_pas_4.ui.finish.ApiClient;
@@ -269,7 +270,7 @@ public class HistoryFragment extends Fragment {
                 .build()));
         List<String> stringList = logCursor(MainActivity.CITY_INFO,context);
         String city = stringList.get(1);
-        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+        baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
 
         String url = baseUrl + "/android/UIDStatusShowEmailCityApp/" + email + "/" + city + "/" +  context.getString(R.string.application);
         Call<List<RouteResponse>> call = ApiClient.getApiService().getRoutes(url);

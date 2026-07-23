@@ -24,6 +24,7 @@ import androidx.navigation.NavOptions;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
 import com.taxi_pas_4.ui.card.unlink.UnlinkApi;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseSetActivCardWfp;
 import com.taxi_pas_4.ui.wfp.token.CallbackResponseWfp;
@@ -55,7 +56,7 @@ public class CustomCardAdapter extends ArrayAdapter<Map<String, String>> {
     public static String table;
     public static String pay_method;
 
-    private  final String baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+    private  final String baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
     public CustomCardAdapter(Context context, ArrayList<Map<String, String>> cardMaps, String table, String pay_method) {
         super(context, R.layout.cards_adapter_layout, cardMaps);
         this.cardMaps = cardMaps;

@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.user.save_server.ApiServiceUser;
 import com.taxi_pas_4.utils.user.save_server.UserResponse;
@@ -30,7 +31,7 @@ public class UserUtils {
     private static final String TAG = "UserUtils";
 
     public static boolean addUserNoName(String email, Context context, AddUserNoNameWorker worker) throws Exception {
-        String baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+        String baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
         Logger.d(context, TAG, "Base URL: " + baseUrl + ", Email: " + email);
 
         Retrofit retrofit = new Retrofit.Builder()

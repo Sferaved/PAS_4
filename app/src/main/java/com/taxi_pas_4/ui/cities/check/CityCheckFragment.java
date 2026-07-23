@@ -27,6 +27,7 @@ import androidx.work.WorkManager;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
 import com.taxi_pas_4.databinding.FragmentCityCheckBinding;
 import com.taxi_pas_4.ui.cities.api.CityApiClient;
 import com.taxi_pas_4.ui.cities.api.CityLastAddressResponse;
@@ -183,7 +184,7 @@ public class CityCheckFragment extends Fragment {
                         cityMenu = getString(R.string.city_kyiv);
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
                         sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-                        sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
+                        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
                         lastAddressUser(city);
                     })
                     .start();
@@ -206,7 +207,7 @@ public class CityCheckFragment extends Fragment {
                         cityMenu = getString(R.string.city_dnipro);
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
                         sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-                        sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
+                        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
                         lastAddressUser(city);
                     })
                     .start();
@@ -229,7 +230,7 @@ public class CityCheckFragment extends Fragment {
                         cityMenu = getString(R.string.city_odessa);
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
                         sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-                        sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
+                        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
                         lastAddressUser(city);
                     })
                     .start();
@@ -252,7 +253,7 @@ public class CityCheckFragment extends Fragment {
                         cityMenu = getString(R.string.city_zaporizhzhia);
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
                         sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-                        sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
+                        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
                         lastAddressUser(city);
                     })
                     .start();
@@ -275,7 +276,7 @@ public class CityCheckFragment extends Fragment {
                         cityMenu = getString(R.string.city_cherkassy);
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
                         sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-                        sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
+                        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
                         lastAddressUser(city);
                     })
                     .start();
@@ -298,7 +299,7 @@ public class CityCheckFragment extends Fragment {
                         cityMenu = getString(R.string.city_lviv);
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
                         sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-                        sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
+                        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
                         lastAddressUser(city);
                     })
                     .start();
@@ -321,7 +322,7 @@ public class CityCheckFragment extends Fragment {
                         cityMenu = getString(R.string.city_ivano_frankivsk);
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
                         sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-                        sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
+                        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
                         lastAddressUser(city);
                     })
                     .start();
@@ -344,7 +345,7 @@ public class CityCheckFragment extends Fragment {
                         cityMenu = getString(R.string.city_vinnytsia);
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
                         sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-                        sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
+                        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
                         lastAddressUser(city);
                     })
                     .start();
@@ -367,7 +368,7 @@ public class CityCheckFragment extends Fragment {
                         cityMenu = getString(R.string.city_poltava);
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
                         sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-                        sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
+                        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
                         lastAddressUser(city);
                     })
                     .start();
@@ -390,7 +391,7 @@ public class CityCheckFragment extends Fragment {
                         cityMenu = getString(R.string.city_sumy);
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
                         sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-                        sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
+                        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
                         lastAddressUser(city);
                     })
                     .start();
@@ -413,7 +414,7 @@ public class CityCheckFragment extends Fragment {
                         cityMenu = getString(R.string.city_kharkiv);
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
                         sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-                        sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
+                        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
                         lastAddressUser(city);
                     })
                     .start();
@@ -436,7 +437,7 @@ public class CityCheckFragment extends Fragment {
                         cityMenu = getString(R.string.city_chernihiv);
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
                         sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-                        sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
+                        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
                         lastAddressUser(city);
                     })
                     .start();
@@ -459,7 +460,7 @@ public class CityCheckFragment extends Fragment {
                         cityMenu = getString(R.string.city_rivne);
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
                         sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-                        sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
+                        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
                         lastAddressUser(city);
                     })
                     .start();
@@ -482,7 +483,7 @@ public class CityCheckFragment extends Fragment {
                         cityMenu = getString(R.string.city_ternopil);
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
                         sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-                        sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
+                        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
                         lastAddressUser(city);
                     })
                     .start();
@@ -505,7 +506,7 @@ public class CityCheckFragment extends Fragment {
                         cityMenu = getString(R.string.city_khmelnytskyi);
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
                         sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-                        sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
+                        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
                         lastAddressUser(city);
                     })
                     .start();
@@ -528,7 +529,7 @@ public class CityCheckFragment extends Fragment {
                         cityMenu = getString(R.string.city_zakarpattya);
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
                         sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-                        sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
+                        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
                         lastAddressUser(city);
                     })
                     .start();
@@ -551,7 +552,7 @@ public class CityCheckFragment extends Fragment {
                         cityMenu = getString(R.string.city_zhytomyr);
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
                         sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-                        sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
+                        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
                         lastAddressUser(city);
                     })
                     .start();
@@ -574,7 +575,7 @@ public class CityCheckFragment extends Fragment {
                         cityMenu = getString(R.string.city_kropyvnytskyi);
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
                         sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-                        sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
+                        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
                         lastAddressUser(city);
                     })
                     .start();
@@ -597,7 +598,7 @@ public class CityCheckFragment extends Fragment {
                         cityMenu = getString(R.string.city_mykolaiv);
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
                         sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-                        sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
+                        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
                         lastAddressUser(city);
                     })
                     .start();
@@ -620,7 +621,7 @@ public class CityCheckFragment extends Fragment {
                         cityMenu = getString(R.string.city_chernivtsi);
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
                         sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-                        sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
+                        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
                         lastAddressUser(city);
                     })
                     .start();
@@ -643,7 +644,7 @@ public class CityCheckFragment extends Fragment {
                         cityMenu = "Lutsk";
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
                         sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-                        sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
+                        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
                         lastAddressUser(city);
                     })
                     .start();
@@ -668,7 +669,7 @@ public class CityCheckFragment extends Fragment {
                         cityMenu = "Test";
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
                         sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-                        sharedPreferencesHelperMain.saveValue("baseUrl", "https://t.easy-order-taxi.site");
+                        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
                         lastAddressUser(city);
                     })
                     .start();
@@ -691,7 +692,7 @@ public class CityCheckFragment extends Fragment {
                         cityMenu = getString(R.string.foreign_countries);
                         String newTitle = getString(R.string.menu_city) + " " + cityMenu;
                         sharedPreferencesHelperMain.saveValue("newTitle", newTitle);
-                        sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
+                        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
                         lastAddressUser(city);
                     })
                     .start();
@@ -945,10 +946,14 @@ public class CityCheckFragment extends Fragment {
             city = "Chernivtsi";
         }
 
-        String BASE_URL =sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
+        String BASE_URL =BaseUrlHelper.fromPrefsWithSlash(sharedPreferencesHelperMain);
 
         CityApiClient cityApiClient = new CityApiClient(BASE_URL);
-        CityService cityService = cityApiClient.getClient().create(CityService.class);
+        CityService cityService = cityApiClient.createService();
+        if (cityService == null) {
+            Logger.w(requireContext(), TAG, "CityApiClient not ready");
+            return;
+        }
 
         // Замените "your_city" на фактическое название города
         Call<CityResponse> call = cityService.getMaxPayValues(city, getString(R.string.application));
@@ -1078,10 +1083,14 @@ public class CityCheckFragment extends Fragment {
         VisicomFragment.clearFromAddressUiForCityChange();
         resetRoutMarker();
 
-        String BASE_URL =sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
+        String BASE_URL =BaseUrlHelper.fromPrefsWithSlash(sharedPreferencesHelperMain);
 
         CityApiClient cityApiClient = new CityApiClient(BASE_URL);
-        CityService cityService = cityApiClient.getClient().create(CityService.class);
+        CityService cityService = cityApiClient.createService();
+        if (cityService == null) {
+            Logger.w(requireContext(), TAG, "CityApiClient not ready");
+            return;
+        }
 
         Call<CityLastAddressResponse> call = cityService.lastAddressUser(email, cityString, requireActivity().getString(R.string.application));
 
@@ -1162,38 +1171,10 @@ public class CityCheckFragment extends Fragment {
         Logger.d(requireActivity(), TAG, "updateMyPosition:city "+ city);
 //        ActionBarUtil.setupCustomActionBar(requireActivity(), R.layout.custom_action_bar_title, R.id.action_bar_title, newTitle);
 
-        switch (city){
-            case "Dnipropetrovsk Oblast":
-            case "Odessa":
-            case "Zaporizhzhia":
-            case "Cherkasy Oblast":
-            case "Kyiv City":
-            case "Lviv":
-            case "Ivano_frankivsk":
-            case "Vinnytsia":
-            case "Poltava":
-            case "Sumy":
-            case "Kharkiv":
-            case "Chernihiv":
-            case "Rivne":
-            case "Ternopil":
-            case "Khmelnytskyi":
-            case "Zakarpattya":
-            case "Zhytomyr":
-            case "Kropyvnytskyi":
-            case "Mykolaiv":
-            case "Chernivtsi":
-            case "Lutsk":
-                sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
-                break;
-            case "OdessaTest":
-//                sharedPreferencesHelperMain.saveValue("baseUrl", "https://test-taxi.kyiv.ua");
-                sharedPreferencesHelperMain.saveValue("baseUrl", "https://t.easy-order-taxi.site");
-                break;
-            default:
-                sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
-                city = "foreign countries";
+        if (!BaseUrlHelper.isKnownCity(city)) {
+            city = "foreign countries";
         }
+        BaseUrlHelper.syncForCity(requireContext(), city, sharedPreferencesHelperMain);
 
         switch (city) {
             case "Kyiv City":

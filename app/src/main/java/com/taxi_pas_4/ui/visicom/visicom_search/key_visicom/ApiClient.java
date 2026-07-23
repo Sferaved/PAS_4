@@ -1,5 +1,7 @@
 package com.taxi_pas_4.ui.visicom.visicom_search.key_visicom;
 
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
+
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import retrofit2.Call;
@@ -9,8 +11,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiClient {
 
-//    private static final String BASE_URL = "https://m.easy-order-taxi.site/";
-    private static final String BASE_URL = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
+    private static final String BASE_URL = BaseUrlHelper.fromPrefsWithSlash(sharedPreferencesHelperMain);
 
     private static final Retrofit retrofit = new Retrofit.Builder()
             .baseUrl(BASE_URL)

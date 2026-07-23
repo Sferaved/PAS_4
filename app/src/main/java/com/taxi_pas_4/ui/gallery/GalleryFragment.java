@@ -35,6 +35,7 @@ import androidx.navigation.NavOptions;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
 import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.FragmentGalleryBinding;
 import com.taxi_pas_4.utils.bottom_sheet.MyBottomSheetBonusFragment;
@@ -113,7 +114,7 @@ public class GalleryFragment extends Fragment {
         binding = FragmentGalleryBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
         context = requireActivity();
-        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+        baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
         if (!NetworkUtils.isNetworkAvailable(requireContext()) && isAdded()) {
             Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
             Logger.w(context, TAG, "NO INTERNET - Showing toast message");
@@ -651,7 +652,7 @@ public class GalleryFragment extends Fragment {
             String urlCost = getTaxiUrlSearchMarkers("costSearchMarkersTime", context);
 
             ToJSONParserRetrofit parser = new ToJSONParserRetrofit();
-            baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+            baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
 //            // Пример строки URL с параметрами
             Logger.d(getActivity(), TAG, "orderFinished: "  + baseUrl + urlCost);
             parser.sendURL(urlCost, new Callback<Map<String, String>>() {

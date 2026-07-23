@@ -43,6 +43,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
 import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.ui.cities.api.CityApiClient;
 import com.taxi_pas_4.ui.cities.api.CityResponse;
@@ -648,9 +649,13 @@ public class MyBottomSheetErrorFragment extends BottomSheetDialogFragment {
     private void cityMaxPay(String city) {
 
 
-        String BASE_URL =sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
+        String BASE_URL =BaseUrlHelper.fromPrefsWithSlash(sharedPreferencesHelperMain);
         CityApiClient cityApiClient = new CityApiClient(BASE_URL);
-        CityService cityService = cityApiClient.getClient().create(CityService.class);
+        CityService cityService = cityApiClient.createService();
+        if (cityService == null) {
+            Logger.w(requireContext(), TAG, "CityApiClient not ready");
+            return;
+        }
 
         // Замените "your_city" на фактическое название города
         Call<CityResponse> call = cityService.getMaxPayValues(city, getString(R.string.application));

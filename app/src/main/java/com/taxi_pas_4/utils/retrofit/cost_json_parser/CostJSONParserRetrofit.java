@@ -1,5 +1,7 @@
 package com.taxi_pas_4.utils.retrofit.cost_json_parser;
 
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
+
 import static com.taxi_pas_4.MainActivity.costMap;
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
@@ -32,7 +34,6 @@ public class CostJSONParserRetrofit {
     private final APIService apiService;
 
     public CostJSONParserRetrofit() {
-//        Retrofit retrofit = RetrofitClient.getClient("https://m.easy-order-taxi.site");
         HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
         loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
@@ -44,7 +45,7 @@ public class CostJSONParserRetrofit {
         httpClient.readTimeout(30, TimeUnit.SECONDS);    // Тайм-аут для чтения
         httpClient.writeTimeout(30, TimeUnit.SECONDS);   // Тайм-аут для записи
         // httpClient.addInterceptor(loggingInterceptor);
-        String baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+        String baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl)

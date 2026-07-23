@@ -51,6 +51,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
 import com.taxi_pas_4.databinding.FragmentCardBinding;
 import com.taxi_pas_4.ui.card.unlink.UnlinkApi;
 import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
@@ -351,7 +352,7 @@ public class CardFragment extends Fragment {
         refreshCardUiAfterSync();
 
         String url = baseUrl != null ? baseUrl
-                : (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+                : BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(url)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -691,7 +692,7 @@ public class CardFragment extends Fragment {
         super.onResume();
 
         context = requireActivity();
-        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+        baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
 
         // Проверка сети
         if (!NetworkUtils.isNetworkAvailable(requireContext()) && isAdded()) {

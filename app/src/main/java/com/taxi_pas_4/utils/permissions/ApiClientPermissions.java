@@ -1,12 +1,14 @@
 package com.taxi_pas_4.utils.permissions;
 
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
+
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiClientPermissions {
-    private static final String BASE_URL = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/apiTest/";
+    private static final String BASE_URL = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain) + "/apiTest/";
 
     private static Retrofit retrofit;
 

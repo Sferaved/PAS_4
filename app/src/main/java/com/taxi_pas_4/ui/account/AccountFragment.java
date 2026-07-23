@@ -41,6 +41,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.redmadrobot.inputmask.MaskedTextChangedListener;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
 import com.taxi_pas_4.databinding.FragmentAccountBinding;
 import com.taxi_pas_4.ui.exit.ExitActivity;
 import com.taxi_pas_4.ui.finish.ApiClient;
@@ -136,17 +137,14 @@ public class AccountFragment extends Fragment {
         userName = binding.userName;
         phoneNumber = binding.phoneNumber;
         email = binding.email;
-
-        List<String> stringList = logCursor(MainActivity.TABLE_USER_INFO);
-        userEmail = stringList.get(3);
-
-        userName.setText(stringList.get(4));
-        phoneNumber.setText(formatPhoneNumber(stringList.get(2)));
-        email.setText(userEmail);
+        progressBar = binding.progressBar;
 
         out_but = binding.outBut;
         consentManager = new FirebaseConsentManager(requireActivity());
         out_but.setOnClickListener(v -> {
+            // Hide/clear immediately so stale profile data does not flash during sign-out.
+            clearUserFields();
+            showGuestAccountUi();
             VerifyUserTask.stopListener();
             consentManager.revokeTokenAndSignOut();
             Toast.makeText(context, R.string.out_account, Toast.LENGTH_SHORT).show();
@@ -161,19 +159,28 @@ public class AccountFragment extends Fragment {
             startFireBase();
         });
 
-        if (!NetworkUtils.isNetworkAvailable(requireContext()) && isAdded()) {
-            in_but.setVisibility(GONE);
-            Logger.w(context, TAG, "NO INTERNET - Showing toast message");
-        } else {
-            in_but.setVisibility(VISIBLE);
-        }
+        btnOrder = binding.btnOrder;
+        btnOrder.setOnClickListener(v -> {
+            sharedPreferencesHelperMain.saveValue("gps_upd", true);
+            MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
+                    .setPopUpTo(R.id.nav_visicom, true)
+                    .build());
+        });
+
+        // Must be before showAuthPendingUi / googleVerifyAccount(): callbacks use btnRestartApp.
+        btnRestartApp = binding.btnRestartApp;
+        btnRestartApp.setOnClickListener(v -> {
+            restartApplication();
+        });
+
         out_but.setVisibility(GONE);
         del_but.setVisibility(GONE);
+        // Keep profile fields hidden until Firebase consent is resolved (avoids data flash).
+        showAuthPendingUi();
 
         setupSanitizedTextWatcher(userName, InputSanitizerHelper.InputType.USERNAME, upd_but);
         setupSanitizedTextWatcher(phoneNumber, InputSanitizerHelper.InputType.PHONE, upd_but);
 
-        progressBar = binding.progressBar;
         email.setOnClickListener(v -> {
             KeyboardUtils.hideKeyboard(requireActivity(), root);
             Toast.makeText(getActivity(), R.string.email_upd, Toast.LENGTH_SHORT).show();
@@ -197,20 +204,6 @@ public class AccountFragment extends Fragment {
 //            String phone = logCursor(MainActivity.CITY_INFO).get(3);
 //            intent.setData(Uri.parse(phone));
 //            startActivity(intent);
-        });
-
-        btnOrder = binding.btnOrder;
-        btnOrder.setOnClickListener(v -> {
-            sharedPreferencesHelperMain.saveValue("gps_upd", true);
-            MainActivity.navController.navigate(R.id.nav_visicom, null, new NavOptions.Builder()
-                    .setPopUpTo(R.id.nav_visicom, true)
-                    .build());
-        });
-
-        // Must be before googleVerifyAccount(): consent callback can run synchronously and call visibility(), which uses btnRestartApp.
-        btnRestartApp = binding.btnRestartApp;
-        btnRestartApp.setOnClickListener(v -> {
-            restartApplication();
         });
 
         googleVerifyAccount();
@@ -265,43 +258,99 @@ public class AccountFragment extends Fragment {
         consentManager.checkUserConsent(new FirebaseConsentManager.ConsentCallback() {
             @Override
             public void onConsentValid() {
+                if (!isAdded() || binding == null) {
+                    return;
+                }
                 Logger.d(context, TAG, "Согласие пользователя действительное.");
+                bindUserFieldsFromDb();
                 visibility(View.VISIBLE);
                 fetchRoutesCancel();
             }
 
             @Override
             public void onConsentInvalid() {
+                if (!isAdded() || binding == null) {
+                    return;
+                }
                 Logger.d(context, TAG, "Согласие пользователя НЕ действительное.");
-                visibility(View.INVISIBLE);
+                clearUserFields();
+                visibility(View.GONE);
             }
         });
     }
 
-    private void visibility(int visible) {
-        if (visible == View.INVISIBLE) {
-            if (!NetworkUtils.isNetworkAvailable(requireContext()) && isAdded()) {
-                in_but.setVisibility(GONE);
-                btnRestartApp.setVisibility(VISIBLE);
-                Logger.w(context, TAG, "NO INTERNET - Showing restart button");
-                Toast.makeText(context, getString(R.string.no_internet_restart), Toast.LENGTH_LONG).show();
-            } else {
-                in_but.setVisibility(VISIBLE);
-                btnRestartApp.setVisibility(GONE);
-            }
-        } else {
+    /** Hide profile + login until consent check finishes (no stale data flash). */
+    private void showAuthPendingUi() {
+        setProfileFieldsVisible(GONE);
+        in_but.setVisibility(GONE);
+        out_but.setVisibility(GONE);
+        del_but.setVisibility(GONE);
+        btnRestartApp.setVisibility(GONE);
+        if (progressBar != null) {
+            progressBar.setVisibility(VISIBLE);
+        }
+    }
+
+    private void showGuestAccountUi() {
+        setProfileFieldsVisible(GONE);
+        out_but.setVisibility(GONE);
+        del_but.setVisibility(GONE);
+        if (progressBar != null) {
+            progressBar.setVisibility(GONE);
+        }
+        if (!NetworkUtils.isNetworkAvailable(requireContext()) && isAdded()) {
             in_but.setVisibility(GONE);
+            btnRestartApp.setVisibility(VISIBLE);
+            Logger.w(context, TAG, "NO INTERNET - Showing restart button");
+        } else {
+            in_but.setVisibility(VISIBLE);
             btnRestartApp.setVisibility(GONE);
         }
+    }
+
+    private void bindUserFieldsFromDb() {
+        List<String> stringList = logCursor(MainActivity.TABLE_USER_INFO);
+        userEmail = stringList.get(3);
+        userName.setText(stringList.get(4));
+        phoneNumber.setText(formatPhoneNumber(stringList.get(2)));
+        email.setText(userEmail);
+    }
+
+    private void clearUserFields() {
+        userEmail = "";
+        if (userName != null) {
+            userName.setText("");
+        }
+        if (phoneNumber != null) {
+            phoneNumber.setText("");
+        }
+        if (email != null) {
+            email.setText("");
+        }
+    }
+
+    private void setProfileFieldsVisible(int visible) {
         phoneNumber.setVisibility(visible);
         userName.setVisibility(visible);
         email.setVisibility(visible);
         upd_but.setVisibility(visible);
         btnOrder.setVisibility(visible);
-
         root.findViewById(R.id.text_name).setVisibility(visible);
         root.findViewById(R.id.text_phone).setVisibility(visible);
         root.findViewById(R.id.text_email).setVisibility(visible);
+    }
+
+    private void visibility(int visible) {
+        if (progressBar != null) {
+            progressBar.setVisibility(GONE);
+        }
+        if (visible == View.GONE) {
+            showGuestAccountUi();
+            return;
+        }
+        in_but.setVisibility(GONE);
+        btnRestartApp.setVisibility(GONE);
+        setProfileFieldsVisible(VISIBLE);
     }
 
     private void restartApplication() {
@@ -393,7 +442,7 @@ public class AccountFragment extends Fragment {
 
         routeList = new ArrayList<>();
 
-        String baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+        String baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
 
         List<String> stringList = logCursor(MainActivity.CITY_INFO);
         String city = stringList.get(1);

@@ -29,6 +29,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
 
 import com.taxi_pas_4.ui.card.CardInfo;
 
@@ -846,7 +847,7 @@ public class WfpUtils {
 
     private static CallbackServiceWfp createCallbackService(Context context) {
 
-        String baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+        String baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
 
 
 

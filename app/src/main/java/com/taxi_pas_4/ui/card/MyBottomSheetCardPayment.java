@@ -42,6 +42,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
 import com.taxi_pas_4.ui.finish.ApiService;
 import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureClient;
 import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureResponse;
@@ -82,7 +83,6 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
     private final String amount;
     String email, uid, uid_Double;
     private String pay_method;
-//    private final String baseUrl = "https://m.easy-order-taxi.site";
     private String baseUrl;
     private boolean hold;
     private static String timeoutText;
@@ -141,7 +141,7 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
         }
         UXCam.tagScreenName(TAG);
 
-        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+        baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
         webView = view.findViewById(R.id.webView);
         email = logCursor(MainActivity.TABLE_USER_INFO, requireActivity()).get(3);
         fragmentManager = getParentFragmentManager();
@@ -235,7 +235,7 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
 
     private void paymentView(String orderReference) {
         pay_method = logCursor(MainActivity.TABLE_SETTINGS_INFO, context).get(4);
-        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+        baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
         switch (pay_method) {
             case "wfp_payment":
                 payWfp(checkoutUrl);
@@ -478,7 +478,7 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
         Logger.d(context, TAG, "getStatusWfp: MainActivity.order_id " +  order_id);
         List<String> stringList = logCursor(MainActivity.CITY_INFO, context);
         String city = stringList.get(1);
-        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+        baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
@@ -496,7 +496,7 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
                 .writeTimeout(30, TimeUnit.SECONDS)   // Тайм-аут на запись данных
                 .build();
 
-        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+        baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl +"/")
                 .addConverterFactory(GsonConverterFactory.create())
@@ -659,7 +659,7 @@ public class MyBottomSheetCardPayment extends BottomSheetDialogFragment {
 //
 //
 //
-//        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+//        baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
 //
 //        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
 //        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);

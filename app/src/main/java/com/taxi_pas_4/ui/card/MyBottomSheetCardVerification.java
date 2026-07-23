@@ -35,6 +35,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.gson.Gson;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
 import com.taxi_pas_4.ui.fondy.callback.CallbackResponse;
 import com.taxi_pas_4.ui.fondy.callback.CallbackService;
 import com.taxi_pas_4.ui.fondy.gen_signatur.SignatureClient;
@@ -95,7 +96,6 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
     String email;
     String pay_method;
     static SQLiteDatabase database;
-//    private final String baseUrl = "https://m.easy-order-taxi.site";
     private String baseUrl;
     Activity context;
 
@@ -122,7 +122,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
         View view = inflater.inflate(R.layout.activity_fondy_payment, container, false);
         rootView = view;
         fragmentManager = getParentFragmentManager();
-        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+        baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
 
         webView = view.findViewById(R.id.webView);
         email = logCursor(MainActivity.TABLE_USER_INFO).get(3);
@@ -374,7 +374,7 @@ public class MyBottomSheetCardVerification extends BottomSheetDialogFragment {
     private void getReversWfp(String city) {
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+        baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
         OkHttpClient client = new OkHttpClient.Builder()
                 .addInterceptor(new RetryInterceptor()) // 3 попытки
                 .addInterceptor(interceptor)

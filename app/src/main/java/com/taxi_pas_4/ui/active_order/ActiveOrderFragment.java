@@ -30,6 +30,7 @@ import androidx.navigation.NavOptions;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
 import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.FragmentCancelBinding;
 import com.taxi_pas_4.ui.finish.ApiClient;
@@ -195,7 +196,7 @@ public class ActiveOrderFragment extends Fragment {
                 .setPopUpTo(R.id.nav_visicom, true)
                 .build()));
 
-        String  baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+        String  baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
 
 
         List<String> stringList = logCursor(MainActivity.CITY_INFO,context);

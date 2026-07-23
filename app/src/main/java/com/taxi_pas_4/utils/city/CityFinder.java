@@ -21,6 +21,7 @@ import androidx.navigation.Navigation;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.utils.data.DataArr;
 import com.taxi_pas_4.utils.ip.ApiServiceCountry;
@@ -400,40 +401,9 @@ public class CityFinder {
             return;
         }
 
-        // ✅ установка baseUrl
-        String finalCityForUrl = city;
-        switch (city){
-            case "Dnipropetrovsk Oblast":
-            case "Odessa":
-            case "Zaporizhzhia":
-            case "Cherkasy Oblast":
-            case "Kyiv City":
-            case "Lviv":
-            case "Ivano_frankivsk":
-            case "Vinnytsia":
-            case "Poltava":
-            case "Sumy":
-            case "Kharkiv":
-            case "Chernihiv":
-            case "Rivne":
-            case "Ternopil":
-            case "Khmelnytskyi":
-            case "Zakarpattya":
-            case "Zhytomyr":
-            case "Kropyvnytskyi":
-            case "Mykolaiv":
-            case "Chernivtsi":
-            case "Lutsk":
-                sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
-                break;
-            case "OdessaTest":
-                sharedPreferencesHelperMain.saveValue("baseUrl", "https://t.easy-order-taxi.site");
-                break;
-            default:
-                sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
-                finalCityForUrl = "foreign countries";
-                break;
-        }
+        // ✅ baseUrl из Firestore city/{city}.base_url (+ fallback)
+        String finalCityForUrl = BaseUrlHelper.documentIdForCity(city);
+        BaseUrlHelper.syncForCity(context, finalCityForUrl, sharedPreferencesHelperMain);
 
         // ✅ Используем finalCityForUrl для дальнейшей работы
         final String finalCity = finalCityForUrl;
@@ -1234,36 +1204,6 @@ public class CityFinder {
     }
 
     private void applyBaseUrlForCity(String city) {
-        switch (city) {
-            case "Dnipropetrovsk Oblast":
-            case "Odessa":
-            case "Zaporizhzhia":
-            case "Cherkasy Oblast":
-            case "Kyiv City":
-            case "Lviv":
-            case "Ivano_frankivsk":
-            case "Vinnytsia":
-            case "Poltava":
-            case "Sumy":
-            case "Kharkiv":
-            case "Chernihiv":
-            case "Rivne":
-            case "Ternopil":
-            case "Khmelnytskyi":
-            case "Zakarpattya":
-            case "Zhytomyr":
-            case "Kropyvnytskyi":
-            case "Mykolaiv":
-            case "Chernivtsi":
-            case "Lutsk":
-                sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
-                break;
-            case "OdessaTest":
-                sharedPreferencesHelperMain.saveValue("baseUrl", "https://t.easy-order-taxi.site");
-                break;
-            default:
-                sharedPreferencesHelperMain.saveValue("baseUrl", "https://m.easy-order-taxi.site");
-                break;
-        }
+        BaseUrlHelper.syncForCity(context, city, sharedPreferencesHelperMain);
     }
 }

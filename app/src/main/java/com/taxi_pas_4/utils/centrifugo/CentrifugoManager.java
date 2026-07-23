@@ -20,6 +20,7 @@ import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.ui.visicom.VisicomFragment;
 import com.taxi_pas_4.ui.weather.finish.PassengerNotifier;
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
 import com.taxi_pas_4.utils.cost.CostParseHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
@@ -66,7 +67,6 @@ import com.taxi_pas_4.utils.db.CursorReadHelper;
  * Версия с официальным Centrifuge SDK
  */
 public class CentrifugoManager {
-    private static final String CENTRIFUGO_URL = "wss://t.easy-order-taxi.site/connection/websocket";
     private static final String CHANNEL_NAME = "teal-towel-48";
     private static final String TAG = "CentrifugoManager";
     private static final int RECONNECT_DELAY_MS = 5000;
@@ -151,8 +151,11 @@ public class CentrifugoManager {
         Options options = new Options();
         options.setToken(connectionToken);
 
+        String centrifugoUrl = BaseUrlHelper.centrifugoWsUrl(sharedPreferencesHelperMain);
+        Log.i(TAG, "Centrifugo URL: " + centrifugoUrl);
+
         // Создаем клиент с тремя параметрами: URL, options, слушатель
-        client = new Client(CENTRIFUGO_URL, options, new EventListener() {
+        client = new Client(centrifugoUrl, options, new EventListener() {
             @Override
             public void onConnected(Client client, ConnectedEvent event) {
                 Log.d(TAG, "✅ Connected to Centrifugo");

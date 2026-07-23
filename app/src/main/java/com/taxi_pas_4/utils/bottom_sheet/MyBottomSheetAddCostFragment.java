@@ -24,6 +24,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
 import com.taxi_pas_4.ui.finish.AddCostBottomUpdateResponse;
 import com.taxi_pas_4.ui.finish.ApiService;
 import com.taxi_pas_4.ui.finish.Status;
@@ -182,7 +183,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
             String addCost
     ) {
 
-        String  baseUrl = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
+        String  baseUrl = BaseUrlHelper.fromPrefsWithSlash(sharedPreferencesHelperMain);
 
         if ("nal_payment".equals(pay_method)) {
             viewModel.setCancelStatus(false);
@@ -430,7 +431,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
 
 
     private void wfpInvoice(String orderId, String amount, String uid) {
-        String  baseUrl = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
+        String  baseUrl = BaseUrlHelper.fromPrefsWithSlash(sharedPreferencesHelperMain);
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl)
@@ -458,7 +459,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
             String amount,
             String order_id
     ) {
-        String  baseUrl = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
+        String  baseUrl = BaseUrlHelper.fromPrefsWithSlash(sharedPreferencesHelperMain);
 
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
@@ -618,7 +619,7 @@ public class MyBottomSheetAddCostFragment extends BottomSheetDialogFragment {
                 .readTimeout(30, TimeUnit.SECONDS)    // Тайм-аут на чтение данных
                 .writeTimeout(30, TimeUnit.SECONDS)   // Тайм-аут на запись данных
                 .build();
-        String baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+        String baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl)

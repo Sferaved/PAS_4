@@ -1,5 +1,7 @@
 package com.taxi_pas_4.ui.fondy.gen_signatur;
 
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
+
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import androidx.annotation.NonNull;
@@ -14,8 +16,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class SignatureClient {
 
-//    private static final String BASE_URL = "https://m.easy-order-taxi.site/";
-    private static final String BASE_URL = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
+    private static final String BASE_URL = BaseUrlHelper.fromPrefsWithSlash(sharedPreferencesHelperMain);
     private static final String TAG = "SignatureClient";
 
     private final ApiService apiService;

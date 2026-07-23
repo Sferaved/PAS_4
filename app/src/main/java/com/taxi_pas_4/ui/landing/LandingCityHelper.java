@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
 import com.taxi_pas_4.utils.location.AutoLocationAfterCityHelper;
 import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
 import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
@@ -44,7 +45,7 @@ public final class LandingCityHelper {
         String newTitle = context.getString(R.string.menu_city) + " " + cityMenu;
 
         prefs.saveValue("countryState", "UA");
-        prefs.saveValue("baseUrl", "https://m.easy-order-taxi.site");
+        BaseUrlHelper.syncForCity(context, KYIV_CITY_CODE, prefs);
         prefs.saveValue("newTitle", newTitle);
         prefs.saveValue("CityCheckActivity", "run");
 

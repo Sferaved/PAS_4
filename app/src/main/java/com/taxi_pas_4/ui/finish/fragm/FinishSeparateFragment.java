@@ -62,6 +62,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
 import com.taxi_pas_4.androidx.startup.MyApplication;
 import com.taxi_pas_4.databinding.FragmentFinishSeparateBinding;
 import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
@@ -347,7 +348,7 @@ public class FinishSeparateFragment extends Fragment {
 
         context.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-        baseUrl = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
+        baseUrl = BaseUrlHelper.fromPrefsWithSlash(sharedPreferencesHelperMain);
         // Получаем доступ к кружочкам
         progressSteps = root.findViewById(R.id.progressSteps);
         step1 = root.findViewById(R.id.step1);
@@ -998,8 +999,7 @@ public class FinishSeparateFragment extends Fragment {
             return;
         }
         String city = listCity.get(1);
-        String baseUrlValue = (String) sharedPreferencesHelperMain.getValue(
-                "baseUrl", "https://m.easy-order-taxi.site");
+        String baseUrlValue = (String) BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
         OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(15, TimeUnit.SECONDS)
                 .readTimeout(20, TimeUnit.SECONDS)
@@ -1496,7 +1496,7 @@ public class FinishSeparateFragment extends Fragment {
     }
 
     private void fetchBonus() {
-        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+        baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
         String url = baseUrl + "bonusBalance/recordsBloke/" + uid + "/" +  context.getString(R.string.application);
         Call<BonusResponse> call = ApiClient.getApiService().getBonus(url);
         Logger.d(context, TAG, "fetchBonus: " + url);
@@ -1558,7 +1558,7 @@ public class FinishSeparateFragment extends Fragment {
         List<String> listCity = logCursor(MainActivity.CITY_INFO, context);
         String city = listCity.get(1);
         String api = listCity.get(2);
-        baseUrl = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
+        baseUrl = BaseUrlHelper.fromPrefsWithSlash(sharedPreferencesHelperMain);
         boolean orderInMyVod = (boolean) sharedPreferencesHelperMain.getValue("order_in_my_vod", false);
         boolean useVodCancel = orderInMyVod && action != null && !"Поиск авто".equals(action);
         String activeUid = resolveActiveOrderUid();
@@ -1898,7 +1898,7 @@ public class FinishSeparateFragment extends Fragment {
             List<String> listCity = logCursor(MainActivity.CITY_INFO, context);
             String city = listCity.get(1);
             String api = listCity.get(2);
-            baseUrl = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
+            baseUrl = BaseUrlHelper.fromPrefsWithSlash(sharedPreferencesHelperMain);
             String url = baseUrl  + api + "/android/historyUIDStatusNew/" + value + "/" + city  + "/" +  context.getString(R.string.application);
 
             Call<OrderResponse> call = ApiClient.getApiService().statusOrder(url);
@@ -2006,7 +2006,7 @@ public class FinishSeparateFragment extends Fragment {
                 }
             });
         } else {
-            baseUrl = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
+            baseUrl = BaseUrlHelper.fromPrefsWithSlash(sharedPreferencesHelperMain);
             String url = baseUrl  + "getOrderStatusMessageResultPush/" + uid;
 
 //            Call<OrderResponse> call = ApiClient.getApiService().getOrderStatusMessageResultPush(url);
@@ -3698,8 +3698,7 @@ public class FinishSeparateFragment extends Fragment {
         }
         String city = listCity.get(1);
         String api = listCity.get(2);
-        String base = sharedPreferencesHelperMain.getValue("baseUrl",
-                "https://m.easy-order-taxi.site") + "/";
+        String base = BaseUrlHelper.fromPrefsWithSlash(sharedPreferencesHelperMain);
         String url = base + api + "/android/historyUIDStatusNew/" + value + "/" + city
                 + "/" + context.getString(R.string.application);
         Logger.d(context, TAG, "pollHistoryUidForCostRecovery: " + url);
@@ -4020,8 +4019,7 @@ public class FinishSeparateFragment extends Fragment {
             return;
         }
 
-        String baseUrlValue = (String) sharedPreferencesHelperMain.getValue(
-                "baseUrl", "https://m.easy-order-taxi.site");
+        String baseUrlValue = (String) BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
         OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(5, TimeUnit.SECONDS)
                 .readTimeout(8, TimeUnit.SECONDS)
@@ -4178,8 +4176,7 @@ public class FinishSeparateFragment extends Fragment {
         }
         OkHttpClient client = clientBuilder.build();
 
-        String baseUrlValue = (String) sharedPreferencesHelperMain.getValue(
-                "baseUrl", "https://m.easy-order-taxi.site");
+        String baseUrlValue = (String) BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrlValue + "/")
                 .addConverterFactory(GsonConverterFactory.create(ApiGsonHelper.create()))
@@ -4548,8 +4545,7 @@ public class FinishSeparateFragment extends Fragment {
             }
             List<String> cityInfo = logCursor(MainActivity.CITY_INFO, context);
             String city = cityInfo.size() > 1 ? cityInfo.get(1) : "";
-            String appBaseUrl = (String) sharedPreferencesHelperMain.getValue(
-                    "baseUrl", "https://m.easy-order-taxi.site");
+            String appBaseUrl = (String) BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
             GooglePayOrderHelper.fetchMerchantConfig(
                     appBaseUrl,
                     getString(R.string.application),
@@ -4633,8 +4629,7 @@ public class FinishSeparateFragment extends Fragment {
         List<String> userInfo = logCursor(TABLE_USER_INFO, context);
         String email = userInfo.size() > 3 ? userInfo.get(3) : "";
         String phone = userInfo.size() > 2 ? userInfo.get(2) : "";
-        String appBaseUrl = (String) sharedPreferencesHelperMain.getValue(
-                "baseUrl", "https://m.easy-order-taxi.site");
+        String appBaseUrl = (String) BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
 
         GooglePayOrderHelper.submitHoldCharge(
                 context,
@@ -4780,8 +4775,7 @@ public class FinishSeparateFragment extends Fragment {
                 .readTimeout(30, TimeUnit.SECONDS)
                 .writeTimeout(30, TimeUnit.SECONDS)
                 .build();
-        String baseUrl = (String) sharedPreferencesHelperMain.getValue(
-                "baseUrl", "https://m.easy-order-taxi.site");
+        String baseUrl = (String) BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl)
                 .addConverterFactory(GsonConverterFactory.create(ApiGsonHelper.create()))
@@ -4825,7 +4819,7 @@ public class FinishSeparateFragment extends Fragment {
         httpClient.readTimeout(60, TimeUnit.SECONDS);    // Тайм-аут для чтения
         httpClient.writeTimeout(60, TimeUnit.SECONDS);   // Тайм-аут для записи
 
-        String baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+        String baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl)
@@ -5180,7 +5174,7 @@ public class FinishSeparateFragment extends Fragment {
 
         String api = logCursor(MainActivity.CITY_INFO, context).get(2);
 
-        baseUrl = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") +"/";
+        baseUrl = BaseUrlHelper.fromPrefsWithSlash(sharedPreferencesHelperMain);
 
         String url = baseUrl + api + "/android/showFinishCost/" + uid;
 

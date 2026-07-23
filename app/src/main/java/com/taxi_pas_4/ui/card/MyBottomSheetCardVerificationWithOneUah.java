@@ -31,6 +31,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
 import com.taxi_pas_4.ui.fondy.payment.UniqueNumberGenerator;
 import com.taxi_pas_4.ui.wfp.checkStatus.StatusResponse;
 import com.taxi_pas_4.ui.wfp.checkStatus.StatusService;
@@ -90,7 +91,7 @@ public class MyBottomSheetCardVerificationWithOneUah extends BottomSheetDialogFr
         context = requireActivity();
         webView = view.findViewById(R.id.webView);
         view.findViewById(R.id.payment_browser_hint).setVisibility(View.GONE);
-        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+        baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
         email = logCursor(MainActivity.TABLE_USER_INFO, context).get(3);
         amount = "1";
         messageFondy =  context.getString(R.string.fondy_message);
@@ -120,7 +121,7 @@ public class MyBottomSheetCardVerificationWithOneUah extends BottomSheetDialogFr
     private void getUrlToPaymentWfp() {
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+        baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
         OkHttpClient client = new OkHttpClient.Builder()
                 .addInterceptor(new RetryInterceptor()) // 3 попытки
                 .addInterceptor(interceptor)
@@ -339,7 +340,7 @@ public class MyBottomSheetCardVerificationWithOneUah extends BottomSheetDialogFr
         Log.d("ReversWfp", "HttpLoggingInterceptor configured with level: BODY");
 
         // Retrieve base URL from SharedPreferences
-        baseUrl = (String) sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site");
+        baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
         Log.d("ReversWfp", "Base URL retrieved: " + baseUrl);
 
         // Build OkHttpClient with interceptors and timeouts

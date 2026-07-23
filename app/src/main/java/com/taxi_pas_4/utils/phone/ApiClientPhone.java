@@ -1,5 +1,7 @@
 package com.taxi_pas_4.utils.phone;
 
+import com.taxi_pas_4.utils.city.BaseUrlHelper;
+
 import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHelperMain;
 
 import retrofit2.Call;
@@ -10,8 +12,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiClientPhone {
 
-//    private static final String BASE_URL = "https://m.easy-order-taxi.site/";
-    private static final String BASE_URL = sharedPreferencesHelperMain.getValue("baseUrl", "https://m.easy-order-taxi.site") + "/";
+    private static final String BASE_URL = BaseUrlHelper.fromPrefsWithSlash(sharedPreferencesHelperMain);
 
     private final ApiServicePhone apiService;
 
