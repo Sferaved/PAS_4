@@ -298,12 +298,15 @@ public class AccountFragment extends Fragment {
         if (progressBar != null) {
             progressBar.setVisibility(GONE);
         }
-        if (!NetworkUtils.isNetworkAvailable(requireContext()) && isAdded()) {
-            in_but.setVisibility(GONE);
-            btnRestartApp.setVisibility(VISIBLE);
-            Logger.w(context, TAG, "NO INTERNET - Showing restart button");
-        } else {
+        // Always show login for guest when fragment is shown; restart is extra if offline.
+        if (AccountAuthButtonsHelper.shouldShowLoginForGuest(
+                NetworkUtils.isNetworkAvailable(requireContext()))) {
             in_but.setVisibility(VISIBLE);
+        }
+        if (!NetworkUtils.isNetworkAvailable(requireContext()) && isAdded()) {
+            btnRestartApp.setVisibility(VISIBLE);
+            Logger.w(context, TAG, "NO INTERNET - Showing restart button (login still visible)");
+        } else {
             btnRestartApp.setVisibility(GONE);
         }
     }
@@ -348,9 +351,24 @@ public class AccountFragment extends Fragment {
             showGuestAccountUi();
             return;
         }
+        // Logged in: logout must be visible even if cancel-routes API is slow/fails (Wi‑Fi/4G).
         in_but.setVisibility(GONE);
         btnRestartApp.setVisibility(GONE);
+        if (AccountAuthButtonsHelper.shouldShowLogoutWhenLoggedIn()) {
+            out_but.setVisibility(VISIBLE);
+        }
         setProfileFieldsVisible(VISIBLE);
+    }
+
+    /** Logout/delete when account is free or cancel-routes API empty/failed. */
+    private void applyLogoutButtonsAfterCancelCheck(boolean requestFailedOrEmpty, boolean accountFreeAsterisk) {
+        if (!isAdded() || binding == null) {
+            return;
+        }
+        if (AccountAuthButtonsHelper.shouldShowLogoutAfterCancelRoutes(requestFailedOrEmpty, accountFreeAsterisk)) {
+            out_but.setVisibility(VISIBLE);
+            del_but.setVisibility(VISIBLE);
+        }
     }
 
     private void restartApplication() {
@@ -409,7 +427,7 @@ public class AccountFragment extends Fragment {
     private void checkInternetAndShowRestartButton() {
         if (!NetworkUtils.isNetworkAvailable(requireContext())) {
             btnRestartApp.setVisibility(VISIBLE);
-            in_but.setVisibility(GONE);
+            // Do not hide login — guest must still be able to sign in after network returns.
             Toast.makeText(context, getString(R.string.no_internet_restart), Toast.LENGTH_LONG).show();
         } else {
             btnRestartApp.setVisibility(GONE);
@@ -443,6 +461,12 @@ public class AccountFragment extends Fragment {
         routeList = new ArrayList<>();
 
         String baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
+        if (baseUrl == null || baseUrl.isEmpty()) {
+            Logger.w(context, TAG, "fetchRoutesCancel: baseUrl empty — keep logout visible");
+            applyLogoutButtonsAfterCancelCheck(true, false);
+            progressBar.setVisibility(GONE);
+            return;
+        }
 
         List<String> stringList = logCursor(MainActivity.CITY_INFO);
         String city = stringList.get(1);
@@ -454,38 +478,45 @@ public class AccountFragment extends Fragment {
         call.enqueue(new Callback<List<RouteResponseCancel>>() {
             @Override
             public void onResponse(@NonNull Call<List<RouteResponseCancel>> call, @NonNull Response<List<RouteResponseCancel>> response) {
+                if (!isAdded() || binding == null) {
+                    return;
+                }
                 progressBar.setVisibility(GONE);
                 if (response.isSuccessful() && response.body() != null) {
                     List<RouteResponseCancel> routes = response.body();
                     Logger.d(context, TAG, "onResponse: " + routes);
-                    if (routes != null && !routes.isEmpty()) {
-                        if (routes.size() == 1) {
-                            RouteResponseCancel route = routes.get(0);
-                            Logger.d(context, TAG, "Checking route: " + route);
-                            if ("*".equals(route.getRouteFrom())) {
-                                Logger.d(context, TAG, "Route with asterisk found, performing delete actions");
-                                Logger.d(context, TAG, "processRouteList: Array is empty, showing delete button");
-                                out_but.setVisibility(VISIBLE);
-                                del_but.setVisibility(VISIBLE);
-                            } else {
-                                routeList.addAll(routes);
-                                processCancelList();
-                            }
+                    if (routes == null || routes.isEmpty()) {
+                        applyLogoutButtonsAfterCancelCheck(true, false);
+                        return;
+                    }
+                    if (routes.size() == 1) {
+                        RouteResponseCancel route = routes.get(0);
+                        Logger.d(context, TAG, "Checking route: " + route);
+                        if ("*".equals(route.getRouteFrom())) {
+                            Logger.d(context, TAG, "Route with asterisk found, performing delete actions");
+                            Logger.d(context, TAG, "processRouteList: Array is empty, showing delete button");
+                            applyLogoutButtonsAfterCancelCheck(false, true);
                         } else {
-                            boolean hasRouteWithAsterisk = false;
-                            for (RouteResponseCancel route : routes) {
-                                if ("*".equals(route.getRouteFrom())) {
-                                    hasRouteWithAsterisk = true;
-                                    break;
-                                }
+                            routeList.addAll(routes);
+                            processCancelList();
+                        }
+                    } else {
+                        boolean hasRouteWithAsterisk = false;
+                        for (RouteResponseCancel route : routes) {
+                            if ("*".equals(route.getRouteFrom())) {
+                                hasRouteWithAsterisk = true;
+                                break;
                             }
-                            if (!hasRouteWithAsterisk) {
-                                routeList.addAll(routes);
-                                processCancelList();
-                            }
+                        }
+                        if (!hasRouteWithAsterisk) {
+                            routeList.addAll(routes);
+                            processCancelList();
+                        } else {
+                            applyLogoutButtonsAfterCancelCheck(false, true);
                         }
                     }
                 } else {
+                    applyLogoutButtonsAfterCancelCheck(true, false);
                     Toast.makeText(requireActivity(), R.string.network_no_internet, Toast.LENGTH_LONG).show();
                     Logger.w(context, TAG, "NO INTERNET - Showing toast message");
                 }
@@ -493,6 +524,13 @@ public class AccountFragment extends Fragment {
 
             public void onFailure(@NonNull Call<List<RouteResponseCancel>> call, @NonNull Throwable t) {
                 FirebaseCrashlytics.getInstance().recordException(t);
+                if (!isAdded() || binding == null) {
+                    return;
+                }
+                progressBar.setVisibility(GONE);
+                // Keep logout available when cancel-routes API fails (Wi‑Fi/4G glitches).
+                applyLogoutButtonsAfterCancelCheck(true, false);
+                Logger.e(context, TAG, "fetchRoutesCancel failed: " + t.getMessage());
             }
         });
     }
