@@ -75,6 +75,10 @@ public class KafkaRequest {
 
         String url = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain)
                 + "/kafka/sendCostMessageMyApi";
+        if (url.startsWith("/kafka")) {
+            Log.e(TAG, "sendCostMessage skipped: baseUrl empty");
+            return;
+        }
         Log.d(TAG, "sendCostMessage url=" + url);
         Request request = new Request.Builder()
                 .url(url)

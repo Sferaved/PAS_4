@@ -7,18 +7,26 @@ import static com.taxi_pas_4.androidx.startup.MyApplication.sharedPreferencesHel
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+/**
+ * Lazy Retrofit: baseUrl from Firebase prefs (not captured at class load).
+ */
 public class ApiClient {
     private static Retrofit retrofit;
-    private static final String BASE_URL = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain) + "/apiTest/android/";
+    private static String retrofitBaseUrl;
 
     public static Retrofit getRetrofitClient() {
-        if (retrofit == null) {
+        String baseUrl = BaseUrlHelper.fromPrefsWithSlash(sharedPreferencesHelperMain);
+        if (baseUrl.isEmpty()) {
+            return null;
+        }
+        String full = baseUrl + "apiTest/android/";
+        if (retrofit == null || !full.equals(retrofitBaseUrl)) {
+            retrofitBaseUrl = full;
             retrofit = new Retrofit.Builder()
-                    .baseUrl(BASE_URL)
+                    .baseUrl(full)
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
         }
         return retrofit;
     }
 }
-

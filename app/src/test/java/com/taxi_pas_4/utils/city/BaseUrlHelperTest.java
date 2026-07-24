@@ -88,6 +88,14 @@ public class BaseUrlHelperTest {
     }
 
     @Test
+    public void fromPrefsWithSlash_addsTrailingSlash() {
+        assertEquals("", BaseUrlHelper.fromPrefsWithSlash(prefs));
+
+        BaseUrlHelper.applyGlobalDefaults(prefs, "https://m.example.com", "https://t.example.com");
+        assertEquals("https://m.example.com/", BaseUrlHelper.fromPrefsWithSlash(prefs));
+    }
+
+    @Test
     public void centrifugoWsUrl_mapsHttpsToWss() {
         BaseUrlHelper.applyGlobalDefaults(prefs, "https://m.example.com", "https://t.example.com");
         assertEquals("wss://m.example.com/connection/websocket",

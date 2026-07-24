@@ -1297,13 +1297,19 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
         hideCostCalculationProgress();
         long now = System.currentTimeMillis();
         lastVisicomCostRequestMs = now;
-        if (isNetworkRelatedCostError(serverMessage)) {
+        boolean networkUp = context != null && NetworkUtils.isNetworkAvailable(context);
+        if (isNetworkRelatedCostError(serverMessage) && !networkUp) {
             lastCostCalculationFailureMs = 0;
             btnVisible(GONE);
             Logger.w(context, TAG, "Ошибка сети при расчёте стоимости: " + serverMessage);
             return;
         }
+        // Сеть есть (Wi‑Fi/4G), но расчёт не удался — не оставляем экран без кнопок заказа.
         lastCostCalculationFailureMs = now;
+        if (tryApplyCachedAroundCityCost()) {
+            Logger.d(context, TAG, "showCostCalculationError: показали кэш при сети online");
+            return;
+        }
         btnVisible(VISIBLE);
         if (!isAdded() || isStateSaved()) {
             return;
@@ -1678,6 +1684,9 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
     @Override
     public void onDestroyView() {
         cancelGooglePayHoldPoll();
+        // If cost response arrives after destroy, do not leave buttons stuck hidden.
+        CostCalculationProgressBar.setCalculationInProgress(false);
+        cancelPendingReserveCost();
         // ✅ Отменяем активные запросы
         pendingAddressRequest = null;
         isUpdatingFromGPS = false;
@@ -5127,6 +5136,31 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
                 "reserveCost: capturedStart='%s' capturedFinish='%s' gpsApplied=%s",
                 start, finish, AutoLocationAfterCityHelper.isGpsStartApplied()));
 
+        String readyBase = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
+        if (readyBase == null || readyBase.isEmpty()) {
+            Logger.w(context, TAG, "reserveCost: baseUrl ещё пустой — ждём Firebase, кэш/повтор");
+            if (isAroundCityRoute(start, finish) && tryApplyCachedAroundCityCost()) {
+                return;
+            }
+            if (costHandler == null) {
+                costHandler = new Handler(Looper.getMainLooper());
+            }
+            costHandler.postDelayed(() -> {
+                if (!isAdded() || binding == null) {
+                    CostCalculationProgressBar.setCalculationInProgress(false);
+                    return;
+                }
+                try {
+                    reserveCost(start, finish, urlCost);
+                } catch (MalformedURLException e) {
+                    Logger.e(context, TAG, "reserveCost retry: " + e.getMessage());
+                    hideCostCalculationProgress();
+                    btnVisible(VISIBLE);
+                }
+            }, 500);
+            return;
+        }
+
         Logger.d(context, TAG, "Попытка #" + ( 1) + ", URL: " + urlCost);
 
         CostJSONParserRetrofit parser = new CostJSONParserRetrofit();
@@ -5135,7 +5169,8 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
             public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
                 new Handler(Looper.getMainLooper()).post(() -> {
                     if (!isAdded() || binding == null) {
-                        Logger.w(context, TAG, "Фрагмент отсоединён или binding null — выходим");
+                        Logger.w(context, TAG, "Фрагмент отсоединён или binding null — сбрасываем расчёт, выходим");
+                        CostCalculationProgressBar.setCalculationInProgress(false);
                         return;
                     }
 
@@ -5171,6 +5206,7 @@ public class VisicomFragment extends Fragment implements ButtonVisibilityCallbac
                 Logger.e(context, TAG, "Ошибка подключения к серверу: " + t.getMessage());
                 new Handler(Looper.getMainLooper()).post(() -> {
                     if (!isAdded() || binding == null) {
+                        CostCalculationProgressBar.setCalculationInProgress(false);
                         return;
                     }
                     if (isAroundCityRoute(start, finish) && tryApplyCachedAroundCityCost()) {

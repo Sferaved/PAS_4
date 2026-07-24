@@ -45,7 +45,13 @@ public class CostJSONParserRetrofit {
         httpClient.readTimeout(30, TimeUnit.SECONDS);    // Тайм-аут для чтения
         httpClient.writeTimeout(30, TimeUnit.SECONDS);   // Тайм-аут для записи
         // httpClient.addInterceptor(loggingInterceptor);
-        String baseUrl = BaseUrlHelper.fromPrefs(sharedPreferencesHelperMain);
+        // Retrofit requires trailing slash; fromPrefs strips it — always use withSlash.
+        String baseUrl = BaseUrlHelper.fromPrefsWithSlash(sharedPreferencesHelperMain);
+        if (baseUrl.isEmpty()) {
+            Log.w(TAG, "baseUrl empty — Retrofit not created (wait keys/base_urls)");
+            apiService = null;
+            return;
+        }
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl)
@@ -60,6 +66,14 @@ public class CostJSONParserRetrofit {
     private Call<Map<String, String>> activeCall;
 
     public void sendURL(String urlString, final Callback<Map<String, String>> callback) throws MalformedURLException {
+        if (apiService == null) {
+            Log.w(TAG, "sendURL skipped: baseUrl not ready");
+            Map<String, String> empty = new HashMap<>();
+            empty.put("order_cost", "0");
+            empty.put("Message", "Ошибка подключения: baseUrl empty");
+            callback.onResponse(null, Response.success(empty));
+            return;
+        }
         Call<Map<String, String>> call = apiService.getData(urlString);
         activeCall = call;
 
