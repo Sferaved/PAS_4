@@ -92,10 +92,10 @@ import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.model.ExecutionStatusViewModel;
 import com.taxi_pas_4.utils.network.RetryInterceptor;
 import com.taxi_pas_4.utils.phone_state.PhoneCallHelper;
+import com.taxi_pas_4.utils.route.OsrmRouteHelper;
 
 import org.json.JSONException;
 import org.osmdroid.api.IMapController;
-import org.osmdroid.bonuspack.routing.OSRMRoadManager;
 import org.osmdroid.bonuspack.routing.Road;
 import org.osmdroid.bonuspack.routing.RoadManager;
 import org.osmdroid.config.Configuration;
@@ -1838,12 +1838,20 @@ public class OpenStreetMapFragment extends Fragment {
         }
         final int generation = ++routeBuildGeneration;
         removeRoadOverlayFromMap();
+        final String userAgent = OsrmRouteHelper.resolveUserAgent(
+                Configuration.getInstance().getUserAgentValue(),
+                ctx != null ? ctx.getPackageName() : null);
         executor.execute(() -> {
-            RoadManager roadManager = new OSRMRoadManager(map.getContext(), System.getProperty("http.agent"));
             ArrayList<GeoPoint> waypoints = new ArrayList<>();
             waypoints.add(startP);
             waypoints.add(endP);
-            Road road = roadManager.getRoad(waypoints);
+            Road road = OsrmRouteHelper.fetchDrivingRoute(userAgent, waypoints);
+            if (!OsrmRouteHelper.isUsableRoad(road)) {
+                Logger.e(ctx, TAG, "No usable OSRM route — skip straight-line overlay");
+                return;
+            }
+            Logger.d(ctx, TAG, "OSRM route points=" + OsrmRouteHelper.pointCount(road)
+                    + " lengthKm=" + road.mLength);
             Polyline newOverlay = RoadManager.buildRoadOverlay(road);
             newOverlay.getOutlinePaint().setStrokeWidth(10f);
             map.post(() -> {
