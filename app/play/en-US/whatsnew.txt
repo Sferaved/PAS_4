@@ -1,2 +1,2 @@
-• Fixed a crash on startup after app optimization
+• Fixed a crash when reading card list after code optimization
 • Stability improvements

@@ -12,13 +12,14 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.taxi_pas_4.MainActivity;
+import com.taxi_pas_4.utils.db.CursorReadHelper;
+import com.taxi_pas_4.utils.network.GsonResponseParser;
 
 import java.util.Arrays;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import com.taxi_pas_4.utils.db.CursorReadHelper;
 
 public class UserPermissions {
     private static final String TAG = "TAG_PERM";
@@ -35,15 +36,14 @@ public class UserPermissions {
             @Override
             public void onResponse(@NonNull Call<PermissionsResponse> call, @NonNull Response<PermissionsResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    Object body = response.body();
-                    if (!(body instanceof PermissionsResponse)) {
+                    PermissionsResponse permissionsResponse = GsonResponseParser.as(
+                            response.body(), PermissionsResponse.class);
+                    if (permissionsResponse == null) {
                         Log.e(TAG, "Unexpected permissions body: "
-                                + (body == null ? "null" : body.getClass().getName()));
+                                + response.body().getClass().getName());
                         return;
                     }
-                    PermissionsResponse permissionsResponse = (PermissionsResponse) body;
-                    if (permissionsResponse != null) {
-                        Log.d(TAG, "Bonus Pay: " + permissionsResponse.getBonusPay());
+                    Log.d(TAG, "Bonus Pay: " + permissionsResponse.getBonusPay());
                         Log.d(TAG, "Card Pay: " + permissionsResponse.getCardPay());
 
                         ContentValues cv = new ContentValues();
@@ -53,7 +53,6 @@ public class UserPermissions {
                         SQLiteDatabase database = context.openOrCreateDatabase(MainActivity.DB_NAME, MODE_PRIVATE, null);
                         database.update(MainActivity.TABLE_USER_INFO, cv, "id = ?", new String[]{"1"});
                         database.close();
-                    }
                 } else {
                         Log.d(TAG,"Request failed with code: " + response.code());
                 }
