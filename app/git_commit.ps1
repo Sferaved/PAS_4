@@ -193,7 +193,7 @@ if (-not [string]::IsNullOrWhiteSpace($env:PLAY_TRACKS)) {
     }
     Write-Host "PLAY_TRACKS: $($trackList -join ', ')" -ForegroundColor Gray
     $publishArgs += "-Tracks"
-    $publishArgs += $trackList
+    $publishArgs += ($trackList -join ',')
 }
 $pwsh = Get-Command pwsh -ErrorAction SilentlyContinue
 if ($pwsh) {
