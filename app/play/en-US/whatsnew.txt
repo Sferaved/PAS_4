@@ -1,2 +1,2 @@
-• Tapping Close on order status shows the active orders reminder on the order page again
+• App code optimized for Google Play (smaller, faster start)
 • Stability improvements

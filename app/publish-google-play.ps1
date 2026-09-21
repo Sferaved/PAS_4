@@ -1,7 +1,8 @@
 # Publish release AAB to Google Play (local, no GitHub Actions).
 # Requires: keystore/service-account.json or app/keystore/service-account.json
 param(
-    [string]$ProjectRoot = (Split-Path -Parent $PSScriptRoot)
+    [string]$ProjectRoot = (Split-Path -Parent $PSScriptRoot),
+    [string[]]$Tracks = @("internal", "alpha", "beta", "production")
 )
 
 $ErrorActionPreference = "Stop"
@@ -177,9 +178,22 @@ if (-not $versionCode) {
 }
 Write-Host "Uploaded versionCode: $versionCode" -ForegroundColor Green
 
-$tracks = @("internal", "alpha", "beta", "production")
-Write-Step "Updating tracks: $($tracks -join ', ')..."
-foreach ($track in $tracks) {
+$allowedTracks = @("internal", "alpha", "beta", "production")
+$resolvedTracks = @(
+    $Tracks |
+        ForEach-Object { $_ -split ',' } |
+        ForEach-Object { $_.Trim().ToLowerInvariant() } |
+        Where-Object { $_ }
+)
+if ($resolvedTracks.Count -eq 0) {
+    throw "No Play tracks specified"
+}
+$unknown = @($resolvedTracks | Where-Object { $allowedTracks -notcontains $_ })
+if ($unknown.Count -gt 0) {
+    throw "Unknown Play tracks: $($unknown -join ', ')"
+}
+Write-Step "Updating tracks: $($resolvedTracks -join ', ')..."
+foreach ($track in $resolvedTracks) {
     $body = @{
         releases = @(
             @{
@@ -206,4 +220,4 @@ Invoke-GoogleApi -Method Post `
     -AccessToken $accessToken | Out-Null
 
 Write-Host ""
-Write-Host "OK: Published to Google Play (versionCode $versionCode)" -ForegroundColor Green
+Write-Host "OK: Published to Google Play tracks [$($resolvedTracks -join ', ')] (versionCode $versionCode)" -ForegroundColor Green
