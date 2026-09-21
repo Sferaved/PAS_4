@@ -11,8 +11,10 @@
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
 
-# Gson: field names must survive (some DTOs have no @SerializedName, e.g. CardInfo).
--keepclassmembers class com.taxi_pas_4.** {
+# Gson: R8 full mode strips classes used only as generic args (Call<Foo> → LinkedTreeMap,
+# then ClassCastException in onResponse). Keep app DTOs, allow renaming.
+-keep,allowobfuscation class com.taxi_pas_4.** {
+    <init>();
     <fields>;
 }
 -keepclassmembers,allowobfuscation class * {
@@ -24,10 +26,18 @@
 -keep class * implements com.google.gson.JsonSerializer
 -keep class * implements com.google.gson.JsonDeserializer
 
-# Retrofit: HTTP annotations and generic signatures are read by reflection.
--keepclasseswithmembers class * {
+# Retrofit (R8 full mode — from retrofit2.pro, plus Call keep).
+-keepclassmembers,allowshrinking,allowobfuscation interface * {
     @retrofit2.http.* <methods>;
 }
+-if interface * { @retrofit2.http.* <methods>; }
+-keep,allowobfuscation interface <1>
+-if interface * { @retrofit2.http.* <methods>; }
+-keep,allowobfuscation interface * extends <1>
+-if interface * { @retrofit2.http.* public *** *(...); }
+-keep,allowoptimization,allowshrinking,allowobfuscation class <3>
+-keep,allowobfuscation,allowshrinking interface retrofit2.Call
+-keep,allowobfuscation,allowshrinking class retrofit2.Response
 -dontwarn retrofit2.**
 -dontwarn okhttp3.**
 -dontwarn okio.**

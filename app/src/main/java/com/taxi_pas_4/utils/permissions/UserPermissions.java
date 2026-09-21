@@ -35,7 +35,13 @@ public class UserPermissions {
             @Override
             public void onResponse(@NonNull Call<PermissionsResponse> call, @NonNull Response<PermissionsResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    PermissionsResponse permissionsResponse = response.body();
+                    Object body = response.body();
+                    if (!(body instanceof PermissionsResponse)) {
+                        Log.e(TAG, "Unexpected permissions body: "
+                                + (body == null ? "null" : body.getClass().getName()));
+                        return;
+                    }
+                    PermissionsResponse permissionsResponse = (PermissionsResponse) body;
                     if (permissionsResponse != null) {
                         Log.d(TAG, "Bonus Pay: " + permissionsResponse.getBonusPay());
                         Log.d(TAG, "Card Pay: " + permissionsResponse.getCardPay());

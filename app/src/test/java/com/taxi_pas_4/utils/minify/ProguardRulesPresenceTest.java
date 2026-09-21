@@ -31,6 +31,8 @@ public class ProguardRulesPresenceTest {
         assertTrue(text.contains("SourceFile,LineNumberTable"));
         assertTrue(text.contains("@com.google.gson.annotations.SerializedName"));
         assertTrue(text.contains("retrofit2.http.*"));
+        assertTrue(text.contains("-keep,allowobfuscation,allowshrinking class retrofit2.Response"));
+        assertTrue(text.contains("-keep,allowobfuscation class com.taxi_pas_4.**"));
         assertTrue(text.contains("org.greenrobot.eventbus.Subscribe"));
         assertTrue(text.contains("@androidx.room.Entity"));
         assertTrue(text.contains("androidx.work.ListenableWorker"));

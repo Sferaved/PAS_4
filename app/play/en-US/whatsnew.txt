@@ -1,2 +1,2 @@
-• App code optimized for Google Play (smaller, faster start)
+• Fixed a crash on startup after app optimization
 • Stability improvements
