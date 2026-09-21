@@ -11,10 +11,12 @@
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
 
-# Gson: R8 full mode strips classes used only as generic args (Call<Foo> → LinkedTreeMap,
-# then ClassCastException in onResponse). Keep app DTOs, allow renaming.
+# Gson: keep DTO classes (names may change). Field names must NOT be renamed —
+# otherwise JSON keys like "main"/"temp" do not bind and UI NPEs.
 -keep,allowobfuscation class com.taxi_pas_4.** {
     <init>();
+}
+-keepclassmembers class com.taxi_pas_4.** {
     <fields>;
 }
 -keepclassmembers,allowobfuscation class * {

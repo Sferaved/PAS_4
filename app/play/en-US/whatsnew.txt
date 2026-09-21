@@ -1,2 +1,2 @@
-• Fixed a crash when reading card list after code optimization
+• Fixed a crash on the weather screen after code optimization
 • Stability improvements
