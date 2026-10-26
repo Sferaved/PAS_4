@@ -1,2 +1,1 @@
-• Fixed a crash on the weather screen after code optimization
-• Stability improvements
+• Login dialog is readable on the dark theme
