@@ -17,6 +17,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.taxi_pas_4.utils.bugreport.mantis.MantisConfig;
+import com.taxi_pas_4.utils.bugreport.mantis.MantisConfigStore;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.androidx.startup.MyApplication;
@@ -365,7 +366,13 @@ public class FirestoreHelper {
             throw new Exception("Поля project_id або category_id не знайдено в keys/mantis_key.");
         }
 
-        return new MantisConfig(apiToken, baseUrl, projectId.intValue(), categoryId.intValue());
+        MantisConfig config = new MantisConfig(apiToken, baseUrl, projectId.intValue(), categoryId.intValue());
+        try {
+            MantisConfigStore.write(context.getFilesDir(), config);
+        } catch (Exception e) {
+            Log.w(TAG, "Mantis config cache skipped: " + e.getMessage());
+        }
+        return config;
     }
 
     public void getUtaxKey(OnSupportUtaxFetchedListener listener) {
