@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModel;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.ui.finish.OrderResponse;
 import com.taxi_pas_4.ui.weather.finish.PassengerNotifier;
+import com.taxi_pas_4.utils.orders.ForkCancelTarget;
 import com.taxi_pas_4.utils.pusher.events.CanceledStatusEvent;
 import com.taxi_pas_4.utils.pusher.events.OrderResponseEvent;
 
@@ -196,6 +197,12 @@ public class ExecutionStatusViewModel extends ViewModel {
             current = MainActivity.uid;
         }
         if (current != null && !current.isEmpty() && !current.equals(newUid)) {
+            String partner = ForkCancelTarget.resolveDoubleUid(
+                    MainActivity.uid_Double, getPersistedDoubleUid());
+            if (ForkCancelTarget.isForkPartnerStatusUid(current, partner, newUid)) {
+                Log.d("VIEWMODEL", "updateUid: keep fork pair, ignore partner " + newUid);
+                return;
+            }
             Log.d("VIEWMODEL", "updateUid: active " + current + " -> " + newUid + ", await orderDouble event");
             MainActivity.uid_Double = "";
             sharedPreferencesHelperMain.saveValue(PREF_FINISH_DOUBLE_UID, "");
