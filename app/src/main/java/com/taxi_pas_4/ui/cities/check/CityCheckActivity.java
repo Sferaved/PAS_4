@@ -43,6 +43,7 @@ import com.taxi_pas_4.utils.location.AutoLocationAfterCityHelper;
 import com.taxi_pas_4.utils.log.Logger;
 import com.taxi_pas_4.utils.preferences.SharedPreferencesHelper;
 import com.taxi_pas_4.utils.worker.TilePreloadWorker;
+import com.taxi_pas_4.utils.worker.utils.WfpUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -946,6 +947,8 @@ public class CityCheckActivity extends AppCompatActivity {
                 new String[] { "1" });
         database.close();
 
+        WfpUtils.refreshCardsAfterCityChange(getApplicationContext(), city);
+
         List<String> settings = new ArrayList<>();
 
         settings.add(Double.toString(startLat));
@@ -1396,7 +1399,7 @@ public class CityCheckActivity extends AppCompatActivity {
                 new String[] { "1" });
         database.close();
 
-
+        WfpUtils.refreshCardsAfterCityChange(getApplicationContext(), city);
 
         List<String> settings = new ArrayList<>();
 
