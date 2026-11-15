@@ -13,8 +13,8 @@ android {
         applicationId "com.taxi_pas_4"
         minSdk = 26
         targetSdk = 36
-        versionCode = 5188
-        versionName = '4.1188'
+        versionCode = 5189
+        versionName = '4.1189'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += ['en', 'ru', 'uk']
         multiDexEnabled = true
