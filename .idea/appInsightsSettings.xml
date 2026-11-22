@@ -48,14 +48,30 @@
                   <option name="projectNumber" value="10844390327" />
                 </ConnectionSetting>
               </option>
+              <option name="devices">
+                <list>
+                  <DeviceSetting>
+                    <option name="deviceType" value="Phone" />
+                    <option name="displayName" value="samsung (SM-G556B)" />
+                    <option name="manufacturer" value="samsung" />
+                    <option name="model" value="SM-G556B" />
+                  </DeviceSetting>
+                </list>
+              </option>
+              <option name="failureTypes">
+                <list>
+                  <option value="FATAL" />
+                  <option value="NON_FATAL" />
+                </list>
+              </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
               <option name="timeIntervalDays" value="ONE_DAY" />
               <option name="versions">
                 <list>
                   <VersionSetting>
-                    <option name="buildVersion" value="5177" />
-                    <option name="displayName" value="4.1177 (5177)" />
-                    <option name="displayVersion" value="4.1177" />
+                    <option name="buildVersion" value="5196" />
+                    <option name="displayName" value="4.1196 (5196)" />
+                    <option name="displayVersion" value="4.1196" />
                   </VersionSetting>
                 </list>
               </option>

@@ -26,6 +26,23 @@ $sourcePaths = @(
     "Sferaved/TaxiEasyUaMain.git"
 )
 
+function Invoke-GitCredential {
+    param(
+        [ValidateSet("fill", "approve", "reject")]
+        [string]$Action,
+        [string]$Payload
+    )
+    $file = Join-Path $env:TEMP ("git-cred-" + [guid]::NewGuid().ToString("n") + ".txt")
+    try {
+        [System.IO.File]::WriteAllText($file, $Payload, [System.Text.Encoding]::ASCII)
+        $output = cmd /c "git credential $Action < `"$file`" 2>&1"
+        return ($output | Out-String)
+    }
+    finally {
+        Remove-Item $file -Force -ErrorAction SilentlyContinue
+    }
+}
+
 function Get-StoredPat {
     param([string]$PathSuffix)
     $fillIn = @(
@@ -36,7 +53,7 @@ function Get-StoredPat {
         "",
         ""
     ) -join "`n"
-    $filled = (($fillIn | git credential fill 2>$null) -join "`n").Trim()
+    $filled = (Invoke-GitCredential -Action "fill" -Payload $fillIn).Trim()
     if ([string]::IsNullOrWhiteSpace($filled)) { return $null }
     $m = [regex]::Match($filled, "(?m)^password=(.+)$")
     if ($m.Success) { return $m.Groups[1].Value }
@@ -50,9 +67,11 @@ function Save-PatForPath {
         "host=github.com",
         "username=sferaved",
         "path=$PathSuffix",
-        "password=$Pat"
+        "password=$Pat",
+        "",
+        ""
     ) -join "`n"
-    $approve | git credential approve | Out-Null
+    Invoke-GitCredential -Action "approve" -Payload $approve | Out-Null
 }
 
 Write-Host "===== Taxi_driver Git credential =====" -ForegroundColor Cyan
