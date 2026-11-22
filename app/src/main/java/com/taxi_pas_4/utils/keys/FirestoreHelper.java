@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
@@ -18,6 +19,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.taxi_pas_4.utils.bugreport.mantis.MantisConfig;
 import com.taxi_pas_4.utils.bugreport.mantis.MantisConfigStore;
+import com.taxi_pas_4.utils.helpers.TelegramBotTokenStore;
 import com.taxi_pas_4.MainActivity;
 import com.taxi_pas_4.R;
 import com.taxi_pas_4.androidx.startup.MyApplication;
@@ -373,6 +375,27 @@ public class FirestoreHelper {
             Log.w(TAG, "Mantis config cache skipped: " + e.getMessage());
         }
         return config;
+    }
+
+    @NonNull
+    public String fetchTelegramBotTokenBlocking() throws Exception {
+        DocumentSnapshot documentSnapshot = Tasks.await(
+                firestore.collection("keys").document("telegram_bot").get()
+        );
+        if (documentSnapshot == null || !documentSnapshot.exists()) {
+            throw new Exception("Документ keys/telegram_bot не знайдено.");
+        }
+        String token = documentSnapshot.getString("bot_token");
+        if (token == null || token.trim().isEmpty()) {
+            throw new Exception("Поле bot_token не знайдено в keys/telegram_bot.");
+        }
+        String trimmed = token.trim();
+        try {
+            TelegramBotTokenStore.write(context.getFilesDir(), trimmed);
+        } catch (Exception e) {
+            Log.w(TAG, "Telegram bot token cache skipped: " + e.getMessage());
+        }
+        return trimmed;
     }
 
     public void getUtaxKey(OnSupportUtaxFetchedListener listener) {
